@@ -1,4 +1,6 @@
-# Gocast 界面文案 v1.14（搜索面板 · 悬浮终端 · 设置）
+# Gocast 界面文案 v1.15（搜索面板 · 悬浮终端 · 设置）
+
+v1.15 改动：搜索面板打开就带推荐（2.2a）。两组叫「推荐」和「Gocast」，不叫「命令」。原来空输入 ⌘K 的「Gocast 操作」列表并进 Gocast 组，读屏跟着改。设置 › 通用加开关「打开时只显示搜索框」（不叫紧凑模式）。
 
 v1.14 改动：剪贴板历史不加密了。设置里的说明和 README 改成「只存在这台 Mac 上，不会上传」，不提加密。「读不出历史」只剩文件坏了这一种情况，文案不变。
 v1.13 改动：参考 Tinycast 的三点。「粘贴到“{应用名}”」就是粘贴去向，去向是悬浮终端时写「粘贴到悬浮终端」。往终端贴图片时主操作不改名，README 说一句。README 已写入剪贴板历史（6.11）。
@@ -97,18 +99,24 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 
 用词说明：Mac 上统一说「拷贝」「访达」，跟系统菜单一致；「预设 · 2」用「新标签」，和悬浮终端里的按钮同一个词，不写「新开标签」。退出项带上应用名，避免和「退出 Gocast」混淆。
 
-空输入时（没有选中项）按 ⌘K，面板自己往下展开成一张列表，不是 2.2 那张带过滤框的卡片，所以这里不放「搜索操作…」。有预设时，在「打开悬浮终端」下面用「用预设打开」做小标题，列出每个预设（名称 + 右侧文件夹最后一段，和终端里 + 菜单同一套）；没有预设就跳过小标题和列表，直接到「添加预设」。不要写「新建预设」，跟设置里同一句「添加预设」。
+### 2.2a 打开时的推荐列表（搜索框空着时）
+
+按 ⌘Space 直接展开，分两组。原来空输入 ⌘K 那张「Gocast 操作」列表并进第二组；空输入时也有选中的行了，所以 ⌘K 就是 2.2 那张普通卡片。
 
 | 位置 | 中文 | English |
 |---|---|---|
-| 空输入 · 1 | 打开悬浮终端 | Open Floating Terminal |
-| 空输入 · 小标题 | 用预设打开 | Open with Preset |
-| 空输入 · 预设行 | `{名称}`，右侧 `{文件夹最后一段}` | `{name}`, folder last segment on the right |
-| 空输入 · 2 | 添加预设 | Add Preset |
-| 空输入 · 3 | 设置… | Settings… |
-| 空输入 · 4 | 退出 Gocast | Quit Gocast |
+| 第一组小标题 | 推荐 | Suggestions |
+| 第二组小标题 | Gocast | Gocast |
+| Gocast 组 · 行 | 剪贴板历史 / 打开悬浮终端 / 添加预设 / 设置… / 退出 Gocast | Clipboard History / Open Floating Terminal / Add Preset / Settings… / Quit Gocast |
+| Gocast 组行的主操作 | 打开；「退出 Gocast」那行是「退出」 | Open; Quit for Quit Gocast |
 
-右侧键帽：「打开悬浮终端」用当前的悬浮终端快捷键；「设置…」用 ⌘,。其余不放键帽。
+用词说明：
+- 第二组不叫「命令」。「命令」在 Gocast 里专指预设里运行的那条命令（pi、npm run dev），文件夹 · 命令的副标题天天在眼前，再拿它当组名会混。用「Gocast」，和搜索结果里这些行右侧的标记同一个词。
+- 是「添加预设」，不是「新建预设」，跟设置里的按钮同一句。
+- 推荐组的行和搜索结果长得一样（应用行、预设行，右侧标记「应用」「预设」）。Gocast 自己的项目进了推荐组时，右侧标记写「Gocast」。没用过时放进去的几个常用项也一样，不加「示例」之类的字。
+- Gocast 组的行右侧放键帽：剪贴板历史用当前的剪贴板快捷键，打开悬浮终端用终端快捷键，设置… 用 ⌘,，其余不放。不再写「用预设打开」小标题：预设在推荐组里，也能直接搜。
+
+打字以后照旧是搜索结果，不分这两组。打过字再清空，回到这张推荐列表。
 
 ### 2.3 读屏（VoiceOver）
 
@@ -120,10 +128,10 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 | 应用行（正在运行） | {名称}，应用，正在运行 | {name}, App, Running |
 | 同名应用行（有副标题时） | {名称}，{副标题}，应用[，正在运行] | {name}, {subtitle}, App[, Running] |
 | 预设行 | {名称}，预设，{文件夹} | {name}, Preset, {folder} |
-| 空输入 ⌘K 整张列表 | Gocast 操作 | Gocast Actions |
-| 空输入 ⌘K 小标题 | 用预设打开，标题 | Open with Preset, heading |
-| 空输入 ⌘K 操作行 | 就用可见的名称，如「打开悬浮终端」 | The visible name, e.g. “Open Floating Terminal” |
-| 空输入 ⌘K 预设行 | {名称}，预设，{文件夹} | {name}, Preset, {folder} |
+| 推荐组小标题 | 推荐，标题 | Suggestions, heading |
+| Gocast 组小标题 | Gocast，标题 | Gocast, heading |
+| Gocast 组的行 | 就用可见的名称，如「剪贴板历史」 | The visible name, e.g. “Clipboard History” |
+| 推荐组的行 | 同上面应用行、预设行 | Same as app and preset rows above |
 
 「正在运行」只加在应用上，预设不加（预设开着时是悬浮终端里的标签，不在搜索结果里标运行）。
 
@@ -208,6 +216,8 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 |---|---|---|
 | 开关 | 登录时自动启动 | Open Gocast at login |
 | 开关说明 | 打开后，开机就能用快捷键，不用先手动打开。 | Then your shortcuts work right after you log in. |
+| 开关 | 打开时只显示搜索框 | Show only the search field |
+| 开关说明 | 打开后，按 {搜索快捷键} 只出现搜索框，不列推荐，打字才出结果。 | When on, {shortcut} shows just the search field. Results appear as you type. |
 | 分组标题 | 悬浮终端 | Floating Terminal |
 | 分组说明 | 也可以直接拖终端边缘来改大小，这里会跟着变。 | You can also drag the terminal's edges. These values update as you do. |
 | 终端字号 | 字号 | Font size |
@@ -226,6 +236,7 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 | 开关说明 | 打开后，有新版本会自己来问你。关掉就只在点“检查更新”时查。 | When on, Gocast asks you when a new version is ready. When off, it only checks if you ask. |
 
 第一版外观只有“跟随系统”一项，需要时再加选项；不要显示一个只有一项的下拉框，用一行说明文字即可。
+「打开时只显示搜索框」默认关。不叫「紧凑模式」：用户看不出「紧凑」紧的是什么，开关名直接说看到的样子。放在通用里哪一行以 design.md 为准。
 「悬浮终端」的分组说明放在标题下面、分组上面。宽度和高度两行共用同一句说明；拖边缘改大小写在分组说明里，不要分别写在宽度或高度下面。
 
 ### 4.4 关于 / About
@@ -283,10 +294,10 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 | 搜索面板结果行 | 剪贴板历史 | Clipboard History |
 | 上面那行的右侧标记 | Gocast | Gocast |
 | 上面那行也能搜到的词（不显示） | 剪贴板、粘贴板、剪切板、历史、clipboard、paste、history | same |
-| 空输入 ⌘K 列表（放在「打开悬浮终端」和预设之后、「添加预设」之前） | 剪贴板历史 | Clipboard History |
+| 打开时的 Gocast 组（2.2a，放在第一行） | 剪贴板历史 | Clipboard History |
 | 菜单栏菜单（放在「悬浮终端」下面） | 剪贴板历史 | Clipboard History |
 
-主操作：打开（↵）。右侧标记不写「命令」：「命令」在 Gocast 里专指预设里运行的那条命令。键帽：⌘K 列表和菜单栏这一项右侧显示当前的剪贴板快捷键（默认 ⌃⌘V）。
+主操作：打开（↵）。右侧标记不写「命令」：「命令」在 Gocast 里专指预设里运行的那条命令。键帽：Gocast 组和菜单栏这一项右侧显示当前的剪贴板快捷键（默认 ⌃⌘V）。
 用户自己会说「粘贴板」「剪切板」，所以这些词都要能搜到，但界面上只写「剪贴板」。
 
 ### 6.2 剪贴板视图
