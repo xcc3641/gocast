@@ -83,6 +83,21 @@ Commands run through the user's login shell, as a login and interactive shell, s
 
 Both can be changed in Settings → 快捷键, and a change takes effect at once.
 
+### Keycap and capsule alignment (measured on 2× captures)
+
+Each value below is the offset of the glyph's ink center from the center of its key, in DIP. Positive means low. The keys and segments themselves are exactly centered in the 36-high capsule: the box center is at 993.0 px and the capsule center at 993 px.
+
+| Glyph | Before | After |
+| --- | --- | --- |
+| 12 pt in a capsule: ⌘, K | +0.75 | +0.25 |
+| 12 pt in a capsule: ↵ | −0.75 | −0.25 |
+| 12 pt in the ⌘K menu: ⌘, ⇧ | +0.75 | +0.25 |
+| 12 pt in the ⌘K menu: C | +0.5 | 0 |
+| 12 pt in the ⌘K menu: ↩ | −0.75 | −0.25 |
+| 13 pt in the recorder: ⌘, ⌥, ⇧ | +0.25 | −0.25 |
+
+The text's line box was centered, which leaves baseline glyphs low and arrows, which sit on the math axis, high. `capNudge` moves each kind by half the measured offset, and a ±0.25 DIP difference is the half pixel that rounding leaves. ⌃ and \` stay high, as in the system's menus. The capsule labels 打开 and 操作 (13 pt) sit +0.25 and +0.5 DIP low and were left as they are.
+
 ### ⌘Space and Spotlight (design.md 4.4, copy.md v1.5 4.1)
 
 - **Check.** `shortcut.SpotlightHasCmdSpace` reads `defaults export com.apple.symbolichotkeys -` and extracts `AppleSymbolicHotKeys.64` (“Show Spotlight search”) with `plutil`. It only reads. ⌘Space counts as Spotlight's when the entry is enabled with key code 49 and the ⌘ mask (1<<20), and also when the entry is missing or can't be read, since that is the system default.

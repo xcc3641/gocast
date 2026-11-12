@@ -103,8 +103,35 @@ func gocastMark(c *ui.Context, k tokens) {
 // assistive technology skips it (the control says its shortcut).
 func keycap(c *ui.Context, k tokens, label string, size float32) {
 	ui.Box(c).Height(20).MinWidth(20).Padding(0, 5).Radius(5).Background(k.keycap).Center().AccessHidden(true).Children(func() {
-		ui.Text(c, label).FontSize(size).TextColor(k.textOnGlass).SingleLine()
+		capLabel(c, label, size, k.textOnGlass)
 	})
+}
+
+// capLabel is the label of a keycap, moved by capNudge to look centered.
+func capLabel(c *ui.Context, label string, size float32, color ui.Color) {
+	t := ui.Text(c, label).FontSize(size).TextColor(color).SingleLine()
+	// A margin on one side moves the centered text by half of it.
+	if n := capNudge(label); n > 0 {
+		t.Margin(2*n, 0, 0, 0)
+	} else if n < 0 {
+		t.Margin(0, 0, -2*n, 0)
+	}
+}
+
+// capNudge is how far a keycap's label moves down (up if negative) for
+// its ink to sit in the middle of the key. The text's line box is
+// centered, which leaves glyphs standing on the baseline (letters, digits,
+// ⌘⇧⌥) 0.5–0.75 DIP low, and arrows, on the math axis, 0.75 DIP high, as
+// measured on 2× captures (12 and 13 pt). ⌃ and ` are drawn high by
+// design, as in menus, and stay.
+func capNudge(label string) float32 {
+	switch label {
+	case "↵", "↩", "↑", "↓", "←", "→", "⇥":
+		return 0.75
+	case "⌃", "`":
+		return 0
+	}
+	return -0.5
 }
 
 // keycaps draws the keys of a shortcut, 4 apart.
@@ -122,7 +149,7 @@ func outlineKeycaps(c *ui.Context, k tokens, color ui.Color, caps ...string) {
 	ui.Row(c).Gap(4).AlignItems(ui.Center).AccessHidden(true).Children(func() {
 		for _, cp := range caps {
 			ui.Box(c).Height(22).MinWidth(22).Padding(0, 5).Radius(6).Border(1, k.hairline).Center().Children(func() {
-				ui.Text(c, cp).FontSize(12).TextColor(color).SingleLine()
+				capLabel(c, cp, 12, color)
 			})
 		}
 	})
