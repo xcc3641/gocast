@@ -192,7 +192,7 @@
   "clipJustCopy": "先只拷贝",
   "clipAXReady": "现在可以直接粘贴了",
   "clipKeep": "记录剪贴板历史",
-  "clipKeepHint": "只存在这台 Mac 上，加密保存，不会上传。",
+  "clipKeepHint": "只存在这台 Mac 上，不会上传。",
   "clipRetention": "保留",
   "clipRetentionDay": "1 天",
   "clipRetentionWeek": "1 周",

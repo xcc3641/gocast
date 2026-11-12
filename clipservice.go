@@ -5,19 +5,17 @@ package main
 // recording what the user copies, as Settings › Clipboard says, and the
 // hooks that paste, which tests and the development modes replace.
 //
-// The history is kept encrypted in clipboard/ of Gocast's folder, its key
-// in keys/clipboard.key there (clipboard.KeyFile), outside the history
-// and out of backups. The Keychain is not used: an update of an ad-hoc
-// signed app would have to ask for its item.
+// The history is kept in clipboard/ of Gocast's folder, in plain files
+// private to the user (no key, no Keychain). A history of the builds that
+// encrypted it is migrated once, with its key file, keys/clipboard.key,
+// which then goes.
 //
 // Development hooks (dev-notes.md), so that the history can be tried
 // without the user's history, pasteboard or keystrokes:
 //
-//   - GOCAST_CLIPBOARD_DIR=<dir> keeps the history in dir, its key in
-//     memory (a history left there by an earlier run can't be read, as
-//     with a key file gone). Nothing is written to the system pasteboard
-//     and ⌘V is never pressed: copies and pastes go to a pasteboard in
-//     memory.
+//   - GOCAST_CLIPBOARD_DIR=<dir> keeps the history in dir. Nothing is
+//     written to the system pasteboard and ⌘V is never pressed: copies
+//     and pastes go to a pasteboard in memory.
 //   - GOCAST_CLIPBOARD_SEED=1, only with GOCAST_CLIPBOARD_DIR, fills the
 //     history with demo items, over whatever was there, the watcher off,
 //     and the pasteboard in memory; =empty leaves it empty. Pasting is
@@ -86,9 +84,9 @@ func newClipService(g *gocast) *clipService {
 	return s
 }
 
-// keyPath is the file of the history's key: in Gocast's folder, outside
-// the history's.
-func (s *clipService) keyPath() string {
+// format2Key is the key file of the history the builds that encrypted it
+// kept, which the store migrates, then deletes.
+func (s *clipService) format2Key() string {
 	return filepath.Join(s.g.dir, "keys", "clipboard.key")
 }
 
@@ -116,18 +114,14 @@ func (s *clipService) trusted() bool {
 // start reads the history on a goroutine, then starts recording.
 func (s *clipService) start() {
 	set := s.g.settings
-	opts := clipboard.Options{Retention: clipboard.Retention(set.ClipboardRetention), ImageDir: clipboard.DefaultImageDir()}
-	if s.dry { // leaves the app's image files alone
-		opts.ImageDir += "-dev"
-	}
-	var keys clipboard.KeyStore = clipboard.NewKeyFile(s.keyPath())
+	opts := clipboard.Options{Retention: clipboard.Retention(set.ClipboardRetention)}
 	switch {
 	case s.seed != "":
 		opts.Pasteboard = &memPasteboard{}
-		keys = &clipboard.MemoryKeys{}
 	case s.dry:
 		opts.Pasteboard = &dryPasteboard{real: clipboard.SystemPasteboard()}
-		keys = &clipboard.MemoryKeys{}
+	default:
+		opts.Format2Key = s.format2Key()
 	}
 	seeding := s.seed != ""
 	locale := mygo.App.Locale()
@@ -136,12 +130,18 @@ func (s *clipService) start() {
 		opts.Now = clock.now
 	}
 	go func() {
-		store, err := clipboard.Open(s.dir(), keys, opts)
+		// Copies of images an earlier build pasted into terminals, from
+		// when the history was encrypted: the images' own files are
+		// pasted now.
+		for _, d := range []string{"gocast-clipboard", "gocast-clipboard-dev"} {
+			_ = os.RemoveAll(filepath.Join(os.TempDir(), d))
+		}
+		store, err := clipboard.Open(s.dir(), opts)
 		if err != nil {
 			log.Printf("clipboard: %v", err)
 		}
 		if seeding {
-			if store.Unreadable() { // an earlier run's history, its key gone
+			if store.Unreadable() { // an earlier run's history, damaged
 				_ = store.Clear()
 			}
 			if s.seed == "1" {

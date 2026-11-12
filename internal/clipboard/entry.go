@@ -1,12 +1,12 @@
 // Package clipboard keeps the clipboard history: a Watcher notices what
-// the user copies, a Store keeps it (in memory for search, and encrypted
-// on disk), and the Store puts entries back on the pasteboard and pastes
-// them into the frontmost app.
+// the user copies, a Store keeps it (in memory for search, and on disk),
+// and the Store puts entries back on the pasteboard and pastes them into
+// the frontmost app.
 //
-// The Store and its persistence are plain Go and work on any platform;
-// reading the system pasteboard, the frontmost app, leaving the key file
-// out of backups, the Accessibility check and the ⌘V keystroke are macOS
-// only.
+// The Store and its persistence (plain files, in the clear, private to
+// the user) are plain Go and work on any platform; reading the system
+// pasteboard, the frontmost app, the Accessibility check and the ⌘V
+// keystroke are macOS only.
 package clipboard
 
 import (

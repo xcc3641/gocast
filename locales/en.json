@@ -892,7 +892,7 @@
   "@clipKeep": {
     "description": "Settings › Clipboard: switch."
   },
-  "clipKeepHint": "Stored only on this Mac, encrypted, never uploaded.",
+  "clipKeepHint": "Stored only on this Mac, never uploaded.",
   "@clipKeepHint": {
     "description": "Settings › Clipboard: the switch's description."
   },

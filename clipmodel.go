@@ -444,6 +444,11 @@ func (t pasteTarget) label(name string) string {
 	return pasteLabel(name)
 }
 
+// allowed reports whether Gocast may paste into t, trusted with the
+// Accessibility permission: pressing ⌘V needs it, but the floating
+// terminal, which is pasted into directly (Terminal.Paste), does not.
+func (t pasteTarget) allowed(trusted bool) bool { return trusted || t.floating }
+
 // terminalApps are the bundle IDs of the terminals, into which an image
 // pastes as its file's path: Terminal, iTerm2, Ghostty, Warp, kitty,
 // Alacritty and WezTerm.
@@ -469,7 +474,7 @@ type pasteWay int
 const (
 	pasteAll       pasteWay = iota // everything the item holds
 	pastePlainText                 // its plain text alone
-	pasteImagePath                 // an image's file, decrypted: its path, as text
+	pasteImagePath                 // an image: its file's path, as text
 )
 
 // pasteWayFor is how an item of kind pastes into target, as plain text
@@ -550,15 +555,17 @@ const (
 	bannerReady // pasting was allowed
 )
 
-// clipBanner is the banner to show: off wins over Accessibility; ready
-// shows for a while once allowed (ready set).
-func clipBanner(state clipState, recording, asked, pasteOnReturn, trusted, ready bool) int {
+// clipBanner is the banner to show: off wins over Accessibility, which
+// shows only when pasting into the target is not allowed
+// (pasteTarget.allowed); ready shows for a while once allowed (ready
+// set).
+func clipBanner(state clipState, recording, asked, pasteOnReturn, allowed, ready bool) int {
 	switch {
 	case state == clipShowList && !recording:
 		return bannerOff
 	case ready:
 		return bannerReady
-	case asked && pasteOnReturn && !trusted && state == clipShowList:
+	case asked && pasteOnReturn && !allowed && state == clipShowList:
 		return bannerAX
 	}
 	return bannerNone

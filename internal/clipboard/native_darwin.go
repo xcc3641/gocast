@@ -17,7 +17,7 @@ import (
 var (
 	loadOnce sync.Once
 	libs     struct {
-		cf, foundation, appServices, coreGraphics uintptr
+		cf, appServices, coreGraphics uintptr
 	}
 )
 
@@ -29,7 +29,6 @@ func load() {
 		}
 		open("/System/Library/Frameworks/AppKit.framework/AppKit")
 		libs.cf = open("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation")
-		libs.foundation = open("/System/Library/Frameworks/Foundation.framework/Foundation")
 		libs.appServices = open("/System/Library/Frameworks/ApplicationServices.framework/ApplicationServices")
 		libs.coreGraphics = open("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics")
 	})

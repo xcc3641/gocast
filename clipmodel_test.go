@@ -250,6 +250,30 @@ func TestClipActions(t *testing.T) {
 
 func appTarget(name string) pasteTarget { return pasteTarget{app: clipboard.App{Name: name}} }
 
+// The floating terminal is pasted into without the Accessibility
+// permission, and no banner asks for it there.
+func TestFloatingTerminalWithoutAX(t *testing.T) {
+	inLocale(t, "zh-Hans")
+	floating, app := pasteTarget{floating: true}, appTarget("备忘录")
+	if !floating.allowed(false) || !floating.allowed(true) {
+		t.Error("the floating terminal needs the permission")
+	}
+	if app.allowed(false) || !app.allowed(true) {
+		t.Error("an app pasted into without the permission")
+	}
+	if b := clipBanner(clipShowList, true, true, true, floating.allowed(false), false); b != bannerNone {
+		t.Errorf("floating terminal, untrusted: banner %d", b)
+	}
+	if b := clipBanner(clipShowList, true, true, true, app.allowed(false), false); b != bannerAX {
+		t.Errorf("an app, untrusted: banner %d", b)
+	}
+	// Return pastes there: the paste action first, its label.
+	text := clipboard.Entry{Kind: clipboard.KindText, Text: "hi"}
+	if as := clipActions(text, floating.allowed(false), floating); as[0].id != actPaste || as[0].label != "粘贴到悬浮终端" {
+		t.Errorf("floating terminal, untrusted: %v %q", as[0].id, as[0].label)
+	}
+}
+
 func TestPasteWay(t *testing.T) {
 	app := func(id string) pasteTarget { return pasteTarget{app: clipboard.App{BundleID: id, Name: id}} }
 	terminals := []pasteTarget{

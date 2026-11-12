@@ -12,9 +12,6 @@ var errUnsupported = errors.New("clipboard: only on macOS")
 // AccessibilitySettingsURL opens the Accessibility settings (macOS only).
 const AccessibilitySettingsURL = "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
 
-// excludeFromBackup does nothing outside macOS.
-func excludeFromBackup(string) error { return nil }
-
 // SystemPasteboard is nil outside macOS.
 func SystemPasteboard() Pasteboard { return nil }
 

@@ -2742,13 +2742,13 @@ func (msgs Messages) ClipKeep() string {
 	return Catalog.Format(msgs.locale, "clipKeep", nil)
 }
 
-// ClipKeepHint says "Stored only on this Mac, encrypted, never uploaded."
+// ClipKeepHint says "Stored only on this Mac, never uploaded."
 // in the language the app shows.
 //
 // Settings › Clipboard: the switch's description.
 func ClipKeepHint() string { return In(i18n.Locale()).ClipKeepHint() }
 
-// ClipKeepHint says "Stored only on this Mac, encrypted, never uploaded."
+// ClipKeepHint says "Stored only on this Mac, never uploaded."
 // in the language of msgs.
 //
 // Settings › Clipboard: the switch's description.

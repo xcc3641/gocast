@@ -259,7 +259,7 @@ func (v *clipView) state() clipState {
 
 // canPaste reports whether Return pastes: on in Settings, and allowed.
 func (v *clipView) canPaste() bool {
-	return v.l.g.settings.PasteOnReturn() && v.trusted
+	return v.l.g.settings.PasteOnReturn() && v.target.allowed(v.trusted)
 }
 
 // --- Drawing ---
@@ -268,7 +268,7 @@ func (v *clipView) view(c *ui.Context, k tokens) {
 	v.shortcuts(c)
 	state := v.state()
 	s := v.svc()
-	banner := clipBanner(state, s.recording(), s.asked, v.l.g.settings.PasteOnReturn(), v.trusted, v.ready)
+	banner := clipBanner(state, s.recording(), s.asked, v.l.g.settings.PasteOnReturn(), v.target.allowed(v.trusted), v.ready)
 
 	c.Key(v.l.gen)
 	panel := ui.Column(c).Absolute().Left(marginX).Top(marginTop).Width(clipWidth).Height(expandedHeight).

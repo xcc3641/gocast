@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"os"
 	"slices"
 	"strings"
 	"sync"
@@ -19,13 +20,10 @@ var (
 	ErrEmpty = errors.New("clipboard: empty content")
 	// ErrTooLarge means the content is over MaxSize.
 	ErrTooLarge = errors.New("clipboard: content over the size limit")
-	// ErrKeyStore means the key could not be read from or stored in its
-	// KeyStore: the history is kept in memory only, and lost on quit.
-	ErrKeyStore = errors.New("clipboard: the history's key is unavailable; history is kept in memory only")
-	// ErrUnreadable means the saved history cannot be read: its key is
-	// missing or malformed, or it cannot be decrypted or parsed. It is left as it is,
-	// and the store stays empty and records nothing, until Clear deletes
-	// it and starts a fresh history.
+	// ErrUnreadable means the saved history cannot be read: its index
+	// cannot be read or parsed. It is left as it is, and the store stays
+	// empty and records nothing, until Clear deletes it and starts a fresh
+	// history.
 	ErrUnreadable = errors.New("clipboard: the saved history cannot be read")
 	// ErrNoPasteboard means the store has no pasteboard to write to.
 	ErrNoPasteboard = errors.New("clipboard: no pasteboard")
@@ -89,23 +87,22 @@ type Options struct {
 	Pasteboard Pasteboard
 	// Now is the clock; nil is time.Now.
 	Now func() time.Time
-	// ImageDir is the folder of the image files pasted into terminals
-	// (ImageFile; the app's is DefaultImageDir), which Open empties; ""
-	// is none.
-	ImageDir string
+	// Format2Key is the key file of a format 2 history, which Open
+	// migrates (migrateFormat2), then deletes; "" is none.
+	Format2Key string
 }
 
 type item struct {
 	Entry
 	hash   string
-	folded string // lower-cased text searched
-	blob   bool   // RTF, HTML or PNG saved in a data file
-	data   *Content
+	folded string   // lower-cased text searched
+	parts  []string // the parts saved under data/ (partRTF, …)
+	data   *Content // the formatted text or image, when not saved
 }
 
 // Store is the clipboard history: entries in memory, newest first, saved
-// encrypted to its directory when it has one. Its methods are safe for
-// concurrent use.
+// to its directory when it has one. Its methods are safe for concurrent
+// use.
 type Store struct {
 	opts Options
 
@@ -113,9 +110,8 @@ type Store struct {
 	items  []*item // newest first
 	byID   map[string]*item
 	byHash map[string]*item
-	vault  *vault // nil keeps the history in memory only
+	disk   *disk // nil keeps the history in memory only
 	dir    string
-	keys   KeyStore
 	// unreadable: the saved history cannot be read (Unreadable).
 	unreadable bool
 	err        error
@@ -152,74 +148,42 @@ func newStore(opts Options) *Store {
 // NewMemoryStore returns a store that keeps the history in memory only.
 func NewMemoryStore(opts Options) *Store { return newStore(opts) }
 
-// Open loads the history saved in dir, encrypted with the key keys hold
-// (a new key the first time). A history of version 1, sealed with a
-// Keychain key, is deleted unread first: the history starts afresh. It
-// always returns a usable store; the error says what went wrong, and Err
-// keeps reporting it:
+// Open loads the history saved in dir, in the clear. First it deletes a
+// history of format 1 unread, and migrates one of format 2 (or deletes
+// it, without its key). It always returns a usable store; the error says
+// what went wrong, and Err keeps reporting it:
 //
-//   - ErrUnreadable (wrapped): there is saved history but its key is gone
-//     or malformed, or it cannot be decrypted or parsed. The files are
-//     left alone, the store is empty, records nothing and reports
-//     Unreadable until Clear deletes the files and starts a fresh history
-//     with a new key.
-//   - ErrKeyStore (wrapped): the key cannot be read or stored. The
-//     history is kept in memory only (Persistent is false); saved files
-//     are left alone, for a later launch.
-//   - another error: the directory cannot be prepared; memory only too.
-func Open(dir string, keys KeyStore, opts Options) (*Store, error) {
+//   - ErrUnreadable (wrapped): the index cannot be read or parsed. The
+//     files are left alone, the store is empty, records nothing and
+//     reports Unreadable until Clear deletes the files and starts a fresh
+//     history.
+//   - another error: the directory cannot be prepared. The history is
+//     kept in memory only (Persistent is false).
+func Open(dir string, opts Options) (*Store, error) {
 	s := newStore(opts)
-	s.dir, s.keys = dir, keys
-	s.removeImageFiles(nil) // an earlier run's
+	s.dir = dir
 	s.err = s.open()
 	return s, s.err
 }
 
 func (s *Store) open() error {
-	if err := removeLegacy(s.dir); err != nil {
+	if err := removeFormat1(s.dir); err != nil {
 		return err
 	}
-	if s.keys == nil {
-		return ErrKeyStore
-	}
-	key, err := s.keys.Load()
-	if err == nil && len(key) != KeySize {
-		err = fmt.Errorf("%w: %d bytes", ErrBadKey, len(key))
-	}
-	if errors.Is(err, ErrNoKey) || errors.Is(err, ErrBadKey) {
-		if hasFiles(s.dir) {
-			s.setUnreadable()
-			return fmt.Errorf("%w: %v", ErrUnreadable, err)
-		}
-		key, err = newKey()
-		if err == nil {
-			err = s.keys.Save(key)
-		}
-	}
-	if err != nil {
-		return fmt.Errorf("%w: %v", ErrKeyStore, err)
-	}
-	v, err := newVault(s.dir, key)
-	if err != nil {
-		return fmt.Errorf("%w: %v", ErrKeyStore, err)
-	}
-	if err := v.prepare(); err != nil {
+	d := &disk{dir: s.dir}
+	if err := d.prepare(); err != nil {
 		return err
 	}
-	data, err := v.read(indexName)
+	migrateFormat2(d, s.opts.Format2Key)
+	data, err := os.ReadFile(d.indexPath())
 	var idx index
 	if err == nil {
-		if e := json.Unmarshal(data, &idx); e != nil {
-			err = ErrUnreadable
-		}
+		err = json.Unmarshal(data, &idx)
 	} else if errors.Is(err, fs.ErrNotExist) {
 		err = nil
 	}
 	if err != nil {
 		s.setUnreadable()
-		if errors.Is(err, ErrUnreadable) {
-			return err
-		}
 		return fmt.Errorf("%w: %v", ErrUnreadable, err)
 	}
 	s.mu.Lock()
@@ -232,7 +196,7 @@ func (s *Store) open() error {
 			ID: r.ID, Kind: r.Kind, Text: r.Text, Files: r.Files, App: r.App,
 			Time: r.Time, Size: r.Size, Width: r.Width, Height: r.Height, Pinned: r.Pinned,
 			Thumbnail: r.Thumbnail,
-		}, hash: r.Hash, blob: r.Blob}
+		}, hash: r.Hash, parts: r.Data}
 		it.fold()
 		s.items = append(s.items, it)
 		s.byID[it.ID] = it
@@ -241,18 +205,19 @@ func (s *Store) open() error {
 		}
 	}
 	slices.SortStableFunc(s.items, func(a, b *item) int { return b.Time.Compare(a.Time) })
-	// Data files of entries the index does not know: a crash between
-	// writing one and saving the index.
-	for _, id := range v.blobIDs() {
-		if it := s.byID[id]; it == nil || !it.blob {
-			_ = v.remove(blobName(id))
+	// Data files of no entry: a crash between writing one and saving the
+	// index.
+	d.removeOrphans(func(id string) []string {
+		if it := s.byID[id]; it != nil {
+			return it.parts
 		}
-	}
-	s.vault = v
+		return nil
+	})
+	s.disk = d
 	removed := s.pruneLocked(now)
 	s.mu.Unlock()
 	if len(removed) > 0 {
-		s.removeBlobs(v, removed)
+		s.removeData(d, removed)
 		return s.save()
 	}
 	return nil
@@ -264,8 +229,8 @@ func (s *Store) setUnreadable() {
 	s.mu.Unlock()
 }
 
-// Unreadable reports whether the saved history cannot be read: its key
-// is missing or malformed, or it cannot be decrypted or parsed. The
+// Unreadable reports whether the saved history cannot be read: its index
+// cannot be read or parsed. The
 // store is then empty and records nothing; Clear deletes the saved
 // history, pinned entries included, and starts a fresh one.
 func (s *Store) Unreadable() bool {
@@ -291,8 +256,7 @@ func (s *Store) CanClear() bool {
 }
 
 // Err is the latest problem with the saved history, or nil, for the UI
-// to show. ErrUnreadable (wrapped) goes with Unreadable; ErrKeyStore
-// (wrapped) means the history is kept in memory only.
+// to show. ErrUnreadable (wrapped) goes with Unreadable.
 func (s *Store) Err() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -303,7 +267,7 @@ func (s *Store) Err() error {
 func (s *Store) Persistent() bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return s.vault != nil
+	return s.disk != nil
 }
 
 // SetOnChange sets fn to be called after the history changes: an entry
@@ -345,12 +309,12 @@ func (s *Store) Retention() Retention {
 func (s *Store) Prune() int {
 	s.mu.Lock()
 	removed := s.pruneLocked(s.opts.Now())
-	v := s.vault
+	d := s.disk
 	s.mu.Unlock()
 	if len(removed) == 0 {
 		return 0
 	}
-	s.removeBlobs(v, removed)
+	s.removeData(d, removed)
 	s.saveNow()
 	s.changed()
 	return len(removed)
@@ -384,15 +348,13 @@ func (s *Store) forget(it *item) {
 	}
 }
 
-func (s *Store) removeBlobs(v *vault, items []*item) {
-	s.removeImageFiles(items)
-	if v == nil {
+// removeData removes the data files of items.
+func (s *Store) removeData(d *disk, items []*item) {
+	if d == nil {
 		return
 	}
 	for _, it := range items {
-		if it.blob {
-			_ = v.remove(blobName(it.ID))
-		}
+		d.removeParts(it.ID, it.parts)
 	}
 }
 
@@ -441,18 +403,23 @@ func (s *Store) Add(c Content, app App) (Entry, error) {
 	if it != nil {
 		id = it.ID
 	}
-	v := s.vault
+	d := s.disk
+	var old []string
+	if it != nil {
+		old = slices.Clone(it.parts)
+	}
 	s.mu.Unlock()
 
-	// The data file goes first, so that a saved index never points at a
-	// missing one. An identical image has its file already.
-	saved := false
+	// The data files go first, so that a saved index never points at a
+	// missing one. An identical image has its file already, which keeps
+	// its name (the path pasted into terminals).
+	var saved []string
 	var werr error
-	if v != nil && rich {
-		if it != nil && it.blob && kind == KindImage {
-			saved = true
-		} else if werr = v.write(blobName(id), encodeBlob(c)); werr == nil {
-			saved = true
+	if d != nil && rich {
+		if it != nil && kind == KindImage && slices.Contains(old, partPNG) {
+			saved = old
+		} else {
+			saved, werr = d.writeParts(id, c)
 		}
 	}
 
@@ -461,14 +428,18 @@ func (s *Store) Add(c Content, app App) (Entry, error) {
 	if it != nil && s.byID[it.ID] != it {
 		it = nil // deleted meanwhile
 	}
-	staleBlob := false
+	var stale []string
 	if it == nil {
 		it = &item{Entry: Entry{ID: id}, hash: h}
 		s.byID[id] = it
 		s.byHash[h] = it
 		s.items = append([]*item{it}, s.items...)
 	} else {
-		staleBlob = it.blob && !rich
+		for _, p := range old {
+			if !slices.Contains(saved, p) {
+				stale = append(stale, p)
+			}
+		}
 		s.toFront(it)
 	}
 	it.Kind, it.App, it.Time, it.Size = kind, app, now, size
@@ -483,9 +454,9 @@ func (s *Store) Add(c Content, app App) (Entry, error) {
 		it.Text = c.Text
 	}
 	it.fold()
-	it.blob = saved
+	it.parts = saved
 	it.data = nil
-	if rich && !saved {
+	if rich && saved == nil {
 		cc := c
 		it.data = &cc
 	}
@@ -496,10 +467,10 @@ func (s *Store) Add(c Content, app App) (Entry, error) {
 	e := it.entry()
 	s.mu.Unlock()
 
-	if staleBlob && v != nil {
-		_ = v.remove(blobName(id))
+	if d != nil {
+		d.removeParts(id, stale)
 	}
-	s.removeBlobs(v, removed)
+	s.removeData(d, removed)
 	s.scheduleSave()
 	s.changed()
 	return e, nil
@@ -560,9 +531,9 @@ func (s *Store) Delete(id string) error {
 	}
 	s.items = slices.DeleteFunc(s.items, func(x *item) bool { return x == it })
 	s.forget(it)
-	v := s.vault
+	d := s.disk
 	s.mu.Unlock()
-	s.removeBlobs(v, []*item{it})
+	s.removeData(d, []*item{it})
 	s.saveNow()
 	s.changed()
 	return nil
@@ -571,8 +542,7 @@ func (s *Store) Delete(id string) error {
 // Clear clears the history: every entry but the pinned ones goes, from
 // memory and disk (pinned entries go only one by one, with Delete).
 // When the saved history is unreadable, Clear instead deletes all of it,
-// pinned entries included, and starts a fresh, empty, encrypted history
-// with a new key.
+// pinned entries included, and starts a fresh, empty history.
 func (s *Store) Clear() error {
 	s.mu.Lock()
 	if s.unreadable {
@@ -592,9 +562,9 @@ func (s *Store) Clear() error {
 	for _, it := range removed {
 		s.forget(it)
 	}
-	v := s.vault
+	d := s.disk
 	s.mu.Unlock()
-	s.removeBlobs(v, removed)
+	s.removeData(d, removed)
 	err := s.saveNow()
 	s.changed()
 	return err
@@ -604,7 +574,6 @@ func (s *Store) Clear() error {
 func (s *Store) reset() error {
 	s.addMu.Lock()
 	defer s.addMu.Unlock()
-	s.removeImageFiles(nil)
 	if err := wipe(s.dir); err != nil {
 		s.mu.Lock()
 		s.err = err
@@ -612,22 +581,10 @@ func (s *Store) reset() error {
 		return err
 	}
 	s.mu.Lock()
-	s.unreadable, s.vault = false, nil
+	s.unreadable, s.disk = false, nil
 	s.items, s.byID, s.byHash = nil, map[string]*item{}, map[string]*item{}
 	s.mu.Unlock()
-	// The files are gone: a new key, and opening again starts a fresh
-	// history with it.
-	var err error
-	if s.keys == nil {
-		err = ErrKeyStore
-	} else if key, kerr := newKey(); kerr != nil {
-		err = fmt.Errorf("%w: %v", ErrKeyStore, kerr)
-	} else if kerr := s.keys.Save(key); kerr != nil {
-		err = fmt.Errorf("%w: %v", ErrKeyStore, kerr)
-	}
-	if err == nil {
-		err = s.open()
-	}
+	err := s.open()
 	if err == nil {
 		err = s.save()
 	}
@@ -706,7 +663,7 @@ func (s *Store) Content(id string) (Content, error) {
 		s.mu.Unlock()
 		return Content{}, ErrNotFound
 	}
-	e, blob, data, v := it.entry(), it.blob, it.data, s.vault
+	e, parts, data, d := it.entry(), it.parts, it.data, s.disk
 	s.mu.Unlock()
 	if data != nil {
 		c := *data
@@ -716,19 +673,15 @@ func (s *Store) Content(id string) (Content, error) {
 	if e.Kind != KindFiles {
 		c.Text = e.Text
 	}
-	if blob && v != nil {
-		b, err := v.read(blobName(id))
-		if err != nil {
-			return c, err
-		}
-		if c.RTF, c.HTML, c.PNG, err = decodeBlob(b); err != nil {
+	if d != nil {
+		if err := d.readParts(id, parts, &c); err != nil {
 			return c, err
 		}
 	}
 	return c, nil
 }
 
-// The index: every entry's metadata and text.
+// The index, history.json: every entry's metadata and text.
 type index struct {
 	Version int      `json:"version"`
 	Entries []record `json:"entries"`
@@ -747,13 +700,13 @@ type record struct {
 	Pinned    bool      `json:"pinned,omitempty"`
 	Thumbnail []byte    `json:"thumb,omitempty"`
 	Hash      string    `json:"hash"`
-	Blob      bool      `json:"blob,omitempty"`
+	Data      []string  `json:"data,omitempty"` // the parts under data/
 }
 
 func (s *Store) scheduleSave() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.vault == nil || s.timer != nil {
+	if s.disk == nil || s.timer != nil {
 		return
 	}
 	s.timer = time.AfterFunc(saveDelay, func() { s.saveNow() })
@@ -779,28 +732,28 @@ func (s *Store) save() error {
 	s.saveMu.Lock()
 	defer s.saveMu.Unlock()
 	s.mu.Lock()
-	v := s.vault
-	if v == nil {
+	d := s.disk
+	if d == nil {
 		s.mu.Unlock()
 		return nil
 	}
-	idx := index{Version: 1, Entries: make([]record, 0, len(s.items))}
+	idx := index{Version: indexVersion, Entries: make([]record, 0, len(s.items))}
 	for _, it := range s.items {
 		idx.Entries = append(idx.Entries, record{
 			ID: it.ID, Kind: it.Kind, Text: it.Text, Files: it.Files, App: it.App,
 			Time: it.Time, Size: it.Size, Width: it.Width, Height: it.Height,
-			Pinned: it.Pinned, Thumbnail: it.Thumbnail, Hash: it.hash, Blob: it.blob,
+			Pinned: it.Pinned, Thumbnail: it.Thumbnail, Hash: it.hash, Data: it.parts,
 		})
 	}
 	s.mu.Unlock()
 	data, err := json.Marshal(idx)
 	if err == nil {
-		err = v.write(indexName, data)
+		err = writeAtomic(d.indexPath(), data)
 	}
 	s.mu.Lock()
 	if err != nil {
 		s.err = err
-	} else if s.err != nil && s.vault == v {
+	} else if s.err != nil && s.disk == d {
 		s.err = nil
 	}
 	s.mu.Unlock()
