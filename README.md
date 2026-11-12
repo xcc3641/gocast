@@ -6,9 +6,6 @@ English · [简体中文](README.zh-Hans.md)
 
 Gocast is a small launcher for the Mac. Press ⌘Space to find and open an app. Press ⌃\` and a terminal drops down from the top of the screen, ready in the folder you work in, already running the command you use there.
 
-<!-- Screenshots go here once the app icon is final:
-     docs/screenshots/search-panel.png, docs/screenshots/floating-terminal.png -->
-
 ## What it does
 
 **Search panel.** Type a few letters and press ↵. Apps are found by their English name, their Chinese name, or pinyin (`wx` finds 微信). The ones you open most come first. ⌘K shows more actions, such as Show in Finder or Copy Path.

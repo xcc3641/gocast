@@ -6,9 +6,6 @@
 
 Gocast 是一个 Mac 上的小启动器。按 ⌘Space，找到应用就打开。按 ⌃\`，终端从屏幕上方落下来，已经在你常用的文件夹里，跑着你常用的命令。
 
-<!-- 图标定稿后在这里放截图：
-     docs/screenshots/search-panel.png、docs/screenshots/floating-terminal.png -->
-
 ## 能做什么
 
 **搜索面板。** 打几个字，按 ↵。中文名、英文名、拼音都能找到应用（输入 `wx` 就有微信），常用的排在前面。按 ⌘K 有更多操作，比如在访达中显示、拷贝路径。
