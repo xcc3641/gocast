@@ -40,6 +40,10 @@ type prefsWindow struct {
 	recording int
 	problem   [3]string
 	recorder  [3]ui.Handle
+	// The notice over the shortcuts that Spotlight has ⌘Space, or that
+	// ⌘Space is the search panel's now (design.md 4.4).
+	notice    int
+	noticeGen int
 
 	// The preset editor.
 	editing       bool
@@ -271,18 +275,96 @@ func (g *group) row(c *ui.Context, k tokens, label, desc string, descColor ui.Co
 
 // --- Shortcuts ---
 
+// The notices of the Shortcuts page.
+const (
+	noticeNone      = iota
+	noticeSpotlight // Spotlight has ⌘Space: ⌥⇧Space stands in
+	noticeSolved    // ⌘Space is the search panel's now
+)
+
+// noticeSolvedFor is how long "Now using ⌘Space" shows.
+const noticeSolvedFor = 3 * time.Second
+
 func (p *prefsWindow) shortcutsPage(c *ui.Context, k tokens) {
 	pageTitle(c, k, locales.PageShortcuts())
+	p.spotlightNotice(c, k)
 	newGroup(c, k, func(g *group) {
 		p.shortcutRow(c, k, g, 1)
 		p.shortcutRow(c, k, g, 2)
 	})
 }
 
+// spotlightNotice is the notice over the shortcuts, on the groups' fill:
+// that Spotlight has ⌘Space, with a button to System Settings and one to
+// keep ⌥⇧Space; then, once the user freed ⌘Space, that the search panel
+// has it, for a while (design.md 4.4).
+func (p *prefsWindow) spotlightNotice(c *ui.Context, k tokens) {
+	if p.notice == noticeNone {
+		return
+	}
+	fade := &ui.Motion{Opacity: 0}
+	tr := ui.ElementTransition{Exit: fade, ExitDuration: 150 * time.Millisecond}
+	if c.Preferences().ReduceMotion {
+		tr = ui.ElementTransition{}
+	}
+	c.Key("spotlightNotice")
+	block := ui.Row(c).Background(k.groupFill).Radius(10).Padding(14).Gap(10).Margin(0, 0, 20, 0).
+		AlignItems(ui.Start).Transition(tr)
+	if p.notice == noticeSolved {
+		block.AlignItems(ui.Center).Role(ui.RoleStatus).Children(func() {
+			sfsymbols.Symbol(c, "checkmark.circle.fill").Size(16).Color(k.success)
+			ui.Text(c, locales.ShortcutSpotlightSolved()).FontSize(13).FontWeight(600).TextColor(k.text)
+		})
+		return
+	}
+	block.Role(ui.RoleGroup).Label(locales.ShortcutSpotlightTitle()).Children(func() {
+		sfsymbols.Symbol(c, "exclamationmark.triangle.fill").Size(16).Color(k.warning)
+		ui.Column(c).Grow(1).Shrink(1).Gap(2).Children(func() {
+			ui.Text(c, locales.ShortcutSpotlightTitle()).FontSize(13).FontWeight(600).TextColor(k.text).Role(ui.RoleHeading)
+			ui.Text(c, locales.ShortcutSpotlightBody()).FontSize(12).TextColor(k.textSecondary)
+			ui.Row(c).Gap(8).Margin(8, 0, 0, 0).Children(func() { // 10 under the text with the column's gap
+				ui.PrimaryButton(c, locales.ShortcutSpotlightOpen()).OnClick(func() {
+					if err := mygo.Shell.OpenExternal(shortcut.SpotlightURL); err != nil {
+						log.Printf("system settings: %v", err)
+					}
+				})
+				ui.Button(c, locales.ShortcutSpotlightKeep()).OnClick(func() {
+					p.notice = noticeNone
+					p.g.keepFallback()
+					p.win.Invalidate()
+				})
+			})
+		})
+	})
+}
+
+// spotlightSolved says, in place of the notice, that the search panel
+// has ⌘Space now, for noticeSolvedFor, if the notice showed.
+func (p *prefsWindow) spotlightSolved() {
+	if p.notice == noticeNone {
+		p.win.Invalidate()
+		return
+	}
+	p.notice = noticeSolved
+	p.noticeGen++
+	gen := p.noticeGen
+	time.AfterFunc(noticeSolvedFor, func() {
+		p.win.Update(func() {
+			if p.noticeGen == gen && p.notice == noticeSolved {
+				p.notice = noticeNone
+			}
+		})
+	})
+	p.win.Invalidate()
+}
+
 // shortcutRow is a shortcut's row: its recorder, and Reset to Default when
 // it is not the default.
 func (p *prefsWindow) shortcutRow(c *ui.Context, k tokens, g *group, row int) {
-	label, current, def := locales.ShortcutLauncher(), p.g.launcherKey, settings.DefaultLauncherShortcut
+	label, current, def := locales.ShortcutLauncher(), p.g.launcherKey, p.g.settings.DefaultLauncher()
+	if p.g.spotlight { // ⌥⇧Space is the default while Spotlight has ⌘Space
+		def = settings.FallbackLauncherShortcut
+	}
 	if row == 2 {
 		label, current, def = locales.ShortcutTerminal(), p.g.terminalKey, settings.DefaultTerminalShortcut
 	}
@@ -298,6 +380,8 @@ func (p *prefsWindow) shortcutRow(c *ui.Context, k tokens, g *group, row int) {
 		desc = locales.ShortcutRecordingHint()
 	case p.problem[row] != "":
 		desc, descColor = p.problem[row], k.danger
+	case row == 1 && p.g.spotlight:
+		desc = locales.ShortcutSpotlightBusy()
 	}
 	g.row(c, k, label, desc, descColor, func() {
 		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
@@ -386,6 +470,10 @@ func (p *prefsWindow) apply(row int, accel string) {
 	case strings.EqualFold(accel, other):
 		p.g.resumeShortcuts()
 		p.problem[row] = locales.ShortcutUsedFor(otherLabel)
+	case row == 1 && strings.EqualFold(accel, settings.DefaultLauncherShortcut) && shortcut.SpotlightHasCmdSpace():
+		// Both would open: the system's hot keys don't refuse it.
+		p.g.resumeShortcuts()
+		p.problem[row] = locales.ShortcutSpotlightBusy()
 	case p.g.setShortcut(row == 2, accel) != nil:
 		p.problem[row] = locales.ShortcutTaken()
 	default:

@@ -647,13 +647,13 @@ func (msgs Messages) TermPlainTip() string {
 // Dismiss says "Dismiss"
 // in the language the app shows.
 //
-// Label of the × button of a notice (not in copy.md).
+// Accessibility label of the × of a notice capsule (copy.md 3).
 func Dismiss() string { return In(i18n.Locale()).Dismiss() }
 
 // Dismiss says "Dismiss"
 // in the language of msgs.
 //
-// Label of the × button of a notice (not in copy.md).
+// Accessibility label of the × of a notice capsule (copy.md 3).
 func (msgs Messages) Dismiss() string {
 	return Catalog.Format(msgs.locale, "dismiss", nil)
 }
@@ -1468,4 +1468,88 @@ func AboutCheckFailed() string { return In(i18n.Locale()).AboutCheckFailed() }
 // About: the check failed.
 func (msgs Messages) AboutCheckFailed() string {
 	return Catalog.Format(msgs.locale, "aboutCheckFailed", nil)
+}
+
+// ShortcutSpotlightTitle says "Spotlight is using ⌘Space"
+// in the language the app shows.
+//
+// Spotlight notice: title, at the top of Shortcuts.
+func ShortcutSpotlightTitle() string { return In(i18n.Locale()).ShortcutSpotlightTitle() }
+
+// ShortcutSpotlightTitle says "Spotlight is using ⌘Space"
+// in the language of msgs.
+//
+// Spotlight notice: title, at the top of Shortcuts.
+func (msgs Messages) ShortcutSpotlightTitle() string {
+	return Catalog.Format(msgs.locale, "shortcutSpotlightTitle", nil)
+}
+
+// ShortcutSpotlightBody says "Both would open at once. Turn off “Show Spotlight search” in System Settings. For now, using ⌥⇧Space."
+// in the language the app shows.
+//
+// Spotlight notice: under the title.
+func ShortcutSpotlightBody() string { return In(i18n.Locale()).ShortcutSpotlightBody() }
+
+// ShortcutSpotlightBody says "Both would open at once. Turn off “Show Spotlight search” in System Settings. For now, using ⌥⇧Space."
+// in the language of msgs.
+//
+// Spotlight notice: under the title.
+func (msgs Messages) ShortcutSpotlightBody() string {
+	return Catalog.Format(msgs.locale, "shortcutSpotlightBody", nil)
+}
+
+// ShortcutSpotlightOpen says "Open System Settings"
+// in the language the app shows.
+//
+// Spotlight notice: opens System Settings › Keyboard.
+func ShortcutSpotlightOpen() string { return In(i18n.Locale()).ShortcutSpotlightOpen() }
+
+// ShortcutSpotlightOpen says "Open System Settings"
+// in the language of msgs.
+//
+// Spotlight notice: opens System Settings › Keyboard.
+func (msgs Messages) ShortcutSpotlightOpen() string {
+	return Catalog.Format(msgs.locale, "shortcutSpotlightOpen", nil)
+}
+
+// ShortcutSpotlightKeep says "Use ⌥⇧Space"
+// in the language the app shows.
+//
+// Spotlight notice: keeps ⌥⇧Space as the default.
+func ShortcutSpotlightKeep() string { return In(i18n.Locale()).ShortcutSpotlightKeep() }
+
+// ShortcutSpotlightKeep says "Use ⌥⇧Space"
+// in the language of msgs.
+//
+// Spotlight notice: keeps ⌥⇧Space as the default.
+func (msgs Messages) ShortcutSpotlightKeep() string {
+	return Catalog.Format(msgs.locale, "shortcutSpotlightKeep", nil)
+}
+
+// ShortcutSpotlightSolved says "Now using ⌘Space"
+// in the language the app shows.
+//
+// Spotlight notice: ⌘Space was freed and is used now.
+func ShortcutSpotlightSolved() string { return In(i18n.Locale()).ShortcutSpotlightSolved() }
+
+// ShortcutSpotlightSolved says "Now using ⌘Space"
+// in the language of msgs.
+//
+// Spotlight notice: ⌘Space was freed and is used now.
+func (msgs Messages) ShortcutSpotlightSolved() string {
+	return Catalog.Format(msgs.locale, "shortcutSpotlightSolved", nil)
+}
+
+// ShortcutSpotlightBusy says "Spotlight is using ⌘Space"
+// in the language the app shows.
+//
+// Shortcuts: note under the search panel row while Spotlight has ⌘Space.
+func ShortcutSpotlightBusy() string { return In(i18n.Locale()).ShortcutSpotlightBusy() }
+
+// ShortcutSpotlightBusy says "Spotlight is using ⌘Space"
+// in the language of msgs.
+//
+// Shortcuts: note under the search panel row while Spotlight has ⌘Space.
+func (msgs Messages) ShortcutSpotlightBusy() string {
+	return Catalog.Format(msgs.locale, "shortcutSpotlightBusy", nil)
 }

@@ -78,10 +78,23 @@ Commands run through the user's login shell, as a login and interactive shell, s
 
 | Action | Shortcut |
 | --- | --- |
-| Search panel | **⌥⇧Space** (fallback ⌘⌥⇧Space if another app has it) |
+| Search panel | **⌘Space**; ⌥⇧Space while Spotlight has ⌘Space, or if another app has it (then ⌘⌥⇧Space if that one is taken too) |
 | Floating terminal | **⌃`** (fallback ⌃⌥`) |
 
 Both can be changed in Settings → 快捷键, and a change takes effect at once.
+
+### ⌘Space and Spotlight (design.md 4.4, copy.md v1.5 4.1)
+
+- **Check.** `shortcut.SpotlightHasCmdSpace` reads `defaults export com.apple.symbolichotkeys -` and extracts `AppleSymbolicHotKeys.64` (“Show Spotlight search”) with `plutil`. It only reads. ⌘Space counts as Spotlight's when the entry is enabled with key code 49 and the ⌘ mask (1<<20), and also when the entry is missing or can't be read, since that is the system default.
+- **Why a check is needed.** Carbon's `RegisterEventHotKey`, which MyGo uses, refuses a shortcut that another app registered (its error is “may be used by another application”), but it does not refuse Spotlight's symbolic hot key, so both would open. Each launch checks again: while Spotlight has ⌘Space, ⌥⇧Space is registered instead, and the row says 「⌘Space 被聚焦搜索占用」.
+- **First launch** (`spotlightChecked` not yet in settings.json): if Spotlight has ⌘Space, Settings opens on 快捷键 with the notice at the top, instead of the search panel. Later launches don't open it.
+  - 「打开系统设置」 opens `x-apple.systempreferences:com.apple.preference.keyboard?Shortcuts`. The Keyboard extension allows the URL scheme and maps that legacy ID; the Shortcuts sheet itself was not opened on the user's Mac.
+  - Each time Gocast becomes active (`App.OnDidBecomeActive`) it checks again. If ⌘Space is free it takes it, the notice turns into 「已改用 ⌘Space」 for 3 s and then fades out over 150 ms.
+  - 「就用 ⌥⇧Space」 saves `launcherDefaultAltShiftSpace: true`. ⌥⇧Space becomes the default from then on, Reset to Default included, and the notice is not shown again.
+- **Recording ⌘Space** while Spotlight has it is refused in the same way as a conflict: red border, dot and 「⌘Space 被聚焦搜索占用」.
+- **Another app holding the shortcut at launch** (registration fails): ⌥⇧Space is used, and the row shows the usual conflict message.
+- **Trying it** without touching the Mac's settings: set `GOCAST_SPOTLIGHT_ENTRY=/path/entry.json`, a file holding the entry as JSON, e.g. `{"enabled":true,"value":{"parameters":[32,49,1048576]}}`. Edit the file, then bring Gocast to the front again.
+- **On this Mac** Spotlight's shortcut is off (`enabled: false`), and Raycast's hot key is `Command-50` (⌘\`), not ⌘Space. Gocast therefore registers ⌘Space and gets it.
 
 ## Verified (2026-11-12, MacBook Pro M1 Pro, zh-Hans, dev build driven by mygo-automation)
 

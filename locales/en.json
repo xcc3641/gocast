@@ -501,5 +501,29 @@
   "aboutCheckFailed": "Couldn’t check for updates. Try again later.",
   "@aboutCheckFailed": {
     "description": "About: the check failed."
+  },
+  "shortcutSpotlightTitle": "Spotlight is using ⌘Space",
+  "@shortcutSpotlightTitle": {
+    "description": "Spotlight notice: title, at the top of Shortcuts."
+  },
+  "shortcutSpotlightBody": "Both would open at once. Turn off “Show Spotlight search” in System Settings. For now, using ⌥⇧Space.",
+  "@shortcutSpotlightBody": {
+    "description": "Spotlight notice: under the title."
+  },
+  "shortcutSpotlightOpen": "Open System Settings",
+  "@shortcutSpotlightOpen": {
+    "description": "Spotlight notice: opens System Settings › Keyboard."
+  },
+  "shortcutSpotlightKeep": "Use ⌥⇧Space",
+  "@shortcutSpotlightKeep": {
+    "description": "Spotlight notice: keeps ⌥⇧Space as the default."
+  },
+  "shortcutSpotlightSolved": "Now using ⌘Space",
+  "@shortcutSpotlightSolved": {
+    "description": "Spotlight notice: ⌘Space was freed and is used now."
+  },
+  "shortcutSpotlightBusy": "Spotlight is using ⌘Space",
+  "@shortcutSpotlightBusy": {
+    "description": "Shortcuts: note under the search panel row while Spotlight has ⌘Space."
   }
 }

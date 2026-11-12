@@ -22,6 +22,7 @@ type tokens struct {
 	// floating in them; panelShadow is the windows' shadow.
 	panelBorder, capsuleBorder, panelShadow ui.Color
 	danger, warning                         ui.Color
+	success                                 ui.Color // the system's green
 }
 
 // The alpha of glassTint over each glass window (design.md 1.2): the
@@ -46,7 +47,7 @@ func tokensOf(dark, highContrast bool) tokens {
 			glassTint:   ui.Hex("#1C1C1E"),
 			panelBorder: ui.RGBA(255, 255, 255, 0.18), capsuleBorder: ui.RGBA(255, 255, 255, 0.12),
 			panelShadow: ui.RGBA(0, 0, 0, 0.55),
-			danger:      ui.Hex("#FF6961"), warning: ui.Hex("#FFB340"),
+			danger:      ui.Hex("#FF6961"), warning: ui.Hex("#FFB340"), success: ui.Hex("#30D158"),
 		}
 	} else {
 		k = tokens{
@@ -56,7 +57,7 @@ func tokensOf(dark, highContrast bool) tokens {
 			glassTint:   ui.Hex("#F6F6F8"),
 			panelBorder: ui.RGBA(0, 0, 0, 0.18), capsuleBorder: ui.RGBA(0, 0, 0, 0.08),
 			panelShadow: ui.RGBA(0, 0, 0, 0.30),
-			danger:      ui.Hex("#D70015"), warning: ui.Hex("#A05A00"),
+			danger:      ui.Hex("#D70015"), warning: ui.Hex("#A05A00"), success: ui.Hex("#34C759"),
 		}
 	}
 	if highContrast {

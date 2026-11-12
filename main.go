@@ -20,7 +20,9 @@ import (
 
 	"gocast/internal/presets"
 	"gocast/internal/settings"
+	"gocast/internal/shortcut"
 	"gocast/internal/usage"
+	"gocast/locales"
 )
 
 const (
@@ -29,11 +31,12 @@ const (
 )
 
 // Fallbacks of the default shortcuts, taken when another app has the
-// default. Not Alt+Space, which Raycast takes (macOS would give the key to
-// both).
+// default (Raycast often has ⌘Space). Not Alt+Space, which Raycast takes
+// as well (macOS would give the key to both).
 var fallbackShortcuts = map[string]string{
-	settings.DefaultLauncherShortcut: "CmdOrCtrl+Alt+Shift+Space",
-	settings.DefaultTerminalShortcut: "Ctrl+Alt+`",
+	settings.DefaultLauncherShortcut:  settings.FallbackLauncherShortcut,
+	settings.FallbackLauncherShortcut: "Cmd+Alt+Shift+Space",
+	settings.DefaultTerminalShortcut:  "Ctrl+Alt+`",
 }
 
 // gocast holds the app's state. Everything here is read and changed on the
@@ -47,6 +50,9 @@ type gocast struct {
 
 	settings                 settings.Settings
 	launcherKey, terminalKey string // the shortcuts registered, or ""
+	// spotlight: Spotlight has ⌘Space, the search panel's shortcut, which
+	// would open both; ⌥⇧Space stands in until it doesn't.
+	spotlight bool
 
 	// quitting is set while the app quits: the panels, which hide rather
 	// than close, close then, or their OnClose would cancel the quit.
@@ -129,11 +135,14 @@ func (g *gocast) saveSettings() {
 // another app has it.
 var errShortcutTaken = errors.New("shortcut taken")
 
-// registerShortcuts takes the shortcuts of the settings, or the fallback
-// of a default that another app has.
+// registerShortcuts takes the shortcuts of the settings, but ⌥⇧Space for
+// ⌘Space while Spotlight has it, and the fallback of a default that
+// another app has, which Settings › Shortcuts then says.
 func (g *gocast) registerShortcuts() {
-	try := func(accel string, fn func()) string {
+	try := func(row int, accel string, fn func()) string {
 		if err := mygo.GlobalShortcut.Register(accel, fn); err != nil {
+			// Carbon refuses a shortcut another app registered (Raycast's
+			// ⌘Space), not Spotlight's, which the check below is for.
 			log.Printf("shortcut %s: %v", accel, err)
 			fb, ok := fallbackShortcuts[accel]
 			if !ok {
@@ -143,12 +152,54 @@ func (g *gocast) registerShortcuts() {
 				log.Printf("shortcut %s: %v", fb, err)
 				return ""
 			}
+			g.prefs.problem[row] = locales.ShortcutTaken()
 			return fb
 		}
 		return accel
 	}
-	g.launcherKey = try(g.settings.Launcher(), g.launcher.toggle)
-	g.terminalKey = try(g.settings.Terminal(), g.term.toggle)
+	launcher := g.settings.Launcher()
+	g.spotlight = launcher == settings.DefaultLauncherShortcut && shortcut.SpotlightHasCmdSpace()
+	if g.spotlight {
+		launcher = settings.FallbackLauncherShortcut
+	}
+	g.launcherKey = try(1, launcher, g.launcher.toggle)
+	g.terminalKey = try(2, g.settings.Terminal(), g.term.toggle)
+}
+
+// spotlightChanged checks again whether Spotlight has ⌘Space, as the user
+// may have turned it off in System Settings, and takes ⌘Space for the
+// search panel when it doesn't (design.md 4.4). It reports whether
+// ⌘Space is the search panel's now.
+func (g *gocast) spotlightChanged() bool {
+	if !g.spotlight || g.prefs.recording != 0 || shortcut.SpotlightHasCmdSpace() {
+		return false
+	}
+	g.spotlight = false
+	g.suspendShortcuts()
+	if err := g.setShortcut(false, settings.DefaultLauncherShortcut); err != nil {
+		g.prefs.problem[1] = locales.ShortcutTaken() // another app has it: ⌥⇧Space stays
+		return false
+	}
+	return true
+}
+
+// keepFallback makes ⌥⇧Space the search panel's default for good, as the
+// user chose it over ⌘Space, which Spotlight has (design.md 4.4).
+func (g *gocast) keepFallback() {
+	g.spotlight = false
+	g.settings.LauncherFallback = true
+	if g.settings.LauncherShortcut == settings.FallbackLauncherShortcut {
+		g.settings.LauncherShortcut = ""
+	}
+	if g.launcherKey == settings.FallbackLauncherShortcut {
+		g.saveSettings()
+		return
+	}
+	g.suspendShortcuts()
+	if err := g.setShortcut(false, settings.FallbackLauncherShortcut); err != nil {
+		g.prefs.problem[1] = locales.ShortcutTaken()
+		g.saveSettings()
+	}
 }
 
 // suspendShortcuts lets the keys of both shortcuts through to the app,
@@ -195,7 +246,7 @@ func (g *gocast) setShortcut(terminalKey bool, accel string) error {
 		}
 	} else {
 		g.settings.LauncherShortcut = accel
-		if accel == settings.DefaultLauncherShortcut {
+		if accel == g.settings.DefaultLauncher() {
 			g.settings.LauncherShortcut = ""
 		}
 		if g.terminalKey != "" {
@@ -229,6 +280,23 @@ func (g *gocast) ready() {
 	g.prefs = newPrefsWindow(g)
 	g.registerShortcuts()
 	g.setUpTray()
+	// Back from System Settings, where the user may have freed ⌘Space.
+	mygo.App.OnDidBecomeActive(func() {
+		if g.spotlightChanged() {
+			g.prefs.spotlightSolved()
+		}
+	})
+	if !g.settings.SpotlightChecked {
+		// The first launch says that Spotlight has ⌘Space, in Settings,
+		// the only window it opens then; the next ones don't.
+		g.settings.SpotlightChecked = true
+		g.saveSettings()
+		if g.spotlight {
+			g.prefs.notice = noticeSpotlight
+			g.prefs.show(pageShortcuts)
+			return
+		}
+	}
 	if !mygo.App.WasOpenedAtLogin() {
 		g.launcher.show() // started by the user: show what it does
 	}

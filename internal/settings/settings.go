@@ -14,7 +14,10 @@ import (
 )
 
 const (
-	DefaultLauncherShortcut  = "Alt+Shift+Space"
+	// The search panel's shortcut is ⌘Space, or ⌥⇧Space while Spotlight
+	// has ⌘Space, or once the user chose it over ⌘Space.
+	DefaultLauncherShortcut  = "Cmd+Space"
+	FallbackLauncherShortcut = "Alt+Shift+Space"
 	DefaultTerminalShortcut  = "Ctrl+`"
 	DefaultFontSize          = 13
 	MinFontSize, MaxFontSize = 11, 20
@@ -33,6 +36,12 @@ type Settings struct {
 	// The global shortcuts, as MyGo's accelerators; "" is the default.
 	LauncherShortcut string `json:"launcherShortcut,omitempty"`
 	TerminalShortcut string `json:"terminalShortcut,omitempty"`
+	// LauncherFallback: the user chose ⌥⇧Space over ⌘Space, which
+	// Spotlight had ("Use ⌥⇧Space"); it is the default since.
+	LauncherFallback bool `json:"launcherDefaultAltShiftSpace,omitempty"`
+	// SpotlightChecked: a launch checked whether Spotlight had ⌘Space,
+	// and said so; the next ones don't.
+	SpotlightChecked bool `json:"spotlightChecked,omitempty"`
 	// FontSize of the terminal, 0 for DefaultFontSize.
 	FontSize int `json:"fontSize,omitempty"`
 	// KeepTerminalOnBlur leaves the floating terminal on screen as the
@@ -51,9 +60,18 @@ type Settings struct {
 // Launcher is the search panel's shortcut.
 func (s Settings) Launcher() string {
 	if s.LauncherShortcut == "" {
-		return DefaultLauncherShortcut
+		return s.DefaultLauncher()
 	}
 	return s.LauncherShortcut
+}
+
+// DefaultLauncher is the search panel's default shortcut: ⌘Space, or
+// ⌥⇧Space once the user chose it over ⌘Space.
+func (s Settings) DefaultLauncher() string {
+	if s.LauncherFallback {
+		return FallbackLauncherShortcut
+	}
+	return DefaultLauncherShortcut
 }
 
 // Terminal is the floating terminal's shortcut.

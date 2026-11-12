@@ -1,7 +1,9 @@
 package settings
 
 import (
+	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -45,5 +47,48 @@ func TestTerminalSize(t *testing.T) {
 	got, err := Load(path)
 	if err != nil || got.TermWidth() != 60 || got.TermHeight() != 40 {
 		t.Fatalf("Load = %+v, %v", got, err)
+	}
+}
+
+func TestLauncherShortcut(t *testing.T) {
+	for _, c := range []struct {
+		name          string
+		s             Settings
+		want, wantDef string
+	}{
+		{"default", Settings{}, "Cmd+Space", "Cmd+Space"},
+		{"chose ⌥⇧Space", Settings{LauncherFallback: true}, "Alt+Shift+Space", "Alt+Shift+Space"},
+		{"recorded", Settings{LauncherShortcut: "Ctrl+Alt+K"}, "Ctrl+Alt+K", "Cmd+Space"},
+		{"recorded after choosing", Settings{LauncherShortcut: "Ctrl+Alt+K", LauncherFallback: true}, "Ctrl+Alt+K", "Alt+Shift+Space"},
+	} {
+		if got := c.s.Launcher(); got != c.want {
+			t.Errorf("%s: Launcher = %q, want %q", c.name, got, c.want)
+		}
+		if got := c.s.DefaultLauncher(); got != c.wantDef {
+			t.Errorf("%s: DefaultLauncher = %q, want %q", c.name, got, c.wantDef)
+		}
+	}
+}
+
+func TestShortcutSettingsRoundTrip(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "settings.json")
+	in := Settings{LauncherFallback: true, SpotlightChecked: true}
+	if err := in.Save(path); err != nil {
+		t.Fatal(err)
+	}
+	data, _ := os.ReadFile(path)
+	if !strings.Contains(string(data), `"launcherDefaultAltShiftSpace": true`) || !strings.Contains(string(data), `"spotlightChecked": true`) {
+		t.Errorf("settings.json = %s", data)
+	}
+	out, err := Load(path)
+	if err != nil || out != in {
+		t.Errorf("Load = %+v, %v; want %+v", out, err, in)
+	}
+	// An empty file, as a first launch's, checks Spotlight.
+	if err := os.WriteFile(path, []byte("{}"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if out, _ := Load(path); out.SpotlightChecked || out.Launcher() != DefaultLauncherShortcut {
+		t.Errorf("{} loads as %+v", out)
 	}
 }
