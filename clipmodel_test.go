@@ -10,6 +10,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"gocast/internal/clipboard"
+	"gocast/internal/sysfmt"
 	"gocast/locales"
 )
 
@@ -381,7 +382,8 @@ func TestClipInfos(t *testing.T) {
 	at := clipNow.Add(-55 * time.Minute)
 	text := clipboard.Entry{Kind: clipboard.KindText, Text: "发布清单 ok", App: clipboard.App{Name: "备忘录"}, Time: at}
 	got := spell(clipInfos(text, clipNow, "zh-Hans", size))
-	if len(got) != 3 || got[0] != "来源=备忘录" || !strings.HasPrefix(got[1], "拷贝时间=今天") || got[2] != "字数=7" {
+	// The system writes the day relative to the real today, not clipNow.
+	if len(got) != 3 || got[0] != "来源=备忘录" || got[1] != "拷贝时间="+sysfmt.Date(at, clipNow, "zh-Hans") || got[2] != "字数=7" {
 		t.Errorf("text: %q", got)
 	}
 	link := clipboard.Entry{Kind: clipboard.KindLink, Text: "https://www.github.com/x", Time: at}

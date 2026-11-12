@@ -367,3 +367,44 @@ func TestLauncherSearchOnly(t *testing.T) {
 		t.Error("cleared: not the bar alone")
 	}
 }
+
+// Gocast's own items are found by their titles in both languages, with
+// pinyin and initials, whatever the language it shows (copy.md 2.2a).
+func TestLauncherSearchesOwnItems(t *testing.T) {
+	cases := []struct{ query, want string }{
+		{"剪贴板", clipItemID}, {"jtb", clipItemID}, {"clip", clipItemID}, {"history", clipItemID},
+		{"终端", termItemID}, {"zhongduan", termItemID}, {"terminal", termItemID}, {"floating", termItemID},
+		{"添加预设", addPresetItemID}, {"tjys", addPresetItemID}, {"add preset", addPresetItemID}, {"preset", addPresetItemID},
+		{"设置", settingsItemID}, {"shezhi", settingsItemID}, {"sz", settingsItemID}, {"settings", settingsItemID}, {"set", settingsItemID},
+		{"退出", quitItemID}, {"tc", quitItemID}, {"quit", quitItemID}, {"gocast", quitItemID},
+	}
+	symbols := map[string]string{clipItemID: "doc.on.clipboard", termItemID: "apple.terminal", addPresetItemID: "plus", settingsItemID: "gearshape", quitItemID: "power"}
+	for _, locale := range []string{"zh-Hans", "en"} {
+		inLocale(t, locale)
+		l := testLauncher(t, usage.New(), nil)
+		for _, c := range cases {
+			l.query = c.query
+			l.filter()
+			if got := shown(l); len(got) == 0 || got[0] != "> "+c.want {
+				t.Errorf("%s %q: %q, want %s first", locale, c.query, got, c.want)
+				continue
+			}
+			// As the clipboard history's result: its symbol, the Gocast tag.
+			e, _ := l.current()
+			if a := l.actions(); len(a) != 1 || a[0].icon != symbols[c.want] {
+				t.Errorf("%s %q: actions %+v, want %s alone", locale, c.query, a, symbols[c.want])
+			}
+			if s := ownSymbol(l.own, e.own); s != symbols[c.want] {
+				t.Errorf("%s %q: symbol %s, want %s", locale, c.query, s, symbols[c.want])
+			}
+			title := ownTitle(locales.In(locale), c.want)
+			if got := l.rowLabel(l.chosen); got != title+listSep()+locales.SearchTagGocast() {
+				t.Errorf("%s %q: label %q", locale, c.query, got)
+			}
+		}
+	}
+	// Found, Quit Gocast is still not scored for the suggestions.
+	if scored(quitItemID) || !scored(settingsItemID) {
+		t.Error("Quit Gocast scored, or Settings… not")
+	}
+}

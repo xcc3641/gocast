@@ -14,7 +14,7 @@ import (
 // suggestions, then Gocast's own items.
 
 // The IDs of Gocast's own items, which usage.json scores as it does apps
-// and presets. Of these, the search finds the clipboard history alone.
+// and presets, and the search finds as it does them.
 const (
 	clipItemID      = "gocast:clipboard"
 	termItemID      = "gocast:terminal"
@@ -50,6 +50,44 @@ func gocastItems(terminalKey, clipKey string, do gocastDo) []ownItem {
 		{settingsItemID, "gearshape", locales.TraySettings(), []string{"⌘", ","}, do.settings},
 		{quitItemID, "power", locales.TrayQuit(), nil, do.quit},
 	}
+}
+
+// ownTitle is the title of Gocast's own item in the language of m.
+func ownTitle(m locales.Messages, id string) string {
+	switch id {
+	case clipItemID:
+		return m.ClipboardHistory()
+	case termItemID:
+		return m.MenuTerminal()
+	case addPresetItemID:
+		return m.PresetsAdd()
+	case settingsItemID:
+		return m.TraySettings()
+	case quitItemID:
+		return m.TrayQuit()
+	}
+	return ""
+}
+
+// ownSearchNames are the names the search finds Gocast's own item by,
+// besides its title: its titles in English and Chinese, as people type
+// either whatever the language Gocast shows (pinyin and initials come
+// with the Chinese); for the clipboard history, also the words users say
+// for it (copy.md 6.1).
+func ownSearchNames(id string) []string {
+	names := []string{ownTitle(locales.In("en"), id), ownTitle(locales.In("zh-Hans"), id)}
+	if id == clipItemID {
+		names = append(names, clipSearchWords...)
+	}
+	return names
+}
+
+// ownSymbol is the symbol of Gocast's own item.
+func ownSymbol(own []ownItem, id string) string {
+	if i := ownIndex(own, id); i >= 0 {
+		return own[i].symbol
+	}
+	return "doc.on.clipboard"
 }
 
 // ownIndex is the index of the item with the ID among Gocast's own, or -1.

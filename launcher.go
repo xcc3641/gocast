@@ -463,7 +463,7 @@ func (l *launcher) itemRow(c *ui.Context, k tokens, item int) {
 	listRow(c, k, false, func() {
 		switch {
 		case e.own != "":
-			symbolSquare(c, k, "doc.on.clipboard") // the one searched
+			symbolSquare(c, k, ownSymbol(l.own, e.own))
 		case e.app == nil:
 			presetSquare(c, k)
 		default:
@@ -727,11 +727,7 @@ func (l *launcher) actions() []action {
 		return nil
 	}
 	if e.own != "" { // its primary action alone (design.md 2.5a)
-		symbol := "doc.on.clipboard"
-		if i := ownIndex(l.own, e.own); i >= 0 {
-			symbol = l.own[i].symbol
-		}
-		return []action{{symbol, primaryName(e), []string{"↩"}, l.primary}}
+		return []action{{ownSymbol(l.own, e.own), primaryName(e), []string{"↩"}, l.primary}}
 	}
 	if e.app != nil {
 		app := *e.app
@@ -936,12 +932,15 @@ func (l *launcher) rebuild() {
 		l.items = append(l.items, it)
 		l.entries = append(l.entries, entry{preset: p.ID})
 	}
-	// The clipboard history, by its names in both languages and the words
-	// users say for it (copy.md 6.1).
-	clip := search.NewItem(clipItemID, locales.ClipboardHistory(), clipSearchWords...)
-	clip.Score = l.g.usage.Score(clipItemID, now)
-	l.items = append(l.items, clip)
-	l.entries = append(l.entries, entry{own: clipItemID})
+	// Gocast's own items, by their titles in both languages, the
+	// clipboard history also by the words users say for it (copy.md 2.2a,
+	// 6.1).
+	for _, o := range l.own {
+		it := search.NewItem(o.id, o.label, ownSearchNames(o.id)...)
+		it.Score = l.g.usage.Score(o.id, now)
+		l.items = append(l.items, it)
+		l.entries = append(l.entries, entry{own: o.id})
+	}
 	for i := range l.apps {
 		app := &l.apps[i]
 		id := "app:" + app.ID
