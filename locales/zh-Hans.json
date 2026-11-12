@@ -13,6 +13,7 @@
   "searchNoResults": "没有找到“{query}”",
   "searchNoResultsHint": "试试应用的另一种叫法，比如英文名或拼音。",
   "searchNoPresetsHint": "想在某个文件夹里直接运行命令？去设置里添加预设。",
+  "searchSuggestions": "建议",
   "searchOpenFailed": "打不开“{name}”，它可能已被移动或删除。",
   "footerOpen": "打开",
   "footerOpenInTerminal": "在悬浮终端打开",

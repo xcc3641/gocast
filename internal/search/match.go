@@ -271,3 +271,16 @@ func SortKey(name string) string {
 	}
 	return b.String()
 }
+
+// Suggestions returns up to n items for an empty query, most used first
+// (by Score, frecency), leaving out those never used.
+func Suggestions(items []Item, n int) []int {
+	var out []int
+	for i, it := range items {
+		if it.Score > 0 {
+			out = append(out, i)
+		}
+	}
+	slices.SortStableFunc(out, func(a, b int) int { return cmp.Compare(items[b].Score, items[a].Score) })
+	return out[:min(n, len(out))]
+}

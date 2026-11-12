@@ -218,6 +218,22 @@ func (msgs Messages) SearchNoPresetsHint() string {
 	return Catalog.Format(msgs.locale, "searchNoPresetsHint", nil)
 }
 
+// SearchSuggestions says "Suggestions"
+// in the language the app shows.
+//
+// Search panel: header of the most used items under an empty query (off in
+// v1; not in copy.md).
+func SearchSuggestions() string { return In(i18n.Locale()).SearchSuggestions() }
+
+// SearchSuggestions says "Suggestions"
+// in the language of msgs.
+//
+// Search panel: header of the most used items under an empty query (off in
+// v1; not in copy.md).
+func (msgs Messages) SearchSuggestions() string {
+	return Catalog.Format(msgs.locale, "searchSuggestions", nil)
+}
+
 // SearchOpenFailed says "Couldn’t open “{name}”. It may have been moved or deleted."
 // in the language the app shows.
 //

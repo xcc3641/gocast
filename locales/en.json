@@ -74,6 +74,10 @@
   "@searchNoPresetsHint": {
     "description": "Added under no results when there is no preset at all."
   },
+  "searchSuggestions": "Suggestions",
+  "@searchSuggestions": {
+    "description": "Search panel: header of the most used items under an empty query (off in v1; not in copy.md)."
+  },
   "searchOpenFailed": "Couldn’t open “{name}”. It may have been moved or deleted.",
   "@searchOpenFailed": {
     "description": "Footer, when an app fails to open.",

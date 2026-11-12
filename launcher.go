@@ -30,7 +30,8 @@ const (
 	barHeight      = 66
 	listHeight     = 366
 	emptyHeight    = 151
-	footerHeight   = 42
+	footerHeight   = 42 // the room of the actions capsule, over the list's end
+	capsuleHeight  = 32
 	expandedHeight = barHeight + 1 + listHeight + footerHeight // 475
 	noResultHeight = barHeight + 1 + emptyHeight + footerHeight // 260
 	panelRadius    = 26
@@ -43,6 +44,12 @@ const (
 
 	// restoreFor is how long the panel keeps its query and choice once
 	// hidden (Raycast's "pop to root" delay).
+	// suggestionsEnabled shows the most used items (frecency) under an
+	// empty query, under a "Suggestions" header, as Raycast does, rather
+	// than the search bar alone. Off until product decides (design.md).
+	suggestionsEnabled = false
+	suggestionCount    = 9
+
 	restoreFor = 90 * time.Second
 	noticeFor  = 4 * time.Second
 )
@@ -79,6 +86,7 @@ type launcher struct {
 	input   ui.Handle
 	scroll  bool // show the choice in the next frame
 	icons   map[string]*ui.Bitmap // by app path; nil where the app has none
+	running map[string]bool       // by bundle ID, as isRunning found it
 
 	loading, loaded bool // listing the apps; listed them once
 
@@ -103,7 +111,7 @@ type launcher struct {
 }
 
 func newLauncher(g *gocast) *launcher {
-	l := &launcher{g: g, icons: map[string]*ui.Bitmap{}}
+	l := &launcher{g: g, icons: map[string]*ui.Bitmap{}, running: map[string]bool{}, filtered: noQuery}
 	l.win = mygo.NewWindow(mygo.WindowOptions{
 		Title:         appName,
 		Panel:         true,
@@ -131,7 +139,13 @@ func newLauncher(g *gocast) *launcher {
 
 // compact reports whether the panel shows its search bar alone: while the
 // query is empty.
-func (l *launcher) compact() bool { return strings.TrimSpace(l.query) == "" }
+// query is empty, and no suggestions show (suggestionsEnabled).
+func (l *launcher) compact() bool {
+	return l.empty() && (!suggestionsEnabled || len(l.results) == 0)
+}
+
+// empty reports whether the query is empty.
+func (l *launcher) empty() bool { return strings.TrimSpace(l.query) == "" }
 
 // targetHeight is the height of the panel for what it shows now.
 func (l *launcher) targetHeight() float32 {
@@ -182,7 +196,7 @@ func (l *launcher) view(c *ui.Context) {
 		l.searchBar(c, k)
 		if body > barHeight {
 			ui.Box(c).Height(1).Background(k.hairline).Shrink(0)
-			ui.Column(c).Height(body - barHeight - 1 - footerHeight).Shrink(0).Children(func() {
+			ui.Column(c).Height(body - barHeight - 1).Shrink(0).Children(func() {
 				if len(l.results) > 0 {
 					l.resultList(c, k)
 				} else {
@@ -228,7 +242,7 @@ func (l *launcher) shortcuts(c *ui.Context) {
 
 func (l *launcher) searchBar(c *ui.Context, k tokens) {
 	ui.Row(c).Height(barHeight).Shrink(0).Padding(0, 20).Gap(12).AlignItems(ui.Center).Children(func() {
-		sfsymbols.Symbol(c, "magnifyingglass").Size(18).Color(k.textOnGlass)
+		sfsymbols.Symbol(c, "command.square").Size(18).Color(k.textOnGlass).AccessHidden(true) // Gocast's mark, as the tray's
 		field := ui.TextInputBase(c, &l.query).Bind(&l.input).Grow(1).FontSize(20).
 			Placeholder(locales.SearchPlaceholder()).Label(locales.SearchPlaceholder()).
 			OnTextKey(l.textKey)
@@ -313,8 +327,13 @@ func (l *launcher) resultList(c *ui.Context, k tokens) {
 	l.list.Key = func(i int) any { return l.items[l.results[i]].ID }
 	l.list.Label = func(i int) string { return l.rowLabel(l.results[i]) }
 	var list ui.Element
+	if l.empty() { // suggestions
+		ui.Text(c, locales.SearchSuggestions()).FontSize(12).TextColor(k.textOnGlass).Padding(12, 20, 0, 20).Shrink(0)
+	}
 	ui.Themed(c, listTheme(c, k)).Grow(1).Children(func() {
-		list = ui.List(c, &l.list, len(l.results), func(i int) { l.row(c, k, i) }).Grow(1).Padding(8)
+		// Room at the end for the last row to scroll above the actions
+		// capsule, which floats over the list.
+		list = ui.List(c, &l.list, len(l.results), func(i int) { l.row(c, k, i) }).Grow(1).Padding(8, 8, footerHeight+4, 8)
 	})
 	if l.scroll && l.chosen >= 0 && l.chosen < len(l.results) {
 		l.scroll = false
@@ -349,15 +368,27 @@ func (l *launcher) row(c *ui.Context, k tokens, i int) {
 			ui.Box(c).Size(iconSize, iconSize).Radius(6).Background(k.keycap).Center().Shrink(0).Children(func() {
 				sfsymbols.Symbol(c, "apple.terminal.fill").Size(13).Color(k.text)
 			})
-		case l.icon(*e.app) != nil:
-			ui.Image(c, l.icon(*e.app)).Size(iconSize, iconSize).Shrink(0)
 		default:
-			ui.Avatar(c, it.Title, nil).Size(iconSize, iconSize).Shrink(0) // its initial
+			app := *e.app
+			ui.Box(c).Size(iconSize, iconSize).Shrink(0).Children(func() {
+				if b := l.icon(app); b != nil {
+					ui.Image(c, b).Size(iconSize, iconSize)
+				} else {
+					ui.Avatar(c, it.Title, nil).Size(iconSize, iconSize) // its initial
+				}
+				if l.isRunning(app.ID) {
+					// A dot under the icon, as the Dock's and Raycast's.
+					ui.Box(c).Absolute().Left(iconSize/2 - 2).Bottom(-6).Size(4, 4).Radius(2).Background(k.textOnGlass)
+				}
+			})
 		}
-		ui.Text(c, it.Title).FontSize(14).TextColor(k.text).SingleLine().MinWidth(160).Shrink(1)
+		// The title at its width, the subtitle at most 45% of the row and
+		// shrinking first, the title only once it is all but gone.
+		title := ui.Text(c, it.Title).FontSize(14).TextColor(k.text).SingleLine().Shrink(1)
 		if subtitle != "" {
+			title.Margin(0, -4, 0, 0) // 8 to the subtitle, not the row's 12
 			ui.Text(c, subtitle).FontSize(13).TextColor(k.textOnGlass).SingleLine().TruncateMiddle().
-				MaxWidth((panelWidth - 16 - 24) * 0.45).Shrink(1)
+				MaxWidth((panelWidth - 16 - 24) * 0.45).Shrink(1000)
 		}
 		ui.Spacer(c)
 		ui.Text(c, tag).FontSize(12).TextColor(k.textOnGlass).SingleLine().Shrink(0)
@@ -393,51 +424,57 @@ func (l *launcher) noResults(c *ui.Context, k tokens) {
 	})
 }
 
-// footer is the bar under the results: Gocast, or a notice, at the left;
-// the primary action and the actions menu at the right, both clickable.
+// footer floats over the end of the list, as Raycast's: a glass capsule
+// at the bottom right with the primary action and the actions menu, both
+// clickable, and one at the bottom left with a notice, for a few seconds.
 func (l *launcher) footer(c *ui.Context, k tokens) {
+	capsule := func() ui.Element {
+		return ui.Row(c).Absolute().Bottom(10).Height(capsuleHeight).Radius(capsuleHeight/2).Padding(0, 12).
+			Gap(8).AlignItems(ui.Center).Material(glass.Glass{}).Shadow(0, 2, 8, 0, ui.RGBA(0, 0, 0, 0.10))
+	}
+	if l.notice != "" {
+		icon, color := "checkmark.circle", k.textOnGlass
+		if l.noticeDanger {
+			icon, color = "exclamationmark.triangle.fill", k.danger
+		}
+		c.Key("notice")
+		capsule().Left(12).MaxWidth(panelWidth/2).Children(func() {
+			sfsymbols.Symbol(c, icon).Size(14).Color(color)
+			ui.Text(c, l.notice).FontSize(12).TextColor(color).SingleLine().Shrink(1)
+		})
+	}
 	e, ok := l.current()
-	ui.Column(c).Height(footerHeight).Shrink(0).Children(func() {
-		ui.Box(c).Height(1).Background(k.hairline)
-		ui.Row(c).Grow(1).Padding(0, 16).AlignItems(ui.Center).Children(func() {
-			ui.Row(c).Gap(8).AlignItems(ui.Center).Grow(1).Shrink(1).Children(func() {
-				switch {
-				case l.notice != "" && l.noticeDanger:
-					sfsymbols.Symbol(c, "exclamationmark.triangle.fill").Size(14).Color(k.danger)
-					ui.Text(c, l.notice).FontSize(12).TextColor(k.danger).SingleLine().Shrink(1)
-				case l.notice != "":
-					sfsymbols.Symbol(c, "checkmark.circle").Size(14).Color(k.textOnGlass)
-					ui.Text(c, l.notice).FontSize(12).TextColor(k.textOnGlass).SingleLine().Shrink(1)
-				default:
-					sfsymbols.Symbol(c, "command.square").Size(14).Color(k.textOnGlass)
-					ui.Text(c, appName).FontSize(12).FontWeight(500).TextColor(k.textOnGlass)
-				}
-			})
-			ui.Row(c).Gap(0).AlignItems(ui.Center).Shrink(0).Children(func() {
-				if ok {
-					name := locales.FooterOpen()
-					if e.app == nil {
-						name = locales.FooterOpenInTerminal()
-					}
-					ui.Row(c).Gap(8).AlignItems(ui.Center).Label(name).KeyShortcuts(0, ui.KeyEnter).OnClick(l.primary).Children(func() {
-						ui.Text(c, name).FontSize(12).TextColor(k.text).SingleLine()
-						keycap(c, k, "↩", 12)
-					})
-					ui.Box(c).Size(1, 16).Background(k.hairline).Margin(0, 12)
-				}
-				actions := ui.Row(c).Gap(8).AlignItems(ui.Center).Label(locales.FooterActions()).KeyShortcuts(ui.Cmd, ui.KeyK)
-				if ok {
-					actions.OnClick(l.toggleMenu)
-				} else {
-					actions.Opacity(0.4) // nothing to act on
-				}
-				actions.Children(func() {
-					ui.Text(c, locales.FooterActions()).FontSize(12).TextColor(k.text).SingleLine()
-					keycaps(c, k, []string{"⌘", "K"}, 12)
-				})
-			})
+	if !ok {
+		return
+	}
+	name := locales.FooterOpen()
+	if e.app == nil {
+		name = locales.FooterOpenInTerminal()
+	}
+	c.Key("actions")
+	capsule().Right(12).Children(func() {
+		ui.Row(c).Gap(8).AlignItems(ui.Center).Label(name).KeyShortcuts(0, ui.KeyEnter).OnClick(l.primary).Children(func() {
+			ui.Text(c, name).FontSize(12).TextColor(k.text).SingleLine()
+			keycap(c, k, "↩", 12)
+		})
+		ui.Box(c).Size(1, 16).Background(k.hairline).Margin(0, 4)
+		ui.Row(c).Gap(8).AlignItems(ui.Center).Label(locales.FooterActions()).KeyShortcuts(ui.Cmd, ui.KeyK).
+			OnClick(l.toggleMenu).Children(func() {
+			ui.Text(c, locales.FooterActions()).FontSize(12).TextColor(k.text).SingleLine()
+			keycaps(c, k, []string{"⌘", "K"}, 12)
 		})
 	})
+}
+
+// isRunning reports whether the app with the bundle ID runs, asked once
+// per show and query.
+func (l *launcher) isRunning(id string) bool {
+	on, ok := l.running[id]
+	if !ok {
+		on = running.IsRunning(id)
+		l.running[id] = on
+	}
+	return on
 }
 
 // current returns the result chosen, while the panel shows results.
@@ -573,7 +610,7 @@ func (l *launcher) actionsMenu(c *ui.Context, k tokens, reduce bool) {
 		tr = ui.ElementTransition{Enter: fade, Exit: fade, Duration: 80 * time.Millisecond}
 	}
 	c.Key("actions")
-	ui.Column(c).Absolute().Right(8).Bottom(footerHeight+8).Width(320).MaxHeight(300).
+	ui.Column(c).Absolute().Right(8).Bottom(10+capsuleHeight+6).Width(320).MaxHeight(300).
 		Radius(12).Material(glass.Glass{}).Shadow(0, 8, 24, 0, ui.RGBA(0, 0, 0, 0.20)).Clip().
 		TransformOrigin(1, 1).Transition(tr).Children(func() {
 		ui.Row(c).Height(36).Shrink(0).Padding(0, 12).AlignItems(ui.Center).Children(func() {
@@ -692,7 +729,7 @@ func (l *launcher) rebuild() {
 		l.items = append(l.items, it)
 		l.entries = append(l.entries, entry{app: app})
 	}
-	if l.compact() {
+	if l.empty() && !suggestionsEnabled {
 		return
 	}
 	// Keep the choice on its item as the apps come in, unless it is the
@@ -700,7 +737,7 @@ func (l *launcher) rebuild() {
 	was := l.currentID()
 	first := l.chosen == 0 && !l.moved
 	l.filtered = l.query
-	l.results = search.Filter(l.items, l.query, l.g.usage.Choice(l.query, now))
+	l.results = l.find()
 	chosen := 0
 	if !first {
 		if i := slices.IndexFunc(l.results, func(r int) bool { return l.items[r].ID == was }); i >= 0 {
@@ -713,8 +750,8 @@ func (l *launcher) rebuild() {
 // filter finds the results of a new query, the first chosen. An empty
 // query keeps the results it had, which the panel shrinks with.
 func (l *launcher) filter() {
-	if l.compact() {
-		l.filtered = "" // the same query again starts afresh
+	if l.empty() && !suggestionsEnabled {
+		l.filtered = noQuery // the same query again starts afresh
 		return
 	}
 	if l.query == l.filtered {
@@ -723,8 +760,21 @@ func (l *launcher) filter() {
 	l.filtered = l.query
 	l.moved = false
 	l.menuOpen = false
-	l.results = search.Filter(l.items, l.query, l.g.usage.Choice(l.query, time.Now()))
+	clear(l.running)
+	l.results = l.find()
 	l.choose(0)
+}
+
+// noQuery is l.filtered when no results were found for the query.
+const noQuery = "\x00"
+
+// find returns the results of the query, or the suggestions for an empty
+// one.
+func (l *launcher) find() []int {
+	if l.empty() {
+		return search.Suggestions(l.items, suggestionCount)
+	}
+	return search.Filter(l.items, l.query, l.g.usage.Choice(l.query, time.Now()))
 }
 
 // load lists the installed apps and their other names on a goroutine, as
@@ -783,12 +833,14 @@ func (l *launcher) show() {
 	}
 	restore := !l.hiddenAt.IsZero() && time.Since(l.hiddenAt) < restoreFor
 	if !restore {
-		l.query, l.filtered, l.results, l.moved = "", "", nil, false
+		l.query, l.filtered, l.results, l.moved = "", noQuery, nil, false
 		l.notice = ""
 		l.list = ui.ListState{}
 		l.choose(0)
+		l.filter() // the suggestions, when they show
 	}
 	l.selectAll = restore && l.query != ""
+	clear(l.running) // apps started or quit meanwhile
 	l.menuOpen = false
 	l.gen++ // appears at its size, without animating to it
 	d := mygo.Screen.DisplayNearestPoint(mygo.Screen.CursorScreenPoint())

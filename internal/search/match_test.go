@@ -109,3 +109,16 @@ func TestBoost(t *testing.T) {
 		t.Errorf("chosen: %v", got)
 	}
 }
+
+func TestSuggestions(t *testing.T) {
+	items := []Item{NewItem("a", "A"), NewItem("b", "B"), NewItem("c", "C"), NewItem("d", "D")}
+	items[0].Score, items[1].Score, items[3].Score = 1, 0, 5
+	items[2].Score = 3
+	got := Suggestions(items, 2)
+	if len(got) != 2 || got[0] != 3 || got[1] != 2 {
+		t.Fatalf("Suggestions = %v, want [3 2]", got)
+	}
+	if got := Suggestions(items, 10); len(got) != 3 {
+		t.Fatalf("Suggestions(10) = %v, want the 3 used items", got)
+	}
+}
