@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"log"
 	"slices"
 	"strconv"
@@ -801,10 +802,8 @@ func (p *prefsWindow) terminalSizeChanged() {
 
 func (p *prefsWindow) aboutPage(c *ui.Context, k tokens) {
 	ui.Column(c).MinHeight(500 - 52 - 24).Justify(ui.Center).AlignItems(ui.Center).Children(func() {
-		// The app's icon is to come (design.md 1.6): the tray's mark.
-		ui.Box(c).Size(64, 64).Center().AccessHidden(true).Children(func() {
-			sfsymbols.Symbol(c, "command.square").Size(48).Color(k.text)
-		})
+		// The app icon, icon.png at 64 (design.md 1.6, 4.2).
+		ui.Image(c, appIcon()).Size(64, 64).Shrink(0)
 		ui.Text(c, appName).FontSize(20).FontWeight(600).TextColor(k.text).Margin(12, 0, 0, 0)
 		ui.Text(c, locales.AboutTagline()).FontSize(13).TextColor(k.textSecondary)
 		ui.Text(c, locales.AboutVersion(appVersion())).FontSize(12).TextColor(k.textSecondary).Margin(4, 0, 16, 0)
@@ -812,6 +811,22 @@ func (p *prefsWindow) aboutPage(c *ui.Context, k tokens) {
 		// the page itself stays as it is.
 		ui.Button(c, locales.AboutCheck()).OnClick(updater.CheckForUpdates)
 	})
+}
+
+// iconPNG is the app icon, 1024 px; assets/icon/make-icon.py draws it.
+//
+//go:embed assets/icon/icon.png
+var iconPNG []byte
+
+var appIconBitmap *ui.Bitmap
+
+// appIcon is iconPNG as a bitmap, made once; MyGo draws it at 64 from a
+// halved copy, smoothly.
+func appIcon() *ui.Bitmap {
+	if appIconBitmap == nil {
+		appIconBitmap, _ = ui.DecodeBitmap(iconPNG)
+	}
+	return appIconBitmap
 }
 
 // appVersion is the packaged app's version, "dev" for a build not

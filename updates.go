@@ -10,11 +10,10 @@ import (
 	"gocast/locales"
 )
 
-// updateIcon is the update window's icon (design.md 4.5): the About
-// page's placeholder, command.square, until Gocast has an app icon.
-// assets/make-update-icon.swift draws it.
+// updateIcon is the update window's icon (design.md 4.5): the app icon
+// at 256 px, which assets/icon/make-icon.py draws.
 //
-//go:embed assets/update-icon.png
+//go:embed assets/icon/update-icon.png
 var updateIcon []byte
 
 // useUpdater adds MyGo's update window, in native UI (design.md 4.5). It

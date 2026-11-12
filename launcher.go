@@ -256,7 +256,10 @@ func (l *launcher) shortcuts(c *ui.Context) {
 
 func (l *launcher) searchBar(c *ui.Context, k tokens) {
 	ui.Row(c).Height(barHeight).Shrink(0).Padding(0, rightLine, 0, 20).Gap(12).AlignItems(ui.Center).Children(func() {
-		gocastMark(c, k)
+		// Half a DIP low (a margin of 1 in a centred row), so that its
+		// middle meets the 20 pt text's: the caps' and the Chinese
+		// characters' ink are 0.75 and 1 below the row's middle.
+		gocastMark(c, k).Margin(1, 0, 0, 0)
 		field := ui.TextInputBase(c, &l.query).Bind(&l.input).Grow(1).FontSize(20).
 			Placeholder(locales.SearchPlaceholder()).Label(locales.SearchPlaceholder()).
 			OnTextKey(l.textKey)

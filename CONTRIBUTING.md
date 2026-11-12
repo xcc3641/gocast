@@ -120,10 +120,11 @@ stops and asks for them to be checked and updated.
 
 ## Releasing
 
-For maintainers. Releases are published as GitHub releases, which installed
-apps check for updates. This needs `updates` in mygo.json (the public key
-and the repository; see the Updates section of docs/dev-notes.md) and the
-GitHub CLI (`gh`), signed in with access to the repository.
+For maintainers. Releases are published as GitHub releases of
+[xcc3641/gocast](https://github.com/xcc3641/gocast), which installed apps
+check for updates: `updates` in mygo.json holds the public key and that
+repository (see the Updates section of docs/dev-notes.md). Uploading needs
+the GitHub CLI (`gh`), signed in with access to the repository.
 
 1. Bump `version` in [mygo.json](mygo.json).
 2. In CHANGELOG.md, turn `## [Unreleased]` into `## [x.y.z] - YYYY-MM-DD`
@@ -141,7 +142,10 @@ GitHub CLI (`gh`), signed in with access to the repository.
    ```
 
    This builds the app, the disk image and the signed update files and
-   uploads them to a draft GitHub release for the version.
+   uploads them to a draft release for the version on xcc3641/gocast.
+   Without the key, `mygo build` still builds the app and the disk image
+   but skips the update files (fine for local builds), and `-upload`
+   refuses to run.
 5. Check the draft on GitHub (try the disk image), then publish it.
    Publishing makes it the latest release: installed apps find it on their
    next automatic check, or when the user chooses Check for Updates.

@@ -8,6 +8,11 @@ package main
 // mark. Neither window draws its own kind of any of them.
 
 import (
+	"bytes"
+	_ "embed"
+	"image"
+	"image/color"
+	"image/png"
 	"time"
 
 	"github.com/egoist/mygo/plugins/glass"
@@ -101,13 +106,49 @@ const shadowLeft, shadowTop, shadowBottom = 72, 48, 96
 
 // --- Gocast's mark ---
 
+// logoPNG is Gocast's mark, assets/icon/make-icon.py's template image:
+// 20 DIP (40 px), black on transparent (design.md 1.6).
+//
+//go:embed assets/icon/logo-template.png
+var logoPNG []byte
+
+// logoBitmap is logoPNG in white, keeping its alpha, so that a tint
+// (which multiplies) draws it in the tint's color; made once.
+var logoBitmap *ui.Bitmap
+
+func gocastLogo() *ui.Bitmap {
+	if logoBitmap == nil {
+		logoBitmap = templateBitmap(logoPNG)
+	}
+	return logoBitmap
+}
+
+// templateBitmap makes a bitmap of a template image's alpha, in white;
+// nil if the PNG can't be read.
+func templateBitmap(data []byte) *ui.Bitmap {
+	src, err := png.Decode(bytes.NewReader(data))
+	if err != nil {
+		return nil
+	}
+	b := src.Bounds()
+	img := image.NewNRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
+	for y := 0; y < b.Dy(); y++ {
+		for x := 0; x < b.Dx(); x++ {
+			_, _, _, a := src.At(b.Min.X+x, b.Min.Y+y).RGBA()
+			img.SetNRGBA(x, y, color.NRGBA{255, 255, 255, uint8(a >> 8)})
+		}
+	}
+	return ui.NewBitmap(img)
+}
+
 // gocastMark is Gocast's mark at the start of the search bar and the
-// terminal's tab bar, as the tray's: the square is 20 seen (design.md
-// 1.6), the symbol drawn larger for the room SF Symbols leave around it,
-// in a box of 20 for the layout.
-func gocastMark(c *ui.Context, k tokens) {
-	ui.Box(c).Size(20, 20).Center().Shrink(0).AccessHidden(true).Children(func() {
-		sfsymbols.Symbol(c, "command.square").Size(23.5).Color(k.textOnGlass)
+// terminal's tab bar, the shape of the tray's (design.md 1.6): the
+// template image drawn at 20×20 in textSecondaryOnGlass, so it follows
+// light and dark.
+func gocastMark(c *ui.Context, k tokens) ui.Element {
+	logo := gocastLogo()
+	return ui.Box(c).Size(20, 20).Shrink(0).AccessHidden(true).Draw(func(p *ui.Painter, r ui.Rect) {
+		p.ImageRegion(logo, ui.Rect{}, r, ui.ImageOptions{Tint: k.textOnGlass})
 	})
 }
 

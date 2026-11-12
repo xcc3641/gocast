@@ -43,7 +43,9 @@ For real window captures, `screencapture -x -o -l <CGWindowID>` works. Get the I
 - `<dir>/darwin-arm64/Gocast.app`
 - `gocast-0.1.0-arm64.dmg`
 
-The bundle is ad-hoc signed. Contents/Resources holds `libghostty-vt.dylib` and, through `resources` in mygo.json, `THIRD_PARTY_NOTICES.md`, `LICENSE` and `NOTICE`. The default `<dir>` is `build/`.
+The bundle is ad-hoc signed. Contents/Resources holds `libghostty-vt.dylib` and, through `resources` in mygo.json, `THIRD_PARTY_NOTICES.md`, `LICENSE` and `NOTICE`. The default `<dir>` is `build/`. With `updates` in mygo.json the output also has `install.sh` and `SHA256SUMS`; without `MYGO_UPDATER_PRIVATE_KEY` it skips the update files ("Not signing an update"), which local builds don't need.
+
+**App icon (design.md 1.6).** mygo.json's `icon` is `assets/icon/icon.png` (1024) and `macos.icon` is `assets/icon/AppIcon.icon` (Icon Composer). With Xcode 26's `actool`, `mygo build` compiles the `.icon` into `Assets.car` (`CFBundleIconName` AppIcon, which macOS 26 draws with its glass, dark and tinted looks) and uses the `AppIcon.icns` that `actool` renders from it; without it (or if it fails) the `.icon` is skipped and the `.icns` is made from `icon.png`. `go run` / `go build` have no icon (no bundle). All the icon files come from `assets/icon/make-icon.py` (the designer's; change the shapes there, never the PNGs by hand).
 
 **Third-party notices.** `THIRD_PARTY_NOTICES.md` is generated: run `go run scripts/gen-third-party-notices.go` after any change to go.mod (CI runs it with `-check`). It reads the license files of the compiled modules from the module cache, the license texts of libghostty-vt's components from `scripts/notices/`, and stops when MyGo bundles a libghostty-vt from another Ghostty commit than those texts describe.
 
@@ -58,8 +60,7 @@ The bundle is ad-hoc signed. Contents/Resources holds `libghostty-vt.dylib` and,
 | `tray.go` | Tray icon and menu |
 | `updates.go` | MyGo's update window (`plugins/updater/native`): its texts from the catalogs, its icon |
 | `theme.go` | design.md 1.2 color tokens, keycaps |
-| `assets/tray.png` | Tray icon; `assets/make-tray-icon.swift` draws it |
-| `assets/update-icon.png` | The update window's icon, a placeholder until the app icon; `assets/make-update-icon.swift` draws it |
+| `assets/icon/` | The icons, all drawn by `make-icon.py`: `AppIcon.icon` and `icon.png` (the app's, also About's at 64), `tray.png` (tray, template), `logo-template.png` (Gocast's mark in the search bar and the terminal's tab bar, tinted `textSecondaryOnGlass`), `update-icon.png` (update window) |
 | `CHANGELOG.md` | Keep a Changelog; the version's section is the update's release notes |
 | `scripts/gen-third-party-notices.go` | Writes `THIRD_PARTY_NOTICES.md`; `scripts/notices/` holds the texts that are not in the module cache |
 | `internal/apps` | App scan, localized names |
@@ -77,7 +78,8 @@ These files are in `~/Library/Application Support/dev.gocast.app/`:
 - `presets.json`. It is edited in Settings; editing it by hand works too, and it is reloaded when the panel or Settings opens. There are no presets on first run. The first terminal is then a plain shell, with the tip that points to Settings.
 - `settings.json`. It holds the shortcuts, font size and keep-terminal-on-blur, and only stores values that differ from the defaults.
 - `usage.json`. Frecency.
-- `updater.json`. The updater plugin's own: 自动检查更新 (`automaticChecks`), the window's download-and-install checkbox, a skipped version, the last check. It is in MyGo's `PathUserData`, which is `dev.gocast.app/` for the bundle but `~/Library/Application Support/Gocast/` for an unbundled `go build` binary (named after the app, as it has no identifier).
+
+`updater.json` is not there: it is the updater plugin's own (自动检查更新 `automaticChecks`, the window's download-and-install checkbox, a skipped version, the last check) and lives in MyGo's `PathUserData`, which is Application Support joined with the app's *name*, so `~/Library/Application Support/Gocast/`, for the bundle and for a `go build` binary alike (checked on a `mygo build` app: its first check wrote `Gocast/updater.json`).
 
 Commands run through the user's login shell, as a login and interactive shell, so their PATH applies.
 
@@ -215,7 +217,7 @@ The checks below were made on real window captures (the screenshots are not in t
   - Over the real desktop: 6.1:1 on a plain row and 5.1:1 on the selected row.
   - Over a pure black backdrop (worst case): 4.6:1 plain and 3.85:1 selected. The selected row is still under 4.5 there.
 - **App icons.** Cell 26, with the row's left padding 10 and a gap of 10, so the title starts at 54. A preset's square is 22, centered in the cell. The running dot is centered at row y 35.
-- **Gocast mark.** 20 seen.
+- **Gocast mark.** `logo-template.png` drawn 20×20 (its squircle is 17 seen), in `textSecondaryOnGlass` (#505054 / #AEAEB2 measured on the captures), through a white copy of the template tinted by `ImageOptions.Tint`. In the search bar it sits half a DIP below the row's middle (`Margin(1,0,0,0)`), so its ink centre (34.0 from the panel's top) meets the 20 pt text's: caps 34.25, the Chinese placeholder 34.5.
 - **⌘K menu.** Its bottom is 8 above the capsule.
 
 The earlier checks still hold:
@@ -228,18 +230,17 @@ The earlier checks still hold:
    - Showing: it fades in while dropping from 12 above its place (180 ms ease-out). It is held at the menu bar for the first frames, so only the last 8 of the 12 show (measured 33→41).
    - Hiding: it fades out while rising 8 (120 ms ease-in), no higher than the menu bar.
    - With Reduce Motion it only fades.
-2. **Tray icon (1.6).** `command.square` is drawn ahead of time by AppKit into `assets/tray.png` and embedded. `sfsymbols.Image` returns a `ui.Bitmap` whose pixels can't be read back, and the tray only takes PNG bytes. The drawn magnifier is the fallback.
-3. **Delete confirmation (4.4).** It is drawn inside the editor's modal, not as a `ui.AlertDialog`, because AlertDialog has no destructive style.
+2. **Delete confirmation (4.4).** It is drawn inside the editor's modal, not as a `ui.AlertDialog`, because AlertDialog has no destructive style.
    - 删除 has `danger` text.
    - 取消 is focused and is the default, as for destructive choices on the Mac.
    - Esc goes back to the editor.
-4. **Settings sidebar (4.2).** It is a custom list, not `ui.Sidebar`, because `SidebarItem` takes SVG icons and not SF Symbols. It keeps Sidebar's behavior: one Tab stop, ↑/↓ choose the page, and the accent-colored selection.
-5. **Preset editor (4.4).** It is a `ui.Modal` with a `ui.Form`; MyGo has no `ui.Dialog` widget.
-6. **List bottom fade (2.3).** Not done. MyGo has no mask, and design.md says this is not a defect.
-7. **Empty query (2.6).** The list of suggestions (frecency) is built but off (`suggestionsEnabled = false` in launcher.go) until the product decision on it is made. Compact is the default.
-8. **Tray menu.** 设置… shows ⌘, on the right as well, the Mac's usual Settings shortcut; it also works in the search panel.
-9. **Same-name apps (2.3; a product decision).** Not the folder first: the bundle's file name without .app, and nothing where that is the name (「Siri」 with 「Siri AI」, and plain 「Siri」). Only apps whose file names collide too get their folder, or their whole path if they share it, cut in the middle.
-10. **Right line (2.1a).** The gray texts at the right (tags, folders) reach 1 past the row's 12 padding, so that their glyphs, not their advances, end on the line with the keys.
+3. **Settings sidebar (4.2).** It is a custom list, not `ui.Sidebar`, because `SidebarItem` takes SVG icons and not SF Symbols. It keeps Sidebar's behavior: one Tab stop, ↑/↓ choose the page, and the accent-colored selection.
+4. **Preset editor (4.4).** It is a `ui.Modal` with a `ui.Form`; MyGo has no `ui.Dialog` widget.
+5. **List bottom fade (2.3).** Not done. MyGo has no mask, and design.md says this is not a defect.
+6. **Empty query (2.6).** The list of suggestions (frecency) is built but off (`suggestionsEnabled = false` in launcher.go) until the product decision on it is made. Compact is the default.
+7. **Tray menu.** 设置… shows ⌘, on the right as well, the Mac's usual Settings shortcut; it also works in the search panel.
+8. **Same-name apps (2.3; a product decision).** Not the folder first: the bundle's file name without .app, and nothing where that is the name (「Siri」 with 「Siri AI」, and plain 「Siri」). Only apps whose file names collide too get their folder, or their whole path if they share it, cut in the middle.
+9. **Right line (2.1a).** The gray texts at the right (tags, folders) reach 1 past the row's 12 padding, so that their glyphs, not their advances, end on the line with the keys.
 
 ## Manual tests still needed
 
@@ -253,7 +254,7 @@ Automation can't cover these:
 - **Folder picker** (系统选文件夹) in the preset editor.
 - **System prompts:** the login-item prompt for 登录时自动启动.
 - **Update check:**
-  - a real update, with Install, Relaunch, Skip and Remind Later (needs the feed, see Open issues);
+  - a real update, with Install, Relaunch, Skip and Remind Later (needs a published release on xcc3641/gocast);
   - the tray's 检查更新… (automation can't reach the tray; it is the plugin's `MenuItem`, the same call as About's button).
 - **Accessibility settings:** Reduce Transparency (the fallback to `surface`), Increase Contrast, and Reduce Motion (fades only).
 - **English UI** (system language en).
@@ -266,14 +267,13 @@ Automation can't cover these:
 - **General.** 自动检查更新 is the second row of the first group, under 登录时自动启动. It reads `updater.AutomaticChecks()` when Settings shows and when the General page is chosen, and on `updater.OnChange`; it writes `updater.SetAutomaticChecks`. It is on by default (no `DisableAutomaticChecks`), and it is not the window's download-and-install checkbox.
 - **What a build says when 检查更新 is pressed:**
   - `go run` / `go build` (dev): 没法在这里更新 / 开发版本不会自己更新。 (en: Updates Unavailable / Development builds don’t update themselves.)
-  - `mygo build` today, with no `updates` in mygo.json: `Updater.Enabled()` is false but the build is not dev, so it says 没法在这里更新 / Gocast 没法在当前安装位置自己更新。如果是用其他方式装的，请在那里更新。 This is misleading until the feed exists (checked with a `-X github.com/egoist/mygo.production=1` build). It never checks in the background.
-- **Keys.** `mygo keygen` made `mygo-update.key` (secret) and `mygo-update.pub`; the maintainer keeps them outside the repository. The public key is `7xqUsSnSTZgGQ69hBuh+pm1jexm7Z3Ngl0lQ17EKPRQ=`. Put the secret in a password manager and in CI as `MYGO_UPDATER_PRIVATE_KEY`; never commit it.
-- **mygo.json has no `updates` yet.** `mygo build` refuses `updates` with a `publicKey` and neither `github` nor `url` ("updates needs either github (owner/name) or url"); `mygo vet` doesn't check it.
-- **TODO when the repository is decided** (`<owner>/gocast` below):
-  1. add to mygo.json `"updates": {"publicKey": "7xqUsSnSTZgGQ69hBuh+pm1jexm7Z3Ngl0lQ17EKPRQ=", "github": "<owner>/gocast"}` (the repository must be public; releases tagged `v0.1.0` …);
-  2. build with `MYGO_UPDATER_PRIVATE_KEY="$(cat path/to/mygo-update.key)" mygo build`, which then also writes `gocast-<version>-darwin-arm64.tar.gz` and `update-darwin-arm64.json`, and needs the version's `## [x.y.z]` section in CHANGELOG.md;
-  3. `mygo build -upload` makes a draft release; publishing it makes it the latest, which apps check.
-  Installed apps update only from builds that had `updates`: 0.1.0 builds made before that never update themselves.
+  - `mygo build`, with the feed: it checks `https://github.com/xcc3641/gocast/releases/latest/download/update-darwin-arm64.json`. Until a release is published that is a 404, and the window says 更新出错 / 现在检查不了更新，请稍后再试。 with the plugin's detail line `mygo: checking for updates: GET https://github.com/xcc3641/gocast/releases/latest/download/update-darwin-arm64.json: 404 Not Found`. (Before the feed it said 没法在这里更新 / Gocast 没法在当前安装位置自己更新…)
+- **Keys.** `mygo keygen` made `mygo-update.key` (secret) and `mygo-update.pub`; the maintainer keeps them outside the repository. The public key is in mygo.json. Put the secret in a password manager and in CI as `MYGO_UPDATER_PRIVATE_KEY`; never commit it.
+- **Feed.** mygo.json has `"updates": {"publicKey": "7xqUsSnSTZgGQ69hBuh+pm1jexm7Z3Ngl0lQ17EKPRQ=", "github": "xcc3641/gocast"}`. The repository must be public, with releases tagged `v0.1.0` …; it doesn't exist yet. `mygo build` needs no key: without one it builds the app and the disk image and skips the update files.
+- **Releasing** (see CONTRIBUTING.md, Releasing):
+  1. `MYGO_UPDATER_PRIVATE_KEY="$(cat path/to/mygo-update.key)" mygo build` also writes `gocast-<version>-darwin-arm64.tar.gz` and `update-darwin-arm64.json`, and needs the version's `## [x.y.z]` section in CHANGELOG.md;
+  2. `mygo build -upload` (needs the key) makes a draft release on xcc3641/gocast; publishing it makes it the latest, which apps check.
+  Installed apps update only from builds that had `updates`: builds made before this one never update themselves.
 
 ## Open issues
 
@@ -281,7 +281,6 @@ Automation can't cover these:
   - `minimumSystemVersion` is 13.0, MyGo's floor.
   - `mygo build` makes arm64 only. A universal (Intel too) build is planned for a later release.
 - **Signing.** Developer ID signing and notarization are not set up (not decided yet), so the bundle is ad-hoc signed and not notarized.
-- **App icon.** None yet (design.md 1.6). About uses `command.square` 48 as a placeholder, and so does the update window (`assets/update-icon.png`, in system gray #8E8E93 since one PNG serves both appearances). Replace both with the icon when it comes.
 - **`mygo build` locales warning.** It warns "The app does not import gocast/locales". This is a false positive and harmless: MyGo's `compiledDirs` splits `go list` output with `strings.Fields`, which breaks when the project's path has a space in it. It should be reported upstream.
 - **Unbundled app names.** An unbundled binary gets app names in English from Launch Services; `Localized(App.Locale())` corrects them.
 
