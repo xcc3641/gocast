@@ -1,0 +1,52 @@
+name: Bug report / 问题反馈
+description: Something in Gocast does not work as expected. / Gocast 里有东西不对。
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Gocast version / 版本
+      description: Settings → About / 设置 → 关于
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version and chip / 系统版本和芯片
+      placeholder: "macOS 15.2, Apple M1 Pro"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where / 在哪里
+      options:
+        - Search panel / 搜索面板
+        - Floating terminal / 悬浮终端
+        - Presets / 预设
+        - Settings / 设置
+        - Updates / 更新
+        - Other / 其他
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce / 复现步骤
+      placeholder: |
+        1. Press ⌘Space
+        2. Type ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected and what happened / 预期和实际
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots, input method, keyboard layout / 截图、输入法、键盘布局
+      description: Optional. For typing problems, say which input method you use. / 选填，打字相关的问题请写明输入法。

@@ -6,9 +6,9 @@ Gocast v1 (0.1.0). It is written in Go with MyGo's native UI (the `ui` package, 
 
 The sources, in priority order:
 - `docs/design.md` (wins on any conflict)
-- `docs/brief.md` v1.3
+- `research/brief.md` v1.3
 - `docs/copy.md` v1.2 (every string is in `locales/`)
-- the `[v1]` items in `docs/raycast-reference.md`
+- the `[v1]` items in `research/raycast-reference.md`
 
 ## Run
 

@@ -3,3 +3,6 @@ build/
 .mygo/
 .DS_Store
 /gocast
+
+# Internal research and drafts, kept local (not published)
+/research/

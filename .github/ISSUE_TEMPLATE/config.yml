@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security issue / 安全问题
+    url: https://github.com/xcc3641/gocast/security/advisories/new
+    about: Please report security problems privately. / 安全问题请私下报告。

@@ -1,0 +1,19 @@
+name: Feature request / 功能建议
+description: An idea that would make Gocast better. / 让 Gocast 更好用的想法。
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do? / 你想做到什么？
+      description: Describe the situation, not only the solution. / 先讲场景，再讲做法。
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: How would you like it to work? / 你希望怎么用？
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What do you do today instead? / 现在是怎么凑合的？
