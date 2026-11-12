@@ -25,7 +25,7 @@ import (
 // out for (no blank frame), and the mouse goes through the rest of the
 // window (SetInputRegion).
 const (
-	panelWidth     = 750
+	panelWidth     = 640
 	barHeight      = 66
 	listHeight     = 409 // to the panel's bottom, under the actions capsule
 	emptyHeight    = 194
@@ -393,13 +393,15 @@ func (l *launcher) row(c *ui.Context, k tokens, i int) {
 				}
 			})
 		}
-		// The title at its width, the subtitle at most 45% of the row and
-		// shrinking first, the title only once it is all but gone.
+		// The subtitle at most 40% of the row, cut in its middle; the
+		// title shrinking first, to 160 (or its width), then the subtitle
+		// (design.md 2.3).
 		title := listTitle(c, k, it.Title)
 		if subtitle != "" {
-			title.Margin(0, -2, 0, 0) // 8 to the subtitle, not the row's 10
+			w, _ := c.MeasureText(0, ui.Span{Text: it.Title, Size: 14})
+			title.Margin(0, -2, 0, 0).Shrink(1000).MinWidth(min(w, listTitleLeast)) // 8 to the subtitle, not the row's 10
 			ui.Text(c, subtitle).FontSize(13).TextColor(k.textOnGlass).SingleLine().TruncateMiddle().
-				MaxWidth((panelWidth - 16 - 22) * 0.45).Shrink(1000)
+				MaxWidth(listNoteMax).Shrink(1)
 		}
 		ui.Spacer(c)
 		listNote(c, k, tag).Shrink(0)
@@ -440,7 +442,20 @@ func presetLabel(p presets.Preset) string {
 func (l *launcher) noResults(c *ui.Context, k tokens) {
 	q := strings.TrimSpace(l.query)
 	ui.Column(c).Grow(1).Justify(ui.Center).AlignItems(ui.Center).Padding(0, 24).Children(func() {
-		ui.Text(c, locales.SearchNoResults(q)).FontSize(14).FontWeight(500).TextColor(k.text).SingleLine()
+		// Only the query is cut, at its end, the line at most 544 wide
+		// (design.md 2.6).
+		before, after := around(locales.SearchNoResults(queryMark), queryMark)
+		ui.Row(c).MaxWidth(panelWidth - 96).Label(locales.SearchNoResults(q)).Children(func() {
+			for i, part := range []string{before, q, after} {
+				if part == "" {
+					continue
+				}
+				t := ui.Text(c, part).FontSize(14).FontWeight(500).TextColor(k.text).SingleLine().Shrink(0).AccessHidden(true)
+				if i == 1 {
+					t.Shrink(1)
+				}
+			}
+		})
 		ui.Text(c, locales.SearchNoResultsHint()).FontSize(13).TextColor(k.textOnGlass).Margin(8, 0, 0, 0)
 		if len(l.g.presets) == 0 {
 			ui.Text(c, locales.SearchNoPresetsHint()).FontSize(13).TextColor(k.textOnGlass).Margin(4, 0, 0, 0)
@@ -448,35 +463,43 @@ func (l *launcher) noResults(c *ui.Context, k tokens) {
 	})
 }
 
+// queryMark stands for the query in the no-results line, to find what is
+// around it.
+const queryMark = "\x00"
+
+// around returns what comes before and after mark in s, all of s before
+// it if it is not there.
+func around(s, mark string) (before, after string) {
+	before, after, _ = strings.Cut(s, mark)
+	return before, after
+}
+
 // footer floats over the end of the list, as Raycast's (design.md 2.4):
 // a glass capsule at the bottom right with the primary action and the
 // actions menu, each clickable, and one at the bottom left with a notice,
 // for a few seconds.
 func (l *launcher) footer(c *ui.Context, k tokens) {
+	e, ok := l.current()
+	var segs []segment
+	if ok {
+		name := locales.FooterOpen()
+		if e.app == nil {
+			name = locales.FooterOpenInTerminal()
+		}
+		segs = append(segs, segment{label: name, color: k.text, key: ui.KeyEnter, caps: []string{"↩"}, act: l.primary})
+	}
+	// No results: nothing to act on.
+	segs = append(segs, segment{label: locales.FooterActions(), color: k.textOnGlass, mods: ui.Cmd, key: ui.KeyK,
+		caps: []string{"⌘", "K"}, dim: !ok, act: l.toggleMenu})
 	if l.notice != "" {
 		n := notice{icon: "checkmark.circle", iconColor: k.textOnGlass, color: k.textOnGlass, text: l.notice}
 		if l.noticeDanger {
 			n.icon, n.iconColor, n.color = "exclamationmark.triangle.fill", k.danger, k.danger
 		}
-		noticeCapsule(c, k, capsuleInset, panelWidth-capsuleWidth-24, n)
+		noticeCapsule(c, k, capsuleInset, noticeRoom(panelWidth, actionsCapsuleWidth(c, segs...)), n)
 	}
-	e, ok := l.current()
-	actionsCapsule(c, k, capsuleInset, func() {
-		if ok {
-			name := locales.FooterOpen()
-			if e.app == nil {
-				name = locales.FooterOpenInTerminal()
-			}
-			segment(c, k, name, k.text, 0, ui.KeyEnter, []string{"↩"}, false, l.primary)
-		}
-		// No results: nothing to act on.
-		segment(c, k, locales.FooterActions(), k.textOnGlass, ui.Cmd, ui.KeyK, []string{"⌘", "K"}, !ok, l.toggleMenu)
-	})
+	actionsCapsule(c, k, capsuleInset, segs...)
 }
-
-// capsuleWidth is about the actions capsule's width, which bounds the
-// notice capsule's.
-const capsuleWidth = 280
 
 // isRunning reports whether the app with the bundle ID runs, as it did
 // when the panel showed.
@@ -788,7 +811,7 @@ func (l *launcher) ownList(c *ui.Context, k tokens) {
 					listTitle(c, k, a.label)
 					ui.Spacer(c)
 					if a.note != "" {
-						listNote(c, k, a.note).Shrink(1)
+						listNote(c, k, a.note).MaxWidth(listNoteMax).TruncateMiddle().Shrink(1)
 					}
 					if len(a.caps) > 0 {
 						keycaps(c, k, a.caps, 12)

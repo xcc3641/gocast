@@ -25,6 +25,8 @@ Gocast is a menu-bar app (LSUIElement). It has no Dock icon and no app-switcher 
 
 **Appearance.** `GOCAST_APPEARANCE=dark` (or `light`) forces Gocast's appearance and leaves the Mac's alone. Use it for screenshots and for checking both themes.
 
+**Language.** `MYGO_LOCALE=en` (or `zh-Hans`) sets the UI language for one run and saves nothing. This is MyGo's own variable, the same one `mygo dev -lang` uses. Use it to check the longer English strings.
+
 **Automation:**
 1. `go build -o build/gocast . && MYGO_AUTOMATION=/tmp/gocast-auto/app.sock ./build/gocast`
 2. `mygo-automation open --socket /tmp/gocast-auto/app.sock`
@@ -110,6 +112,19 @@ The text's line box was centered, which leaves baseline glyphs low and arrows, w
 - **Another app holding the shortcut at launch** (registration fails): ⌥⇧Space is used, and the row shows the usual conflict message.
 - **Trying it** without touching the Mac's settings: set `GOCAST_SPOTLIGHT_ENTRY=/path/entry.json`, a file holding the entry as JSON, e.g. `{"enabled":true,"value":{"parameters":[32,49,1048576]}}`. Edit the file, then bring Gocast to the front again.
 - **On this Mac** Spotlight's shortcut is off (`enabled: false`), and Raycast's hot key is `Command-50` (⌘\`), not ⌘Space. Gocast therefore registers ⌘Space and gets it.
+
+### Widths at 640 (design.md 2.1–2.6, 3.2)
+
+- **Panel.** The search panel is 640 wide. The window is the panel plus its shadow margins.
+- **Result rows.** A preset's subtitle is at most 40% of the 624-wide row (`listNoteMax`, 249.6) and is cut in the middle. The title shrinks first, down to 160 or to its own width if that is less (`listTitleLeast`, measured with `MeasureText`), and is cut at its end. Only after that does the subtitle shrink. The empty-query list caps the folder on the right the same way and cuts it in the middle.
+- **Capsules.**
+  - The actions capsule never shrinks. `actionsCapsuleWidth` measures its texts, and the notice capsule gets `noticeRoom` = window width − actions capsule − 24 and is cut at its end. The full text goes into the notice's label and tooltip. The terminal's notice capsule uses the same rule.
+  - The computed width matches the laid-out width exactly: 331.19 for "Open in Floating Terminal ↩ · Actions ⌘K". Design.md estimates about 315. Each outline key is its text + 10 + a 2 border, at least 22.
+- **⌘K popup.** Still 320 wide. A name grows to fill the row and is cut at its end, the keys never shrink, and the gap between name and keys is 8 + 4 = 12.
+- **No-results line.** It is split around the query, using `queryMark` in the catalog string. Only the query shrinks, and the line is at most 544 (640 − 96).
+- **Terminal size.**
+  - Defaults are 50% wide and 60% high. Width runs 30–100 and height 30–90. The minimum is still 640×300 px.
+  - On a 1512-wide work area, 640 px is 42%, so the width slider has no visible effect below 42% there.
 
 ### ⌘K with an empty query (design.md 2.5a, copy.md v1.7)
 

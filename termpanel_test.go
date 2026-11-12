@@ -40,9 +40,11 @@ func TestTermSize(t *testing.T) {
 		st           settings.Settings
 		wantW, wantH int
 	}{
-		// Unset: 80% by 50%, with no cap on the width.
-		{"default", 1512, 949, settings.Settings{}, 1210, 475},
-		{"wide display", 2560, 1400, settings.Settings{}, 2048, 700},
+		// Unset: 50% by 60% (design.md 3.2), with no cap on the width.
+		{"default", 1512, 949, settings.Settings{}, 756, 569},
+		{"wide display", 2560, 1400, settings.Settings{}, 1280, 840},
+		{"30% wide: never under 640", 1512, 949, settings.Settings{TerminalWidth: 30}, 640, 569},
+		{"30% of a wide display", 2560, 1400, settings.Settings{TerminalWidth: 30}, 768, 840},
 		{"60×40", 1512, 949, settings.Settings{TerminalWidth: 60, TerminalHeight: 40}, 907, 380},
 		{"63×37", 1512, 949, settings.Settings{TerminalWidth: 63, TerminalHeight: 37}, 953, 351},
 		{"largest", 2560, 1400, settings.Settings{TerminalWidth: 100, TerminalHeight: 90}, 2560, 1260},
@@ -51,6 +53,7 @@ func TestTermSize(t *testing.T) {
 		{"tiny work area", 600, 280, settings.Settings{TerminalWidth: 50, TerminalHeight: 30}, 600, 280},
 		// Out of range values from a hand-edited file are clamped.
 		{"clamped", 1000, 1000, settings.Settings{TerminalWidth: 20, TerminalHeight: 99}, 640, 900},
+		{"clamped to 30% wide", 2560, 1400, settings.Settings{TerminalWidth: 10}, 768, 840},
 	} {
 		w, h := termSize(c.waW, c.waH, c.st)
 		if w != c.wantW || h != c.wantH {
@@ -67,7 +70,8 @@ func TestTermPercent(t *testing.T) {
 		{1000, 1512, 50, 100, 66}, // 66.1%
 		{1050, 1512, 50, 100, 69}, // 69.4%
 		{1060, 1512, 50, 100, 70}, // 70.1%
-		{640, 1512, 50, 100, 50},  // the minimum width is under 50%
+		{640, 1512, 30, 100, 42},  // 42.3%: the minimum width
+		{400, 1512, 30, 100, 30},  // under the range
 		{1512, 1512, 50, 100, 100},
 		{300, 949, 30, 90, 32}, // 31.6%
 		{200, 949, 30, 90, 30}, // under the range
@@ -116,7 +120,7 @@ func TestDragSize(t *testing.T) {
 		{"under the minimum", r(302, 41, 908, 120), 908, 300},
 		{"over 90% high", r(302, 41, 908, 940), 908, 854},
 		{"wider than the screen", r(0, 41, 1300, 380), 1512, 380},
-		{"under 50% wide", r(500, 41, 512, 380), 756, 380},
+		{"under 640 wide", r(500, 41, 512, 380), 640, 380},
 	} {
 		w, h := dragSize(prev, c.b, wa)
 		if w != c.wantW || h != c.wantH {

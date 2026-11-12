@@ -32,8 +32,11 @@ func TestSnapPercent(t *testing.T) {
 
 func TestTerminalSize(t *testing.T) {
 	var s Settings
-	if s.TermWidth() != DefaultTerminalWidth || s.TermHeight() != DefaultTerminalHeight {
+	if s.TermWidth() != 50 || s.TermHeight() != 60 { // design.md 3.2
 		t.Fatalf("defaults: %d×%d", s.TermWidth(), s.TermHeight())
+	}
+	if MinTerminalWidth != 30 || MaxTerminalWidth != 100 || MinTerminalHeight != 30 || MaxTerminalHeight != 90 {
+		t.Fatalf("ranges: width %d–%d, height %d–%d", MinTerminalWidth, MaxTerminalWidth, MinTerminalHeight, MaxTerminalHeight)
 	}
 	s.TerminalWidth, s.TerminalHeight = 20, 200 // edited by hand
 	if s.TermWidth() != MinTerminalWidth || s.TermHeight() != MaxTerminalHeight {

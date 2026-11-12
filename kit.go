@@ -24,8 +24,9 @@ const (
 	menuWidth        = 320
 	menuMaxHeight    = 300
 	menuRowHeight    = 32
-	menuPad          = 6 // around a popup menu's rows
-	menuRowPad       = 8 // in a row, before its icon and after its keys
+	menuPad          = 6  // around a popup menu's rows
+	menuNameGap      = 12 // the least between a row's name and keys
+	menuRowPad       = 8  // in a row, before its icon and after its keys
 	// menuTextInset is where a popup menu's rows start their icon and end
 	// their keys, from its edges, as its filter field and title do.
 	menuTextInset   = menuPad + menuRowPad
@@ -137,7 +138,7 @@ func capNudge(label string) float32 {
 
 // keycaps draws the keys of a shortcut, 4 apart.
 func keycaps(c *ui.Context, k tokens, caps []string, size float32) {
-	ui.Row(c).Gap(4).AlignItems(ui.Center).AccessHidden(true).Children(func() {
+	ui.Row(c).Gap(4).AlignItems(ui.Center).Shrink(0).AccessHidden(true).Children(func() {
 		for _, cp := range caps {
 			keycap(c, k, cp, size)
 		}
@@ -147,9 +148,9 @@ func keycaps(c *ui.Context, k tokens, caps []string, size float32) {
 // outlineKeycaps draws the keys of a shortcut in an actions capsule
 // (design.md 2.4): 22 high, outlined in the hairline, not filled.
 func outlineKeycaps(c *ui.Context, k tokens, color ui.Color, caps ...string) {
-	ui.Row(c).Gap(4).AlignItems(ui.Center).AccessHidden(true).Children(func() {
+	ui.Row(c).Gap(capGap).AlignItems(ui.Center).Shrink(0).AccessHidden(true).Children(func() {
 		for _, cp := range caps {
-			ui.Box(c).Height(22).MinWidth(22).Padding(0, 5).Radius(6).Border(1, k.hairline).Center().Children(func() {
+			ui.Box(c).Height(outlineCap).MinWidth(outlineCap).Padding(0, outlineCapPad).Radius(6).Border(1, k.hairline).Center().Children(func() {
 				capLabel(c, cp, 12, color)
 			})
 		}
@@ -170,19 +171,81 @@ func capsule(c *ui.Context, k tokens, inset float32) ui.Element {
 		Shadow(0, 4, 12, 0, ui.RGBA(0, 0, 0, 0.12))
 }
 
-// actionsCapsule is the capsule of actions at the bottom right: its
-// segments come from segment.
-func actionsCapsule(c *ui.Context, k tokens, inset float32, segments func()) {
+// actionsCapsule is the capsule of actions at the bottom right, as wide
+// as its segments are, never shortened (design.md 2.4): the notice
+// capsule beside it gives way.
+func actionsCapsule(c *ui.Context, k tokens, inset float32, segs ...segment) {
 	c.Key("actions")
-	capsule(c, k, inset).Right(inset).Padding(0, 3, 0, 6).Gap(4).Children(segments)
+	e := capsule(c, k, inset)
+	e.Right(inset).Shrink(0).Padding(0, 3, 0, 6).Gap(4).Children(func() {
+		for _, sg := range segs {
+			sg.draw(c, k)
+		}
+	})
+}
+
+// The measures of an actions capsule: its padding, left and right; the
+// gap between its segments; a segment's padding, left and right, and the
+// gap between its name and keys; a key's least width, padding and the gap
+// between keys (outlineKeycaps).
+const (
+	capsulePadL, capsulePadR, segmentGap  = 6, 3, 4
+	segmentPadL, segmentPadR, segmentKeys = 8, 6, 8
+	outlineCap, outlineCapPad, capGap     = 22, 5, 4
+)
+
+// actionsCapsuleWidth is the width of the actions capsule of segs, its
+// border included, as laid out.
+func actionsCapsuleWidth(c *ui.Context, segs ...segment) float32 {
+	return capsuleWidthOf(func(text string, size float32) float32 {
+		w, _ := c.MeasureText(0, ui.Span{Text: text, Size: size})
+		return w
+	}, segs...)
+}
+
+// capsuleWidthOf is actionsCapsuleWidth, the texts' widths given by
+// measure.
+func capsuleWidthOf(measure func(text string, size float32) float32, segs ...segment) float32 {
+	w := float32(capsulePadL + capsulePadR + 2) // and the 1 DIP border
+	for i, sg := range segs {
+		if i > 0 {
+			w += segmentGap
+		}
+		w += segmentPadL + measure(sg.label, 13) + segmentKeys + segmentPadR
+		for j, cp := range sg.caps {
+			if j > 0 {
+				w += capGap
+			}
+			w += max(outlineCap, measure(cp, 12)+2*outlineCapPad+2) // and its border
+		}
+	}
+	return w
+}
+
+// noticeRoom is the most a notice capsule may take beside an actions
+// capsule actions wide, in a window width wide (design.md 2.4): the
+// window less both, the insets at both sides and 8 between.
+func noticeRoom(width, actions float32) float32 {
+	return width - actions - 24
 }
 
 // segment is a clickable part of an actions capsule, its action's name
 // and keys, in the selection color while pressed. dim draws it for an
 // action that can't be taken.
-func segment(c *ui.Context, k tokens, label string, color ui.Color, mods ui.Modifiers, key ui.Key, caps []string, dim bool, act func()) {
-	seg := ui.Row(c).Height(capsuleHeight-6).Radius(14).Padding(0, 6, 0, 8).Gap(8).AlignItems(ui.Center).
-		Label(label).KeyShortcuts(mods, key)
+type segment struct {
+	label string
+	color ui.Color
+	mods  ui.Modifiers
+	key   ui.Key
+	caps  []string
+	dim   bool
+	act   func()
+}
+
+func (sg segment) draw(c *ui.Context, k tokens) {
+	label, color, caps, dim, act := sg.label, sg.color, sg.caps, sg.dim, sg.act
+	seg := ui.Row(c).Height(capsuleHeight-6).Radius(14).Padding(0, segmentPadR, 0, segmentPadL).Gap(segmentKeys).
+		AlignItems(ui.Center).Shrink(0).Label(label).KeyShortcuts(sg.mods, sg.key)
 	if dim {
 		// Dimmed by its colors, as opacity under glass draws the glass
 		// dark.
@@ -199,7 +262,7 @@ func segment(c *ui.Context, k tokens, label string, color ui.Color, mods ui.Modi
 		capColor = capColor.Alpha(0.4)
 	}
 	seg.Children(func() {
-		ui.Text(c, label).FontSize(13).TextColor(color).SingleLine()
+		ui.Text(c, label).FontSize(13).TextColor(color).SingleLine().Shrink(0)
 		outlineKeycaps(c, k, capColor, caps...)
 	})
 }
@@ -215,14 +278,15 @@ type notice struct {
 }
 
 // noticeCapsule shows a notice at the bottom left, at most maxWidth wide,
-// fading in and out (design.md 2.4, 3.6).
+// its text cut at the end if it must, which its label and tooltip say
+// whole; fading in and out (design.md 2.4, 3.6).
 func noticeCapsule(c *ui.Context, k tokens, inset, maxWidth float32, n notice) {
 	size := n.size
 	if size == 0 {
 		size = 12
 	}
 	c.Key("notice")
-	e := capsule(c, k, inset).Left(inset).MaxWidth(maxWidth).Padding(0, 14).Gap(6)
+	e := capsule(c, k, inset).Left(inset).MaxWidth(maxWidth).Padding(0, 14).Gap(6).Label(n.text).Tooltip(n.text)
 	if n.extra != nil {
 		e.Padding(0, 8, 0, 14)
 	}
@@ -232,7 +296,7 @@ func noticeCapsule(c *ui.Context, k tokens, inset, maxWidth float32, n notice) {
 	}
 	e.Children(func() {
 		sfsymbols.Symbol(c, n.icon).Size(14).Color(n.iconColor)
-		ui.Text(c, n.text).FontSize(size).TextColor(n.color).SingleLine().Shrink(1)
+		ui.Text(c, n.text).FontSize(size).TextColor(n.color).SingleLine().Shrink(1).AccessHidden(true)
 		if n.extra != nil {
 			n.extra()
 		}
@@ -305,8 +369,9 @@ func menuRow(c *ui.Context, k tokens, icon, label, note string, caps []string, c
 		if icon != "" {
 			sfsymbols.Symbol(c, icon).Size(16).Color(k.text)
 		}
-		ui.Text(c, label).FontSize(13).TextColor(k.text).SingleLine().Shrink(1)
-		ui.Spacer(c)
+		// The name cut at its end, the keys whole, 12 apart at least
+		// (design.md 2.5): the row's 8 and 4.
+		ui.Text(c, label).FontSize(13).TextColor(k.text).SingleLine().Shrink(1).Grow(1).Margin(0, menuNameGap-8, 0, 0)
 		if note != "" {
 			ui.Text(c, note).FontSize(12).TextColor(k.textOnGlass).SingleLine().Shrink(1)
 		}
@@ -377,6 +442,14 @@ func presetSquare(c *ui.Context, k tokens) {
 func listTitle(c *ui.Context, k tokens, title string) ui.Element {
 	return ui.Text(c, title).FontSize(14).TextColor(k.text).SingleLine().Shrink(1)
 }
+
+// listNoteMax is the most a row's subtitle, or the folder at its right,
+// takes: 40% of the row (design.md 2.3, 2.5a).
+const listNoteMax = (panelWidth - 2*listInset) * 0.4
+
+// listTitleLeast is the least a row's title keeps of its width as its
+// subtitle takes room (design.md 2.3).
+const listTitleLeast = 160
 
 // listNote is the gray text at a row's right, 12.
 func listNote(c *ui.Context, k tokens, note string) ui.Element {

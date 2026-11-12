@@ -502,27 +502,25 @@ func (p *termPanel) capsules(c *ui.Context, k tokens, s *session) {
 		s.announced = true
 		c.Announce(n.text)
 	}
-	room := float32(p.win.Bounds().Width) - 2*termInset
+	width := float32(p.win.Bounds().Width)
+	room := width - 2*termInset
+	var segs []segment
 	if s.exited {
-		room -= actionsWidth + termInset
-	}
-	noticeCapsule(c, k, termInset, max(room, 160), n)
-	if !s.exited {
-		return
-	}
-	actionsCapsule(c, k, termInset, func() {
 		name := locales.TermRunAgain()
 		if s.commandMissing() {
 			name = locales.ActionEditPreset()
 		}
-		segment(c, k, name, k.text, 0, ui.KeyEnter, []string{"↩"}, false, func() { p.primary(s) })
-		segment(c, k, locales.TermCloseTab(), k.textOnGlass, ui.Cmd, ui.KeyW, []string{"⌘", "W"}, false, func() { p.closeTab(s) })
-	})
+		segs = []segment{
+			{label: name, color: k.text, key: ui.KeyEnter, caps: []string{"↩"}, act: func() { p.primary(s) }},
+			{label: locales.TermCloseTab(), color: k.textOnGlass, mods: ui.Cmd, key: ui.KeyW, caps: []string{"⌘", "W"}, act: func() { p.closeTab(s) }},
+		}
+		room = width - actionsCapsuleWidth(c, segs...) - 3*termInset
+	}
+	noticeCapsule(c, k, termInset, max(room, 160), n)
+	if s.exited {
+		actionsCapsule(c, k, termInset, segs...)
+	}
 }
-
-// actionsWidth is about the width of the terminal's actions capsule,
-// which bounds the notice capsule's.
-const actionsWidth = 260
 
 // primary is the end capsule's first action: run the preset again, or
 // edit it when its command was not found.
