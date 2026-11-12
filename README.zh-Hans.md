@@ -26,7 +26,13 @@ Gocast 待在菜单栏，不占 Dock。深色、浅色跟着系统走，界面�
 curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh | sh
 ```
 
-卸载：`sh install.sh --uninstall`。预设和设置会留着。
+卸载：
+
+```sh
+curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh | sh -s -- --uninstall
+```
+
+预设和设置会留着。
 
 **系统要求：** macOS 13 或更高版本，Apple 芯片。之后会支持 Intel。
 

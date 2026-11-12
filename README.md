@@ -26,7 +26,13 @@ It lives in the menu bar, with no Dock icon. It follows your Mac's light or dark
 curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh | sh
 ```
 
-To uninstall: `sh install.sh --uninstall`. Your presets and settings stay.
+To uninstall:
+
+```sh
+curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh | sh -s -- --uninstall
+```
+
+Your presets and settings stay.
 
 **Requires** macOS 13 or later on Apple silicon. Intel support is planned.
 
