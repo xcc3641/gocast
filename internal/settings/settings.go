@@ -11,6 +11,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"slices"
 )
 
 const (
@@ -19,6 +20,7 @@ const (
 	DefaultLauncherShortcut  = "Cmd+Space"
 	FallbackLauncherShortcut = "Alt+Shift+Space"
 	DefaultTerminalShortcut  = "Ctrl+`"
+	DefaultClipboardShortcut = "Ctrl+Cmd+V"
 	DefaultFontSize          = 13
 	MinFontSize, MaxFontSize = 11, 20
 
@@ -56,6 +58,56 @@ type Settings struct {
 	TerminalHeight int `json:"terminalHeightPercent,omitempty"`
 	// PlainTipDismissed: the tip over a plain terminal, closed for good.
 	PlainTipDismissed bool `json:"plainTerminalTipDismissed,omitempty"`
+
+	// The clipboard history (design.md 4.4 剪贴板). ClipboardShortcut
+	// opens it, "" for the default ⌃⌘V.
+	ClipboardShortcut string `json:"clipboardShortcut,omitempty"`
+	// ClipboardOff: the history records nothing (the switch "Keep
+	// clipboard history", on by default).
+	ClipboardOff bool `json:"clipboardHistoryOff,omitempty"`
+	// ClipboardRetention is how long unpinned items are kept, as
+	// clipboard.Retention spells it ("1d", "1w", "1m", "3m", "forever");
+	// "" for a month.
+	ClipboardRetention string `json:"clipboardRetention,omitempty"`
+	// ClipboardCopyOnly: Return only copies, not pastes (the switch
+	// "Press Return to paste", on by default; "Just Copy" turns it off).
+	ClipboardCopyOnly bool `json:"clipboardReturnCopiesOnly,omitempty"`
+	// ClipboardIgnoredApps are the bundle IDs of the apps whose copies
+	// are not kept; nil until the user changes them, for the defaults,
+	// and an empty list once the user removed them all.
+	ClipboardIgnoredApps *[]string `json:"clipboardIgnoredApps,omitempty"`
+}
+
+// Clipboard is the clipboard history's shortcut.
+func (s Settings) Clipboard() string {
+	if s.ClipboardShortcut == "" {
+		return DefaultClipboardShortcut
+	}
+	return s.ClipboardShortcut
+}
+
+// PasteOnReturn reports whether Return pastes the item chosen in the
+// clipboard history, rather than only copying it.
+func (s Settings) PasteOnReturn() bool { return !s.ClipboardCopyOnly }
+
+// IgnoredApps are the bundle IDs of the apps whose copies the history does
+// not keep: defaults until the user changed the list.
+func (s Settings) IgnoredApps(defaults []string) []string {
+	if s.ClipboardIgnoredApps == nil {
+		return append([]string(nil), defaults...)
+	}
+	return append([]string{}, (*s.ClipboardIgnoredApps)...)
+}
+
+// SetIgnoredApps keeps the list of ignored apps, nil again when it is the
+// defaults.
+func (s *Settings) SetIgnoredApps(ids, defaults []string) {
+	if slices.Equal(ids, defaults) {
+		s.ClipboardIgnoredApps = nil
+		return
+	}
+	list := append([]string{}, ids...)
+	s.ClipboardIgnoredApps = &list
 }
 
 // Launcher is the search panel's shortcut.

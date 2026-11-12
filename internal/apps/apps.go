@@ -168,3 +168,9 @@ func str(v any) string {
 	s, _ := v.(string)
 	return s
 }
+
+// BundleID is the bundle identifier of the app at path (its Info.plist's
+// CFBundleIdentifier), or "" when it has none.
+func BundleID(path string) string {
+	return str(decode(filepath.Join(path, "Contents", "Info.plist"))["CFBundleIdentifier"])
+}

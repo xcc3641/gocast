@@ -18,11 +18,16 @@ var (
 	selPool   = objc.RegisterName("new")
 	selDrain  = objc.RegisterName("drain")
 	selTermed = objc.RegisterName("isTerminated")
+	selShared = objc.RegisterName("sharedWorkspace")
+	selURLFor = objc.RegisterName("URLForApplicationWithBundleIdentifier:")
+	selPath   = objc.RegisterName("path")
+	selUTF8   = objc.RegisterName("UTF8String")
 )
 
 var (
 	load                          sync.Once
 	classStr, classApp, classPool objc.ID
+	classWorkspace                objc.ID
 )
 
 // classes looks the classes up once AppKit is loaded, which MyGo has done
@@ -33,6 +38,7 @@ func classes() bool {
 		classStr = objc.ID(objc.GetClass("NSString"))
 		classApp = objc.ID(objc.GetClass("NSRunningApplication"))
 		classPool = objc.ID(objc.GetClass("NSAutoreleasePool"))
+		classWorkspace = objc.ID(objc.GetClass("NSWorkspace"))
 	})
 	return classStr != 0 && classApp != 0 && classPool != 0
 }
@@ -68,4 +74,24 @@ func Quit(bundleID string) bool {
 	asked := false
 	each(bundleID, func(app objc.ID) { asked = objc.Send[bool](app, selTerm) || asked })
 	return asked
+}
+
+// AppPath is where the app with bundleID is installed, as Launch Services
+// finds it (NSWorkspace's URLForApplicationWithBundleIdentifier:), or ""
+// when it is not.
+func AppPath(bundleID string) string {
+	if bundleID == "" || !classes() || classWorkspace == 0 {
+		return ""
+	}
+	pool := classPool.Send(selPool)
+	defer pool.Send(selDrain)
+	url := classWorkspace.Send(selShared).Send(selURLFor, classStr.Send(selString, bundleID))
+	if url == 0 {
+		return ""
+	}
+	path := url.Send(selPath)
+	if path == 0 {
+		return ""
+	}
+	return objc.Send[string](path, selUTF8)
 }

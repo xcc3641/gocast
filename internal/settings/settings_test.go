@@ -3,6 +3,7 @@ package settings
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -130,5 +131,43 @@ func TestTermWidthOn(t *testing.T) {
 		if s.TerminalWidth != c.set {
 			t.Errorf("TerminalWidth became %d", s.TerminalWidth)
 		}
+	}
+}
+
+func TestClipboardSettings(t *testing.T) {
+	var s Settings
+	if s.Clipboard() != "Ctrl+Cmd+V" || !s.PasteOnReturn() {
+		t.Errorf("defaults: %q, paste %v", s.Clipboard(), s.PasteOnReturn())
+	}
+	defaults := []string{"a", "b"}
+	if got := s.IgnoredApps(defaults); !slices.Equal(got, defaults) {
+		t.Errorf("unset ignored apps = %v", got)
+	}
+	s.SetIgnoredApps(nil, defaults) // all removed: empty, not the defaults
+	if got := s.IgnoredApps(defaults); got == nil || len(got) != 0 {
+		t.Errorf("emptied ignored apps = %#v", got)
+	}
+	path := filepath.Join(t.TempDir(), "settings.json")
+	if err := s.Save(path); err != nil {
+		t.Fatal(err)
+	}
+	data, _ := os.ReadFile(path)
+	if !strings.Contains(string(data), `"clipboardIgnoredApps": []`) {
+		t.Errorf("saved %s", data)
+	}
+	out, err := Load(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := out.IgnoredApps(defaults); got == nil || len(got) != 0 {
+		t.Errorf("emptied ignored apps load as %#v", got)
+	}
+	out.SetIgnoredApps([]string{"a", "b"}, defaults) // the defaults again: unset
+	if out.ClipboardIgnoredApps != nil {
+		t.Errorf("defaults kept as %v", *out.ClipboardIgnoredApps)
+	}
+	out.SetIgnoredApps([]string{"c"}, defaults)
+	if got := out.IgnoredApps(defaults); !slices.Equal(got, []string{"c"}) {
+		t.Errorf("ignored apps = %v", got)
 	}
 }

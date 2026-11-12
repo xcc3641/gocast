@@ -12,3 +12,12 @@ func TestFinder(t *testing.T) {
 		t.Fatal("an app that does not exist runs")
 	}
 }
+
+func TestAppPath(t *testing.T) {
+	if got := AppPath("com.apple.finder"); got != "/System/Library/CoreServices/Finder.app" {
+		t.Errorf("Finder is at %q", got)
+	}
+	if got := AppPath("dev.gocast.no-such-app"); got != "" {
+		t.Errorf("an app that does not exist is at %q", got)
+	}
+}

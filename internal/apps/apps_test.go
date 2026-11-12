@@ -60,3 +60,21 @@ func TestSystemApps(t *testing.T) {
 		t.Errorf("Calculator in zh-Hans: %q", got)
 	}
 }
+
+func TestBundleID(t *testing.T) {
+	app := filepath.Join(t.TempDir(), "Notes.app")
+	if err := os.MkdirAll(filepath.Join(app, "Contents"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if got := BundleID(app); got != "" {
+		t.Errorf("no Info.plist: %q", got)
+	}
+	plist := `<?xml version="1.0" encoding="UTF-8"?>
+<plist version="1.0"><dict><key>CFBundleIdentifier</key><string>com.apple.Notes</string></dict></plist>`
+	if err := os.WriteFile(filepath.Join(app, "Contents", "Info.plist"), []byte(plist), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if got := BundleID(app); got != "com.apple.Notes" {
+		t.Errorf("BundleID = %q", got)
+	}
+}

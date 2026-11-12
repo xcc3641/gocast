@@ -9,3 +9,6 @@ func IsRunning(string) bool { return false }
 
 // Quit does nothing outside macOS.
 func Quit(string) bool { return false }
+
+// AppPath returns "" outside macOS.
+func AppPath(string) string { return "" }
