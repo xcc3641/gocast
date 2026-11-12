@@ -41,7 +41,7 @@ For real window captures, `screencapture -x -o -l <CGWindowID>` works. Get the I
 
 ## Release build
 
-`mygo build --out <dir>` produces:
+`mygo build -o <dir>` produces:
 - `<dir>/darwin-arm64/Gocast.app`
 - `gocast-0.1.0-arm64.dmg`
 
