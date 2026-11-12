@@ -26,6 +26,7 @@ const (
 	// display it shows on, in steps of SizeStep (design.md 4.4).
 	DefaultTerminalWidth                 = 50
 	MinTerminalWidth, MaxTerminalWidth   = 30, 100
+	MinTerminalPixels                    = 640 // the least it is wide, in DIPs, which may be over MinTerminalWidth
 	DefaultTerminalHeight                = 60
 	MinTerminalHeight, MaxTerminalHeight = 30, 90
 	SizeStep                             = 1
@@ -97,6 +98,25 @@ func (s Settings) TermWidth() int {
 		return DefaultTerminalWidth
 	}
 	return SnapPercent(float64(s.TerminalWidth), MinTerminalWidth, MaxTerminalWidth)
+}
+
+// MinTermWidth is the least width the floating terminal has, in percent
+// of a work area workArea wide: MinTerminalPixels of it, rounded up, at
+// least MinTerminalWidth (design.md 4.4): 43 on a 1512 one, 30 on a 2560
+// one.
+func MinTermWidth(workArea int) int {
+	if workArea <= 0 {
+		return MinTerminalWidth
+	}
+	pct := (MinTerminalPixels*100 + workArea - 1) / workArea
+	return min(max(pct, MinTerminalWidth), MaxTerminalWidth)
+}
+
+// TermWidthOn is the floating terminal's width in percent of a work area
+// workArea wide: TermWidth, at least MinTermWidth. TerminalWidth stays
+// what was set, for a wider display.
+func (s Settings) TermWidthOn(workArea int) int {
+	return max(s.TermWidth(), MinTermWidth(workArea))
 }
 
 // TermHeight is the floating terminal's height in percent of the work

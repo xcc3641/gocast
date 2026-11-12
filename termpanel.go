@@ -23,7 +23,7 @@ import (
 
 // The floating terminal's measures (design.md 3.2–3.6), in DIPs.
 const (
-	termMinWidth  = 640 // as small as the panel gets, by any setting or drag
+	termMinWidth  = settings.MinTerminalPixels // as small as the panel gets, by any setting or drag
 	termMinHeight = 300
 	termTopGap    = 8
 	tabBarH       = 52
@@ -831,7 +831,7 @@ func dragSize(prev, b, wa mygo.Rectangle) (w, h int) {
 	if b.Y == prev.Y && b.Height != prev.Height { // the bottom edge
 		h = b.Height
 	}
-	w = clampSize(w, wa.Width, settings.MinTerminalWidth, settings.MaxTerminalWidth, termMinWidth)
+	w = clampSize(w, wa.Width, settings.MinTermWidth(wa.Width), settings.MaxTerminalWidth, termMinWidth)
 	h = clampSize(h, wa.Height, settings.MinTerminalHeight, settings.MaxTerminalHeight, termMinHeight)
 	return w, h
 }
@@ -854,11 +854,20 @@ func (p *termPanel) sizeChanged() {
 	p.place(mygo.Rectangle{X: p.wa.X + (p.wa.Width-w)/2, Y: p.wa.Y + termTopGap, Width: w, Height: h})
 }
 
+// workAreaWidth is the width of the work area of the display the panel
+// is on, else of the one under the mouse, where it would show.
+func (p *termPanel) workAreaWidth() int {
+	if p.shown && p.wa.Width > 0 {
+		return p.wa.Width
+	}
+	return mygo.Screen.DisplayNearestPoint(mygo.Screen.CursorScreenPoint()).WorkArea.Width
+}
+
 // termSize is the panel's size in a work area of waW×waH for the
 // percentages of the settings (design.md 3.2): no smaller than
 // termMinWidth×termMinHeight, no larger than the work area.
 func termSize(waW, waH int, st settings.Settings) (w, h int) {
-	w, h = percentOf(waW, st.TermWidth()), percentOf(waH, st.TermHeight())
+	w, h = percentOf(waW, st.TermWidthOn(waW)), percentOf(waH, st.TermHeight())
 	return min(max(w, termMinWidth), waW), min(max(h, termMinHeight), waH)
 }
 

@@ -95,3 +95,40 @@ func TestShortcutSettingsRoundTrip(t *testing.T) {
 		t.Errorf("{} loads as %+v", out)
 	}
 }
+
+func TestMinTermWidth(t *testing.T) {
+	for _, c := range []struct{ workArea, want int }{
+		{1512, 43}, // 42.3: up
+		{2560, 30}, // 25: at least 30
+		{2133, 31}, // 30.004
+		{2134, 30}, // 29.99
+		{1280, 50}, // exactly
+		{1600, 40},
+		{640, 100},
+		{500, 100}, // never over 100
+		{0, 30},    // none known
+	} {
+		if got := MinTermWidth(c.workArea); got != c.want {
+			t.Errorf("MinTermWidth(%d) = %d, want %d", c.workArea, got, c.want)
+		}
+	}
+}
+
+func TestTermWidthOn(t *testing.T) {
+	for _, c := range []struct {
+		set, workArea, want int
+	}{
+		{30, 1512, 43}, // used no less than the least
+		{30, 2560, 30},
+		{0, 1512, 50}, // the default
+		{60, 1512, 60},
+	} {
+		s := Settings{TerminalWidth: c.set}
+		if got := s.TermWidthOn(c.workArea); got != c.want {
+			t.Errorf("TermWidthOn(%d) with %d set = %d, want %d", c.workArea, c.set, got, c.want)
+		}
+		if s.TerminalWidth != c.set {
+			t.Errorf("TerminalWidth became %d", s.TerminalWidth)
+		}
+	}
+}

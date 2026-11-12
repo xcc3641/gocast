@@ -123,8 +123,35 @@ The text's line box was centered, which leaves baseline glyphs low and arrows, w
 - **⌘K popup.** Still 320 wide. A name grows to fill the row and is cut at its end, the keys never shrink, and the gap between name and keys is 8 + 4 = 12.
 - **No-results line.** It is split around the query, using `queryMark` in the catalog string. Only the query shrinks, and the line is at most 544 (640 − 96).
 - **Terminal size.**
-  - Defaults are 50% wide and 60% high. Width runs 30–100 and height 30–90. The minimum is still 640×300 px.
-  - On a 1512-wide work area, 640 px is 42%, so the width slider has no visible effect below 42% there.
+  - Defaults are 50% wide and 60% high. Height runs 30–90. The minimum is still 640×300 px.
+  - The width's least is `settings.MinTermWidth(workArea)` = max(30, ⌈640 / work-area width × 100⌉): 43 on this Mac's 1512, 30 on a 2560 display. The work area is that of the display the terminal is on, or of the one under the mouse when it is hidden (`termPanel.workAreaWidth`).
+  - The slider's track starts at that least. The stored `terminalWidthPercent` stays as set (30 stays 30 in settings.json) and is shown and used as max(stored, least) (`Settings.TermWidthOn`), so a wider display gets it back. On 1512, 43% is 650 px, not 640.
+  - Dragging an edge clamps the width to the least too and saves the rounded percent.
+
+### Right line (design.md 2.1a, measured on 2× captures)
+
+Whatever is at the search panel's right ends on one line 20 from its right edge (`rightLine` in kit.go; `TestRightLine` checks the sums).
+
+| Item | Sum | Before (ink, DIP from the edge) | After |
+| --- | --- | --- | --- |
+| Result row tag 应用 / App | list 8 + row 12 (`listRowPadR`) | 21.5 / 20.5 | 20.5 / 19.5 |
+| Empty-query list keycaps (⌃\`, ⌘,) | the same | 20 | 20 |
+| Empty-query list folder (~, …032) | the same | 20.5 / 21.5 | 19.5 / 20.5 |
+| Capsule's last key K | inset 8 + border 1 + `capsulePadR` 3 + `segmentPadR` 8 (was 6) | 18 | 20 |
+| ⌘K popup keys | inset 8 + `menuPad` 6 + `menuRowPadR` 6 (was 8; the left stays 8) | 22 | 20 |
+| ⌘K popup filter field | inset 8 + `menuTextInsetR` 12 | 22 (frame) | 20 (frame) |
+| Search bar spinner | the bar's right padding 20 | 19.5 | 19.5 |
+
+Keys are boxes and end on the line exactly. Text glyphs end inside their advance (应用 and digits 1.5, App and ~ 0.5), so `listNote` reaches `noteBearing` = 1 past the row's padding; every item then ends within 0.5 of the line, in both languages. Left side, for reference: the result icons' ink at 20 from the panel's left (cell at 18), titles at 54; in the popup, the icons at 14 (ink 15), the filter text at 14, the names at 26.
+
+Captures: `screens/v9/align-right-before.png` and `align-right-after.png` (light, query "t3", ⌘K open), `align-right-after-capsule.png` (no popup), `align-right-after-en.png`, `align-right-empty-{en,zh-Hans}.png`, `align-right-spinner.png` (a build with the spinner forced on).
+
+### Copies and names (design.md 2.3)
+
+- `apps.Unique`: copies with one bundle ID are one app. The one kept is in /Applications or /System/Applications, else ~/Applications, else the first found.
+- `apps.Places`: apps of one name (any case) with different IDs all stay, each with its folder after the name, styled as a preset's subtitle (13 secondary, at most 40%, cut in the middle). When they share the folder, as Siri (`com.apple.siri.launcher`, Siri.app) and Siri (`com.apple.campo`, Siri AI.app) both in /System/Applications, the whole path tells them apart. Assistive technology reads the folder after the tag.
+- On this Mac the 180 apps before and after are the same: no ID has two copies. Only the two Siri rows change.
+- Background-only (`LSBackgroundOnly`) apps found: Claude Code URL Handler, Parsec. Agents (`LSUIElement`): Apps, Bob, 调度中心, 飞连, 关于本机, Input Source Pro, iOS App安装器, 截屏, KeepingYouAwake, LunarBar, MEGAsync, NordVPN, Raycast, Rectangle, Scroll Reverser, 时间机器, both Siris, Stats, Tailscale, 系统信息. None is left out.
 
 ### ⌘K with an empty query (design.md 2.5a, copy.md v1.7)
 
@@ -199,6 +226,8 @@ The earlier skeleton checks still hold (`.airbuild/artifacts/screens/`):
 6. **List bottom fade (2.3).** Not done. MyGo has no mask, and design.md says this is not a defect.
 7. **Empty query (2.6).** The list of suggestions (frecency) is built but off (`suggestionsEnabled = false` in launcher.go) until decided. Compact is the default.
 8. **Tray menu.** 设置… shows ⌘, on the right as well, the Mac's usual Settings shortcut; it also works in the search panel.
+9. **Same-name apps (2.3).** The folder is shown, except when the apps share it (the two Siris in /System/Applications): then the whole path, the folder alone telling nothing.
+10. **Right line (2.1a).** The gray texts at the right (tags, folders) reach 1 past the row's 12 padding, so that their glyphs, not their advances, end on the line with the keys.
 
 ## Manual tests still needed
 

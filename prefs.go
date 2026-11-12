@@ -743,7 +743,11 @@ func (p *prefsWindow) generalPage(c *ui.Context, k tokens) {
 		})
 		sizeHint := locales.GeneralSizeHint()
 		g.row(c, k, locales.GeneralWidth(), sizeHint, k.textSecondary, func() {
-			if p.percentSlider(c, k, locales.GeneralWidth(), &p.termWidth, settings.MinTerminalWidth, settings.MaxTerminalWidth) {
+			// From the least the terminal is wide on its display; the
+			// width set shown no less, though kept until changed.
+			lo := settings.MinTermWidth(p.g.term.workAreaWidth())
+			p.termWidth = max(p.termWidth, float64(lo))
+			if p.percentSlider(c, k, locales.GeneralWidth(), &p.termWidth, lo, settings.MaxTerminalWidth) {
 				p.g.settings.TerminalWidth = int(p.termWidth)
 				p.g.saveSettings()
 				p.g.term.sizeChanged()

@@ -23,13 +23,13 @@ func TestCapsuleWidth(t *testing.T) {
 	measure := func(text string, size float32) float32 { return 7 * float32(len([]rune(text))) }
 	open := segment{label: "Open", caps: []string{"↩"}}
 	actions := segment{label: "Actions", caps: []string{"⌘", "K"}}
-	// 6 + 3 + 2 border; Open: 8 + 28 + 8 + 22 + 6; 4; Actions: 8 + 49 +
-	// 8 + 22 + 4 + 22 + 6.
-	if got, want := capsuleWidthOf(measure, open, actions), float32(11+72+4+119); got != want {
+	// 6 + 3 + 2 border; Open: 8 + 28 + 8 + 22 + 8; 4; Actions: 8 + 49 +
+	// 8 + 22 + 4 + 22 + 8.
+	if got, want := capsuleWidthOf(measure, open, actions), float32(11+74+4+121); got != want {
 		t.Errorf("capsule width = %v, want %v", got, want)
 	}
 	// A key wider than 22: its text, 5 and its border at both sides.
-	if got, want := capsuleWidthOf(measure, segment{label: "", caps: []string{"Enter"}}), float32(11+8+8+47+6); got != want {
+	if got, want := capsuleWidthOf(measure, segment{label: "", caps: []string{"Enter"}}), float32(11+8+8+47+8); got != want {
 		t.Errorf("capsule width with a wide key = %v, want %v", got, want)
 	}
 	// The notice takes what the actions capsule leaves (design.md 2.4):
@@ -67,5 +67,23 @@ func TestAround(t *testing.T) {
 		if b, a := around(locales.In(loc).SearchNoResults(queryMark), queryMark); b == "" || a == "" {
 			t.Errorf("%s: no-results line %q · %q", loc, b, a)
 		}
+	}
+}
+
+func TestRightLine(t *testing.T) {
+	// design.md 2.1a: whatever is at the search panel's right ends 20 from
+	// its edge.
+	for name, end := range map[string]float32{
+		"row tag":          listInset + listRowPadR,
+		"capsule last key": capsuleInset + 1 + capsulePadR + segmentPadR, // 1: its border
+		"popup menu keys":  capsuleInset + menuPad + menuRowPadR,
+		"popup filter":     capsuleInset + menuTextInsetR,
+	} {
+		if end != rightLine {
+			t.Errorf("%s ends %v from the edge, not %v", name, end, float32(rightLine))
+		}
+	}
+	if menuTextInset != 14 {
+		t.Errorf("popup rows' icons start %v in, not 14", float32(menuTextInset))
 	}
 }

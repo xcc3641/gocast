@@ -26,11 +26,23 @@ const (
 	menuRowHeight    = 32
 	menuPad          = 6  // around a popup menu's rows
 	menuNameGap      = 12 // the least between a row's name and keys
-	menuRowPad       = 8  // in a row, before its icon and after its keys
-	// menuTextInset is where a popup menu's rows start their icon and end
-	// their keys, from its edges, as its filter field and title do.
+	menuRowPad       = 8  // in a row, before its icon
+	menuRowPadR      = 6  // in a row, after its keys
+	// menuTextInset is where a popup menu's rows start their icon, from
+	// its left edge, as its filter field and title do; menuTextInsetR
+	// where they end their keys, from its right edge, as its filter field
+	// does: 12, 20 from the search panel's, on its right line (design.md
+	// 2.1a).
 	menuTextInset   = menuPad + menuRowPad
+	menuTextInsetR  = menuPad + menuRowPadR
 	roundButtonSize = 32
+
+	// rightLine is the line, from the search panel's right edge, the ends
+	// of what is at its right are on (design.md 2.1a): a row's tag (list
+	// 8, row 12), the actions capsule's last key (inset 8, border 1,
+	// capsulePadR 3, segmentPadR 8), a popup menu's keys (inset 8,
+	// menuPad 6, menuRowPadR 6), the search bar's spinner (its padding).
+	rightLine = 20
 )
 
 // --- Glass ---
@@ -177,7 +189,7 @@ func capsule(c *ui.Context, k tokens, inset float32) ui.Element {
 func actionsCapsule(c *ui.Context, k tokens, inset float32, segs ...segment) {
 	c.Key("actions")
 	e := capsule(c, k, inset)
-	e.Right(inset).Shrink(0).Padding(0, 3, 0, 6).Gap(4).Children(func() {
+	e.Right(inset).Shrink(0).Padding(0, capsulePadR, 0, capsulePadL).Gap(segmentGap).Children(func() {
 		for _, sg := range segs {
 			sg.draw(c, k)
 		}
@@ -190,7 +202,7 @@ func actionsCapsule(c *ui.Context, k tokens, inset float32, segs ...segment) {
 // between keys (outlineKeycaps).
 const (
 	capsulePadL, capsulePadR, segmentGap  = 6, 3, 4
-	segmentPadL, segmentPadR, segmentKeys = 8, 6, 8
+	segmentPadL, segmentPadR, segmentKeys = 8, 8, 8
 	outlineCap, outlineCapPad, capGap     = 22, 5, 4
 )
 
@@ -345,7 +357,7 @@ func popupMenu(c *ui.Context, k tokens, originX, originY float32) ui.Element {
 // filter field, which starts where the rows' icons do and ends where their
 // keys do (design.md 2.5).
 func menuField(c *ui.Context, k tokens, field func()) {
-	ui.Row(c).Height(36).Shrink(0).Padding(0, menuTextInset).AlignItems(ui.Center).Children(field)
+	ui.Row(c).Height(36).Shrink(0).Padding(0, menuTextInsetR, 0, menuTextInset).AlignItems(ui.Center).Children(field)
 	ui.Box(c).Height(1).Background(k.hairline).Shrink(0)
 }
 
@@ -364,7 +376,7 @@ func menuRow(c *ui.Context, k tokens, icon, label, note string, caps []string, c
 		bg = k.selection
 	}
 	c.Key(label)
-	ui.Row(c).Height(menuRowHeight).Padding(0, menuRowPad).Radius(8).Gap(8).AlignItems(ui.Center).Background(bg).
+	ui.Row(c).Height(menuRowHeight).Padding(0, menuRowPadR, 0, menuRowPad).Radius(8).Gap(8).AlignItems(ui.Center).Background(bg).
 		Role(ui.RoleMenuItem).Label(label).OnClick(act).Children(func() {
 		if icon != "" {
 			sfsymbols.Symbol(c, icon).Size(16).Color(k.text)
@@ -403,7 +415,8 @@ const (
 	iconSize              = 22
 	sectionHeight         = 28
 	dividerHeight         = 9
-	listInset             = 8 // the list's padding, left and right
+	listInset             = 8                     // the list's padding, left and right
+	listRowPadR           = rightLine - listInset // a row's padding at its right
 	listTextLeft  float32 = 54
 )
 
@@ -412,7 +425,7 @@ const (
 // included), then the rest, 12 from the right; in the selection gray when
 // chosen (a ui.List draws its own).
 func listRow(c *ui.Context, k tokens, chosen bool, children func()) ui.Element {
-	r := ui.Row(c).Height(rowHeight).Shrink(0).Padding(0, 12, 0, 10).Gap(10).AlignItems(ui.Center).Radius(8)
+	r := ui.Row(c).Height(rowHeight).Shrink(0).Padding(0, listRowPadR, 0, 10).Gap(10).AlignItems(ui.Center).Radius(8)
 	if chosen {
 		r.Background(k.selection)
 	}
@@ -451,10 +464,17 @@ const listNoteMax = (panelWidth - 2*listInset) * 0.4
 // subtitle takes room (design.md 2.3).
 const listTitleLeast = 160
 
-// listNote is the gray text at a row's right, 12.
+// listNote is the gray text at a row's right, 12. It reaches noteBearing
+// past the row's padding: its glyphs end inside their advance (应用 1.5,
+// a digit 1.5, App and ~ 0.5 in), and then end within 1 of the right line
+// the keys at the right end on (design.md 2.1a).
 func listNote(c *ui.Context, k tokens, note string) ui.Element {
-	return ui.Text(c, note).FontSize(12).TextColor(k.textOnGlass).SingleLine()
+	return ui.Text(c, note).FontSize(12).TextColor(k.textOnGlass).SingleLine().Margin(0, -noteBearing, 0, 0)
 }
+
+// noteBearing is how much of a 12 text's advance, at its right, is
+// commonly blank.
+const noteBearing = 1
 
 // listSection is the title of a section of rows: 28 high, 12 Medium,
 // secondary, aligned with the rows' titles, 6 over its bottom.

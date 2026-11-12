@@ -53,6 +53,7 @@ const (
 // entry is what a search result opens: an app, or a terminal preset.
 type entry struct {
 	app    *mygo.InstalledApp
+	place  string // the app's folder, when another app has its name
 	preset string // its ID, when app is nil
 }
 
@@ -71,6 +72,7 @@ type launcher struct {
 
 	apps     []mygo.InstalledApp
 	alts     [][]string // the apps' other names (English, Chinese), by index
+	places   []string   // by index, the folder telling an app from another of its name (apps.Places)
 	items    []search.Item
 	entries  []entry // by item
 	results  []int   // items matching the query, best first; kept as the query empties, for the panel to shrink with them
@@ -250,7 +252,7 @@ func (l *launcher) shortcuts(c *ui.Context) {
 }
 
 func (l *launcher) searchBar(c *ui.Context, k tokens) {
-	ui.Row(c).Height(barHeight).Shrink(0).Padding(0, 20).Gap(12).AlignItems(ui.Center).Children(func() {
+	ui.Row(c).Height(barHeight).Shrink(0).Padding(0, rightLine, 0, 20).Gap(12).AlignItems(ui.Center).Children(func() {
 		gocastMark(c, k)
 		field := ui.TextInputBase(c, &l.query).Bind(&l.input).Grow(1).FontSize(20).
 			Placeholder(locales.SearchPlaceholder()).Label(locales.SearchPlaceholder()).
@@ -366,7 +368,7 @@ func (l *launcher) resultList(c *ui.Context, k tokens) {
 func (l *launcher) row(c *ui.Context, k tokens, i int) {
 	it := l.items[l.results[i]]
 	e := l.entries[l.results[i]]
-	var subtitle string
+	subtitle := e.place // an app's folder, when another has its name (design.md 2.3)
 	tag := locales.SearchTagApp()
 	if e.app == nil {
 		tag = locales.SearchTagPreset()
@@ -420,6 +422,9 @@ func (l *launcher) rowLabel(item int) string {
 		s := it.Title + sep + locales.SearchTagApp()
 		if l.isRunning(e.app.ID) {
 			s += sep + locales.SearchRunning()
+		}
+		if e.place != "" {
+			s += sep + e.place
 		}
 		return s
 	}
@@ -902,7 +907,7 @@ func (l *launcher) rebuild() {
 		it := search.NewItem(id, app.Name, l.alts[i]...)
 		it.Score = l.g.usage.Score(id, now)
 		l.items = append(l.items, it)
-		l.entries = append(l.entries, entry{app: app})
+		l.entries = append(l.entries, entry{app: app, place: l.places[i]})
 	}
 	if l.empty() && !suggestionsEnabled {
 		return
@@ -985,14 +990,24 @@ func (l *launcher) load() {
 		}
 		// By name, Chinese names among the others by their pinyin.
 		slices.SortStableFunc(list, func(a, b named) int { return strings.Compare(a.key, b.key) })
-		found = found[:0]
-		alts := make([][]string, len(list))
+		// One of the copies of an app; apps of one name told apart by
+		// their folders.
+		all := make([]apps.App, len(list))
 		for i, n := range list {
-			found = append(found, n.app)
-			alts[i] = n.alts
+			all[i] = apps.App{ID: n.app.ID, Path: n.app.Path, Name: n.app.Name}
 		}
+		keep := apps.Unique(all)
+		found = found[:0]
+		alts := make([][]string, len(keep))
+		kept := make([]apps.App, len(keep))
+		for i, j := range keep {
+			found = append(found, list[j].app)
+			alts[i] = list[j].alts
+			kept[i] = all[j]
+		}
+		places := apps.Places(kept)
 		l.win.Update(func() {
-			l.apps, l.alts, l.loading, l.loaded = found, alts, false, true
+			l.apps, l.alts, l.places, l.loading, l.loaded = found, alts, places, false, true
 			l.rebuild()
 		})
 	}()

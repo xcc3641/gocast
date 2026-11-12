@@ -43,7 +43,7 @@ func TestTermSize(t *testing.T) {
 		// Unset: 50% by 60% (design.md 3.2), with no cap on the width.
 		{"default", 1512, 949, settings.Settings{}, 756, 569},
 		{"wide display", 2560, 1400, settings.Settings{}, 1280, 840},
-		{"30% wide: never under 640", 1512, 949, settings.Settings{TerminalWidth: 30}, 640, 569},
+		{"30% wide: used as 43%, never under 640", 1512, 949, settings.Settings{TerminalWidth: 30}, 650, 569},
 		{"30% of a wide display", 2560, 1400, settings.Settings{TerminalWidth: 30}, 768, 840},
 		{"60×40", 1512, 949, settings.Settings{TerminalWidth: 60, TerminalHeight: 40}, 907, 380},
 		{"63×37", 1512, 949, settings.Settings{TerminalWidth: 63, TerminalHeight: 37}, 953, 351},
@@ -83,7 +83,7 @@ func TestTermPercent(t *testing.T) {
 		}
 	}
 	// A size set from a percentage reads back as that percentage.
-	for pct := settings.MinTerminalWidth; pct <= settings.MaxTerminalWidth; pct++ {
+	for pct := settings.MinTermWidth(1512); pct <= settings.MaxTerminalWidth; pct++ {
 		w, _ := termSize(1512, 949, settings.Settings{TerminalWidth: pct})
 		if w > termMinWidth {
 			if got := termPercent(w, 1512, settings.MinTerminalWidth, settings.MaxTerminalWidth); got != pct {
@@ -120,7 +120,7 @@ func TestDragSize(t *testing.T) {
 		{"under the minimum", r(302, 41, 908, 120), 908, 300},
 		{"over 90% high", r(302, 41, 908, 940), 908, 854},
 		{"wider than the screen", r(0, 41, 1300, 380), 1512, 380},
-		{"under 640 wide", r(500, 41, 512, 380), 640, 380},
+		{"under 43% wide (650)", r(500, 41, 512, 380), 650, 380},
 	} {
 		w, h := dragSize(prev, c.b, wa)
 		if w != c.wantW || h != c.wantH {
