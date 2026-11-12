@@ -8,13 +8,13 @@ import (
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/i18n"
-	"github.com/egoist/mygo/plugins/sfsymbols"
 	"github.com/egoist/mygo/ui"
 
 	"gocast/internal/apps"
 	"gocast/internal/presets"
 	"gocast/internal/running"
 	"gocast/internal/search"
+	"gocast/internal/shortcut"
 	"gocast/locales"
 )
 
@@ -32,11 +32,6 @@ const (
 	capsuleInset   = 8
 	expandedHeight = barHeight + listHeight  // 475
 	noResultHeight = barHeight + emptyHeight // 260
-	rowHeight      = 40
-	iconSize       = 22 // a preset's square, a letter avatar
-	// iconCell is an app icon's frame, wider than iconSize: macOS app
-	// icons have about 10% clear around them (design.md 2.3).
-	iconCell = 26
 
 	// The window's room around the panel, for its shadow.
 	marginX, marginTop, marginBottom = shadowLeft, shadowTop, shadowBottom
@@ -109,6 +104,14 @@ type launcher struct {
 	menuInput     ui.Handle
 	menuItems     []action // the menu's actions, as it opened
 	menuShown     []int    // those matching menuQuery
+
+	// Gocast's own actions, the list Cmd-K opens under an empty query
+	// (design.md 2.5a): open, chosen; and shown, open or the panel
+	// shrinking from it.
+	own       []ownAction
+	ownOpen   bool
+	ownChosen int
+	ownShown  bool
 }
 
 func newLauncher(g *gocast) *launcher {
@@ -151,6 +154,8 @@ func (l *launcher) empty() bool { return strings.TrimSpace(l.query) == "" }
 // targetHeight is the height of the panel for what it shows now.
 func (l *launcher) targetHeight() float32 {
 	switch {
+	case l.ownOpen:
+		return barHeight + ownListHeight(l.own)
 	case l.compact():
 		return barHeight
 	case len(l.results) > 0:
@@ -178,7 +183,10 @@ func (l *launcher) view(c *ui.Context) {
 	// What the panel lays out below its bar: the results, the "no
 	// results" message, or, while it shrinks to its bar, what it showed.
 	body := target
-	if l.compact() {
+	switch {
+	case l.compact() && l.ownShown:
+		body = barHeight + ownListHeight(l.own)
+	case l.compact():
 		body = expandedHeight
 		if len(l.results) == 0 {
 			body = noResultHeight
@@ -195,7 +203,9 @@ func (l *launcher) view(c *ui.Context) {
 	}
 	panel.Height(h).Children(func() {
 		l.searchBar(c, k)
-		if body > barHeight {
+		if body > barHeight && l.compact() && l.ownShown {
+			ui.Column(c).Height(body - barHeight).Shrink(0).Children(func() { l.ownList(c, k) })
+		} else if body > barHeight {
 			ui.Column(c).Height(body - barHeight).Shrink(0).Children(func() {
 				if len(l.results) > 0 {
 					l.resultList(c, k)
@@ -237,7 +247,6 @@ func (l *launcher) shortcuts(c *ui.Context) {
 			l.editPreset(e.preset)
 		}
 	}
-	c.OnShortcut(ui.Cmd, ui.KeyQ, mygo.App.Quit)
 }
 
 func (l *launcher) searchBar(c *ui.Context, k tokens) {
@@ -279,6 +288,9 @@ func (l *launcher) textKey(key ui.TextKey) bool {
 		defer func() { l.query = bound }()
 	}
 	mods := key.Mods
+	if l.ownOpen && l.ownKey(key.Key, mods) {
+		return true
+	}
 	switch {
 	case key.Key == ui.KeyEscape && mods == 0:
 		if l.query != "" {
@@ -362,19 +374,13 @@ func (l *launcher) row(c *ui.Context, k tokens, i int) {
 			subtitle = presetSubtitle(l.g.presets[j])
 		}
 	}
-	// Left 10, the icon's cell 26, 10: the title starts 54 from the
-	// panel's edge, the list's 8 included.
-	ui.Row(c).Height(rowHeight).Padding(0, 12, 0, 10).Gap(10).AlignItems(ui.Center).Children(func() {
+	listRow(c, k, false, func() {
 		switch {
 		case e.app == nil:
-			ui.Box(c).Size(iconCell, iconCell).Center().Shrink(0).Children(func() {
-				ui.Box(c).Size(iconSize, iconSize).Radius(6).Background(k.keycap).Center().Children(func() {
-					sfsymbols.Symbol(c, "apple.terminal.fill").Size(13).Color(k.text)
-				})
-			})
+			presetSquare(c, k)
 		default:
 			app := *e.app
-			ui.Box(c).Size(iconCell, iconCell).Center().Shrink(0).Children(func() {
+			listIcon(c, func() {
 				if b := l.icon(app); b != nil {
 					ui.Image(c, b).Size(iconCell, iconCell)
 				} else {
@@ -389,14 +395,14 @@ func (l *launcher) row(c *ui.Context, k tokens, i int) {
 		}
 		// The title at its width, the subtitle at most 45% of the row and
 		// shrinking first, the title only once it is all but gone.
-		title := ui.Text(c, it.Title).FontSize(14).TextColor(k.text).SingleLine().Shrink(1)
+		title := listTitle(c, k, it.Title)
 		if subtitle != "" {
 			title.Margin(0, -2, 0, 0) // 8 to the subtitle, not the row's 10
 			ui.Text(c, subtitle).FontSize(13).TextColor(k.textOnGlass).SingleLine().TruncateMiddle().
 				MaxWidth((panelWidth - 16 - 22) * 0.45).Shrink(1000)
 		}
 		ui.Spacer(c)
-		ui.Text(c, tag).FontSize(12).TextColor(k.textOnGlass).SingleLine().Shrink(0)
+		listNote(c, k, tag).Shrink(0)
 	})
 }
 
@@ -415,11 +421,20 @@ func (l *launcher) rowLabel(item int) string {
 		}
 		return s
 	}
-	s := it.Title + sep + locales.SearchTagPreset()
 	if j := presets.Find(l.g.presets, e.preset); j >= 0 {
-		s += sep + l.g.presets[j].ShortDir()
+		return presetLabel(l.g.presets[j])
 	}
-	return s
+	return it.Title + sep + locales.SearchTagPreset()
+}
+
+// presetLabel is what assistive technology reads of a preset's row:
+// "my-app · pi, Preset, ~/Work/my-app".
+func presetLabel(p presets.Preset) string {
+	sep := ", "
+	if strings.HasPrefix(i18n.Locale(), "zh") {
+		sep = "，"
+	}
+	return presetTitle(p) + sep + locales.SearchTagPreset() + sep + p.ShortDir()
 }
 
 func (l *launcher) noResults(c *ui.Context, k tokens) {
@@ -495,6 +510,14 @@ func (l *launcher) currentID() string {
 func (l *launcher) toggleMenu() {
 	if l.menuOpen {
 		l.closeMenu()
+		return
+	}
+	if l.ownOpen {
+		l.closeOwn()
+		return
+	}
+	if l.compact() { // the query empty: Gocast's own actions
+		l.openOwn()
 		return
 	}
 	if _, ok := l.current(); !ok {
@@ -624,6 +647,162 @@ func (l *launcher) actionsMenu(c *ui.Context, k tokens) {
 	})
 }
 
+// --- Gocast's own actions (Cmd-K under an empty query) ---
+
+// ownAction is a row of Gocast's own actions.
+type ownAction struct {
+	// symbol is the row's icon, or "" for a preset's square.
+	symbol, label string
+	// label2 is what assistive technology reads of the row, if not label.
+	label2 string
+	note   string   // a preset's folder, at the right
+	caps   []string // its shortcut, at the right
+	// section is the title of the section the row begins, divided that
+	// a divider goes over it.
+	section string
+	divided bool
+	run     func()
+}
+
+// gocastDo is what Gocast's own actions do.
+type gocastDo struct {
+	terminal, addPreset, settings, quit func()
+	preset                              func(id string)
+}
+
+// gocastActions are Gocast's own actions (design.md 2.5a, copy.md 2.2):
+// show the floating terminal, with its shortcut; under Open with Preset,
+// if there are any, each preset, to open it in a new tab; add a preset;
+// then Settings… and Quit Gocast.
+func gocastActions(ps []presets.Preset, terminalKey string, do gocastDo) []ownAction {
+	as := []ownAction{{symbol: "apple.terminal", label: locales.MenuTerminal(), caps: shortcut.Caps(terminalKey), run: do.terminal}}
+	for i, p := range ps {
+		id := p.ID
+		a := ownAction{label: presetTitle(p), label2: presetLabel(p), note: lastDir(p.ShortDir()), run: func() { do.preset(id) }}
+		if i == 0 {
+			a.section = locales.MenuWithPreset()
+		}
+		as = append(as, a)
+	}
+	return append(as,
+		ownAction{symbol: "plus", label: locales.PresetsAdd(), run: do.addPreset},
+		ownAction{symbol: "gearshape", label: locales.TraySettings(), caps: []string{"⌘", ","}, run: do.settings, divided: true},
+		ownAction{symbol: "power", label: locales.TrayQuit(), run: do.quit},
+	)
+}
+
+// ownListHeight is the height of the list of the actions under the
+// search bar: its rows, sections and dividers, its padding (none over, 8
+// under), within the panel's most.
+func ownListHeight(as []ownAction) float32 {
+	h := float32(listInset)
+	for _, a := range as {
+		h += rowHeight
+		if a.section != "" {
+			h += sectionHeight
+		}
+		if a.divided {
+			h += dividerHeight
+		}
+	}
+	return min(h, listHeight)
+}
+
+func (l *launcher) openOwn() {
+	l.own = gocastActions(l.g.presets, l.g.terminalKey, gocastDo{
+		terminal:  func() { l.hide(); l.g.term.open() },
+		preset:    func(id string) { l.hide(); l.g.term.openPreset(id, true) },
+		addPreset: func() { l.hide(); l.g.addPreset() },
+		settings:  func() { l.hide(); l.g.openSettings("") },
+		quit:      mygo.App.Quit,
+	})
+	l.ownOpen, l.ownShown, l.ownChosen = true, true, 0
+	l.scroll = true
+	l.input.Focus()
+	l.win.Invalidate()
+}
+
+// closeOwn folds the list back under the bar, which it shows as the panel
+// shrinks.
+func (l *launcher) closeOwn() {
+	l.ownOpen = false
+	l.win.Invalidate()
+}
+
+func (l *launcher) runOwn(i int) {
+	if i < 0 || i >= len(l.own) {
+		return
+	}
+	l.ownOpen = false
+	l.own[i].run()
+}
+
+// ownKey takes the search field's keys for the list: moving, running,
+// Escape to fold it. Typing goes to the field, whose query ends the list.
+func (l *launcher) ownKey(key ui.Key, mods ui.Modifiers) bool {
+	switch {
+	case key == ui.KeyEscape && mods == 0:
+		l.closeOwn()
+	case key == ui.KeyEnter && mods == 0:
+		l.runOwn(l.ownChosen)
+	case key == ui.KeyEnter: // no other action
+	case key == ui.KeyDown && mods == 0, key == ui.KeyN && mods == ui.Ctrl, key == ui.KeyJ && mods == ui.Ctrl:
+		l.ownChosen = min(l.ownChosen+1, len(l.own)-1)
+		l.scroll = true
+	case key == ui.KeyUp && mods == 0, key == ui.KeyP && mods == ui.Ctrl, key == ui.KeyK && mods == ui.Ctrl:
+		l.ownChosen = max(l.ownChosen-1, 0)
+		l.scroll = true
+	default:
+		return false
+	}
+	return true
+}
+
+// ownList shows Gocast's own actions as the results show, a click
+// running one.
+func (l *launcher) ownList(c *ui.Context, k tokens) {
+	bottom := float32(listInset)
+	if barHeight+ownListHeight(l.own) >= expandedHeight { // it scrolls
+		bottom = capsuleInset + capsuleHeight + capsuleInset
+	}
+	ui.Scroll(c).Grow(1).Role(ui.RoleList).Label(locales.MenuList()).Children(func() {
+		ui.Column(c).Padding(0, listInset, bottom, listInset).Children(func() {
+			for i, a := range l.own {
+				if a.divided {
+					listDivider(c, k)
+				}
+				if a.section != "" {
+					listSection(c, k, a.section, locales.MenuWithPresetHeading())
+				}
+				label := a.label
+				if a.label2 != "" {
+					label = a.label2
+				}
+				c.Key(i)
+				row := listRow(c, k, i == l.ownChosen, func() {
+					if a.symbol == "" {
+						presetSquare(c, k)
+					} else {
+						listSymbol(c, k, a.symbol)
+					}
+					listTitle(c, k, a.label)
+					ui.Spacer(c)
+					if a.note != "" {
+						listNote(c, k, a.note).Shrink(1)
+					}
+					if len(a.caps) > 0 {
+						keycaps(c, k, a.caps, 12)
+					}
+				}).Role(ui.RoleListItem).Label(label).OnClick(func() { l.runOwn(i) })
+				if l.scroll && i == l.ownChosen {
+					l.scroll = false
+					row.ScrollIntoView()
+				}
+			}
+		})
+	})
+}
+
 // --- Acting ---
 
 // primary opens the result chosen: an app, or a preset in the floating
@@ -723,6 +902,9 @@ func (l *launcher) rebuild() {
 // filter finds the results of a new query, the first chosen. An empty
 // query keeps the results it had, which the panel shrinks with.
 func (l *launcher) filter() {
+	if !l.empty() {
+		l.ownOpen, l.ownShown = false, false
+	}
 	if l.empty() && !suggestionsEnabled {
 		l.filtered = noQuery // the same query again starts afresh
 		return
@@ -813,7 +995,7 @@ func (l *launcher) show() {
 	}
 	l.selectAll = restore && l.query != ""
 	clear(l.running) // apps started or quit meanwhile
-	l.menuOpen = false
+	l.menuOpen, l.ownOpen, l.ownShown = false, false, false
 	l.gen++ // appears at its size, without animating to it
 	d := mygo.Screen.DisplayNearestPoint(mygo.Screen.CursorScreenPoint())
 	wa := d.WorkArea
@@ -832,7 +1014,7 @@ func (l *launcher) hide() {
 		return
 	}
 	l.hiddenAt = time.Now()
-	l.menuOpen = false
+	l.menuOpen, l.ownOpen = false, false
 	l.win.Hide()
 }
 

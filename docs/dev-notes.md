@@ -111,6 +111,15 @@ The text's line box was centered, which leaves baseline glyphs low and arrows, w
 - **Trying it** without touching the Mac's settings: set `GOCAST_SPOTLIGHT_ENTRY=/path/entry.json`, a file holding the entry as JSON, e.g. `{"enabled":true,"value":{"parameters":[32,49,1048576]}}`. Edit the file, then bring Gocast to the front again.
 - **On this Mac** Spotlight's shortcut is off (`enabled: false`), and Raycast's hot key is `Command-50` (⌘\`), not ⌘Space. Gocast therefore registers ⌘Space and gets it.
 
+### ⌘K with an empty query (design.md 2.5a, copy.md v1.7)
+
+- In compact mode ⌘K does not open the popup card. The panel itself grows into a list of Gocast's own actions (`gocastActions`, drawn by `ownList`). Its rows, section title and divider are the kit's `listRow`, `listSection` and `listDivider`, which the result rows use too.
+- The order is 打开悬浮终端 (the terminal shortcut's keycaps), then 用预设打开 with the presets, then 添加预设, a divider, 设置… (⌘,) and 退出 Gocast. If there are no presets, the section is left out.
+- The keyboard stays in the search field. ↑↓ / ⌃N⌃P / ⌃J⌃K move, ↵ or a click runs, and Esc or ⌘K folds the list back to 66. Typing a character ends the list and searches. The list has no filter field and no capsule.
+- Height: 66 + rows 40 + section 28 + divider 9 + 8, at most 475 (`ownListHeight`). That gives 351 with 2 presets and 243 with none, both measured on captures.
+- The panel no longer takes ⌘Q (design.md 2.5a). Quitting happens from the row or the tray menu.
+- With a result chosen, ⌘K still opens that result's popup.
+
 ## Verified (2026-11-12, MacBook Pro M1 Pro, zh-Hans, dev build driven by mygo-automation)
 
 `gofmt -l`, `go vet ./...`, `mygo vet` and `go test ./...` are all clean.

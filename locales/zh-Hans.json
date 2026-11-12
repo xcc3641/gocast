@@ -107,5 +107,9 @@
   "shortcutSpotlightOpen": "打开系统设置",
   "shortcutSpotlightKeep": "就用 ⌥⇧Space",
   "shortcutSpotlightSolved": "已改用 ⌘Space",
-  "shortcutSpotlightBusy": "⌘Space 被聚焦搜索占用"
+  "shortcutSpotlightBusy": "⌘Space 被聚焦搜索占用",
+  "menuTerminal": "打开悬浮终端",
+  "menuWithPreset": "用预设打开",
+  "menuList": "Gocast 操作",
+  "menuWithPresetHeading": "用预设打开，标题"
 }

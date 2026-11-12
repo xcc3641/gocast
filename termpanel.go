@@ -713,6 +713,15 @@ func (p *termPanel) toggle() {
 	p.show()
 }
 
+// open shows the panel as toggle does, or focuses it where it shows.
+func (p *termPanel) open() {
+	if p.shown {
+		p.win.Focus()
+		return
+	}
+	p.toggle()
+}
+
 // show drops the panel from the top of the work area of the display with
 // the pointer, at its default size (design.md 3.2, 1.5).
 func (p *termPanel) show() {

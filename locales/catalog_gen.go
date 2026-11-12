@@ -1553,3 +1553,61 @@ func ShortcutSpotlightBusy() string { return In(i18n.Locale()).ShortcutSpotlight
 func (msgs Messages) ShortcutSpotlightBusy() string {
 	return Catalog.Format(msgs.locale, "shortcutSpotlightBusy", nil)
 }
+
+// MenuTerminal says "Open Floating Terminal"
+// in the language the app shows.
+//
+// Actions menu with an empty query: shows the floating terminal.
+func MenuTerminal() string { return In(i18n.Locale()).MenuTerminal() }
+
+// MenuTerminal says "Open Floating Terminal"
+// in the language of msgs.
+//
+// Actions menu with an empty query: shows the floating terminal.
+func (msgs Messages) MenuTerminal() string {
+	return Catalog.Format(msgs.locale, "menuTerminal", nil)
+}
+
+// MenuWithPreset says "Open with Preset"
+// in the language the app shows.
+//
+// Actions menu with an empty query: header over the presets.
+func MenuWithPreset() string { return In(i18n.Locale()).MenuWithPreset() }
+
+// MenuWithPreset says "Open with Preset"
+// in the language of msgs.
+//
+// Actions menu with an empty query: header over the presets.
+func (msgs Messages) MenuWithPreset() string {
+	return Catalog.Format(msgs.locale, "menuWithPreset", nil)
+}
+
+// MenuList says "Gocast Actions"
+// in the language the app shows.
+//
+// Accessibility label of the list of Gocast actions shown by Cmd-K with an
+// empty query.
+func MenuList() string { return In(i18n.Locale()).MenuList() }
+
+// MenuList says "Gocast Actions"
+// in the language of msgs.
+//
+// Accessibility label of the list of Gocast actions shown by Cmd-K with an
+// empty query.
+func (msgs Messages) MenuList() string {
+	return Catalog.Format(msgs.locale, "menuList", nil)
+}
+
+// MenuWithPresetHeading says "Open with Preset, heading"
+// in the language the app shows.
+//
+// Accessibility label of the Open with Preset section title in that list.
+func MenuWithPresetHeading() string { return In(i18n.Locale()).MenuWithPresetHeading() }
+
+// MenuWithPresetHeading says "Open with Preset, heading"
+// in the language of msgs.
+//
+// Accessibility label of the Open with Preset section title in that list.
+func (msgs Messages) MenuWithPresetHeading() string {
+	return Catalog.Format(msgs.locale, "menuWithPresetHeading", nil)
+}

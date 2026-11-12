@@ -3,8 +3,9 @@ package main
 // kit.go is Gocast's one set of components, drawn with the tokens of
 // theme.go, which the search panel, the floating terminal and Settings
 // share (design.md 8): the glass and its tint, the windows' outline and
-// shadow, the capsules, the keycaps, the popup menus, the round buttons
-// and Gocast's mark. Neither window draws its own kind of any of them.
+// shadow, the search panel's list rows, sections and dividers, the
+// capsules, the keycaps, the popup menus, the round buttons and Gocast's
+// mark. Neither window draws its own kind of any of them.
 
 import (
 	"time"
@@ -323,6 +324,78 @@ func menuTitle(c *ui.Context, k tokens, title string) {
 // menuSeparator separates groups of a popup menu's rows.
 func menuSeparator(c *ui.Context, k tokens) {
 	ui.Box(c).Height(1).Background(k.hairline).Margin(4, 8).Shrink(0)
+}
+
+// --- The search panel's list (design.md 2.3, 2.5a) ---
+
+// The measures of the search panel's list: a row, its icon's cell (an app
+// icon's frame: macOS app icons have about 10% clear around them), a
+// preset's square and a letter avatar in it, a section's title, a divider
+// with the room over and under it.
+const (
+	rowHeight             = 40
+	iconCell              = 26
+	iconSize              = 22
+	sectionHeight         = 28
+	dividerHeight         = 9
+	listInset             = 8 // the list's padding, left and right
+	listTextLeft  float32 = 54
+)
+
+// listRow is a row of the search panel's list: left 10, an icon in its
+// cell, 10, the title starting 54 from the panel's edge (the list's 8
+// included), then the rest, 12 from the right; in the selection gray when
+// chosen (a ui.List draws its own).
+func listRow(c *ui.Context, k tokens, chosen bool, children func()) ui.Element {
+	r := ui.Row(c).Height(rowHeight).Shrink(0).Padding(0, 12, 0, 10).Gap(10).AlignItems(ui.Center).Radius(8)
+	if chosen {
+		r.Background(k.selection)
+	}
+	return r.Children(children)
+}
+
+// listIcon is a row's icon cell, its icon centered in it.
+func listIcon(c *ui.Context, icon func()) ui.Element {
+	return ui.Box(c).Size(iconCell, iconCell).Center().Shrink(0).Children(icon)
+}
+
+// listSymbol is a row's icon cell with a symbol, 16, secondary.
+func listSymbol(c *ui.Context, k tokens, symbol string) {
+	listIcon(c, func() { sfsymbols.Symbol(c, symbol).Size(16).Color(k.textOnGlass) })
+}
+
+// presetSquare is a preset's icon: a terminal on a keycap-gray square.
+func presetSquare(c *ui.Context, k tokens) {
+	listIcon(c, func() {
+		ui.Box(c).Size(iconSize, iconSize).Radius(6).Background(k.keycap).Center().Children(func() {
+			sfsymbols.Symbol(c, "apple.terminal.fill").Size(13).Color(k.text)
+		})
+	})
+}
+
+// listTitle is a row's name, 14.
+func listTitle(c *ui.Context, k tokens, title string) ui.Element {
+	return ui.Text(c, title).FontSize(14).TextColor(k.text).SingleLine().Shrink(1)
+}
+
+// listNote is the gray text at a row's right, 12.
+func listNote(c *ui.Context, k tokens, note string) ui.Element {
+	return ui.Text(c, note).FontSize(12).TextColor(k.textOnGlass).SingleLine()
+}
+
+// listSection is the title of a section of rows: 28 high, 12 Medium,
+// secondary, aligned with the rows' titles, 6 over its bottom.
+func listSection(c *ui.Context, k tokens, title, label string) {
+	ui.Column(c).Height(sectionHeight).Shrink(0).Justify(ui.End).Padding(0, 0, 6, listTextLeft-listInset).
+		Label(label).Children(func() {
+		ui.Text(c, title).FontSize(12).FontWeight(500).TextColor(k.textOnGlass).SingleLine().AccessHidden(true)
+	})
+}
+
+// listDivider separates sections of rows: a hairline, 10 in from the
+// rows' sides, 4 over and under.
+func listDivider(c *ui.Context, k tokens) {
+	ui.Box(c).Height(1).Margin(4, 10).Background(k.hairline).Shrink(0).AccessHidden(true)
 }
 
 // --- Buttons ---

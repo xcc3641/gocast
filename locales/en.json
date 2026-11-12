@@ -525,5 +525,21 @@
   "shortcutSpotlightBusy": "Spotlight is using ⌘Space",
   "@shortcutSpotlightBusy": {
     "description": "Shortcuts: note under the search panel row while Spotlight has ⌘Space."
+  },
+  "menuTerminal": "Open Floating Terminal",
+  "@menuTerminal": {
+    "description": "Actions menu with an empty query: shows the floating terminal."
+  },
+  "menuWithPreset": "Open with Preset",
+  "@menuWithPreset": {
+    "description": "Actions menu with an empty query: header over the presets."
+  },
+  "menuList": "Gocast Actions",
+  "@menuList": {
+    "description": "Accessibility label of the list of Gocast actions shown by Cmd-K with an empty query."
+  },
+  "menuWithPresetHeading": "Open with Preset, heading",
+  "@menuWithPresetHeading": {
+    "description": "Accessibility label of the Open with Preset section title in that list."
   }
 }
