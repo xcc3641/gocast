@@ -5,18 +5,24 @@ package main
 // recording what the user copies, as Settings › Clipboard says, and the
 // hooks that paste, which tests and the development modes replace.
 //
+// The history is kept encrypted in clipboard/ of Gocast's folder, its key
+// in keys/clipboard.key there (clipboard.KeyFile), outside the history
+// and out of backups. The Keychain is not used: an update of an ad-hoc
+// signed app would have to ask for its item.
+//
 // Development hooks (dev-notes.md), so that the history can be tried
-// without the login Keychain, the user's pasteboard or keystrokes:
+// without the user's history, pasteboard or keystrokes:
 //
 //   - GOCAST_CLIPBOARD_DIR=<dir> keeps the history in dir, its key in
 //     memory (a history left there by an earlier run can't be read, as
-//     with a key gone from the Keychain). Nothing is written to the
-//     system pasteboard and ⌘V is never pressed: copies and pastes go to
-//     a pasteboard in memory.
-//   - GOCAST_CLIPBOARD_SEED=1 (with GOCAST_CLIPBOARD_DIR) fills the
+//     with a key file gone). Nothing is written to the system pasteboard
+//     and ⌘V is never pressed: copies and pastes go to a pasteboard in
+//     memory.
+//   - GOCAST_CLIPBOARD_SEED=1, only with GOCAST_CLIPBOARD_DIR, fills the
 //     history with demo items, over whatever was there, the watcher off,
 //     and the pasteboard in memory; =empty leaves it empty. Pasting is
-//     taken as allowed.
+//     taken as allowed. Without GOCAST_CLIPBOARD_DIR it is ignored, so
+//     that it never touches the user's history.
 //   - GOCAST_CLIPBOARD_FORCE_NO_AX=1 takes pasting as not allowed.
 
 import (
@@ -69,12 +75,21 @@ var (
 )
 
 func newClipService(g *gocast) *clipService {
-	return &clipService{
+	s := &clipService{
 		g:    g,
 		dry:  os.Getenv("GOCAST_CLIPBOARD_DIR") != "",
-		seed: os.Getenv("GOCAST_CLIPBOARD_SEED"),
 		noAX: os.Getenv("GOCAST_CLIPBOARD_FORCE_NO_AX") == "1",
 	}
+	if s.dry { // never seed over the user's history
+		s.seed = os.Getenv("GOCAST_CLIPBOARD_SEED")
+	}
+	return s
+}
+
+// keyPath is the file of the history's key: in Gocast's folder, outside
+// the history's.
+func (s *clipService) keyPath() string {
+	return filepath.Join(s.g.dir, "keys", "clipboard.key")
 }
 
 // dir is where the history is kept: in Gocast's folder, or the
@@ -102,7 +117,7 @@ func (s *clipService) trusted() bool {
 func (s *clipService) start() {
 	set := s.g.settings
 	opts := clipboard.Options{Retention: clipboard.Retention(set.ClipboardRetention)}
-	var keys clipboard.KeyStore = clipboard.NewKeychain()
+	var keys clipboard.KeyStore = clipboard.NewKeyFile(s.keyPath())
 	switch {
 	case s.seed != "":
 		opts.Pasteboard = &memPasteboard{}

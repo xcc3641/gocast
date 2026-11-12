@@ -16,11 +16,17 @@ import (
 // KeySize is the length of the history's encryption key: AES-256.
 const KeySize = 32
 
-// ErrNoKey is what KeyStore.Load returns when no key is stored yet.
-var ErrNoKey = errors.New("clipboard: no key stored")
+var (
+	// ErrNoKey is what KeyStore.Load returns when no key is stored yet.
+	ErrNoKey = errors.New("clipboard: no key stored")
+	// ErrBadKey is what KeyStore.Load returns for a stored key that is not
+	// a key: of the wrong length, say.
+	ErrBadKey = errors.New("clipboard: the stored key is malformed")
+)
 
 // KeyStore keeps the key that encrypts the history on disk. The app uses
-// the Keychain (NewKeychain); tests use MemoryKeys.
+// a key file (KeyFile), which updates of an ad-hoc signed app read without
+// asking, unlike a Keychain item; tests use MemoryKeys.
 type KeyStore interface {
 	// Load returns the stored key, or ErrNoKey when there is none.
 	Load() ([]byte, error)
@@ -57,15 +63,22 @@ func (m *MemoryKeys) Save(key []byte) error {
 
 // The files of the history directory: the index (every entry's metadata
 // and text) and one file per entry with formatted text or an image, under
-// data/. Each is AES-256-GCM sealed: a magic, a random nonce, then the
+// data2/. Each is AES-256-GCM sealed: a magic, a random nonce, then the
 // ciphertext, authenticated together with the file's name so that files
 // cannot be swapped.
+//
+// Version 2 is sealed with the key of a key file. Version 1 (history.gcb,
+// data/, magic GCB1) was sealed with a key in the login Keychain, which
+// the app no longer reads: removeLegacy deletes those files unread.
 const (
-	indexName = "history.gcb"
-	dataDir   = "data"
+	indexName = "history2.gcb"
+	dataDir   = "data2"
 	blobExt   = ".gcb"
-	magic     = "GCB1"
+	magic     = "GCB2"
 	tmpPrefix = ".tmp-"
+
+	legacyIndex = "history.gcb"
+	legacyData  = "data"
 )
 
 type vault struct {
@@ -139,7 +152,12 @@ func (v *vault) write(name string, plain []byte) error {
 	if err != nil {
 		return err
 	}
-	path := filepath.Join(v.dir, filepath.FromSlash(name))
+	return writeAtomic(filepath.Join(v.dir, filepath.FromSlash(name)), sealed)
+}
+
+// writeAtomic writes data to path, private to the user (0600): to a
+// temporary file in the same directory, synced, then renamed over path.
+func writeAtomic(path string, data []byte) error {
 	f, err := os.CreateTemp(filepath.Dir(path), tmpPrefix+"*")
 	if err != nil {
 		return err
@@ -155,7 +173,7 @@ func (v *vault) write(name string, plain []byte) error {
 		f.Close()
 		return err
 	}
-	if _, err := f.Write(sealed); err != nil {
+	if _, err := f.Write(data); err != nil {
 		f.Close()
 		return err
 	}
@@ -202,6 +220,16 @@ func (v *vault) blobIDs() []string {
 		}
 	}
 	return ids
+}
+
+// removeLegacy deletes the history of version 1, sealed with a Keychain
+// key, without reading it (nor the key): the history starts afresh.
+func removeLegacy(dir string) error {
+	err := os.Remove(filepath.Join(dir, legacyIndex))
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return err
+	}
+	return os.RemoveAll(filepath.Join(dir, legacyData))
 }
 
 // hasFiles reports whether the directory holds any saved history.

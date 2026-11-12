@@ -4,8 +4,9 @@
 // them into the frontmost app.
 //
 // The Store and its persistence are plain Go and work on any platform;
-// reading the system pasteboard, the frontmost app, the Keychain, the
-// Accessibility check and the ⌘V keystroke are macOS only.
+// reading the system pasteboard, the frontmost app, leaving the key file
+// out of backups, the Accessibility check and the ⌘V keystroke are macOS
+// only.
 package clipboard
 
 import (

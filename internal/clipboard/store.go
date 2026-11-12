@@ -19,11 +19,11 @@ var (
 	ErrEmpty = errors.New("clipboard: empty content")
 	// ErrTooLarge means the content is over MaxSize.
 	ErrTooLarge = errors.New("clipboard: content over the size limit")
-	// ErrKeychain means the key could not be read from or stored in the
-	// Keychain: the history is kept in memory only, and lost on quit.
-	ErrKeychain = errors.New("clipboard: the Keychain is unavailable; history is kept in memory only")
+	// ErrKeyStore means the key could not be read from or stored in its
+	// KeyStore: the history is kept in memory only, and lost on quit.
+	ErrKeyStore = errors.New("clipboard: the history's key is unavailable; history is kept in memory only")
 	// ErrUnreadable means the saved history cannot be read: its key is
-	// missing, or it cannot be decrypted or parsed. It is left as it is,
+	// missing or malformed, or it cannot be decrypted or parsed. It is left as it is,
 	// and the store stays empty and records nothing, until Clear deletes
 	// it and starts a fresh history.
 	ErrUnreadable = errors.New("clipboard: the saved history cannot be read")
@@ -149,16 +149,19 @@ func newStore(opts Options) *Store {
 func NewMemoryStore(opts Options) *Store { return newStore(opts) }
 
 // Open loads the history saved in dir, encrypted with the key keys hold
-// (a new key the first time). It always returns a usable store; the error
-// says what went wrong, and Err keeps reporting it:
+// (a new key the first time). A history of version 1, sealed with a
+// Keychain key, is deleted unread first: the history starts afresh. It
+// always returns a usable store; the error says what went wrong, and Err
+// keeps reporting it:
 //
-//   - ErrUnreadable (wrapped): there is saved history but its key is gone,
-//     or it cannot be decrypted or parsed. The files are left alone, the
-//     store is empty, records nothing and reports Unreadable until Clear
-//     deletes the files and starts a fresh history.
-//   - ErrKeychain (wrapped): the Keychain cannot be used. The history is
-//     kept in memory only (Persistent is false); saved files are left
-//     alone, for a later launch.
+//   - ErrUnreadable (wrapped): there is saved history but its key is gone
+//     or malformed, or it cannot be decrypted or parsed. The files are
+//     left alone, the store is empty, records nothing and reports
+//     Unreadable until Clear deletes the files and starts a fresh history
+//     with a new key.
+//   - ErrKeyStore (wrapped): the key cannot be read or stored. The
+//     history is kept in memory only (Persistent is false); saved files
+//     are left alone, for a later launch.
 //   - another error: the directory cannot be prepared; memory only too.
 func Open(dir string, keys KeyStore, opts Options) (*Store, error) {
 	s := newStore(opts)
@@ -168,14 +171,20 @@ func Open(dir string, keys KeyStore, opts Options) (*Store, error) {
 }
 
 func (s *Store) open() error {
+	if err := removeLegacy(s.dir); err != nil {
+		return err
+	}
 	if s.keys == nil {
-		return ErrKeychain
+		return ErrKeyStore
 	}
 	key, err := s.keys.Load()
-	if errors.Is(err, ErrNoKey) {
+	if err == nil && len(key) != KeySize {
+		err = fmt.Errorf("%w: %d bytes", ErrBadKey, len(key))
+	}
+	if errors.Is(err, ErrNoKey) || errors.Is(err, ErrBadKey) {
 		if hasFiles(s.dir) {
 			s.setUnreadable()
-			return fmt.Errorf("%w: its key is missing from the Keychain", ErrUnreadable)
+			return fmt.Errorf("%w: %v", ErrUnreadable, err)
 		}
 		key, err = newKey()
 		if err == nil {
@@ -183,15 +192,11 @@ func (s *Store) open() error {
 		}
 	}
 	if err != nil {
-		return fmt.Errorf("%w: %v", ErrKeychain, err)
+		return fmt.Errorf("%w: %v", ErrKeyStore, err)
 	}
 	v, err := newVault(s.dir, key)
 	if err != nil {
-		if hasFiles(s.dir) {
-			s.setUnreadable()
-			return fmt.Errorf("%w: %v", ErrUnreadable, err)
-		}
-		return fmt.Errorf("%w: %v", ErrKeychain, err)
+		return fmt.Errorf("%w: %v", ErrKeyStore, err)
 	}
 	if err := v.prepare(); err != nil {
 		return err
@@ -255,7 +260,7 @@ func (s *Store) setUnreadable() {
 }
 
 // Unreadable reports whether the saved history cannot be read: its key
-// is missing from the Keychain, or it cannot be decrypted or parsed. The
+// is missing or malformed, or it cannot be decrypted or parsed. The
 // store is then empty and records nothing; Clear deletes the saved
 // history, pinned entries included, and starts a fresh one.
 func (s *Store) Unreadable() bool {
@@ -281,7 +286,7 @@ func (s *Store) CanClear() bool {
 }
 
 // Err is the latest problem with the saved history, or nil, for the UI
-// to show. ErrUnreadable (wrapped) goes with Unreadable; ErrKeychain
+// to show. ErrUnreadable (wrapped) goes with Unreadable; ErrKeyStore
 // (wrapped) means the history is kept in memory only.
 func (s *Store) Err() error {
 	s.mu.Lock()
@@ -556,7 +561,7 @@ func (s *Store) Delete(id string) error {
 // memory and disk (pinned entries go only one by one, with Delete).
 // When the saved history is unreadable, Clear instead deletes all of it,
 // pinned entries included, and starts a fresh, empty, encrypted history
-// (with a new key when the old one is missing).
+// with a new key.
 func (s *Store) Clear() error {
 	s.mu.Lock()
 	if s.unreadable {
@@ -598,9 +603,19 @@ func (s *Store) reset() error {
 	s.unreadable, s.vault = false, nil
 	s.items, s.byID, s.byHash = nil, map[string]*item{}, map[string]*item{}
 	s.mu.Unlock()
-	// The files are gone: opening again starts a fresh history, with a
-	// new key if the old one is missing.
-	err := s.open()
+	// The files are gone: a new key, and opening again starts a fresh
+	// history with it.
+	var err error
+	if s.keys == nil {
+		err = ErrKeyStore
+	} else if key, kerr := newKey(); kerr != nil {
+		err = fmt.Errorf("%w: %v", ErrKeyStore, kerr)
+	} else if kerr := s.keys.Save(key); kerr != nil {
+		err = fmt.Errorf("%w: %v", ErrKeyStore, kerr)
+	}
+	if err == nil {
+		err = s.open()
+	}
 	if err == nil {
 		err = s.save()
 	}

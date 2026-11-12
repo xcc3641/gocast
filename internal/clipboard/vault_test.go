@@ -141,6 +141,7 @@ func TestUnreadable(t *testing.T) {
 		"other key": func(_ string, keys *MemoryKeys) {
 			keys.Key = bytes.Repeat([]byte{7}, KeySize)
 		},
+		"malformed key": func(_ string, keys *MemoryKeys) { keys.Key = []byte("short") },
 		"corrupt index": func(dir string, _ *MemoryKeys) {
 			p := filepath.Join(dir, indexName)
 			b, _ := os.ReadFile(p)
@@ -176,8 +177,12 @@ func TestUnreadable(t *testing.T) {
 				t.Error("the unreadable history was overwritten")
 			}
 
+			old := append([]byte(nil), keys.Key...)
 			if err := s2.Clear(); err != nil {
 				t.Fatal(err)
+			}
+			if len(keys.Key) != KeySize || bytes.Equal(keys.Key, old) {
+				t.Errorf("Clear kept the key: %x", keys.Key)
 			}
 			if s2.Unreadable() || s2.Err() != nil || !s2.Persistent() || s2.Len() != 0 || s2.CanClear() {
 				t.Errorf("after Clear: unreadable %v, err %v, len %d", s2.Unreadable(), s2.Err(), s2.Len())
@@ -197,7 +202,7 @@ func TestUnreadable(t *testing.T) {
 	}
 }
 
-func TestKeychainUnavailable(t *testing.T) {
+func TestKeyStoreUnavailable(t *testing.T) {
 	dir := filepath.Join(t.TempDir(), "h")
 	clk := newClock()
 	s := openStore(t, dir, &MemoryKeys{}, clk)
@@ -206,7 +211,7 @@ func TestKeychainUnavailable(t *testing.T) {
 
 	denied := &MemoryKeys{Err: errors.New("user canceled")}
 	s2, err := Open(dir, denied, Options{Pasteboard: &fakeBoard{}, Now: clk.now})
-	if !errors.Is(err, ErrKeychain) || s2.Persistent() || s2.Unreadable() {
+	if !errors.Is(err, ErrKeyStore) || s2.Persistent() || s2.Unreadable() {
 		t.Fatalf("Open: %v, persistent %v, unreadable %v", err, s2.Persistent(), s2.Unreadable())
 	}
 	if _, err := s2.Add(Content{Text: "memory only", HTML: []byte("<b>m</b>")}, safari); err != nil {
@@ -220,7 +225,7 @@ func TestKeychainUnavailable(t *testing.T) {
 	if (&vault{dir: dir}).blobIDs() != nil {
 		t.Error("wrote data without a key")
 	}
-	if s, err := Open(dir, nil, Options{Pasteboard: &fakeBoard{}}); !errors.Is(err, ErrKeychain) || s == nil {
+	if s, err := Open(dir, nil, Options{Pasteboard: &fakeBoard{}}); !errors.Is(err, ErrKeyStore) || s == nil {
 		t.Errorf("nil keys: %v", err)
 	}
 }

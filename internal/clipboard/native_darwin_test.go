@@ -16,9 +16,6 @@ func TestNativeSymbols(t *testing.T) {
 	if !loadCF() {
 		t.Error("CoreFoundation")
 	}
-	if !loadSecurity() {
-		t.Error("Security")
-	}
 	if !loadAX() || ax.withOptions == nil || ax.prompt == 0 {
 		t.Error("ApplicationServices")
 	}
@@ -80,35 +77,4 @@ func TestSystemPasteboardReadOnly(t *testing.T) {
 		t.Errorf("frontmost %+v", app)
 	}
 	t.Logf("change count %d, frontmost %+v", n, app)
-}
-
-// TestKeychain stores, reads and deletes a key in the login Keychain,
-// under a service of its own. Run with GOCAST_KEYCHAIN_TEST=1.
-func TestKeychain(t *testing.T) {
-	if os.Getenv("GOCAST_KEYCHAIN_TEST") != "1" {
-		t.Skip("set GOCAST_KEYCHAIN_TEST=1 to use the Keychain")
-	}
-	k := &Keychain{Service: KeychainService + ".test", Account: "test-key"}
-	t.Cleanup(func() {
-		if err := k.Delete(); err != nil {
-			t.Errorf("cleanup: %v", err)
-		}
-	})
-	if _, err := k.Load(); !errors.Is(err, ErrNoKey) {
-		t.Fatalf("Load before Save: %v", err)
-	}
-	key, _ := newKey()
-	if err := k.Save(key); err != nil {
-		t.Fatal(err)
-	}
-	got, err := k.Load()
-	if err != nil || string(got) != string(key) {
-		t.Fatalf("Load: %v", err)
-	}
-	if err := k.Delete(); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := k.Load(); !errors.Is(err, ErrNoKey) {
-		t.Errorf("Load after Delete: %v", err)
-	}
 }

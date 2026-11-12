@@ -17,7 +17,7 @@ import (
 var (
 	loadOnce sync.Once
 	libs     struct {
-		cf, security, appServices, coreGraphics uintptr
+		cf, foundation, appServices, coreGraphics uintptr
 	}
 )
 
@@ -29,7 +29,7 @@ func load() {
 		}
 		open("/System/Library/Frameworks/AppKit.framework/AppKit")
 		libs.cf = open("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation")
-		libs.security = open("/System/Library/Frameworks/Security.framework/Security")
+		libs.foundation = open("/System/Library/Frameworks/Foundation.framework/Foundation")
 		libs.appServices = open("/System/Library/Frameworks/ApplicationServices.framework/ApplicationServices")
 		libs.coreGraphics = open("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics")
 	})
@@ -190,23 +190,16 @@ func symbol(lib uintptr, name string) uintptr {
 	return deref(addr)
 }
 
-// CoreFoundation, for the dictionaries the Keychain and Accessibility
-// calls take.
+// CoreFoundation, for the dictionary the Accessibility check takes.
 var cf struct {
 	once        sync.Once
 	ok          bool
-	stringUTF8  func(alloc uintptr, s string, encoding uint32) uintptr
-	dataCreate  func(alloc uintptr, b *byte, n int) uintptr
 	dictCreate  func(alloc uintptr, keys, values *uintptr, n int, keyCB, valueCB uintptr) uintptr
 	release     func(ref uintptr)
-	dataLength  func(ref uintptr) int
-	dataBytes   func(ref uintptr) unsafe.Pointer
 	keyCB       uintptr
 	valueCB     uintptr
 	booleanTrue uintptr
 }
-
-const cfStringEncodingUTF8 = 0x08000100
 
 func loadCF() bool {
 	cf.once.Do(func() {
@@ -214,12 +207,8 @@ func loadCF() bool {
 		if libs.cf == 0 {
 			return
 		}
-		purego.RegisterLibFunc(&cf.stringUTF8, libs.cf, "CFStringCreateWithCString")
-		purego.RegisterLibFunc(&cf.dataCreate, libs.cf, "CFDataCreate")
 		purego.RegisterLibFunc(&cf.dictCreate, libs.cf, "CFDictionaryCreate")
 		purego.RegisterLibFunc(&cf.release, libs.cf, "CFRelease")
-		purego.RegisterLibFunc(&cf.dataLength, libs.cf, "CFDataGetLength")
-		purego.RegisterLibFunc(&cf.dataBytes, libs.cf, "CFDataGetBytePtr")
 		cf.keyCB, _ = purego.Dlsym(libs.cf, "kCFTypeDictionaryKeyCallBacks")
 		cf.valueCB, _ = purego.Dlsym(libs.cf, "kCFTypeDictionaryValueCallBacks")
 		cf.booleanTrue = symbol(libs.cf, "kCFBooleanTrue")
@@ -238,16 +227,6 @@ func (r *cfRefs) keep(ref uintptr) uintptr {
 	return ref
 }
 
-func (r *cfRefs) str(s string) uintptr { return r.keep(cf.stringUTF8(0, s, cfStringEncodingUTF8)) }
-
-func (r *cfRefs) data(b []byte) uintptr {
-	var p *byte
-	if len(b) > 0 {
-		p = &b[0]
-	}
-	return r.keep(cf.dataCreate(0, p, len(b)))
-}
-
 // dict makes a CFDictionary of keys and values, in pairs.
 func (r *cfRefs) dict(pairs ...uintptr) uintptr {
 	n := len(pairs) / 2
@@ -263,13 +242,4 @@ func (r *cfRefs) release() {
 		cf.release(ref)
 	}
 	*r = nil
-}
-
-// cfBytes copies the bytes of a CFData.
-func cfBytes(ref uintptr) []byte {
-	n := cf.dataLength(ref)
-	if n <= 0 {
-		return []byte{}
-	}
-	return append([]byte(nil), unsafe.Slice((*byte)(cf.dataBytes(ref)), n)...)
 }
