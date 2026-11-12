@@ -115,8 +115,22 @@ func (v *clipView) svc() *clipService { return v.l.g.clip }
 // openClip turns the panel into the clipboard view, fresh: fromSearch,
 // from the search panel, which Escape goes back to; else shown at once.
 func (l *launcher) openClip(fromSearch bool) {
+	l.enterClip(pasteTarget{app: frontmostOther(), floating: l.g.term.focused()}, fromSearch)
+	if !l.win.IsVisible() {
+		d := mygo.Screen.DisplayNearestPoint(mygo.Screen.CursorScreenPoint())
+		wa := d.WorkArea
+		l.win.SetPosition(wa.X+(wa.Width-windowWidth)/2, wa.Y+wa.Height/5-marginTop)
+		l.win.Show()
+	}
+	l.clip.input.Focus()
+	l.win.Invalidate()
+}
+
+// enterClip is openClip's state: all of it changes before the window
+// shows, which then draws the clipboard view as its first frame.
+func (l *launcher) enterClip(target pasteTarget, fromSearch bool) {
 	v := l.clip
-	v.target = pasteTarget{app: frontmostOther(), floating: l.g.term.focused()}
+	v.target = target
 	v.fromSearch = fromSearch
 	v.open = true
 	v.query, v.filter = "", clipboard.FilterAll
@@ -130,14 +144,7 @@ func (l *launcher) openClip(fromSearch bool) {
 	v.choose(freshChoice(v.rows, v.entries))
 	l.menuOpen = false
 	l.gen++ // at its size at once, without animating to it
-	if !l.win.IsVisible() {
-		d := mygo.Screen.DisplayNearestPoint(mygo.Screen.CursorScreenPoint())
-		wa := d.WorkArea
-		l.win.SetPosition(wa.X+(wa.Width-windowWidth)/2, wa.Y+wa.Height/5-marginTop)
-		l.win.Show()
-	}
-	v.input.Focus()
-	l.win.Invalidate()
+	l.shown = true
 }
 
 // toggleClip is the clipboard shortcut: it hides the view, else turns the

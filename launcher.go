@@ -96,7 +96,11 @@ type launcher struct {
 
 	loading, loaded bool // listing the apps; listed them once
 
-	hiddenAt  time.Time
+	hiddenAt time.Time
+	// shown: the panel shows, or is about to, as show and openClip set
+	// it before they order the window in; hide clears it. Hidden (and
+	// at first), the panel draws nothing (see view).
+	shown     bool
 	selectAll bool // select the query in the next frame (restored on show)
 	gen       int  // the panel's key: each show starts its animation afresh
 	composing bool // the input method composes in the field
@@ -188,8 +192,21 @@ func (l *launcher) targetHeight() float32 {
 
 func (l *launcher) view(c *ui.Context) {
 	c.SetTheme(themed(c))
-	k := tokensFor(c)
 	c.Root().Background(ui.Transparent)
+	// Hidden, the panel draws nothing, so that it shows nothing stale as
+	// it shows again: the window keeps the last frame it drew, which
+	// AppKit shows as it orders the window in, until the window server
+	// tells it shows, a pass or more later, and the frame of what it shows
+	// now draws (frames wait while it is out of sight). Its last frame
+	// would be the search panel as the clipboard shortcut opens the
+	// clipboard view, or the reverse (design.md 2.8.1). Asking
+	// WindowHidden builds the view once more as the window hides: that
+	// frame, transparent, is the one the window keeps. Not shown yet, at
+	// first, it draws nothing either.
+	if hidden := c.WindowHidden(); hidden || !l.shown {
+		return
+	}
+	k := tokensFor(c)
 	reduce := c.Preferences().ReduceMotion
 
 	if l.clip.open {
@@ -246,7 +263,7 @@ func (l *launcher) view(c *ui.Context) {
 // setRegion takes the mouse over the panel, w wide and h high, centred in
 // the window; it goes through the rest of it.
 func (l *launcher) setRegion(w, h float32) {
-	if w == l.regionW && h == l.region {
+	if w == l.regionW && h == l.region || l.win == nil { // nil: drawn in a test
 		return
 	}
 	l.regionW, l.region = w, h
@@ -1102,12 +1119,28 @@ func (l *launcher) show() {
 		l.input.Focus()
 		return
 	}
+	l.enterSearch(time.Now())
+	d := mygo.Screen.DisplayNearestPoint(mygo.Screen.CursorScreenPoint())
+	wa := d.WorkArea
+	l.win.SetPosition(wa.X+(wa.Width-windowWidth)/2, wa.Y+wa.Height/5-marginTop)
+	l.input.Focus()
+	l.win.Show()
+	l.win.Invalidate() // draw the state changed outside a frame
+	if l.g.loadPresets() {
+		l.g.presetsChanged()
+	}
+	l.load()
+}
+
+// enterSearch is show's state: all of it changes before the window
+// shows, which then draws the search panel as its first frame.
+func (l *launcher) enterSearch(now time.Time) {
 	l.clip.open = false
-	now := time.Now()
 	restore := restoring(l.hiddenAt, now)
 	// The setting as the panel shows: switched while it shows, it does not
 	// change (design.md 4.4).
 	l.searchOnly = l.g.settings.SearchOnly
+	l.shown = true
 	l.own = l.ownItems()
 	// Ranked as it shows, the suggestions do not move until it shows again
 	// with an empty query after 90 seconds (design.md 2.5a).
@@ -1124,29 +1157,27 @@ func (l *launcher) show() {
 	clear(l.running) // apps started or quit meanwhile
 	l.menuOpen = false
 	l.gen++ // appears at its size, without animating to it
-	d := mygo.Screen.DisplayNearestPoint(mygo.Screen.CursorScreenPoint())
-	wa := d.WorkArea
-	l.win.SetPosition(wa.X+(wa.Width-windowWidth)/2, wa.Y+wa.Height/5-marginTop)
-	l.input.Focus()
-	l.win.Show()
-	l.win.Invalidate() // draw the state changed outside a frame
-	if l.g.loadPresets() {
-		l.g.presetsChanged()
-	}
-	l.load()
 }
 
 func (l *launcher) hide() {
 	if !l.win.IsVisible() {
 		return
 	}
+	l.leave(time.Now())
+	l.win.Hide()
+	l.win.Invalidate() // nothing, the frame the window keeps (see view)
+}
+
+// leave is hide's state: the search panel kept for 90 seconds, the
+// clipboard view not (design.md 2.8.1); nothing drawn (see view).
+func (l *launcher) leave(now time.Time) {
 	if l.clip.open {
 		l.clip.closed()
 	} else {
-		l.hiddenAt = time.Now() // the clipboard view isn't restored (design.md 2.8.1)
+		l.hiddenAt = now
 	}
 	l.menuOpen = false
-	l.win.Hide()
+	l.shown = false
 }
 
 // toggle shows or hides the search panel: from the clipboard view, it goes
