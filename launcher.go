@@ -8,7 +8,6 @@ import (
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/i18n"
-	"github.com/egoist/mygo/plugins/glass"
 	"github.com/egoist/mygo/plugins/sfsymbols"
 	"github.com/egoist/mygo/ui"
 
@@ -28,12 +27,12 @@ import (
 const (
 	panelWidth     = 750
 	barHeight      = 66
-	listHeight     = 366
-	emptyHeight    = 151
-	footerHeight   = 42 // the room of the actions capsule, over the list's end
-	capsuleHeight  = 32
-	expandedHeight = barHeight + 1 + listHeight + footerHeight // 475
-	noResultHeight = barHeight + 1 + emptyHeight + footerHeight // 260
+	listHeight     = 409 // to the panel's bottom, under the actions capsule
+	emptyHeight    = 194
+	capsuleHeight  = 36
+	capsuleInset   = 8
+	expandedHeight = barHeight + listHeight  // 475
+	noResultHeight = barHeight + emptyHeight // 260
 	panelRadius    = 26
 	rowHeight      = 40
 	iconSize       = 22
@@ -73,20 +72,20 @@ type launcher struct {
 	g   *gocast
 	win *mygo.Window
 
-	apps    []mygo.InstalledApp
-	alts    [][]string // the apps' other names (English, Chinese), by index
-	items   []search.Item
-	entries []entry // by item
-	results []int   // items matching the query, best first; kept as the query empties, for the panel to shrink with them
-	query   string
+	apps     []mygo.InstalledApp
+	alts     [][]string // the apps' other names (English, Chinese), by index
+	items    []search.Item
+	entries  []entry // by item
+	results  []int   // items matching the query, best first; kept as the query empties, for the panel to shrink with them
+	query    string
 	filtered string // the query of the results
-	chosen  int
-	moved   bool // the user moved the choice since the results changed
-	list    ui.ListState
-	input   ui.Handle
-	scroll  bool // show the choice in the next frame
-	icons   map[string]*ui.Bitmap // by app path; nil where the app has none
-	running map[string]bool       // by bundle ID, as isRunning found it
+	chosen   int
+	moved    bool // the user moved the choice since the results changed
+	list     ui.ListState
+	input    ui.Handle
+	scroll   bool                  // show the choice in the next frame
+	icons    map[string]*ui.Bitmap // by app path; nil where the app has none
+	running  map[string]bool       // by bundle ID, as isRunning found it
 
 	loading, loaded bool // listing the apps; listed them once
 
@@ -104,10 +103,10 @@ type launcher struct {
 	menuOpen      bool
 	menuComposing bool
 	menuQuery     string
-	menuChosen int
-	menuInput  ui.Handle
-	menuItems  []action // the menu's actions, as it opened
-	menuShown  []int    // those matching menuQuery
+	menuChosen    int
+	menuInput     ui.Handle
+	menuItems     []action // the menu's actions, as it opened
+	menuShown     []int    // those matching menuQuery
 }
 
 func newLauncher(g *gocast) *launcher {
@@ -195,8 +194,7 @@ func (l *launcher) view(c *ui.Context) {
 	panel.Height(h).Children(func() {
 		l.searchBar(c, k)
 		if body > barHeight {
-			ui.Box(c).Height(1).Background(k.hairline).Shrink(0)
-			ui.Column(c).Height(body - barHeight - 1).Shrink(0).Children(func() {
+			ui.Column(c).Height(body - barHeight).Shrink(0).Children(func() {
 				if len(l.results) > 0 {
 					l.resultList(c, k)
 				} else {
@@ -242,7 +240,7 @@ func (l *launcher) shortcuts(c *ui.Context) {
 
 func (l *launcher) searchBar(c *ui.Context, k tokens) {
 	ui.Row(c).Height(barHeight).Shrink(0).Padding(0, 20).Gap(12).AlignItems(ui.Center).Children(func() {
-		sfsymbols.Symbol(c, "command.square").Size(18).Color(k.textOnGlass).AccessHidden(true) // Gocast's mark, as the tray's
+		sfsymbols.Symbol(c, "command.square").Size(20).Color(k.textOnGlass).AccessHidden(true) // Gocast's mark, as the tray's
 		field := ui.TextInputBase(c, &l.query).Bind(&l.input).Grow(1).FontSize(20).
 			Placeholder(locales.SearchPlaceholder()).Label(locales.SearchPlaceholder()).
 			OnTextKey(l.textKey)
@@ -328,12 +326,12 @@ func (l *launcher) resultList(c *ui.Context, k tokens) {
 	l.list.Label = func(i int) string { return l.rowLabel(l.results[i]) }
 	var list ui.Element
 	if l.empty() { // suggestions
-		ui.Text(c, locales.SearchSuggestions()).FontSize(12).TextColor(k.textOnGlass).Padding(12, 20, 0, 20).Shrink(0)
+		ui.Text(c, locales.SearchSuggestions()).FontSize(12).TextColor(k.textOnGlass).Padding(0, 20, 4, 20).Shrink(0)
 	}
-	ui.Themed(c, listTheme(c, k)).Grow(1).Children(func() {
+	ui.Themed(c, listTheme(c, k)).Background(ui.Transparent).Grow(1).Children(func() { // the glass shows through
 		// Room at the end for the last row to scroll above the actions
 		// capsule, which floats over the list.
-		list = ui.List(c, &l.list, len(l.results), func(i int) { l.row(c, k, i) }).Grow(1).Padding(8, 8, footerHeight+4, 8)
+		list = ui.List(c, &l.list, len(l.results), func(i int) { l.row(c, k, i) }).Grow(1).Padding(0, 8, capsuleInset+capsuleHeight+capsuleInset, 8)
 	})
 	if l.scroll && l.chosen >= 0 && l.chosen < len(l.results) {
 		l.scroll = false
@@ -378,7 +376,8 @@ func (l *launcher) row(c *ui.Context, k tokens, i int) {
 				}
 				if l.isRunning(app.ID) {
 					// A dot under the icon, as the Dock's and Raycast's.
-					ui.Box(c).Absolute().Left(iconSize/2 - 2).Bottom(-6).Size(4, 4).Radius(2).Background(k.textOnGlass)
+					// 2 under the icon, in the row's height.
+					ui.Box(c).Absolute().Left(iconSize/2-2).Bottom(-6).Size(4, 4).Radius(2).Background(k.textSecondary)
 				}
 			})
 		}
@@ -404,7 +403,11 @@ func (l *launcher) rowLabel(item int) string {
 		sep = "，"
 	}
 	if e.app != nil {
-		return it.Title + sep + locales.SearchTagApp()
+		s := it.Title + sep + locales.SearchTagApp()
+		if l.isRunning(e.app.ID) {
+			s += sep + locales.SearchRunning()
+		}
+		return s
 	}
 	s := it.Title + sep + locales.SearchTagPreset()
 	if j := presets.Find(l.g.presets, e.preset); j >= 0 {
@@ -424,50 +427,82 @@ func (l *launcher) noResults(c *ui.Context, k tokens) {
 	})
 }
 
-// footer floats over the end of the list, as Raycast's: a glass capsule
-// at the bottom right with the primary action and the actions menu, both
-// clickable, and one at the bottom left with a notice, for a few seconds.
+// footer floats over the end of the list, as Raycast's (design.md 2.4):
+// a glass capsule at the bottom right with the primary action and the
+// actions menu, each clickable, and one at the bottom left with a notice,
+// for a few seconds.
 func (l *launcher) footer(c *ui.Context, k tokens) {
+	// The capsules are the system's glass, as the panel: MyGo's glass
+	// over the panel's would show what the window painted under it,
+	// nothing, as gray.
 	capsule := func() ui.Element {
-		return ui.Row(c).Absolute().Bottom(10).Height(capsuleHeight).Radius(capsuleHeight/2).Padding(0, 12).
-			Gap(8).AlignItems(ui.Center).Material(glass.Glass{}).Shadow(0, 2, 8, 0, ui.RGBA(0, 0, 0, 0.10))
+		return ui.Row(c).Absolute().Bottom(capsuleInset).Height(capsuleHeight).Radius(capsuleHeight/2).
+			AlignItems(ui.Center).Material(panelGlass{fallback: k.surface}).Border(1, capsuleBorder(c)).
+			Shadow(0, 4, 12, 0, ui.RGBA(0, 0, 0, 0.12))
 	}
+	// segment is a clickable part of the actions capsule, in the selection
+	// color while pressed.
+	segment := func(label string, mods ui.Modifiers, key ui.Key) ui.Element {
+		seg := ui.Row(c).Height(capsuleHeight-6).Radius(14).Padding(0, 6, 0, 8).Gap(8).AlignItems(ui.Center).
+			Label(label).KeyShortcuts(mods, key)
+		if seg.Pressed() {
+			seg.Background(k.selection)
+		}
+		return seg
+	}
+	reduce := c.Preferences().ReduceMotion
 	if l.notice != "" {
 		icon, color := "checkmark.circle", k.textOnGlass
 		if l.noticeDanger {
 			icon, color = "exclamationmark.triangle.fill", k.danger
 		}
+		fade := &ui.Motion{Opacity: 0}
 		c.Key("notice")
-		capsule().Left(12).MaxWidth(panelWidth/2).Children(func() {
+		n := capsule().Left(capsuleInset).MaxWidth(panelWidth-capsuleWidth-24).Padding(0, 14).Gap(6)
+		if !reduce {
+			n.Transition(ui.ElementTransition{Enter: fade, Exit: fade, Duration: 150 * time.Millisecond})
+		}
+		n.Children(func() {
 			sfsymbols.Symbol(c, icon).Size(14).Color(color)
 			ui.Text(c, l.notice).FontSize(12).TextColor(color).SingleLine().Shrink(1)
 		})
 	}
 	e, ok := l.current()
-	if !ok {
-		return
-	}
-	name := locales.FooterOpen()
-	if e.app == nil {
-		name = locales.FooterOpenInTerminal()
-	}
 	c.Key("actions")
-	capsule().Right(12).Children(func() {
-		ui.Row(c).Gap(8).AlignItems(ui.Center).Label(name).KeyShortcuts(0, ui.KeyEnter).OnClick(l.primary).Children(func() {
-			ui.Text(c, name).FontSize(12).TextColor(k.text).SingleLine()
-			keycap(c, k, "↩", 12)
-		})
-		ui.Box(c).Size(1, 16).Background(k.hairline).Margin(0, 4)
-		ui.Row(c).Gap(8).AlignItems(ui.Center).Label(locales.FooterActions()).KeyShortcuts(ui.Cmd, ui.KeyK).
-			OnClick(l.toggleMenu).Children(func() {
-			ui.Text(c, locales.FooterActions()).FontSize(12).TextColor(k.text).SingleLine()
-			keycaps(c, k, []string{"⌘", "K"}, 12)
+	capsule().Right(capsuleInset).Padding(0, 3, 0, 6).Gap(4).Children(func() {
+		if ok {
+			name := locales.FooterOpen()
+			if e.app == nil {
+				name = locales.FooterOpenInTerminal()
+			}
+			segment(name, 0, ui.KeyEnter).OnClick(l.primary).Children(func() {
+				ui.Text(c, name).FontSize(13).TextColor(k.text).SingleLine()
+				outlineKeycaps(c, k, k.textOnGlass, "↩")
+			})
+		}
+		actions := segment(locales.FooterActions(), ui.Cmd, ui.KeyK)
+		color := k.textOnGlass
+		if ok {
+			actions.OnClick(l.toggleMenu)
+		} else {
+			// No results: nothing to act on. Dimmed by its colors, as
+			// opacity under glass draws the glass dark.
+			color = color.Alpha(0.4)
+			actions.AccessDisabled(true)
+		}
+		actions.Children(func() {
+			ui.Text(c, locales.FooterActions()).FontSize(13).TextColor(color).SingleLine()
+			outlineKeycaps(c, k, color, "⌘", "K")
 		})
 	})
 }
 
-// isRunning reports whether the app with the bundle ID runs, asked once
-// per show and query.
+// capsuleWidth is about the actions capsule's width, which bounds the
+// notice capsule's.
+const capsuleWidth = 280
+
+// isRunning reports whether the app with the bundle ID runs, as it did
+// when the panel showed.
 func (l *launcher) isRunning(id string) bool {
 	on, ok := l.running[id]
 	if !ok {
@@ -610,8 +645,8 @@ func (l *launcher) actionsMenu(c *ui.Context, k tokens, reduce bool) {
 		tr = ui.ElementTransition{Enter: fade, Exit: fade, Duration: 80 * time.Millisecond}
 	}
 	c.Key("actions")
-	ui.Column(c).Absolute().Right(8).Bottom(10+capsuleHeight+6).Width(320).MaxHeight(300).
-		Radius(12).Material(glass.Glass{}).Shadow(0, 8, 24, 0, ui.RGBA(0, 0, 0, 0.20)).Clip().
+	ui.Column(c).Absolute().Right(capsuleInset).Bottom(capsuleInset+capsuleHeight+8).Width(320).MaxHeight(300).
+		Radius(12).Material(panelGlass{fallback: k.surface}).Shadow(0, 8, 24, 0, ui.RGBA(0, 0, 0, 0.20)).Clip().
 		TransformOrigin(1, 1).Transition(tr).Children(func() {
 		ui.Row(c).Height(36).Shrink(0).Padding(0, 12).AlignItems(ui.Center).Children(func() {
 			f := ui.TextInputBase(c, &l.menuQuery).Bind(&l.menuInput).Grow(1).FontSize(13).
@@ -760,7 +795,6 @@ func (l *launcher) filter() {
 	l.filtered = l.query
 	l.moved = false
 	l.menuOpen = false
-	clear(l.running)
 	l.results = l.find()
 	l.choose(0)
 }

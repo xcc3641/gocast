@@ -12,9 +12,9 @@ import (
 )
 
 const (
-	DefaultLauncherShortcut = "Alt+Shift+Space"
-	DefaultTerminalShortcut = "Ctrl+`"
-	DefaultFontSize         = 13
+	DefaultLauncherShortcut  = "Alt+Shift+Space"
+	DefaultTerminalShortcut  = "Ctrl+`"
+	DefaultFontSize          = 13
 	MinFontSize, MaxFontSize = 11, 20
 )
 

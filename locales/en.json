@@ -78,6 +78,10 @@
   "@searchSuggestions": {
     "description": "Search panel: header of the most used items under an empty query (off in v1; not in copy.md)."
   },
+  "searchRunning": "Running",
+  "@searchRunning": {
+    "description": "Search panel: read out after a running app's name and type (copy.md 2.3: “Safari, App, Running”)."
+  },
   "searchOpenFailed": "Couldn’t open “{name}”. It may have been moved or deleted.",
   "@searchOpenFailed": {
     "description": "Footer, when an app fails to open.",

@@ -234,6 +234,22 @@ func (msgs Messages) SearchSuggestions() string {
 	return Catalog.Format(msgs.locale, "searchSuggestions", nil)
 }
 
+// SearchRunning says "Running"
+// in the language the app shows.
+//
+// Search panel: read out after a running app's name and type (copy.md 2.3:
+// “Safari, App, Running”).
+func SearchRunning() string { return In(i18n.Locale()).SearchRunning() }
+
+// SearchRunning says "Running"
+// in the language of msgs.
+//
+// Search panel: read out after a running app's name and type (copy.md 2.3:
+// “Safari, App, Running”).
+func (msgs Messages) SearchRunning() string {
+	return Catalog.Format(msgs.locale, "searchRunning", nil)
+}
+
 // SearchOpenFailed says "Couldn’t open “{name}”. It may have been moved or deleted."
 // in the language the app shows.
 //

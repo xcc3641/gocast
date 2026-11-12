@@ -102,3 +102,23 @@ func keycaps(c *ui.Context, k tokens, caps []string, size float32) {
 		}
 	})
 }
+
+// outlineKeycaps draws the keys of a shortcut in the actions capsule
+// (design.md 2.4): 22 high, outlined in the hairline, not filled.
+func outlineKeycaps(c *ui.Context, k tokens, color ui.Color, caps ...string) {
+	ui.Row(c).Gap(4).AlignItems(ui.Center).AccessHidden(true).Children(func() {
+		for _, cp := range caps {
+			ui.Box(c).Height(22).MinWidth(22).Padding(0, 5).Radius(6).Border(1, k.hairline).Center().Children(func() {
+				ui.Text(c, cp).FontSize(12).TextColor(color).SingleLine()
+			})
+		}
+	})
+}
+
+// capsuleBorder is the outline of the panel's floating capsules.
+func capsuleBorder(c *ui.Context) ui.Color {
+	if c.Theme().Dark {
+		return ui.RGBA(255, 255, 255, 0.12)
+	}
+	return ui.RGBA(0, 0, 0, 0.08)
+}
