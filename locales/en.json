@@ -14,7 +14,7 @@
   },
   "trayCheckUpdates": "Check for Updates…",
   "@trayCheckUpdates": {
-    "description": "Tray menu: checks for updates (on the About page of Settings)."
+    "description": "Tray menu: opens the update window and checks (the updater plugin's MenuItem)."
   },
   "trayQuit": "Quit Gocast",
   "@trayQuit": {
@@ -404,6 +404,14 @@
   "@generalLoginHint": {
     "description": "General: under the switch."
   },
+  "generalAutoUpdate": "Check for updates automatically",
+  "@generalAutoUpdate": {
+    "description": "General: switch, in the first group under Open at login. It is the updater's automatic checks."
+  },
+  "generalAutoUpdateHint": "When on, Gocast asks you when a new version is ready. When off, it only checks if you ask.",
+  "@generalAutoUpdateHint": {
+    "description": "General: under the switch."
+  },
   "generalTerminalGroup": "Floating Terminal",
   "@generalTerminalGroup": {
     "description": "General: title over the floating terminal group."
@@ -470,37 +478,7 @@
   },
   "aboutCheck": "Check for Updates",
   "@aboutCheck": {
-    "description": "About: button."
-  },
-  "aboutChecking": "Checking…",
-  "@aboutChecking": {
-    "description": "About: while checking."
-  },
-  "aboutUpToDate": "You’re up to date.",
-  "@aboutUpToDate": {
-    "description": "About: no update."
-  },
-  "aboutUpdateTitle": "Gocast {version} is available",
-  "@aboutUpdateTitle": {
-    "description": "About: alert title.",
-    "placeholders": {
-      "version": {
-        "type": "String",
-        "example": "0.3.0"
-      }
-    }
-  },
-  "aboutUpdateRestart": "Update and Restart",
-  "@aboutUpdateRestart": {
-    "description": "About: alert button."
-  },
-  "aboutUpdateLater": "Later",
-  "@aboutUpdateLater": {
-    "description": "About: alert button."
-  },
-  "aboutCheckFailed": "Couldn’t check for updates. Try again later.",
-  "@aboutCheckFailed": {
-    "description": "About: the check failed."
+    "description": "About: button. Opens the update window and checks."
   },
   "shortcutSpotlightTitle": "Spotlight is using ⌘Space",
   "@shortcutSpotlightTitle": {
@@ -541,5 +519,113 @@
   "menuWithPresetHeading": "Open with Preset, heading",
   "@menuWithPresetHeading": {
     "description": "Accessibility label of the Open with Preset section title in that list."
+  },
+  "updateTitle": "Software Update",
+  "@updateTitle": {
+    "description": "Update window: title."
+  },
+  "updateChecking": "Checking…",
+  "@updateChecking": {
+    "description": "Update window: while checking."
+  },
+  "updateCancel": "Cancel",
+  "@updateCancel": {
+    "description": "Update window: button."
+  },
+  "updateOK": "OK",
+  "@updateOK": {
+    "description": "Update window: button."
+  },
+  "updateUpToDate": "You’re Up to Date",
+  "@updateUpToDate": {
+    "description": "Update window: title, no newer version."
+  },
+  "updateUpToDateMessage": "%[1]s %[2]s is the latest version.",
+  "@updateUpToDateMessage": {
+    "description": "Update window: %[1]s the app name, %[2]s its version."
+  },
+  "updateDevelopmentBuild": "Development builds don’t update themselves.",
+  "@updateDevelopmentBuild": {
+    "description": "Update window: message in a development build."
+  },
+  "updateUnavailable": "Updates Unavailable",
+  "@updateUnavailable": {
+    "description": "Update window: title when the app cannot update itself."
+  },
+  "updateUnavailableMessage": "%[1]s can’t update itself here. If you installed it another way, update it there.",
+  "@updateUnavailableMessage": {
+    "description": "Update window: %[1]s the app name."
+  },
+  "updateError": "Update Error",
+  "@updateError": {
+    "description": "Update window: title of an error."
+  },
+  "updateCheckError": "Couldn’t check for updates. Try again later.",
+  "@updateCheckError": {
+    "description": "Update window: the check failed."
+  },
+  "updateInstallError": "Couldn’t install the update. Try again later.",
+  "@updateInstallError": {
+    "description": "Update window: installing failed."
+  },
+  "updateAvailable": "%[1]s is ready to update",
+  "@updateAvailable": {
+    "description": "Update window: title, %[1]s the app name."
+  },
+  "updateAvailableMessage": "%[1]s %[2]s is ready. You’re on %[3]s.",
+  "@updateAvailableMessage": {
+    "description": "Update window: %[1]s the app name, %[2]s the new version, %[3]s the running one."
+  },
+  "updateReleaseNotes": "Release Notes",
+  "@updateReleaseNotes": {
+    "description": "Update window: over the release notes."
+  },
+  "updateAutomaticDownloads": "Automatically download and install updates",
+  "@updateAutomaticDownloads": {
+    "description": "Update window: checkbox (not the General switch)."
+  },
+  "updateSkip": "Skip This Version",
+  "@updateSkip": {
+    "description": "Update window: button."
+  },
+  "updateRemindLater": "Remind Later",
+  "@updateRemindLater": {
+    "description": "Update window: button."
+  },
+  "updateInstall": "Install Update",
+  "@updateInstall": {
+    "description": "Update window: default button."
+  },
+  "updateDownloading": "Downloading…",
+  "@updateDownloading": {
+    "description": "Update window: while downloading."
+  },
+  "updateProgress": "%[1]s / %[2]s",
+  "@updateProgress": {
+    "description": "Update window: %[1]s downloaded of %[2]s, both sizes."
+  },
+  "updateMegabytes": "%s MB",
+  "@updateMegabytes": {
+    "description": "Update window: a size, %s a number such as 12.3."
+  },
+  "updateInstalling": "Installing…",
+  "@updateInstalling": {
+    "description": "Update window: while installing."
+  },
+  "updateReady": "Ready to Relaunch",
+  "@updateReady": {
+    "description": "Update window: title once installed."
+  },
+  "updateReadyMessage": "%[1]s %[2]s is installed and will open next time. You can relaunch now.",
+  "@updateReadyMessage": {
+    "description": "Update window: %[1]s the app name, %[2]s the new version."
+  },
+  "updateLater": "Later",
+  "@updateLater": {
+    "description": "Update window: button once installed."
+  },
+  "updateRelaunch": "Relaunch",
+  "@updateRelaunch": {
+    "description": "Update window: default button once installed."
   }
 }

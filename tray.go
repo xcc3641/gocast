@@ -10,6 +10,7 @@ import (
 	"log"
 
 	"github.com/egoist/mygo"
+	"github.com/egoist/mygo/plugins/updater"
 
 	"gocast/locales"
 )
@@ -38,7 +39,7 @@ func (g *gocast) setUpTray() {
 }
 
 // updateTray builds the tray's menu again, as the shortcuts it shows
-// change.
+// change, and the language (updater.MenuItem says the one shown).
 func (g *gocast) updateTray() {
 	if g.tray != nil {
 		g.tray.SetMenu(g.trayMenu())
@@ -51,7 +52,7 @@ func (g *gocast) trayMenu() *mygo.Menu {
 		{Label: locales.TrayTerminal(), Accelerator: g.terminalKey, Click: func(*mygo.MenuItem, *mygo.Window) { g.term.toggle() }},
 		mygo.Separator(),
 		{Label: locales.TraySettings(), Accelerator: "Cmd+,", Click: func(*mygo.MenuItem, *mygo.Window) { g.openSettings("") }},
-		{Label: locales.TrayCheckUpdates(), Click: func(*mygo.MenuItem, *mygo.Window) { g.checkForUpdates() }},
+		updater.MenuItem(), // 检查更新…: the update window
 		mygo.Separator(),
 		{Label: locales.TrayQuit(), Accelerator: "CmdOrCtrl+Q", Click: func(*mygo.MenuItem, *mygo.Window) { mygo.App.Quit() }},
 	})

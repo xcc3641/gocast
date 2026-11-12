@@ -330,6 +330,7 @@ func main() {
 	mygo.App.OnSecondInstance(func([]string, string) { g.launcher.show() })
 	mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) { g.quitting = true })
 	mygo.App.OnQuitCanceled(func() { g.quitting = false })
+	useUpdater()
 	mygo.App.WhenReady(g.ready)
 	if err := mygo.App.Run(); err != nil {
 		log.Fatal(err)

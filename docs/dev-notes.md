@@ -7,7 +7,7 @@ Gocast v1 (0.1.0). It is written in Go with MyGo's native UI (the `ui` package, 
 The sources, in priority order:
 - `docs/design.md` (wins on any conflict)
 - `research/brief.md` v1.3
-- `docs/copy.md` v1.2 (every string is in `locales/`)
+- `docs/copy.md` v1.9 (every string is in `locales/`)
 - the `[v1]` items in `research/raycast-reference.md`
 
 ## Run
@@ -56,8 +56,11 @@ The bundle is ad-hoc signed, and `libghostty-vt.dylib` is bundled in Resources. 
 | `termpanel.go` | Floating terminal (`plugins/terminal`): tabs, banners, end bar, show/hide |
 | `prefs.go` | Settings window: Shortcuts, Terminal Presets (editor), General, About |
 | `tray.go` | Tray icon and menu |
+| `updates.go` | MyGo's update window (`plugins/updater/native`): its texts from the catalogs, its icon |
 | `theme.go` | design.md 1.2 color tokens, keycaps |
 | `assets/tray.png` | Tray icon; `assets/make-tray-icon.swift` draws it |
+| `assets/update-icon.png` | The update window's icon, a placeholder until the app icon; `assets/make-update-icon.swift` draws it |
+| `CHANGELOG.md` | Keep a Changelog; the version's section is the update's release notes |
 | `internal/apps` | App scan, localized names |
 | `internal/search` | Matching: substring, word initials, pinyin (full and initials), ranking |
 | `internal/usage` | Frecency, and which result a query chose |
@@ -73,6 +76,7 @@ These files are in `~/Library/Application Support/dev.gocast.app/`:
 - `presets.json`. It is edited in Settings; editing it by hand works too, and it is reloaded when the panel or Settings opens. There are no presets on first run. The first terminal is then a plain shell, with the tip that points to Settings.
 - `settings.json`. It holds the shortcuts, font size and keep-terminal-on-blur, and only stores values that differ from the defaults.
 - `usage.json`. Frecency.
+- `updater.json`. The updater plugin's own: 自动检查更新 (`automaticChecks`), the window's download-and-install checkbox, a skipped version, the last check. It is in MyGo's `PathUserData`, which is `dev.gocast.app/` for the bundle but `~/Library/Application Support/Gocast/` for an unbundled `go build` binary (named after the app, as it has no identifier).
 
 Commands run through the user's login shell, as a login and interactive shell, so their PATH applies.
 
@@ -250,19 +254,35 @@ Automation can't cover these:
 - **Folder picker** (系统选文件夹) in the preset editor.
 - **System prompts:** the login-item prompt for 登录时自动启动.
 - **Update check:**
-  - a real update, with Install and Relaunch;
-  - in dev it always reads 检查失败, because updates are disabled.
+  - a real update, with Install, Relaunch, Skip and Remind Later (needs the feed, see Open issues);
+  - the tray's 检查更新… (automation can't reach the tray; it is the plugin's `MenuItem`, the same call as About's button).
 - **Accessibility settings:** Reduce Transparency (the fallback to `surface`), Increase Contrast, and Reduce Motion (fades only).
 - **English UI** (system language en).
 
+## Updates (design.md 4.4, 4.5; copy.md v1.9)
+
+- **Window.** `mygo.Use(native.New(updater.Options{Icon, Strings}))` in `updates.go`. The texts are copy.md 4.5's, from the catalogs (`update*` keys), for `en` and `zh-Hans`; no exclamation marks (`TestUpdateStrings`). `Language` is left empty, which is `App.Locale()`: the one of Gocast's catalogs the app shows, so `MYGO_LOCALE` and a change of the system language apply, and a system language Gocast doesn't have gets English, as the rest of the app.
+- **Tray.** 检查更新… is `updater.MenuItem()`, whose label is our `trayCheckUpdates` (passed as `Strings.MenuItem`). The menu is rebuilt on a locale change, so it follows.
+- **About.** A plain 检查更新 button calling `updater.CheckForUpdates()`. The page doesn't change: the earlier spinner, the 已是最新版本 line and the own update alert are gone, with their catalog keys.
+- **General.** 自动检查更新 is the second row of the first group, under 登录时自动启动. It reads `updater.AutomaticChecks()` when Settings shows and when the General page is chosen, and on `updater.OnChange`; it writes `updater.SetAutomaticChecks`. It is on by default (no `DisableAutomaticChecks`), and it is not the window's download-and-install checkbox.
+- **What a build says when 检查更新 is pressed:**
+  - `go run` / `go build` (dev): 没法在这里更新 / 开发版本不会自己更新。 (en: Updates Unavailable / Development builds don’t update themselves.) Captures: `screens/v12/update-window-dev{,-en,-dark}.png`.
+  - `mygo build` today, with no `updates` in mygo.json: `Updater.Enabled()` is false but the build is not dev, so it says 没法在这里更新 / Gocast 没法在当前安装位置自己更新。如果是用其他方式装的，请在那里更新。 This is misleading until the feed exists (checked with a `-X github.com/egoist/mygo.production=1` build: `screens/v12/update-window-production-no-feed.png`). It never checks in the background.
+- **Keys.** `mygo keygen -o ~/.config/gocast-update-keys` made `mygo-update.key` (secret, 0600) and `mygo-update.pub` there, outside the repo. The public key is `7xqUsSnSTZgGQ69hBuh+pm1jexm7Z3Ngl0lQ17EKPRQ=`. Put the secret in a password manager and in CI as `MYGO_UPDATER_PRIVATE_KEY`; never commit it.
+- **mygo.json has no `updates` yet.** `mygo build` refuses `updates` with a `publicKey` and neither `github` nor `url` ("updates needs either github (owner/name) or url"); `mygo vet` doesn't check it.
+- **TODO when the repository is decided** (likely `xcc3641/gocast`):
+  1. add to mygo.json `"updates": {"publicKey": "7xqUsSnSTZgGQ69hBuh+pm1jexm7Z3Ngl0lQ17EKPRQ=", "github": "xcc3641/gocast"}` (the repository must be public; releases tagged `v0.1.0` …);
+  2. build with `MYGO_UPDATER_PRIVATE_KEY="$(cat ~/.config/gocast-update-keys/mygo-update.key)" mygo build`, which then also writes `gocast-<version>-darwin-arm64.tar.gz` and `update-darwin-arm64.json`, and needs the version's `## [x.y.z]` section in CHANGELOG.md;
+  3. `mygo build -upload` makes a draft release; publishing it makes it the latest, which apps check.
+  Installed apps update only from builds that had `updates`: 0.1.0 builds made before that never update themselves.
+
 ## Open issues
 
-- **Updates feed.** None is configured (`updates` in mygo.json). Until it is, packaged builds also read 现在检查不了更新…
 - **Platform:**
   - `minimumSystemVersion` is 13.0, MyGo's floor (brief v1.3 agrees).
   - `mygo build` makes arm64 only. The universal build is planned for the second release (brief).
 - **Signing.** There is no Developer ID on this Mac, so the bundle is ad-hoc signed and not notarized.
-- **App icon.** None yet (design.md 1.6). About uses `command.square` 48 as a placeholder.
+- **App icon.** None yet (design.md 1.6). About uses `command.square` 48 as a placeholder, and so does the update window (`assets/update-icon.png`, in system gray #8E8E93 since one PNG serves both appearances). Replace both with the icon when it comes.
 - **`mygo build` locales warning.** It warns "The app does not import gocast/locales". This is a false positive and harmless: MyGo's `compiledDirs` splits `go list` output with `strings.Fields`, which breaks on the space in "Application Support". It should be reported upstream.
 - **Unbundled app names.** An unbundled binary gets app names in English from Launch Services; `Localized(App.Locale())` corrects them.
 

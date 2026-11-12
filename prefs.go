@@ -1,8 +1,6 @@
 package main
 
 import (
-	"context"
-	"errors"
 	"log"
 	"slices"
 	"strconv"
@@ -11,6 +9,7 @@ import (
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/plugins/sfsymbols"
+	"github.com/egoist/mygo/plugins/updater"
 	"github.com/egoist/mygo/ui"
 
 	"gocast/internal/presets"
@@ -60,18 +59,11 @@ type prefsWindow struct {
 
 	// General.
 	login      bool
+	autoUpdate bool // the updater's automatic checks (updater.json)
 	fontSize   float64
 	termWidth  float64 // percent of the work area
 	termHeight float64
 	hideBlur   bool
-
-	// About.
-	checking     bool
-	status       string
-	statusDanger bool
-	statusGen    int
-	update       *mygo.Update
-	updateOpen   bool
 }
 
 func newPrefsWindow(g *gocast) *prefsWindow {
@@ -94,6 +86,12 @@ func newPrefsWindow(g *gocast) *prefsWindow {
 		e.PreventDefault()
 		p.hide()
 	})
+	// The update window's answers and checks may change what the updater
+	// keeps; the switch shows it again.
+	updater.OnChange(func() {
+		p.autoUpdate = updater.AutomaticChecks()
+		p.win.Invalidate()
+	})
 	return p
 }
 
@@ -107,6 +105,7 @@ func (p *prefsWindow) show(page string) {
 		p.g.presetsChanged()
 	}
 	p.login = mygo.App.OpenAtLogin()
+	p.autoUpdate = updater.AutomaticChecks()
 	p.fontSize = float64(p.g.settings.Font())
 	p.termWidth = float64(p.g.settings.TermWidth())
 	p.termHeight = float64(p.g.settings.TermHeight())
@@ -158,15 +157,6 @@ func (p *prefsWindow) view(c *ui.Context) {
 		})
 	})
 	p.editor(c, k)
-	if p.update != nil {
-		switch ui.AlertDialog(c, &p.updateOpen, locales.AboutUpdateTitle(p.update.Version), "",
-			locales.AboutUpdateLater(), locales.AboutUpdateRestart()) {
-		case 1:
-			p.install(p.update)
-		case 0, ui.AlertDismissed:
-			p.update = nil
-		}
-	}
 }
 
 // sidebar lists the pages, under room for the traffic lights, on the
@@ -226,6 +216,9 @@ func (p *prefsWindow) sidebar(c *ui.Context, k tokens) {
 func (p *prefsWindow) goTo(page string) {
 	p.stopRecording()
 	p.page = page
+	if page == pageGeneral {
+		p.autoUpdate = updater.AutomaticChecks()
+	}
 }
 
 // --- Layout helpers (design.md 4.3) ---
@@ -725,6 +718,13 @@ func (p *prefsWindow) generalPage(c *ui.Context, k tokens) {
 				}
 			}
 		})
+		// The updater's own preference, not settings.json; not the update
+		// window's "download and install" checkbox (design.md 4.4, 4.5).
+		g.row(c, k, locales.GeneralAutoUpdate(), locales.GeneralAutoUpdateHint(), k.textSecondary, func() {
+			if ui.Switch(c, &p.autoUpdate).Label(locales.GeneralAutoUpdate()).Changed() {
+				updater.SetAutomaticChecks(p.autoUpdate)
+			}
+		})
 	})
 	groupTitle(c, k, locales.GeneralTerminalGroup(), locales.GeneralTerminalGroupHint())
 	newGroup(c, k, func(g *group) {
@@ -808,19 +808,9 @@ func (p *prefsWindow) aboutPage(c *ui.Context, k tokens) {
 		ui.Text(c, appName).FontSize(20).FontWeight(600).TextColor(k.text).Margin(12, 0, 0, 0)
 		ui.Text(c, locales.AboutTagline()).FontSize(13).TextColor(k.textSecondary)
 		ui.Text(c, locales.AboutVersion(appVersion())).FontSize(12).TextColor(k.textSecondary).Margin(4, 0, 16, 0)
-		if p.checking {
-			ui.Row(c).Gap(8).Height(28).AlignItems(ui.Center).Children(func() {
-				ui.Spinner(c).Size(14, 14)
-				ui.Text(c, locales.AboutChecking()).FontSize(13).TextColor(k.textSecondary)
-			})
-		} else {
-			ui.Button(c, locales.AboutCheck()).OnClick(p.check)
-		}
-		color := k.textSecondary
-		if p.statusDanger {
-			color = k.danger
-		}
-		ui.Text(c, p.status).FontSize(12).TextColor(color).Height(16).Margin(8, 0, 0, 0)
+		// The update window says what the check found (design.md 4.4):
+		// the page itself stays as it is.
+		ui.Button(c, locales.AboutCheck()).OnClick(updater.CheckForUpdates)
 	})
 }
 
@@ -831,68 +821,6 @@ func appVersion() string {
 		return v
 	}
 	return "dev"
-}
-
-// check asks for an update: an alert offers it, or a line under the
-// button says there is none (for 3 seconds) or that the check failed.
-func (p *prefsWindow) check() {
-	if p.checking {
-		return
-	}
-	p.checking, p.status = true, ""
-	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		defer cancel()
-		up, err := mygo.Updater.Check(ctx)
-		p.win.Update(func() {
-			p.checking = false
-			switch {
-			case err != nil:
-				if !errors.Is(err, mygo.ErrUpdatesDisabled) {
-					log.Printf("update: %v", err)
-				}
-				p.say(locales.AboutCheckFailed(), true, false)
-			case up == nil:
-				p.say(locales.AboutUpToDate(), false, true)
-			default:
-				p.update, p.updateOpen = up, true
-			}
-		})
-	}()
-}
-
-// install downloads and installs the update, then relaunches.
-func (p *prefsWindow) install(up *mygo.Update) {
-	p.checking = true
-	go func() {
-		err := up.Install(context.Background(), nil)
-		p.win.Update(func() {
-			p.checking, p.update = false, nil
-			if err != nil {
-				log.Printf("update: %v", err)
-				p.say(locales.AboutCheckFailed(), true, false)
-				return
-			}
-			mygo.App.Relaunch()
-		})
-	}()
-}
-
-// say shows a line under the Check for Updates button, for 3 seconds when
-// it fades.
-func (p *prefsWindow) say(text string, danger, fades bool) {
-	p.status, p.statusDanger = text, danger
-	p.statusGen++
-	gen := p.statusGen
-	if fades {
-		time.AfterFunc(3*time.Second, func() {
-			p.win.Update(func() {
-				if p.statusGen == gen {
-					p.status = ""
-				}
-			})
-		})
-	}
 }
 
 // --- Opening Settings ---
@@ -910,12 +838,6 @@ func (g *gocast) editPreset(id string) {
 func (g *gocast) addPreset() {
 	g.prefs.show(pagePresets)
 	g.prefs.edit("")
-}
-
-// checkForUpdates shows the About page and checks.
-func (g *gocast) checkForUpdates() {
-	g.prefs.show(pageAbout)
-	g.prefs.check()
 }
 
 // defaultPreset returns the default preset, or nil for a plain terminal.
