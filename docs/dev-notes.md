@@ -149,8 +149,8 @@ Captures: `screens/v9/align-right-before.png` and `align-right-after.png` (light
 ### Copies and names (design.md 2.3)
 
 - `apps.Unique`: copies with one bundle ID are one app. The one kept is in /Applications or /System/Applications, else ~/Applications, else the first found.
-- `apps.Places`: apps of one name (any case) with different IDs all stay, each with its folder after the name, styled as a preset's subtitle (13 secondary, at most 40%, cut in the middle). When they share the folder, as Siri (`com.apple.siri.launcher`, Siri.app) and Siri (`com.apple.campo`, Siri AI.app) both in /System/Applications, the whole path tells them apart. Assistive technology reads the folder after the tag.
-- On this Mac the 180 apps before and after are the same: no ID has two copies. Only the two Siri rows change.
+- `apps.Places`: apps of one name (any case) with different IDs all stay. After the name, styled as a preset's subtitle (13 secondary, at most 40%, cut in the middle), each shows its bundle's file name without .app, or nothing when that is its name: Siri (`com.apple.campo`, Siri AI.app) shows 「Siri AI」, Siri (`com.apple.siri.launcher`, Siri.app) nothing. Only those whose file names collide too (any case) show their folder, as Finder names it, or the whole path if they share it. Assistive technology reads it after the name: 「Siri，Siri AI，应用」.
+- On this Mac the 180 apps before and after are the same: no ID has two copies. Only the Siri AI row gets a subtitle.
 - Background-only (`LSBackgroundOnly`) apps found: Claude Code URL Handler, Parsec. Agents (`LSUIElement`): Apps, Bob, 调度中心, 飞连, 关于本机, Input Source Pro, iOS App安装器, 截屏, KeepingYouAwake, LunarBar, MEGAsync, NordVPN, Raycast, Rectangle, Scroll Reverser, 时间机器, both Siris, Stats, Tailscale, 系统信息. None is left out.
 
 ### ⌘K with an empty query (design.md 2.5a, copy.md v1.7)
@@ -226,7 +226,7 @@ The earlier skeleton checks still hold (`.airbuild/artifacts/screens/`):
 6. **List bottom fade (2.3).** Not done. MyGo has no mask, and design.md says this is not a defect.
 7. **Empty query (2.6).** The list of suggestions (frecency) is built but off (`suggestionsEnabled = false` in launcher.go) until decided. Compact is the default.
 8. **Tray menu.** 设置… shows ⌘, on the right as well, the Mac's usual Settings shortcut; it also works in the search panel.
-9. **Same-name apps (2.3).** The folder is shown, except when the apps share it (the two Siris in /System/Applications): then the whole path, the folder alone telling nothing.
+9. **Same-name apps (2.3; product's rule, v10).** Not the folder first: the bundle's file name without .app, and nothing where that is the name (「Siri」 with 「Siri AI」, and plain 「Siri」). Only apps whose file names collide too get their folder, or their whole path if they share it, cut in the middle.
 10. **Right line (2.1a).** The gray texts at the right (tags, folders) reach 1 past the row's 12 padding, so that their glyphs, not their advances, end on the line with the keys.
 
 ## Manual tests still needed

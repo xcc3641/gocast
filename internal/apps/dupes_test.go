@@ -38,15 +38,34 @@ func TestPlaces(t *testing.T) {
 		{ID: "a", Path: "/Applications/Notes.app", Name: "Notes"},
 		{ID: "b", Path: home + "/Applications/Chrome Apps.localized/Notes.app", Name: "notes"},
 		{ID: "c", Path: "/Applications/Safari.app", Name: "Safari"},
+		{ID: "d", Path: "/Applications/Mail.app", Name: "Mail"},
+		{ID: "e", Path: "/Volumes/A/Apps/mail.app", Name: "Mail"},
+		{ID: "f", Path: "/Volumes/B/Apps/Mail.app", Name: "Mail"},
+		{ID: "g", Path: "/Volumes/B/Apps/Mail Pro.app", Name: "Mail"},
+		{ID: "h", Path: "/Applications/X/Tool.app", Name: "Tool"},
+		{ID: "i", Path: "/Applications/Y/Tool.app", Name: "Tool"},
+		{ID: "j", Path: "/Applications/Z/Tool 2.app", Name: "Tool"},
 	}
 	want := []string{
-		// One folder: the whole paths tell them apart.
-		"/System/Applications/Siri AI.app", "/System/Applications/Siri.app",
-		// Names the same whatever the case; the folder as Finder names it.
+		// The file name, none where it is the name.
+		"Siri AI", "",
+		// Names and file names the same whatever the case: the folder,
+		// as Finder names it.
 		"/Applications", "~/Applications/Chrome Apps",
 		"",
+		// Only the colliding file names get folders; the whole path
+		// where those share theirs.
+		"/Applications", "/Volumes/A/Apps", "/Volumes/B/Apps", "Mail Pro",
+		"/Applications/X", "/Applications/Y", "Tool 2",
 	}
 	if got := Places(apps); !slices.Equal(got, want) {
 		t.Errorf("Places =\n%q\nwant\n%q", got, want)
+	}
+	same := []App{
+		{ID: "x", Path: "/A/Tool.app", Name: "Tool"},
+		{ID: "y", Path: "/A/tool.app", Name: "Tool"}, // a case-sensitive volume
+	}
+	if got, want := Places(same), []string{"/A/Tool.app", "/A/tool.app"}; !slices.Equal(got, want) {
+		t.Errorf("Places in one folder = %q, want %q", got, want)
 	}
 }

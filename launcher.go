@@ -53,7 +53,7 @@ const (
 // entry is what a search result opens: an app, or a terminal preset.
 type entry struct {
 	app    *mygo.InstalledApp
-	place  string // the app's folder, when another app has its name
+	place  string // what tells the app from another of its name: its file name or folder (apps.Places)
 	preset string // its ID, when app is nil
 }
 
@@ -72,7 +72,7 @@ type launcher struct {
 
 	apps     []mygo.InstalledApp
 	alts     [][]string // the apps' other names (English, Chinese), by index
-	places   []string   // by index, the folder telling an app from another of its name (apps.Places)
+	places   []string   // by index, what tells an app from another of its name (apps.Places)
 	items    []search.Item
 	entries  []entry // by item
 	results  []int   // items matching the query, best first; kept as the query empties, for the panel to shrink with them
@@ -368,7 +368,7 @@ func (l *launcher) resultList(c *ui.Context, k tokens) {
 func (l *launcher) row(c *ui.Context, k tokens, i int) {
 	it := l.items[l.results[i]]
 	e := l.entries[l.results[i]]
-	subtitle := e.place // an app's folder, when another has its name (design.md 2.3)
+	subtitle := e.place // what tells an app from another of its name (design.md 2.3)
 	tag := locales.SearchTagApp()
 	if e.app == nil {
 		tag = locales.SearchTagPreset()
@@ -410,8 +410,9 @@ func (l *launcher) row(c *ui.Context, k tokens, i int) {
 	})
 }
 
-// rowLabel is what assistive technology reads of a result: "Safari, App",
-// a preset's folder after.
+// rowLabel is what assistive technology reads of a result: "Safari, App";
+// "Siri, Siri AI, App" for an app told from another of its name, as
+// shown; a preset's folder after.
 func (l *launcher) rowLabel(item int) string {
 	it, e := l.items[item], l.entries[item]
 	sep := ", "
@@ -419,12 +420,13 @@ func (l *launcher) rowLabel(item int) string {
 		sep = "，"
 	}
 	if e.app != nil {
-		s := it.Title + sep + locales.SearchTagApp()
-		if l.isRunning(e.app.ID) {
-			s += sep + locales.SearchRunning()
-		}
+		s := it.Title
 		if e.place != "" {
 			s += sep + e.place
+		}
+		s += sep + locales.SearchTagApp()
+		if l.isRunning(e.app.ID) {
+			s += sep + locales.SearchRunning()
 		}
 		return s
 	}
