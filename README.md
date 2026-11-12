@@ -18,7 +18,15 @@ It lives in the menu bar, with no Dock icon. It follows your Mac's light or dark
 
 ## Install
 
-Download the latest `.dmg` from [Releases](https://github.com/xcc3641/gocast/releases/latest), open it, and drag Gocast to Applications. The first time, open System Settings › Privacy & Security and click Open Anyway.
+**Disk image.** Download the latest `.dmg` from [Releases](https://github.com/xcc3641/gocast/releases/latest), open it, and drag Gocast to Applications. The first time, open System Settings › Privacy & Security and click Open Anyway.
+
+**Terminal.** One line. It downloads the latest Gocast from this project's releases, checks it is the official build (and refuses it if it was changed), puts it in Applications (or `~/Applications` if it can't), needs no admin password, and opens Gocast. macOS will not ask you to click Open Anyway. The [install script](install.sh) is in this repository; you can read it first.
+
+```sh
+curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh | sh
+```
+
+To uninstall: `sh install.sh --uninstall`. Your presets and settings stay.
 
 **Requires** macOS 13 or later on Apple silicon. Intel support is planned.
 

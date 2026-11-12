@@ -18,7 +18,15 @@ Gocast 待在菜单栏，不占 Dock。深色、浅色跟着系统走，界面�
 
 ## 安装
 
-到 [Releases](https://github.com/xcc3641/gocast/releases/latest) 下载最新的 `.dmg`，打开后把 Gocast 拖进“应用程序”文件夹。第一次打开时，去系统设置 › 隐私与安全性，点「仍要打开」。
+**磁盘映像。** 到 [Releases](https://github.com/xcc3641/gocast/releases/latest) 下载最新的 `.dmg`，打开后把 Gocast 拖进“应用程序”文件夹。第一次打开时，去系统设置 › 隐私与安全性，点「仍要打开」。
+
+**终端。** 贴一行就装好。它从本项目的发布页下载最新版，核对是官方发布的（被改过就拒装），放进「应用程序」（没有权限就放进 `~/Applications`），不用管理员密码，然后打开 Gocast。这样装的不用点「仍要打开」。[安装脚本](install.sh) 在仓库里，可以先看内容再跑。
+
+```sh
+curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh | sh
+```
+
+卸载：`sh install.sh --uninstall`。预设和设置会留着。
 
 **系统要求：** macOS 13 或更高版本，Apple 芯片。之后会支持 Intel。
 
