@@ -1,5 +1,7 @@
-# Gocast 界面文案 v1.10（搜索面板 · 悬浮终端 · 设置）
+# Gocast 界面文案 v1.12（搜索面板 · 悬浮终端 · 设置）
 
+v1.12 改动：第 6 节跟 design.md 对齐。补「读不出剪贴板历史」，以及这时的清空确认。拷贝或粘贴后面板直接收起，所以去掉「已拷贝」提示。剪贴板快捷键只放在设置 › 快捷键。入口那一行的主操作是「打开」。
+v1.11 改动：新增第 6 节「剪贴板历史」（入口、视图、操作、权限提示、设置页、清空确认、读屏）。统一用词加「剪贴板历史」「置顶」「拷贝」。菜单栏和设置 › 快捷键各加一行。
 v1.10 改动：例子里的个人项目名换成通用的 `~/Projects/my-app`。
 v1.9 改动：接上 MyGo 更新器。关于页只留「检查更新」按钮；新版本、已最新、失败都改由更新窗口来说（安装更新 / 稍后提醒 / 跳过这个版本）。通用里加「自动检查更新」开关。窗口文案去掉感叹号，跟全应用语气一致。
 v1.8 改动：同名应用的副标题和读屏。两个 Siri 不再读成一样。
@@ -25,6 +27,9 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 | 唤出或收起的按键 | 快捷键 | Shortcut | 热键、Hotkey |
 | 命令运行的位置 | 文件夹 | Folder | 目录、路径（路径只在显示 ~/Projects/my-app 时出现） |
 | 要运行的程序 | 命令 | Command | 脚本、程序 |
+| 以前拷贝过、Gocast 记下来的内容 | 剪贴板历史 | Clipboard history | 粘贴板、剪切板、剪贴簿、复制历史 |
+| 让一条留在最上面、不过期 | 置顶 | Pin | 钉住、固定、收藏 |
+| 放进剪贴板 | 拷贝 | Copy | 复制（Mac 菜单里是「拷贝」） |
 
 原则：用户说得出口的词。不出现"会话""进程""PTY""Kitty"这类词。
 
@@ -34,6 +39,7 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 |---|---|---|
 | 菜单项 1 | 搜索… | Search… |
 | 菜单项 2 | 悬浮终端 | Floating Terminal |
+| 菜单项 2a | 剪贴板历史 | Clipboard History |
 | 分隔线 | | |
 | 菜单项 3 | 设置… | Settings… |
 | 菜单项 4 | 检查更新… | Check for Updates… |
@@ -153,6 +159,7 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 |---|---|---|
 | 行标签 1 | 打开搜索面板 | Open search panel |
 | 行标签 2 | 显示或收起悬浮终端 | Show or hide floating terminal |
+| 行标签 3 | 打开剪贴板历史 | Open clipboard history |
 | 录制中 | 请按下新的快捷键 | Press the new shortcut |
 | 录制中提示 | 按 esc 取消 | Press esc to cancel |
 | 恢复默认 | 恢复默认 | Reset to Default |
@@ -261,6 +268,166 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 | 立即重启 | 重新启动 | Relaunch |
 
 `%[1]s` 是应用名 Gocast，`%[2]s` 是新版本号，`%[3]s` 是当前版本号。菜单栏「检查更新…」跟插件的 MenuItem 用同一句，不要另写。
+
+## 6. 剪贴板历史
+
+这一节的用词先看最上面「统一用词」里新加的三行：剪贴板历史、置顶、拷贝。范围以需求为准，布局、尺寸和位置以 design.md 为准；文案和设计冲突时，以 design.md 为准，我再跟着改。
+
+### 6.1 入口
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 搜索面板结果行 | 剪贴板历史 | Clipboard History |
+| 上面那行的右侧标记 | Gocast | Gocast |
+| 上面那行也能搜到的词（不显示） | 剪贴板、粘贴板、剪切板、历史、clipboard、paste、history | same |
+| 空输入 ⌘K 列表（放在「打开悬浮终端」和预设之后、「添加预设」之前） | 剪贴板历史 | Clipboard History |
+| 菜单栏菜单（放在「悬浮终端」下面） | 剪贴板历史 | Clipboard History |
+
+主操作：打开（↵）。右侧标记不写「命令」：「命令」在 Gocast 里专指预设里运行的那条命令。键帽：⌘K 列表和菜单栏这一项右侧显示当前的剪贴板快捷键（默认 ⌃⌘V）。
+用户自己会说「粘贴板」「剪切板」，所以这些词都要能搜到，但界面上只写「剪贴板」。
+
+### 6.2 剪贴板视图
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 搜索框占位 | 搜索剪贴板历史 | Search clipboard history |
+| 类型筛选（⌘P）· 默认 | 全部类型 | All Types |
+| 类型筛选 · 其余 | 文字 / 链接 / 图片 / 文件 | Text / Links / Images / Files |
+| 分组标题 | 已置顶 / 今天 / 昨天 / 更早 | Pinned / Today / Yesterday / Earlier |
+| 图片行标题 | 图片 {宽}×{高} | Image {w}×{h} |
+| 多个文件的行标题 | {第一个文件名} 等 {n} 个文件 | {first file} and {n−1} more |
+| 来源应用未知 | 未知应用 | Unknown app |
+
+搜索框占位不带「…」，和主搜索面板「搜索应用或终端预设」一致。文字行显示内容的第一行，空白行跳过，过长从末尾截断。链接行显示完整地址，过长从中间省略。
+
+### 6.3 预览下面的信息
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 来源 | 来源 | Source |
+| 时间 | 拷贝时间 | Copied |
+| 文字 | 字数 | Characters |
+| 图片 | 尺寸 / 大小 | Dimensions / Size |
+| 文件 | 位置 / 大小 | Location / Size |
+| 链接 | 链接 | Link |
+| 文件已不在 | 这个文件已被移动或删除。 | This file has been moved or deleted. |
+
+时间用系统的相对写法：「今天 14:05」「昨天 09:12」「11月10日 18:30」，跟系统语言和 12/24 小时制走，不要自己拼。字数按字符算，中文一个字算一个。
+
+### 6.4 空状态
+
+| 场景 | 标题 | 说明 | 按钮 |
+|---|---|---|---|
+| 一条都没有 | 还没有剪贴板历史 | 拷贝点什么，它就会出现在这里。 | 无 |
+| 记录已关闭 | 剪贴板历史已关闭 | 打开后，你拷贝的内容会记在这里。 | 打开 |
+| 搜不到 | 没有找到“{输入}” | 试试内容里的原话。这里不按拼音搜。 | 无 |
+| 筛选后没有 | 没有{类型} | 无 | 无 |
+| 读不出历史（钥匙丢了或文件坏了） | 读不出剪贴板历史 | 保存的历史打不开了。去设置 › 剪贴板点“清空历史…”，从头开始记录。 | 无 |
+
+English: No clipboard history yet / Copy something and it shows up here. · Clipboard history is off / Turn it on and what you copy is kept here. / Turn On · No results for “{query}” / Try words from the item itself. Pinyin isn’t matched here. · No {type}（No text / No links / No images / No files）· Can’t read clipboard history / Your saved history can’t be opened. Go to Settings › Clipboard and click Clear History… to start fresh.
+
+「打开」直接打开记录开关，不跳到设置。「读不出」这一条不放按钮，只说去哪里清空；设置里的「清空历史…」这时不能灰掉。主搜索面板能用拼音搜，这里不能，所以在「搜不到」里说清楚。
+
+### 6.5 操作胶囊和 ⌘K 菜单
+
+| 位置 | 中文 | English | 键 |
+|---|---|---|---|
+| 主操作（可以直接粘贴时） | 粘贴到“{应用名}” | Paste to {app} | ↵ |
+| 主操作（不知道刚才是哪个应用时） | 粘贴 | Paste | ↵ |
+| 主操作（没有辅助功能权限时） | 拷贝到剪贴板 | Copy to Clipboard | ↵ |
+| 次入口 | 操作 | Actions | ⌘K |
+| ⌘K · 1 | 粘贴到“{应用名}” | Paste to {app} | ↵ |
+| ⌘K · 2（只对文字） | 粘贴为纯文本 | Paste as Plain Text | |
+| ⌘K · 3 | 拷贝到剪贴板 | Copy to Clipboard | ⌘↵ |
+| ⌘K · 4（只对链接） | 打开链接 | Open Link | ⌘O |
+| ⌘K · 5（只对文件） | 在访达中显示 | Show in Finder | |
+| ⌘K · 6 | 置顶 / 取消置顶 | Pin / Unpin | ⌘. |
+| ⌘K · 7 | 删除 | Delete | ⌃X |
+| ⌘K · 8 | 清空历史… | Clear History… | ⌃⇧X |
+
+主操作写的就是按回车会发生的事：没有权限时回车只会拷贝，就别写「粘贴」。不写「复制」，Mac 菜单里是「拷贝」。「清空历史…」和设置页按钮是同一个动作，用同一句、同一个确认框。
+
+### 6.6 提示（左下角胶囊，4 秒后淡出）
+
+拷贝或粘贴成功后面板直接收起，不出提示。
+
+| 场景 | 中文 | English |
+|---|---|---|
+| 没有权限时回车 | 已拷贝，按 ⌘V 粘贴。 | Copied. Press ⌘V to paste. |
+| 删除一条 | 已删除 | Deleted |
+| 置顶 / 取消置顶 | 已置顶 / 已取消置顶 | Pinned / Unpinned |
+
+### 6.7 辅助功能权限（第一次按回车想直接粘贴时，在剪贴板视图顶上出现，和 ⌘Space 那块提示同一种样式）
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 标题 | 直接粘贴需要你允许一次 | Allow Gocast to paste for you |
+| 说明 | Gocast 会替你按一下 ⌘V，系统要求先在“辅助功能”里打开 Gocast。只用来粘贴。 | Gocast presses ⌘V for you. macOS asks you to turn on Gocast in Accessibility first. It’s only used to paste. |
+| 主按钮 | 打开系统设置 | Open System Settings |
+| 次按钮 | 先只拷贝 | Just Copy |
+| 允许后 | 现在可以直接粘贴了 | Ready to paste |
+
+这次回车已经把内容拷贝到剪贴板了，提示出现的同时左下角给「已拷贝，按 ⌘V 粘贴。」。点「先只拷贝」后这块提示不再出现，回车一直是拷贝；想改回来去设置 › 剪贴板。从系统设置切回来时再查一次，有权限了就换成「现在可以直接粘贴了」，3 秒后收起。
+
+### 6.8 设置 › 剪贴板 / Clipboard
+
+侧边栏加一项「剪贴板」，建议顺序：快捷键 / 终端预设 / 剪贴板 / 通用 / 关于。位置以 design.md 为准。
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 开关 | 记录剪贴板历史 | Keep clipboard history |
+| 开关说明 | 只存在这台 Mac 上，加密保存，不会上传。 | Stored only on this Mac, encrypted, never uploaded. |
+| 保留时长 | 保留 | Keep for |
+| 保留选项 | 1 天 / 1 周 / 1 个月 / 3 个月 / 一直保留 | 1 Day / 1 Week / 1 Month / 3 Months / Forever |
+| 保留说明 | 置顶的不会过期。 | Pinned items never expire. |
+| 直接粘贴开关 | 回车直接粘贴 | Press Return to paste |
+| 直接粘贴说明 | 需要在系统设置的“辅助功能”里打开 Gocast。关掉后，回车只拷贝。 | Needs Gocast turned on in Accessibility. When off, Return only copies. |
+| 没有权限时的说明 | 还没在“辅助功能”里打开 Gocast。 | Gocast isn’t turned on in Accessibility yet. |
+| 上面那行的按钮 | 打开系统设置 | Open System Settings |
+| 分组标题 | 不记录的应用 | Don’t keep from these apps |
+| 分组说明 | 从这些应用拷贝的内容不会记下来。密码管理器拷贝的密码本来就不记。 | Nothing you copy in these apps is kept. Passwords from password managers are never kept anyway. |
+| 加号 | 添加应用… | Add App… |
+| 减号（读屏） | 移除 | Remove |
+| 选应用的对话框按钮 | 添加 | Add |
+| 按钮 | 清空历史… | Clear History… |
+
+「回车直接粘贴」默认开。点了「先只拷贝」就把它关掉，以后不再问；想改回来就在这里打开。
+剪贴板快捷键不放在这一页，只在设置 › 快捷键的第三行「打开剪贴板历史」，冲突提示沿用 4.1。
+
+### 6.9 清空确认
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 标题 | 清空剪贴板历史？ | Clear clipboard history? |
+| 说明 | 置顶的会留下，其他都会删掉，不能恢复。 | Pinned items stay. Everything else is deleted for good. |
+| 说明（读不出历史时） | 保存的历史会全部删掉，包括置顶的，不能恢复。 | All saved history is deleted, including pinned items. This can’t be undone. |
+| 按钮 | 清空 / 取消 | Clear / Cancel |
+
+置顶的要删，就在那条上单独删。读不出历史时置顶的也留不住，换用第二句说明。
+
+### 6.10 读屏（VoiceOver）
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 整张列表 | 剪贴板历史 | Clipboard History |
+| 文字行 | {第一行}，文字，{时间}[，已置顶] | {first line}, Text, {time}[, Pinned] |
+| 链接行 | {地址}，链接，{时间}[，已置顶] | {address}, Link, {time}[, Pinned] |
+| 图片行 | 图片，{宽}乘{高}，{时间}[，已置顶] | Image, {w} by {h}, {time}[, Pinned] |
+| 文件行 | {文件名}，文件，{时间}[，已置顶] | {file name}, File, {time}[, Pinned] |
+| 多个文件行 | {第一个文件名}等 {n} 个文件，{时间}[，已置顶] | {first file} and {n−1} more, Files, {time}[, Pinned] |
+| 分组标题 | 今天，标题 | Today, heading |
+| 预览区 | 预览 | Preview |
+| 类型筛选 | 类型，{当前类型} | Type, {current} |
+
+读「乘」不读「×」。时间读系统的相对写法（今天 14:05）。
+
+### 6.11 README「你的数据」（这个功能合进去时再加，现在不改）
+
+中文：剪贴板历史也只存在这台 Mac 上（同一个文件夹，加密保存）。密码管理器拷贝的密码不会记。可以在设置 › 剪贴板里关掉、清空，或者选哪些应用不记。
+
+English: Clipboard history stays on this Mac too, in the same folder, encrypted. Passwords from password managers are never kept. Turn it off, clear it, or exclude apps in Settings › Clipboard.
+
+快捷键表加一行：⌃⌘V · 任何地方 · 打开剪贴板历史 / anywhere / Open clipboard history。
 
 ## 5. 系统弹窗里会出现的文字（系统要求写明用途）
 
