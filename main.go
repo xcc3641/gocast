@@ -1,15 +1,15 @@
 // Gocast is a launcher for macOS in the manner of Raycast, in MyGo's native
 // UI: Option+Shift+Space shows a search panel over every app to find and
 // open installed apps (by their English and Chinese names, and by pinyin)
-// and terminal presets; Control+` shows a floating terminal whose tabs run
-// the presets of presets.json. It lives in the menu bar, without a Dock
-// icon, and runs once.
+// and terminal presets; Control+` drops a floating terminal from the top
+// of the screen, whose tabs run the presets. It lives in the menu bar,
+// without a Dock icon, and runs once.
 //
 //	go run .
 package main
 
 import (
-	"encoding/json"
+	"errors"
 	"log"
 	"os"
 	"path/filepath"
@@ -19,6 +19,8 @@ import (
 	"github.com/egoist/mygo/plugins/terminal"
 
 	"gocast/internal/presets"
+	"gocast/internal/settings"
+	"gocast/internal/usage"
 )
 
 const (
@@ -26,12 +28,13 @@ const (
 	identifier = "dev.gocast.app"
 )
 
-// The global shortcuts, each tried in turn: the first one free is taken.
-// Not Alt+Space, which Raycast takes (macOS would give the key to both).
-var (
-	launcherShortcuts = []string{"Alt+Shift+Space", "CmdOrCtrl+Alt+Shift+Space"}
-	terminalShortcuts = []string{"Ctrl+`", "Ctrl+Alt+`"}
-)
+// Fallbacks of the default shortcuts, taken when another app has the
+// default. Not Alt+Space, which Raycast takes (macOS would give the key to
+// both).
+var fallbackShortcuts = map[string]string{
+	settings.DefaultLauncherShortcut: "CmdOrCtrl+Alt+Shift+Space",
+	settings.DefaultTerminalShortcut: "Ctrl+Alt+`",
+}
 
 // gocast holds the app's state. Everything here is read and changed on the
 // main thread.
@@ -39,9 +42,11 @@ type gocast struct {
 	dir      string // ~/Library/Application Support/dev.gocast.app
 	launcher *launcher
 	term     *termPanel
+	prefs    *prefsWindow
 	tray     *mygo.Tray
 
-	launcherKey, terminalKey string // the shortcuts taken, or ""
+	settings                 settings.Settings
+	launcherKey, terminalKey string // the shortcuts registered, or ""
 
 	// quitting is set while the app quits: the panels, which hide rather
 	// than close, close then, or their OnClose would cancel the quit.
@@ -49,18 +54,22 @@ type gocast struct {
 
 	presets      []presets.Preset
 	presetsStamp time.Time
-	usage        map[string]int // times opened, by item ID
+	usage        *usage.Store
 }
 
-func (g *gocast) presetsPath() string { return filepath.Join(g.dir, "presets.json") }
-func (g *gocast) usagePath() string   { return filepath.Join(g.dir, "usage.json") }
+func (g *gocast) presetsPath() string  { return filepath.Join(g.dir, "presets.json") }
+func (g *gocast) usagePath() string    { return filepath.Join(g.dir, "usage.json") }
+func (g *gocast) settingsPath() string { return filepath.Join(g.dir, "settings.json") }
 
 // loadPresets reads presets.json again when it changed (or the first
-// time), writing the defaults when there is none. It reports whether the
-// presets changed.
+// time). It reports whether the presets changed.
 func (g *gocast) loadPresets() bool {
 	path := g.presetsPath()
-	if fi, err := os.Stat(path); err == nil && g.presets != nil && fi.ModTime().Equal(g.presetsStamp) {
+	fi, err := os.Stat(path)
+	if err == nil && fi.ModTime().Equal(g.presetsStamp) {
+		return false
+	}
+	if err != nil && g.presetsStamp.IsZero() && g.presets != nil {
 		return false
 	}
 	ps, err := presets.Load(path)
@@ -68,48 +77,134 @@ func (g *gocast) loadPresets() bool {
 		log.Printf("presets: %v", err)
 	}
 	g.presets = ps
+	if g.presets == nil {
+		g.presets = []presets.Preset{}
+	}
 	if fi, err := os.Stat(path); err == nil {
 		g.presetsStamp = fi.ModTime()
 	}
 	return true
 }
 
-func (g *gocast) loadUsage() {
-	g.usage = map[string]int{}
-	if data, err := os.ReadFile(g.usagePath()); err == nil {
-		_ = json.Unmarshal(data, &g.usage)
+// savePresets writes the presets and tells the panels.
+func (g *gocast) savePresets(ps []presets.Preset) error {
+	if err := presets.Save(g.presetsPath(), ps); err != nil {
+		return err
 	}
+	g.presets = ps
+	if fi, err := os.Stat(g.presetsPath()); err == nil {
+		g.presetsStamp = fi.ModTime()
+	}
+	g.presetsChanged()
+	return nil
 }
 
-// used counts an opening of the item, which ranks it higher next time.
-func (g *gocast) used(id string) {
-	g.usage[id]++
-	data, _ := json.Marshal(g.usage)
-	if err := os.WriteFile(g.usagePath(), data, 0o644); err != nil {
+// presetsChanged tells the panels the presets changed.
+func (g *gocast) presetsChanged() {
+	g.launcher.rebuild()
+	g.term.presetsChanged()
+	g.launcher.win.Invalidate()
+}
+
+// record notes that query opened the item id, which ranks it higher next
+// time, and first for that query.
+func (g *gocast) record(id, query string) {
+	if id == "" {
+		return
+	}
+	now := time.Now()
+	g.usage.Record(id, query, now)
+	if err := g.usage.Save(g.usagePath(), now); err != nil {
 		log.Printf("usage: %v", err)
 	}
 }
 
-// hideOnClose makes closing win (Escape, Cmd-W) hide it, so that it shows
-// again at once, as it was; quitting closes it.
-func (g *gocast) hideOnClose(win *mygo.Window) {
-	win.OnClose(func(e *mygo.CloseEvent) {
-		if !g.quitting {
-			e.PreventDefault()
-			win.Hide()
-		}
-	})
+func (g *gocast) saveSettings() {
+	if err := g.settings.Save(g.settingsPath()); err != nil {
+		log.Printf("settings: %v", err)
+	}
 }
 
-func register(shortcuts []string, fn func()) string {
-	for _, s := range shortcuts {
-		err := mygo.GlobalShortcut.Register(s, fn)
-		if err == nil {
-			return s
+// errShortcutTaken is the error of a shortcut the system refused, as
+// another app has it.
+var errShortcutTaken = errors.New("shortcut taken")
+
+// registerShortcuts takes the shortcuts of the settings, or the fallback
+// of a default that another app has.
+func (g *gocast) registerShortcuts() {
+	try := func(accel string, fn func()) string {
+		if err := mygo.GlobalShortcut.Register(accel, fn); err != nil {
+			log.Printf("shortcut %s: %v", accel, err)
+			fb, ok := fallbackShortcuts[accel]
+			if !ok {
+				return ""
+			}
+			if err := mygo.GlobalShortcut.Register(fb, fn); err != nil {
+				log.Printf("shortcut %s: %v", fb, err)
+				return ""
+			}
+			return fb
 		}
-		log.Printf("shortcut %s: %v", s, err)
+		return accel
 	}
-	return ""
+	g.launcherKey = try(g.settings.Launcher(), g.launcher.toggle)
+	g.terminalKey = try(g.settings.Terminal(), g.term.toggle)
+}
+
+// suspendShortcuts lets the keys of both shortcuts through to the app,
+// while the user records a new one; resumeShortcuts takes them again.
+func (g *gocast) suspendShortcuts() {
+	for _, k := range []string{g.launcherKey, g.terminalKey} {
+		if k != "" {
+			mygo.GlobalShortcut.Unregister(k)
+		}
+	}
+}
+
+func (g *gocast) resumeShortcuts() {
+	if g.launcherKey != "" {
+		_ = mygo.GlobalShortcut.Register(g.launcherKey, g.launcher.toggle)
+	}
+	if g.terminalKey != "" {
+		_ = mygo.GlobalShortcut.Register(g.terminalKey, g.term.toggle)
+	}
+}
+
+// setShortcut makes accel the shortcut of the search panel (terminal
+// false) or of the floating terminal, at once, keeping the old one when
+// the system refuses it (errShortcutTaken). Call it with the shortcuts
+// suspended; it resumes them.
+func (g *gocast) setShortcut(terminalKey bool, accel string) error {
+	cur, fn := &g.launcherKey, g.launcher.toggle
+	if terminalKey {
+		cur, fn = &g.terminalKey, g.term.toggle
+	}
+	if err := mygo.GlobalShortcut.Register(accel, fn); err != nil {
+		log.Printf("shortcut %s: %v", accel, err)
+		g.resumeShortcuts()
+		return errShortcutTaken
+	}
+	*cur = accel
+	if terminalKey {
+		g.settings.TerminalShortcut = accel
+		if accel == settings.DefaultTerminalShortcut {
+			g.settings.TerminalShortcut = ""
+		}
+		if g.launcherKey != "" {
+			_ = mygo.GlobalShortcut.Register(g.launcherKey, g.launcher.toggle)
+		}
+	} else {
+		g.settings.LauncherShortcut = accel
+		if accel == settings.DefaultLauncherShortcut {
+			g.settings.LauncherShortcut = ""
+		}
+		if g.terminalKey != "" {
+			_ = mygo.GlobalShortcut.Register(g.terminalKey, g.term.toggle)
+		}
+	}
+	g.saveSettings()
+	g.updateTray()
+	return nil
 }
 
 func (g *gocast) ready() {
@@ -121,12 +216,18 @@ func (g *gocast) ready() {
 			log.Printf("terminal: %v", err)
 		}
 	}()
-	g.loadUsage()
+	var err error
+	if g.settings, err = settings.Load(g.settingsPath()); err != nil {
+		log.Printf("settings: %v", err)
+	}
+	if g.usage, err = usage.Load(g.usagePath(), time.Now()); err != nil {
+		log.Printf("usage: %v", err)
+	}
 	g.loadPresets()
 	g.launcher = newLauncher(g)
 	g.term = newTermPanel(g)
-	g.launcherKey = register(launcherShortcuts, g.launcher.toggle)
-	g.terminalKey = register(terminalShortcuts, g.term.toggle)
+	g.prefs = newPrefsWindow(g)
+	g.registerShortcuts()
 	g.setUpTray()
 	if !mygo.App.WasOpenedAtLogin() {
 		g.launcher.show() // started by the user: show what it does

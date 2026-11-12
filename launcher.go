@@ -2,286 +2,737 @@ package main
 
 import (
 	"log"
-	"os"
-	"path/filepath"
-	"runtime"
 	"slices"
 	"strings"
-	"unicode/utf8"
+	"time"
 
 	"github.com/egoist/mygo"
+	"github.com/egoist/mygo/i18n"
+	"github.com/egoist/mygo/plugins/glass"
+	"github.com/egoist/mygo/plugins/sfsymbols"
 	"github.com/egoist/mygo/ui"
 
 	"gocast/internal/apps"
 	"gocast/internal/presets"
+	"gocast/internal/running"
 	"gocast/internal/search"
 	"gocast/locales"
 )
 
+// The search panel's measures (design.md 2.1–2.4), in DIPs. The window is
+// as large as the expanded panel all the time, plus room for its shadow:
+// the panel grows and shrinks inside it, drawn in the same frame as its
+// content, so that no frame shows it at a size its content was not laid
+// out for (no blank frame), and the mouse goes through the rest of the
+// window (SetInputRegion).
 const (
-	launcherWidth, launcherHeight = 680, 420
-	iconSize                      = 28 // DIPs
-)
+	panelWidth     = 750
+	barHeight      = 66
+	listHeight     = 366
+	emptyHeight    = 151
+	footerHeight   = 42
+	expandedHeight = barHeight + 1 + listHeight + footerHeight // 475
+	noResultHeight = barHeight + 1 + emptyHeight + footerHeight // 260
+	panelRadius    = 26
+	rowHeight      = 40
+	iconSize       = 22
 
-var (
-	searchIcon   = ui.MustParseSVG([]byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>`))
-	terminalIcon = ui.MustParseSVG([]byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="3"/><path d="m7 9 3 3-3 3"/><path d="M13 15h4"/></svg>`))
+	marginX, marginTop, marginBottom = 32, 12, 44
+	windowWidth                      = panelWidth + 2*marginX
+	windowHeight                     = marginTop + expandedHeight + marginBottom
+
+	// restoreFor is how long the panel keeps its query and choice once
+	// hidden (Raycast's "pop to root" delay).
+	restoreFor = 90 * time.Second
+	noticeFor  = 4 * time.Second
 )
 
 // entry is what a search result opens: an app, or a terminal preset.
 type entry struct {
-	app      *mygo.InstalledApp
-	preset   int // index in gocast.presets, when app is nil
-	subtitle string
+	app    *mygo.InstalledApp
+	preset string // its ID, when app is nil
+}
+
+// action is an item of the actions menu (Cmd-K).
+type action struct {
+	icon, label string
+	caps        []string
+	run         func()
 }
 
 // launcher is the search panel. Its state is read and changed on the main
 // thread; the apps come from a goroutine through Window.Update.
 type launcher struct {
-	g     *gocast
-	panel *mygo.Window
+	g   *gocast
+	win *mygo.Window
 
 	apps    []mygo.InstalledApp
 	alts    [][]string // the apps' other names (English, Chinese), by index
 	items   []search.Item
 	entries []entry // by item
-	results []int   // items matching the query, best first
+	results []int   // items matching the query, best first; kept as the query empties, for the panel to shrink with them
 	query   string
+	filtered string // the query of the results
 	chosen  int
+	moved   bool // the user moved the choice since the results changed
 	list    ui.ListState
 	input   ui.Handle
+	scroll  bool // show the choice in the next frame
 	icons   map[string]*ui.Bitmap // by app path; nil where the app has none
-	loading bool
-	failed  string // the app that last failed to open, said in the footer
+
+	loading, loaded bool // listing the apps; listed them once
+
+	hiddenAt  time.Time
+	selectAll bool // select the query in the next frame (restored on show)
+	gen       int  // the panel's key: each show starts its animation afresh
+	composing bool // the input method composes in the field
+	region    float32
+
+	notice       string // in the footer for a while: a failure, a path copied
+	noticeDanger bool
+	noticeGen    int
+	announce     bool
+
+	menuOpen      bool
+	menuComposing bool
+	menuQuery     string
+	menuChosen int
+	menuInput  ui.Handle
+	menuItems  []action // the menu's actions, as it opened
+	menuShown  []int    // those matching menuQuery
 }
 
 func newLauncher(g *gocast) *launcher {
 	l := &launcher{g: g, icons: map[string]*ui.Bitmap{}}
-	l.panel = mygo.NewWindow(mygo.WindowOptions{
+	l.win = mygo.NewWindow(mygo.WindowOptions{
 		Title:         appName,
 		Panel:         true,
 		Hidden:        true,
 		Frameless:     true,
 		Transparent:   true,
-		Vibrancy:      mygo.VibrancyGlass,
-		CornerRadius:  16,
-		Width:         launcherWidth,
-		Height:        launcherHeight,
+		DisableShadow: true, // the panel draws its own, around its own shape
+		Width:         windowWidth,
+		Height:        windowHeight,
 		DisableResize: true,
 		Content:       ui.View(l.view),
 	})
-	// Hide rather than close, on Escape, Cmd-W, and when the user goes
+	// Hide rather than close, on Escape and Cmd-W, and when the user goes
 	// elsewhere: the panel shows again at once, as it was.
-	g.hideOnClose(l.panel)
-	l.panel.OnBlur(l.panel.Hide)
+	l.win.OnClose(func(e *mygo.CloseEvent) {
+		if !g.quitting {
+			e.PreventDefault()
+			l.hide()
+		}
+	})
+	l.win.OnBlur(l.hide)
 	l.rebuild()
 	return l
 }
 
+// compact reports whether the panel shows its search bar alone: while the
+// query is empty.
+func (l *launcher) compact() bool { return strings.TrimSpace(l.query) == "" }
+
+// targetHeight is the height of the panel for what it shows now.
+func (l *launcher) targetHeight() float32 {
+	switch {
+	case l.compact():
+		return barHeight
+	case len(l.results) > 0:
+		return expandedHeight
+	case l.loading && !l.loaded:
+		return barHeight // the apps come: no "no results" yet
+	default:
+		return noResultHeight
+	}
+}
+
 func (l *launcher) view(c *ui.Context) {
-	t := c.Theme()
-	root := c.Root()
-	if c.Vibrancy() {
-		root.Background(ui.Transparent) // the material shows through
-	} else {
-		root.Background(t.Background)
-	}
-	// An Escape left to the panel closes it, which hides it: with a query,
-	// Escape clears it first.
-	if l.query != "" && c.Shortcut(0, ui.KeyEscape) {
-		l.query = ""
-		l.filter()
-	}
-	if c.Shortcut(0, ui.KeyDown) {
-		l.choose(l.chosen + 1)
-	}
-	if c.Shortcut(0, ui.KeyUp) {
-		l.choose(l.chosen - 1)
-	}
-	// Enter opens the chosen result. The search field has the keyboard,
-	// and a single-line text field takes Enter as its submission, so the
-	// window's Shortcut never sees it there: the field's Submitted is
-	// what a real Enter (and an automation's) reports. The list reports
-	// its own Enter, and the window's Shortcut is the Enter pressed with
-	// the focus elsewhere. Each opens once.
-	open := c.Shortcut(0, ui.KeyEnter)
-	c.OnShortcut(ui.Cmd, ui.KeyQ, mygo.App.Quit)
+	c.SetTheme(themed(c))
+	k := tokensFor(c)
+	c.Root().Background(ui.Transparent)
+	reduce := c.Preferences().ReduceMotion
 
-	ui.Column(c).Fill().Children(func() {
-		ui.Row(c).Padding(16, 18).Gap(12).AlignItems(ui.Center).Children(func() {
-			ui.Icon(c, searchIcon).FontSize(20).TextColor(t.TextMuted)
-			field := ui.TextInputBase(c, &l.query).Bind(&l.input).Grow(1).FontSize(22).
-				Placeholder(locales.SearchPlaceholder()).Label(locales.SearchPlaceholder())
-			if field.Changed() {
-				l.filter()
-			}
-			if field.Submitted() {
-				open = true
-			}
-		})
-		ui.Divider(c)
-		l.list.Selected = &l.chosen
-		l.list.Key = func(i int) any { return l.items[l.results[i]].ID }
-		l.list.Label = func(i int) string { return l.items[l.results[i]].Title }
-		list := ui.List(c, &l.list, len(l.results), func(i int) { l.row(c, i) }).Grow(1).Padding(6).Children(func() {
-			switch {
-			case len(l.results) > 0:
-			case l.loading:
-				ui.Text(c, locales.SearchFinding()).TextColor(t.TextMuted).Padding(16)
-			default:
-				ui.Column(c).Padding(16).Gap(6).Children(func() {
-					ui.Text(c, locales.SearchNoResults(strings.TrimSpace(l.query))).TextColor(t.Text)
-					ui.Text(c, locales.SearchNoResultsHint()).FontSize(12).TextColor(t.TextMuted)
-					if len(l.g.presets) == 0 {
-						ui.Text(c, locales.SearchNoPresetsHint()).FontSize(12).TextColor(t.TextMuted)
-					}
-				})
-			}
-		})
-		if list.Submitted() {
-			open = true
+	l.shortcuts(c)
+
+	target := l.targetHeight()
+	if target != l.region {
+		l.region = target
+		l.win.SetInputRegion([]mygo.Rectangle{{X: marginX, Y: marginTop, Width: panelWidth, Height: int(target)}})
+	}
+	// What the panel lays out below its bar: the results, the "no
+	// results" message, or, while it shrinks to its bar, what it showed.
+	body := target
+	if l.compact() {
+		body = expandedHeight
+		if len(l.results) == 0 {
+			body = noResultHeight
 		}
-		ui.Divider(c)
-		ui.Row(c).Padding(8, 16).Gap(16).Children(func() {
-			if l.failed != "" {
-				ui.Text(c, locales.SearchOpenFailed(l.failed)).FontSize(11).TextColor(t.Danger).Grow(1).SingleLine()
-			} else {
-				hint := keys(l.g.launcherKey) + " " + strings.TrimSuffix(locales.TraySearch(), "…")
-				if l.g.terminalKey != "" {
-					hint += "　" + keys(l.g.terminalKey) + " " + locales.TrayTerminal()
+	}
+
+	c.Key(l.gen)
+	panel := ui.Column(c).Absolute().Left(marginX).Top(marginTop).Width(panelWidth).
+		Radius(panelRadius).Material(panelGlass{fallback: k.surface}).Clip().
+		Shadow(0, 10, 30, 0, ui.RGBA(0, 0, 0, 0.22))
+	h := target
+	if !reduce {
+		h = panel.AnimateTo("h", target, ui.Animation{Spring: ui.SpringOptions{Duration: 120 * time.Millisecond}})
+	}
+	panel.Height(h).Children(func() {
+		l.searchBar(c, k)
+		if body > barHeight {
+			ui.Box(c).Height(1).Background(k.hairline).Shrink(0)
+			ui.Column(c).Height(body - barHeight - 1 - footerHeight).Shrink(0).Children(func() {
+				if len(l.results) > 0 {
+					l.resultList(c, k)
+				} else {
+					l.noResults(c, k)
 				}
-				ui.Text(c, hint).FontSize(11).TextColor(t.TextMuted).Grow(1).SingleLine()
-			}
-			hint := locales.SearchHintClose()
-			if l.query != "" {
-				hint = locales.SearchHintClear()
-			}
-			ui.Text(c, hint).FontSize(11).TextColor(t.TextMuted)
-		})
-	})
-	if open {
-		l.open()
-	}
-}
-
-// row shows a result with its icon, its name, and what or where it is.
-func (l *launcher) row(c *ui.Context, i int) {
-	it := l.items[l.results[i]]
-	e := l.entries[l.results[i]]
-	t := c.Theme()
-	bg := ui.Transparent
-	text, muted := t.Text, t.TextMuted
-	if i == l.chosen {
-		bg = t.Accent.Alpha(0.85)
-		text, muted = t.AccentText, t.AccentText.Alpha(0.75)
-	}
-	ui.Row(c).Padding(6, 10).Gap(12).AlignItems(ui.Center).Radius(8).Background(bg).Children(func() {
-		switch {
-		case e.app == nil:
-			ui.Box(c).Size(iconSize, iconSize).Center().Children(func() {
-				ui.Icon(c, terminalIcon).FontSize(22).TextColor(text)
 			})
-		case l.icon(*e.app) != nil:
-			ui.Image(c, l.icon(*e.app)).Size(iconSize, iconSize)
-		default:
-			ui.Avatar(c, it.Title, nil).Size(iconSize, iconSize) // its initial
+			l.footer(c, k)
 		}
-		ui.Column(c).Grow(1).Gap(1).Children(func() {
-			ui.Text(c, it.Title).TextColor(text).SingleLine()
-			ui.Text(c, e.subtitle).FontSize(11).TextColor(muted).SingleLine()
-		})
-		tag := locales.SearchTagApp()
-		if e.app == nil {
-			tag = locales.SearchTagPreset()
+		if l.menuOpen {
+			l.actionsMenu(c, k, reduce)
 		}
-		ui.Text(c, tag).FontSize(11).TextColor(muted)
+	})
+	if l.announce {
+		l.announce = false
+		c.Announce(l.notice)
+	}
+}
+
+// shortcuts are the panel's Command keys, whatever has the focus.
+func (l *launcher) shortcuts(c *ui.Context) {
+	if c.Shortcut(ui.Cmd, ui.KeyK) {
+		l.toggleMenu()
+	}
+	if c.Shortcut(ui.Cmd, ui.KeyW) {
+		l.hide()
+	}
+	if c.Shortcut(ui.Cmd, ui.KeyComma) {
+		l.hide()
+		l.g.openSettings("")
+	}
+	if c.Shortcut(ui.Cmd|ui.Shift, ui.KeyC) {
+		if e, ok := l.current(); ok && e.app != nil {
+			l.copyPath(*e.app)
+		}
+	}
+	if c.Shortcut(ui.Cmd, ui.KeyE) {
+		if e, ok := l.current(); ok && e.app == nil {
+			l.editPreset(e.preset)
+		}
+	}
+	c.OnShortcut(ui.Cmd, ui.KeyQ, mygo.App.Quit)
+}
+
+func (l *launcher) searchBar(c *ui.Context, k tokens) {
+	ui.Row(c).Height(barHeight).Shrink(0).Padding(0, 20).Gap(12).AlignItems(ui.Center).Children(func() {
+		sfsymbols.Symbol(c, "magnifyingglass").Size(18).Color(k.textOnGlass)
+		field := ui.TextInputBase(c, &l.query).Bind(&l.input).Grow(1).FontSize(20).
+			Placeholder(locales.SearchPlaceholder()).Label(locales.SearchPlaceholder()).
+			OnTextKey(l.textKey)
+		l.composing = field.Composing()
+		if l.selectAll {
+			l.selectAll = false
+			field.SetTextSelection(0, len([]rune(l.query)))
+		}
+		if field.Changed() {
+			l.filter()
+		}
+		if l.loading && !l.loaded && !l.compact() {
+			ui.Spinner(c).Size(14, 14)
+		}
 	})
 }
 
-// rebuild makes the searchable items: the terminal presets, then the
-// apps, and filters them again.
-func (l *launcher) rebuild() {
-	l.items, l.entries = l.items[:0], l.entries[:0]
-	for i, p := range l.g.presets {
-		id := "preset:" + p.Name
-		it := search.NewItem(id, presetTitle(p), p.Command, "Terminal", "终端")
-		it.Boost = l.g.usage[id]
-		l.items = append(l.items, it)
-		l.entries = append(l.entries, entry{preset: i, subtitle: presetSubtitle(p)})
+// textKey takes the keys of the search field that move the choice and act
+// on it, as they come, before the field: none while the input method
+// composes, whose keys (arrows, Enter, Escape) are its own.
+func (l *launcher) textKey(key ui.TextKey) bool {
+	if l.composing {
+		return false
 	}
-	for i := range l.apps {
-		app := &l.apps[i]
-		id := "app:" + app.ID
-		it := search.NewItem(id, app.Name, l.alts[i]...)
-		it.Boost = l.g.usage[id]
-		sub := where(*app)
-		// The app's name in the other language, as 微信 shows WeChat.
-		for _, n := range l.alts[i] {
-			if n != app.Name && !strings.EqualFold(n, app.Name) && isOtherScript(n, app.Name) {
-				sub = n + " · " + sub
-				break
-			}
+	// Keys typed before this one may not have reached the view yet: act
+	// on the query as it is now (type-ahead, then Enter at once), and
+	// put the bound value back as it was, which the field writes as the
+	// next frame is built (writing it here would make the field take it
+	// as the app's, over what it holds).
+	bound := l.query
+	if q := key.Text(); q != l.query {
+		l.query = q
+		l.filter()
+		defer func() { l.query = bound }()
+	}
+	mods := key.Mods
+	switch {
+	case key.Key == ui.KeyEscape && mods == 0:
+		if l.query != "" {
+			key.SetText("") // and the bound value
+			bound, l.query = "", ""
+			l.filter()
+		} else {
+			l.hide()
 		}
-		l.items = append(l.items, it)
-		l.entries = append(l.entries, entry{app: app, subtitle: sub})
+		return true
+	case key.Key == ui.KeyEnter && mods == 0:
+		l.primary()
+		return true
+	case key.Key == ui.KeyEnter && mods == ui.Cmd:
+		l.secondary()
+		return true
+	case key.Key == ui.KeyDown && mods == 0, key.Key == ui.KeyN && mods == ui.Ctrl, key.Key == ui.KeyJ && mods == ui.Ctrl:
+		l.move(1)
+		return true
+	case key.Key == ui.KeyUp && mods == 0, key.Key == ui.KeyP && mods == ui.Ctrl, key.Key == ui.KeyK && mods == ui.Ctrl:
+		l.move(-1)
+		return true
 	}
-	l.filter()
+	return false
 }
 
-// isOtherScript reports whether a and b differ in having non-ASCII
-// letters, as 微信 and WeChat do, rather than being spellings of one name.
-func isOtherScript(a, b string) bool {
-	ascii := func(s string) bool { return utf8.RuneCountInString(s) == len(s) }
-	return ascii(a) != ascii(b)
-}
-
-func (l *launcher) filter() {
-	l.results = search.Filter(l.items, l.query)
-	l.choose(0)
-}
-
-// choose chooses result i, within the results. The list follows the item
-// chosen as the results change (by its Key): Choose tells it this is a
-// new choice, so that it does not drop it (-1) when the item it had is
-// filtered out.
-func (l *launcher) choose(i int) {
-	l.chosen = max(0, min(i, len(l.results)-1))
-	if len(l.results) > 0 {
-		l.list.Selected = &l.chosen
-		l.list.Choose(l.chosen)
-		l.list.ScrollIntoView(l.chosen)
-	}
-}
-
-// open opens the chosen result and hides the panel first, which gives the
-// keyboard back to the app the user was in, before the launched app (or
-// the terminal) takes it.
-func (l *launcher) open() {
-	if l.chosen < 0 && len(l.results) > 0 {
-		l.chosen = 0 // the list dropped its choice: open the first
-	}
-	if l.chosen < 0 || l.chosen >= len(l.results) {
+func (l *launcher) move(step int) {
+	if l.compact() || len(l.results) == 0 {
 		return
 	}
-	it := l.items[l.results[l.chosen]]
-	e := l.entries[l.results[l.chosen]]
-	l.panel.Hide()
-	l.failed = ""
-	l.g.used(it.ID)
+	l.moved = true
+	l.choose(max(0, min(l.chosen+step, len(l.results)-1))) // no wrapping
+}
+
+// choose chooses the result i, telling the list the app chose it (else
+// it keeps the choice on the item it had, or on none when the item is
+// gone), and shows it in the next frame.
+func (l *launcher) choose(i int) {
+	l.list.Selected = &l.chosen
+	l.list.Choose(i)
+	l.scroll = true
+}
+
+func (l *launcher) resultList(c *ui.Context, k tokens) {
+	l.list.Selected = &l.chosen
+	l.list.Key = func(i int) any { return l.items[l.results[i]].ID }
+	l.list.Label = func(i int) string { return l.rowLabel(l.results[i]) }
+	var list ui.Element
+	ui.Themed(c, listTheme(c, k)).Grow(1).Children(func() {
+		list = ui.List(c, &l.list, len(l.results), func(i int) { l.row(c, k, i) }).Grow(1).Padding(8)
+	})
+	if l.scroll && l.chosen >= 0 && l.chosen < len(l.results) {
+		l.scroll = false
+		l.list.ScrollIntoView(l.chosen)
+	}
+	if list.Changed() {
+		// A click chose a row: the keyboard stays in the field.
+		l.moved = true
+		l.input.Focus()
+	}
+	if list.Submitted() && !l.compact() {
+		l.primary() // a double click
+	}
+}
+
+// row shows a result: its icon, its name, a preset's folder and command,
+// and what it is.
+func (l *launcher) row(c *ui.Context, k tokens, i int) {
+	it := l.items[l.results[i]]
+	e := l.entries[l.results[i]]
+	var subtitle string
+	tag := locales.SearchTagApp()
 	if e.app == nil {
-		l.g.term.openPreset(l.g.presets[e.preset].Name)
+		tag = locales.SearchTagPreset()
+		if j := presets.Find(l.g.presets, e.preset); j >= 0 {
+			subtitle = presetSubtitle(l.g.presets[j])
+		}
+	}
+	ui.Row(c).Height(rowHeight).Padding(0, 12).Gap(12).AlignItems(ui.Center).Children(func() {
+		switch {
+		case e.app == nil:
+			ui.Box(c).Size(iconSize, iconSize).Radius(6).Background(k.keycap).Center().Shrink(0).Children(func() {
+				sfsymbols.Symbol(c, "apple.terminal.fill").Size(13).Color(k.text)
+			})
+		case l.icon(*e.app) != nil:
+			ui.Image(c, l.icon(*e.app)).Size(iconSize, iconSize).Shrink(0)
+		default:
+			ui.Avatar(c, it.Title, nil).Size(iconSize, iconSize).Shrink(0) // its initial
+		}
+		ui.Text(c, it.Title).FontSize(14).TextColor(k.text).SingleLine().MinWidth(160).Shrink(1)
+		if subtitle != "" {
+			ui.Text(c, subtitle).FontSize(13).TextColor(k.textOnGlass).SingleLine().TruncateMiddle().
+				MaxWidth((panelWidth - 16 - 24) * 0.45).Shrink(1)
+		}
+		ui.Spacer(c)
+		ui.Text(c, tag).FontSize(12).TextColor(k.textOnGlass).SingleLine().Shrink(0)
+	})
+}
+
+// rowLabel is what assistive technology reads of a result: "Safari, App",
+// a preset's folder after.
+func (l *launcher) rowLabel(item int) string {
+	it, e := l.items[item], l.entries[item]
+	sep := ", "
+	if strings.HasPrefix(i18n.Locale(), "zh") {
+		sep = "，"
+	}
+	if e.app != nil {
+		return it.Title + sep + locales.SearchTagApp()
+	}
+	s := it.Title + sep + locales.SearchTagPreset()
+	if j := presets.Find(l.g.presets, e.preset); j >= 0 {
+		s += sep + l.g.presets[j].ShortDir()
+	}
+	return s
+}
+
+func (l *launcher) noResults(c *ui.Context, k tokens) {
+	q := strings.TrimSpace(l.query)
+	ui.Column(c).Grow(1).Justify(ui.Center).AlignItems(ui.Center).Padding(0, 24).Children(func() {
+		ui.Text(c, locales.SearchNoResults(q)).FontSize(14).FontWeight(500).TextColor(k.text).SingleLine()
+		ui.Text(c, locales.SearchNoResultsHint()).FontSize(13).TextColor(k.textOnGlass).Margin(8, 0, 0, 0)
+		if len(l.g.presets) == 0 {
+			ui.Text(c, locales.SearchNoPresetsHint()).FontSize(13).TextColor(k.textOnGlass).Margin(4, 0, 0, 0)
+		}
+	})
+}
+
+// footer is the bar under the results: Gocast, or a notice, at the left;
+// the primary action and the actions menu at the right, both clickable.
+func (l *launcher) footer(c *ui.Context, k tokens) {
+	e, ok := l.current()
+	ui.Column(c).Height(footerHeight).Shrink(0).Children(func() {
+		ui.Box(c).Height(1).Background(k.hairline)
+		ui.Row(c).Grow(1).Padding(0, 16).AlignItems(ui.Center).Children(func() {
+			ui.Row(c).Gap(8).AlignItems(ui.Center).Grow(1).Shrink(1).Children(func() {
+				switch {
+				case l.notice != "" && l.noticeDanger:
+					sfsymbols.Symbol(c, "exclamationmark.triangle.fill").Size(14).Color(k.danger)
+					ui.Text(c, l.notice).FontSize(12).TextColor(k.danger).SingleLine().Shrink(1)
+				case l.notice != "":
+					sfsymbols.Symbol(c, "checkmark.circle").Size(14).Color(k.textOnGlass)
+					ui.Text(c, l.notice).FontSize(12).TextColor(k.textOnGlass).SingleLine().Shrink(1)
+				default:
+					sfsymbols.Symbol(c, "command.square").Size(14).Color(k.textOnGlass)
+					ui.Text(c, appName).FontSize(12).FontWeight(500).TextColor(k.textOnGlass)
+				}
+			})
+			ui.Row(c).Gap(0).AlignItems(ui.Center).Shrink(0).Children(func() {
+				if ok {
+					name := locales.FooterOpen()
+					if e.app == nil {
+						name = locales.FooterOpenInTerminal()
+					}
+					ui.Row(c).Gap(8).AlignItems(ui.Center).Label(name).KeyShortcuts(0, ui.KeyEnter).OnClick(l.primary).Children(func() {
+						ui.Text(c, name).FontSize(12).TextColor(k.text).SingleLine()
+						keycap(c, k, "↩", 12)
+					})
+					ui.Box(c).Size(1, 16).Background(k.hairline).Margin(0, 12)
+				}
+				actions := ui.Row(c).Gap(8).AlignItems(ui.Center).Label(locales.FooterActions()).KeyShortcuts(ui.Cmd, ui.KeyK)
+				if ok {
+					actions.OnClick(l.toggleMenu)
+				} else {
+					actions.Opacity(0.4) // nothing to act on
+				}
+				actions.Children(func() {
+					ui.Text(c, locales.FooterActions()).FontSize(12).TextColor(k.text).SingleLine()
+					keycaps(c, k, []string{"⌘", "K"}, 12)
+				})
+			})
+		})
+	})
+}
+
+// current returns the result chosen, while the panel shows results.
+func (l *launcher) current() (entry, bool) {
+	if l.compact() || l.chosen < 0 || l.chosen >= len(l.results) {
+		return entry{}, false
+	}
+	return l.entries[l.results[l.chosen]], true
+}
+
+// currentID returns the item ID of the result chosen.
+func (l *launcher) currentID() string {
+	if l.compact() || l.chosen < 0 || l.chosen >= len(l.results) {
+		return ""
+	}
+	return l.items[l.results[l.chosen]].ID
+}
+
+// --- The actions menu (Cmd-K) ---
+
+func (l *launcher) toggleMenu() {
+	if l.menuOpen {
+		l.closeMenu()
+		return
+	}
+	if _, ok := l.current(); !ok {
+		return
+	}
+	l.menuOpen = true
+	l.menuQuery = ""
+	l.menuChosen = 0
+	l.menuItems = l.actions()
+	l.filterMenu()
+	l.menuInput.Focus()
+	l.win.Invalidate()
+}
+
+func (l *launcher) closeMenu() {
+	l.menuOpen = false
+	l.input.Focus()
+	l.win.Invalidate()
+}
+
+// actions are what the menu offers for the result chosen, its primary
+// action first (copy.md 2.2).
+func (l *launcher) actions() []action {
+	e, ok := l.current()
+	if !ok {
+		return nil
+	}
+	if e.app != nil {
+		app := *e.app
+		as := []action{
+			{"arrow.up.forward.app", locales.ActionOpen(), []string{"↩"}, l.primary},
+			{"folder", locales.ActionShowInFinder(), []string{"⌘", "↩"}, l.secondary},
+			{"doc.on.doc", locales.ActionCopyPath(), []string{"⌘", "⇧", "C"}, func() { l.copyPath(app) }},
+		}
+		if running.IsRunning(app.ID) {
+			as = append(as, action{"xmark.circle", locales.ActionQuitApp(app.Name), nil, func() {
+				running.Quit(app.ID)
+				l.hide()
+			}})
+		}
+		return as
+	}
+	id := e.preset
+	return []action{
+		{"apple.terminal", locales.ActionOpenInTerminal(), []string{"↩"}, l.primary},
+		{"plus.square.on.square", locales.ActionNewTab(), []string{"⌘", "↩"}, l.secondary},
+		{"pencil", locales.ActionEditPreset(), []string{"⌘", "E"}, func() { l.editPreset(id) }},
+		{"folder", locales.ActionShowFolder(), nil, func() {
+			if j := presets.Find(l.g.presets, id); j >= 0 {
+				l.hide()
+				mygo.Shell.ShowItemInFolder(l.g.presets[j].WorkDir())
+			}
+		}},
+	}
+}
+
+func (l *launcher) filterMenu() {
+	l.menuShown = l.menuShown[:0]
+	for i, a := range l.menuItems {
+		if search.NewKey(a.label).Rank(l.menuQuery) >= 0 {
+			l.menuShown = append(l.menuShown, i)
+		}
+	}
+	l.menuChosen = max(0, min(l.menuChosen, len(l.menuShown)-1))
+}
+
+func (l *launcher) runMenu(i int) {
+	if i < 0 || i >= len(l.menuShown) {
+		return
+	}
+	a := l.menuItems[l.menuShown[i]]
+	l.menuOpen = false
+	l.input.Focus()
+	a.run()
+}
+
+func (l *launcher) menuKey(key ui.TextKey) bool {
+	if l.menuComposing {
+		return false
+	}
+	if q := key.Text(); q != l.menuQuery { // as in textKey
+		bound := l.menuQuery
+		l.menuQuery = q
+		l.filterMenu()
+		defer func() { l.menuQuery = bound }()
+	}
+	mods := key.Mods
+	switch {
+	case key.Key == ui.KeyEscape && mods == 0:
+		l.closeMenu()
+		return true
+	case key.Key == ui.KeyEnter && mods == 0:
+		l.runMenu(l.menuChosen)
+		return true
+	case key.Key == ui.KeyDown && mods == 0, key.Key == ui.KeyN && mods == ui.Ctrl, key.Key == ui.KeyJ && mods == ui.Ctrl:
+		l.menuChosen = min(l.menuChosen+1, len(l.menuShown)-1)
+		return true
+	case key.Key == ui.KeyUp && mods == 0, key.Key == ui.KeyP && mods == ui.Ctrl, key.Key == ui.KeyK && mods == ui.Ctrl:
+		l.menuChosen = max(l.menuChosen-1, 0)
+		return true
+	}
+	return false
+}
+
+func (l *launcher) actionsMenu(c *ui.Context, k tokens, reduce bool) {
+	enter := &ui.Motion{Opacity: 0, Scale: 0.97}
+	tr := ui.ElementTransition{Enter: enter, Exit: enter, Duration: 120 * time.Millisecond, ExitDuration: 80 * time.Millisecond}
+	if reduce {
+		fade := &ui.Motion{Opacity: 0}
+		tr = ui.ElementTransition{Enter: fade, Exit: fade, Duration: 80 * time.Millisecond}
+	}
+	c.Key("actions")
+	ui.Column(c).Absolute().Right(8).Bottom(footerHeight+8).Width(320).MaxHeight(300).
+		Radius(12).Material(glass.Glass{}).Shadow(0, 8, 24, 0, ui.RGBA(0, 0, 0, 0.20)).Clip().
+		TransformOrigin(1, 1).Transition(tr).Children(func() {
+		ui.Row(c).Height(36).Shrink(0).Padding(0, 12).AlignItems(ui.Center).Children(func() {
+			f := ui.TextInputBase(c, &l.menuQuery).Bind(&l.menuInput).Grow(1).FontSize(13).
+				Placeholder(locales.ActionsPlaceholder()).Label(locales.ActionsPlaceholder()).
+				OnTextKey(l.menuKey)
+			l.menuComposing = f.Composing()
+			if f.Changed() {
+				l.filterMenu()
+			}
+		})
+		ui.Box(c).Height(1).Background(k.hairline).Shrink(0)
+		ui.Scroll(c).Shrink(1).Children(func() {
+			ui.Column(c).Padding(6).Children(func() {
+				if len(l.menuShown) == 0 {
+					ui.Text(c, locales.ActionsNoMatch()).FontSize(13).TextColor(k.textOnGlass).Padding(8)
+				}
+				for i, ai := range l.menuShown {
+					a := l.menuItems[ai]
+					bg := ui.Transparent
+					if i == l.menuChosen {
+						bg = k.selection
+					}
+					c.Key(a.label)
+					row := ui.Row(c).Height(32).Padding(0, 8).Radius(8).Gap(8).AlignItems(ui.Center).Background(bg).Label(a.label)
+					idx := i
+					row.OnClick(func() { l.runMenu(idx) }).Children(func() {
+						sfsymbols.Symbol(c, a.icon).Size(16).Color(k.text)
+						ui.Text(c, a.label).FontSize(13).TextColor(k.text).SingleLine().Shrink(1)
+						ui.Spacer(c)
+						if len(a.caps) > 0 {
+							keycaps(c, k, a.caps, 12)
+						}
+					})
+				}
+			})
+		})
+	})
+}
+
+// --- Acting ---
+
+// primary opens the result chosen: an app, or a preset in the floating
+// terminal (its tab, if it has one).
+func (l *launcher) primary() { l.act(false) }
+
+// secondary shows an app in Finder, or opens a preset in a new tab.
+func (l *launcher) secondary() { l.act(true) }
+
+func (l *launcher) act(second bool) {
+	e, ok := l.current()
+	if !ok {
+		return
+	}
+	l.g.record(l.currentID(), l.query)
+	l.hide() // the keyboard goes back to the app the user was in first
+	if e.app == nil {
+		l.g.term.openPreset(e.preset, second)
+		return
+	}
+	if second {
+		mygo.Shell.ShowItemInFolder(e.app.Path)
 		return
 	}
 	if err := mygo.Shell.LaunchApp(*e.app); err != nil {
 		log.Printf("launching %s: %v", e.app.Name, err)
 		l.show()
-		l.failed = e.app.Name
+		l.say(locales.SearchOpenFailed(e.app.Name), true)
 	}
+}
+
+func (l *launcher) copyPath(app mygo.InstalledApp) {
+	mygo.Clipboard.WriteText(app.Path)
+	l.say(locales.FooterPathCopied(), false)
+}
+
+func (l *launcher) editPreset(id string) {
+	l.hide()
+	l.g.editPreset(id)
+}
+
+// say shows a notice in the footer for a few seconds.
+func (l *launcher) say(text string, danger bool) {
+	l.notice, l.noticeDanger, l.announce = text, danger, true
+	l.noticeGen++
+	gen := l.noticeGen
+	time.AfterFunc(noticeFor, func() {
+		l.win.Update(func() {
+			if l.noticeGen == gen {
+				l.notice = ""
+			}
+		})
+	})
+	l.win.Invalidate()
+}
+
+// --- Items ---
+
+// rebuild makes the searchable items, the terminal presets then the apps,
+// and filters them again, keeping the choice on its item.
+func (l *launcher) rebuild() {
+	l.items, l.entries = l.items[:0], l.entries[:0]
+	now := time.Now()
+	for _, p := range l.g.presets {
+		id := "preset:" + p.ID
+		it := search.NewItem(id, presetTitle(p), p.Command, "Terminal", "终端")
+		it.Score = l.g.usage.Score(id, now)
+		l.items = append(l.items, it)
+		l.entries = append(l.entries, entry{preset: p.ID})
+	}
+	for i := range l.apps {
+		app := &l.apps[i]
+		id := "app:" + app.ID
+		it := search.NewItem(id, app.Name, l.alts[i]...)
+		it.Score = l.g.usage.Score(id, now)
+		l.items = append(l.items, it)
+		l.entries = append(l.entries, entry{app: app})
+	}
+	if l.compact() {
+		return
+	}
+	// Keep the choice on its item as the apps come in, unless it is the
+	// first row the user left as it was: the new first row takes it.
+	was := l.currentID()
+	first := l.chosen == 0 && !l.moved
+	l.filtered = l.query
+	l.results = search.Filter(l.items, l.query, l.g.usage.Choice(l.query, now))
+	chosen := 0
+	if !first {
+		if i := slices.IndexFunc(l.results, func(r int) bool { return l.items[r].ID == was }); i >= 0 {
+			chosen = i
+		}
+	}
+	l.choose(chosen)
+}
+
+// filter finds the results of a new query, the first chosen. An empty
+// query keeps the results it had, which the panel shrinks with.
+func (l *launcher) filter() {
+	if l.compact() {
+		l.filtered = "" // the same query again starts afresh
+		return
+	}
+	if l.query == l.filtered {
+		return
+	}
+	l.filtered = l.query
+	l.moved = false
+	l.menuOpen = false
+	l.results = search.Filter(l.items, l.query, l.g.usage.Choice(l.query, time.Now()))
+	l.choose(0)
 }
 
 // load lists the installed apps and their other names on a goroutine, as
 // at each show, where apps may have come or gone since.
 func (l *launcher) load() {
+	if l.loading {
+		return
+	}
 	l.loading = true
 	go func() {
 		found, err := mygo.Shell.InstalledApps()
@@ -313,34 +764,57 @@ func (l *launcher) load() {
 			found = append(found, n.app)
 			alts[i] = n.alts
 		}
-		l.panel.Update(func() {
-			l.apps, l.alts, l.loading = found, alts, false
+		l.win.Update(func() {
+			l.apps, l.alts, l.loading, l.loaded = found, alts, false, true
 			l.rebuild()
 		})
 	}()
 }
 
-// show shows the panel on the display with the pointer, a third of the way
-// down, with an empty query.
+// --- Showing and hiding ---
+
+// show shows the panel on the display with the pointer, its top a fifth of
+// the way down: as it was if it hid less than 90 seconds ago, its query
+// selected so that typing replaces it; else empty, its bar alone.
 func (l *launcher) show() {
-	if l.g.loadPresets() {
-		l.rebuild()
+	if l.win.IsVisible() {
+		l.input.Focus()
+		return
 	}
+	restore := !l.hiddenAt.IsZero() && time.Since(l.hiddenAt) < restoreFor
+	if !restore {
+		l.query, l.filtered, l.results, l.moved = "", "", nil, false
+		l.notice = ""
+		l.list = ui.ListState{}
+		l.choose(0)
+	}
+	l.selectAll = restore && l.query != ""
+	l.menuOpen = false
+	l.gen++ // appears at its size, without animating to it
 	d := mygo.Screen.DisplayNearestPoint(mygo.Screen.CursorScreenPoint())
-	w, h := l.panel.Size()
-	l.panel.SetPosition(d.WorkArea.X+(d.WorkArea.Width-w)/2, d.WorkArea.Y+(d.WorkArea.Height-h)/3)
-	l.query = ""
-	l.failed = ""
-	l.filter()
-	l.load()
+	wa := d.WorkArea
+	l.win.SetPosition(wa.X+(wa.Width-windowWidth)/2, wa.Y+wa.Height/5-marginTop)
 	l.input.Focus()
-	l.panel.Show()
-	l.panel.Invalidate() // draw the state changed outside a frame
+	l.win.Show()
+	l.win.Invalidate() // draw the state changed outside a frame
+	if l.g.loadPresets() {
+		l.g.presetsChanged()
+	}
+	l.load()
+}
+
+func (l *launcher) hide() {
+	if !l.win.IsVisible() {
+		return
+	}
+	l.hiddenAt = time.Now()
+	l.menuOpen = false
+	l.win.Hide()
 }
 
 func (l *launcher) toggle() {
-	if l.panel.IsVisible() {
-		l.panel.Hide()
+	if l.win.IsVisible() {
+		l.hide()
 	} else {
 		l.show()
 	}
@@ -362,28 +836,6 @@ func (l *launcher) icon(app mygo.InstalledApp) *ui.Bitmap {
 	}
 	l.icons[app.Path] = bitmap
 	return bitmap
-}
-
-// where says where an app is, shortly: its folder.
-func where(app mygo.InstalledApp) string {
-	dir := filepath.Dir(app.Path)
-	if home, err := os.UserHomeDir(); err == nil && strings.HasPrefix(dir, home) {
-		return "~" + dir[len(home):]
-	}
-	for _, system := range []string{"/System/Applications", "/System/Library/CoreServices/Applications", "/System/Library/CoreServices"} {
-		if rest, ok := strings.CutPrefix(dir, system); ok {
-			return "System" + rest
-		}
-	}
-	return strings.TrimPrefix(dir, "/")
-}
-
-// keys spells a shortcut as macOS does: ⌥⇧Space.
-func keys(shortcut string) string {
-	if runtime.GOOS != "darwin" {
-		return shortcut
-	}
-	return strings.NewReplacer("CmdOrCtrl+", "⌘", "Cmd+", "⌘", "Ctrl+", "⌃", "Alt+", "⌥", "Shift+", "⇧").Replace(shortcut)
 }
 
 // presetTitle is a preset's name, or "Terminal" for one without.

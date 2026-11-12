@@ -29,7 +29,7 @@ func TestEnglish(t *testing.T) {
 		"ACT":  {"Activity Monitor", "Calculator"},             // prefix, then letters in order
 		"zzz":  nil,
 	} {
-		if got := titles(items, Filter(items, query)); !slices.Equal(got, want) {
+		if got := titles(items, Filter(items, query, "")); !slices.Equal(got, want) {
 			t.Errorf("%q: %v, want %v", query, got, want)
 		}
 	}
@@ -65,7 +65,7 @@ func TestChinese(t *testing.T) {
 		"bwl":      {"备忘录"},
 		"notes":    {"备忘录"},
 	} {
-		if got := titles(items, Filter(items, query)); !slices.Equal(got, want) {
+		if got := titles(items, Filter(items, query, "")); !slices.Equal(got, want) {
 			t.Errorf("%q: %v, want %v", query, got, want)
 		}
 	}
@@ -96,11 +96,16 @@ func TestRanks(t *testing.T) {
 
 func TestBoost(t *testing.T) {
 	items := []Item{NewItem("a", "Calendar"), NewItem("b", "Calculator")}
-	items[1].Boost = 3
-	if got := titles(items, Filter(items, "cal")); !slices.Equal(got, []string{"Calculator", "Calendar"}) {
+	items[1].Score = 300
+	if got := titles(items, Filter(items, "cal", "")); !slices.Equal(got, []string{"Calculator", "Calendar"}) {
 		t.Errorf("boosted: %v", got)
 	}
-	if got := titles(items, Filter(items, "")); !slices.Equal(got, []string{"Calculator", "Calendar"}) {
+	if got := titles(items, Filter(items, "", "")); !slices.Equal(got, []string{"Calculator", "Calendar"}) {
 		t.Errorf("empty query: %v", got)
+	}
+	// The item a query opened last comes first for it, whatever the rank.
+	items = append(items, NewItem("c", "iCal Helper"))
+	if got := titles(items, Filter(items, "cal", "c")); got[0] != "iCal Helper" {
+		t.Errorf("chosen: %v", got)
 	}
 }

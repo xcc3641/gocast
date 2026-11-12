@@ -65,13 +65,13 @@ func (msgs Messages) TrayTerminal() string {
 // TraySettings says "Settings…"
 // in the language the app shows.
 //
-// Tray menu: opens Settings (not built yet, shown disabled).
+// Tray menu: opens Settings.
 func TraySettings() string { return In(i18n.Locale()).TraySettings() }
 
 // TraySettings says "Settings…"
 // in the language of msgs.
 //
-// Tray menu: opens Settings (not built yet, shown disabled).
+// Tray menu: opens Settings.
 func (msgs Messages) TraySettings() string {
 	return Catalog.Format(msgs.locale, "traySettings", nil)
 }
@@ -79,31 +79,15 @@ func (msgs Messages) TraySettings() string {
 // TrayCheckUpdates says "Check for Updates…"
 // in the language the app shows.
 //
-// Tray menu: checks for updates (not built yet, shown disabled).
+// Tray menu: checks for updates (on the About page of Settings).
 func TrayCheckUpdates() string { return In(i18n.Locale()).TrayCheckUpdates() }
 
 // TrayCheckUpdates says "Check for Updates…"
 // in the language of msgs.
 //
-// Tray menu: checks for updates (not built yet, shown disabled).
+// Tray menu: checks for updates (on the About page of Settings).
 func (msgs Messages) TrayCheckUpdates() string {
 	return Catalog.Format(msgs.locale, "trayCheckUpdates", nil)
-}
-
-// TrayEditPresets says "Edit Presets File…"
-// in the language the app shows.
-//
-// Tray menu, until Settings exist: opens presets.json in the default
-// editor. Not in copy.md yet.
-func TrayEditPresets() string { return In(i18n.Locale()).TrayEditPresets() }
-
-// TrayEditPresets says "Edit Presets File…"
-// in the language of msgs.
-//
-// Tray menu, until Settings exist: opens presets.json in the default
-// editor. Not in copy.md yet.
-func (msgs Messages) TrayEditPresets() string {
-	return Catalog.Format(msgs.locale, "trayEditPresets", nil)
 }
 
 // TrayQuit says "Quit Gocast"
@@ -165,7 +149,7 @@ func (msgs Messages) SearchTagPreset() string {
 // PresetSubtitle says "{folder} · {command}"
 // in the language the app shows.
 //
-// Subtitle of a preset's result row.
+// Subtitle of a preset (search row, settings list).
 func PresetSubtitle(folder string, command string) string {
 	return In(i18n.Locale()).PresetSubtitle(folder, command)
 }
@@ -173,7 +157,7 @@ func PresetSubtitle(folder string, command string) string {
 // PresetSubtitle says "{folder} · {command}"
 // in the language of msgs.
 //
-// Subtitle of a preset's result row.
+// Subtitle of a preset (search row, settings list).
 func (msgs Messages) PresetSubtitle(folder string, command string) string {
 	return Catalog.Format(msgs.locale, "presetSubtitle", map[string]any{"folder": folder, "command": command})
 }
@@ -190,34 +174,6 @@ func PresetSubtitleShell(folder string) string { return In(i18n.Locale()).Preset
 // Subtitle of a preset without a command (a plain terminal).
 func (msgs Messages) PresetSubtitleShell(folder string) string {
 	return Catalog.Format(msgs.locale, "presetSubtitleShell", map[string]any{"folder": folder})
-}
-
-// SearchHintClear says "↩ Open\u3000↑↓ Select\u3000esc Clear"
-// in the language the app shows.
-//
-// Footer hint while the field has text.
-func SearchHintClear() string { return In(i18n.Locale()).SearchHintClear() }
-
-// SearchHintClear says "↩ Open\u3000↑↓ Select\u3000esc Clear"
-// in the language of msgs.
-//
-// Footer hint while the field has text.
-func (msgs Messages) SearchHintClear() string {
-	return Catalog.Format(msgs.locale, "searchHintClear", nil)
-}
-
-// SearchHintClose says "↩ Open\u3000↑↓ Select\u3000esc Close"
-// in the language the app shows.
-//
-// Footer hint while the field is empty.
-func SearchHintClose() string { return In(i18n.Locale()).SearchHintClose() }
-
-// SearchHintClose says "↩ Open\u3000↑↓ Select\u3000esc Close"
-// in the language of msgs.
-//
-// Footer hint while the field is empty.
-func (msgs Messages) SearchHintClose() string {
-	return Catalog.Format(msgs.locale, "searchHintClose", nil)
 }
 
 // SearchNoResults says "No results for “{query}”"
@@ -262,46 +218,286 @@ func (msgs Messages) SearchNoPresetsHint() string {
 	return Catalog.Format(msgs.locale, "searchNoPresetsHint", nil)
 }
 
-// SearchFinding says "Finding apps…"
-// in the language the app shows.
-//
-// While the apps are listed for the first time. Not in copy.md yet.
-func SearchFinding() string { return In(i18n.Locale()).SearchFinding() }
-
-// SearchFinding says "Finding apps…"
-// in the language of msgs.
-//
-// While the apps are listed for the first time. Not in copy.md yet.
-func (msgs Messages) SearchFinding() string {
-	return Catalog.Format(msgs.locale, "searchFinding", nil)
-}
-
 // SearchOpenFailed says "Couldn’t open “{name}”. It may have been moved or deleted."
 // in the language the app shows.
 //
-// When an app fails to open.
+// Footer, when an app fails to open.
 func SearchOpenFailed(name string) string { return In(i18n.Locale()).SearchOpenFailed(name) }
 
 // SearchOpenFailed says "Couldn’t open “{name}”. It may have been moved or deleted."
 // in the language of msgs.
 //
-// When an app fails to open.
+// Footer, when an app fails to open.
 func (msgs Messages) SearchOpenFailed(name string) string {
 	return Catalog.Format(msgs.locale, "searchOpenFailed", map[string]any{"name": name})
+}
+
+// FooterOpen says "Open"
+// in the language the app shows.
+//
+// Footer: the primary action of an app (Enter).
+func FooterOpen() string { return In(i18n.Locale()).FooterOpen() }
+
+// FooterOpen says "Open"
+// in the language of msgs.
+//
+// Footer: the primary action of an app (Enter).
+func (msgs Messages) FooterOpen() string {
+	return Catalog.Format(msgs.locale, "footerOpen", nil)
+}
+
+// FooterOpenInTerminal says "Open in Floating Terminal"
+// in the language the app shows.
+//
+// Footer: the primary action of a preset (Enter).
+func FooterOpenInTerminal() string { return In(i18n.Locale()).FooterOpenInTerminal() }
+
+// FooterOpenInTerminal says "Open in Floating Terminal"
+// in the language of msgs.
+//
+// Footer: the primary action of a preset (Enter).
+func (msgs Messages) FooterOpenInTerminal() string {
+	return Catalog.Format(msgs.locale, "footerOpenInTerminal", nil)
+}
+
+// FooterActions says "Actions"
+// in the language the app shows.
+//
+// Footer: opens the actions menu (Cmd-K).
+func FooterActions() string { return In(i18n.Locale()).FooterActions() }
+
+// FooterActions says "Actions"
+// in the language of msgs.
+//
+// Footer: opens the actions menu (Cmd-K).
+func (msgs Messages) FooterActions() string {
+	return Catalog.Format(msgs.locale, "footerActions", nil)
+}
+
+// FooterPathCopied says "Path copied"
+// in the language the app shows.
+//
+// Footer: after Copy Path.
+func FooterPathCopied() string { return In(i18n.Locale()).FooterPathCopied() }
+
+// FooterPathCopied says "Path copied"
+// in the language of msgs.
+//
+// Footer: after Copy Path.
+func (msgs Messages) FooterPathCopied() string {
+	return Catalog.Format(msgs.locale, "footerPathCopied", nil)
+}
+
+// ActionsPlaceholder says "Search actions…"
+// in the language the app shows.
+//
+// Placeholder of the actions menu's filter.
+func ActionsPlaceholder() string { return In(i18n.Locale()).ActionsPlaceholder() }
+
+// ActionsPlaceholder says "Search actions…"
+// in the language of msgs.
+//
+// Placeholder of the actions menu's filter.
+func (msgs Messages) ActionsPlaceholder() string {
+	return Catalog.Format(msgs.locale, "actionsPlaceholder", nil)
+}
+
+// ActionsNoMatch says "No matching actions"
+// in the language the app shows.
+//
+// Actions menu: nothing matches the filter.
+func ActionsNoMatch() string { return In(i18n.Locale()).ActionsNoMatch() }
+
+// ActionsNoMatch says "No matching actions"
+// in the language of msgs.
+//
+// Actions menu: nothing matches the filter.
+func (msgs Messages) ActionsNoMatch() string {
+	return Catalog.Format(msgs.locale, "actionsNoMatch", nil)
+}
+
+// ActionOpen says "Open"
+// in the language the app shows.
+//
+// Action on an app.
+func ActionOpen() string { return In(i18n.Locale()).ActionOpen() }
+
+// ActionOpen says "Open"
+// in the language of msgs.
+//
+// Action on an app.
+func (msgs Messages) ActionOpen() string {
+	return Catalog.Format(msgs.locale, "actionOpen", nil)
+}
+
+// ActionShowInFinder says "Show in Finder"
+// in the language the app shows.
+//
+// Action on an app.
+func ActionShowInFinder() string { return In(i18n.Locale()).ActionShowInFinder() }
+
+// ActionShowInFinder says "Show in Finder"
+// in the language of msgs.
+//
+// Action on an app.
+func (msgs Messages) ActionShowInFinder() string {
+	return Catalog.Format(msgs.locale, "actionShowInFinder", nil)
+}
+
+// ActionCopyPath says "Copy Path"
+// in the language the app shows.
+//
+// Action on an app.
+func ActionCopyPath() string { return In(i18n.Locale()).ActionCopyPath() }
+
+// ActionCopyPath says "Copy Path"
+// in the language of msgs.
+//
+// Action on an app.
+func (msgs Messages) ActionCopyPath() string {
+	return Catalog.Format(msgs.locale, "actionCopyPath", nil)
+}
+
+// ActionQuitApp says "Quit {app}"
+// in the language the app shows.
+//
+// Action on a running app.
+func ActionQuitApp(app string) string { return In(i18n.Locale()).ActionQuitApp(app) }
+
+// ActionQuitApp says "Quit {app}"
+// in the language of msgs.
+//
+// Action on a running app.
+func (msgs Messages) ActionQuitApp(app string) string {
+	return Catalog.Format(msgs.locale, "actionQuitApp", map[string]any{"app": app})
+}
+
+// ActionOpenInTerminal says "Open in Floating Terminal"
+// in the language the app shows.
+//
+// Action on a preset.
+func ActionOpenInTerminal() string { return In(i18n.Locale()).ActionOpenInTerminal() }
+
+// ActionOpenInTerminal says "Open in Floating Terminal"
+// in the language of msgs.
+//
+// Action on a preset.
+func (msgs Messages) ActionOpenInTerminal() string {
+	return Catalog.Format(msgs.locale, "actionOpenInTerminal", nil)
+}
+
+// ActionNewTab says "New Tab"
+// in the language the app shows.
+//
+// Action on a preset: opens it in another tab.
+func ActionNewTab() string { return In(i18n.Locale()).ActionNewTab() }
+
+// ActionNewTab says "New Tab"
+// in the language of msgs.
+//
+// Action on a preset: opens it in another tab.
+func (msgs Messages) ActionNewTab() string {
+	return Catalog.Format(msgs.locale, "actionNewTab", nil)
+}
+
+// ActionEditPreset says "Edit Preset"
+// in the language the app shows.
+//
+// Action on a preset; also the button of a tab whose command is missing,
+// and the title of the preset editor.
+func ActionEditPreset() string { return In(i18n.Locale()).ActionEditPreset() }
+
+// ActionEditPreset says "Edit Preset"
+// in the language of msgs.
+//
+// Action on a preset; also the button of a tab whose command is missing,
+// and the title of the preset editor.
+func (msgs Messages) ActionEditPreset() string {
+	return Catalog.Format(msgs.locale, "actionEditPreset", nil)
+}
+
+// ActionShowFolder says "Show Folder in Finder"
+// in the language the app shows.
+//
+// Action on a preset.
+func ActionShowFolder() string { return In(i18n.Locale()).ActionShowFolder() }
+
+// ActionShowFolder says "Show Folder in Finder"
+// in the language of msgs.
+//
+// Action on a preset.
+func (msgs Messages) ActionShowFolder() string {
+	return Catalog.Format(msgs.locale, "actionShowFolder", nil)
 }
 
 // TermTabDefault says "Terminal"
 // in the language the app shows.
 //
-// Tab title of a preset without a name.
+// Title of a tab without a preset.
 func TermTabDefault() string { return In(i18n.Locale()).TermTabDefault() }
 
 // TermTabDefault says "Terminal"
 // in the language of msgs.
 //
-// Tab title of a preset without a name.
+// Title of a tab without a preset.
 func (msgs Messages) TermTabDefault() string {
 	return Catalog.Format(msgs.locale, "termTabDefault", nil)
+}
+
+// TermNewTab says "New tab (⌘T)"
+// in the language the app shows.
+//
+// Tooltip of the new tab button.
+func TermNewTab() string { return In(i18n.Locale()).TermNewTab() }
+
+// TermNewTab says "New tab (⌘T)"
+// in the language of msgs.
+//
+// Tooltip of the new tab button.
+func (msgs Messages) TermNewTab() string {
+	return Catalog.Format(msgs.locale, "termNewTab", nil)
+}
+
+// TermNewTabMenu says "Open with preset"
+// in the language the app shows.
+//
+// Title of the new tab menu.
+func TermNewTabMenu() string { return In(i18n.Locale()).TermNewTabMenu() }
+
+// TermNewTabMenu says "Open with preset"
+// in the language of msgs.
+//
+// Title of the new tab menu.
+func (msgs Messages) TermNewTabMenu() string {
+	return Catalog.Format(msgs.locale, "termNewTabMenu", nil)
+}
+
+// TermPlain says "Plain terminal"
+// in the language the app shows.
+//
+// New tab menu: a terminal without a preset.
+func TermPlain() string { return In(i18n.Locale()).TermPlain() }
+
+// TermPlain says "Plain terminal"
+// in the language of msgs.
+//
+// New tab menu: a terminal without a preset.
+func (msgs Messages) TermPlain() string {
+	return Catalog.Format(msgs.locale, "termPlain", nil)
+}
+
+// TermCloseTabTip says "Close tab (⌘W)"
+// in the language the app shows.
+//
+// Tooltip of a tab's close button.
+func TermCloseTabTip() string { return In(i18n.Locale()).TermCloseTabTip() }
+
+// TermCloseTabTip says "Close tab (⌘W)"
+// in the language of msgs.
+//
+// Tooltip of a tab's close button.
+func (msgs Messages) TermCloseTabTip() string {
+	return Catalog.Format(msgs.locale, "termCloseTabTip", nil)
 }
 
 // TermHide says "Hide (press {shortcut} to come back)"
@@ -400,4 +596,760 @@ func TermFolderMissing(folder string) string { return In(i18n.Locale()).TermFold
 // Notice above the terminal when the preset's folder is missing.
 func (msgs Messages) TermFolderMissing(folder string) string {
 	return Catalog.Format(msgs.locale, "termFolderMissing", map[string]any{"folder": folder})
+}
+
+// TermPlainTip says "This is a plain terminal. To run a command in a folder with one key, add a preset in Settings."
+// in the language the app shows.
+//
+// Tip over the first plain terminal when there is no preset.
+func TermPlainTip() string { return In(i18n.Locale()).TermPlainTip() }
+
+// TermPlainTip says "This is a plain terminal. To run a command in a folder with one key, add a preset in Settings."
+// in the language of msgs.
+//
+// Tip over the first plain terminal when there is no preset.
+func (msgs Messages) TermPlainTip() string {
+	return Catalog.Format(msgs.locale, "termPlainTip", nil)
+}
+
+// Dismiss says "Close"
+// in the language the app shows.
+//
+// Label of the × button of a notice (not in copy.md).
+func Dismiss() string { return In(i18n.Locale()).Dismiss() }
+
+// Dismiss says "Close"
+// in the language of msgs.
+//
+// Label of the × button of a notice (not in copy.md).
+func (msgs Messages) Dismiss() string {
+	return Catalog.Format(msgs.locale, "dismiss", nil)
+}
+
+// SettingsTitle says "Settings"
+// in the language the app shows.
+//
+// Title of the Settings window.
+func SettingsTitle() string { return In(i18n.Locale()).SettingsTitle() }
+
+// SettingsTitle says "Settings"
+// in the language of msgs.
+//
+// Title of the Settings window.
+func (msgs Messages) SettingsTitle() string {
+	return Catalog.Format(msgs.locale, "settingsTitle", nil)
+}
+
+// PageShortcuts says "Shortcuts"
+// in the language the app shows.
+//
+// Settings sidebar.
+func PageShortcuts() string { return In(i18n.Locale()).PageShortcuts() }
+
+// PageShortcuts says "Shortcuts"
+// in the language of msgs.
+//
+// Settings sidebar.
+func (msgs Messages) PageShortcuts() string {
+	return Catalog.Format(msgs.locale, "pageShortcuts", nil)
+}
+
+// PagePresets says "Terminal Presets"
+// in the language the app shows.
+//
+// Settings sidebar.
+func PagePresets() string { return In(i18n.Locale()).PagePresets() }
+
+// PagePresets says "Terminal Presets"
+// in the language of msgs.
+//
+// Settings sidebar.
+func (msgs Messages) PagePresets() string {
+	return Catalog.Format(msgs.locale, "pagePresets", nil)
+}
+
+// PageGeneral says "General"
+// in the language the app shows.
+//
+// Settings sidebar.
+func PageGeneral() string { return In(i18n.Locale()).PageGeneral() }
+
+// PageGeneral says "General"
+// in the language of msgs.
+//
+// Settings sidebar.
+func (msgs Messages) PageGeneral() string {
+	return Catalog.Format(msgs.locale, "pageGeneral", nil)
+}
+
+// PageAbout says "About"
+// in the language the app shows.
+//
+// Settings sidebar.
+func PageAbout() string { return In(i18n.Locale()).PageAbout() }
+
+// PageAbout says "About"
+// in the language of msgs.
+//
+// Settings sidebar.
+func (msgs Messages) PageAbout() string {
+	return Catalog.Format(msgs.locale, "pageAbout", nil)
+}
+
+// ShortcutLauncher says "Open search panel"
+// in the language the app shows.
+//
+// Shortcuts: row label.
+func ShortcutLauncher() string { return In(i18n.Locale()).ShortcutLauncher() }
+
+// ShortcutLauncher says "Open search panel"
+// in the language of msgs.
+//
+// Shortcuts: row label.
+func (msgs Messages) ShortcutLauncher() string {
+	return Catalog.Format(msgs.locale, "shortcutLauncher", nil)
+}
+
+// ShortcutTerminal says "Show or hide floating terminal"
+// in the language the app shows.
+//
+// Shortcuts: row label.
+func ShortcutTerminal() string { return In(i18n.Locale()).ShortcutTerminal() }
+
+// ShortcutTerminal says "Show or hide floating terminal"
+// in the language of msgs.
+//
+// Shortcuts: row label.
+func (msgs Messages) ShortcutTerminal() string {
+	return Catalog.Format(msgs.locale, "shortcutTerminal", nil)
+}
+
+// ShortcutRecording says "Press the new shortcut"
+// in the language the app shows.
+//
+// Shortcut recorder while recording.
+func ShortcutRecording() string { return In(i18n.Locale()).ShortcutRecording() }
+
+// ShortcutRecording says "Press the new shortcut"
+// in the language of msgs.
+//
+// Shortcut recorder while recording.
+func (msgs Messages) ShortcutRecording() string {
+	return Catalog.Format(msgs.locale, "shortcutRecording", nil)
+}
+
+// ShortcutRecordingHint says "Press esc to cancel"
+// in the language the app shows.
+//
+// Row note while recording.
+func ShortcutRecordingHint() string { return In(i18n.Locale()).ShortcutRecordingHint() }
+
+// ShortcutRecordingHint says "Press esc to cancel"
+// in the language of msgs.
+//
+// Row note while recording.
+func (msgs Messages) ShortcutRecordingHint() string {
+	return Catalog.Format(msgs.locale, "shortcutRecordingHint", nil)
+}
+
+// ShortcutReset says "Reset to Default"
+// in the language the app shows.
+//
+// Shortcuts: puts the default back.
+func ShortcutReset() string { return In(i18n.Locale()).ShortcutReset() }
+
+// ShortcutReset says "Reset to Default"
+// in the language of msgs.
+//
+// Shortcuts: puts the default back.
+func (msgs Messages) ShortcutReset() string {
+	return Catalog.Format(msgs.locale, "shortcutReset", nil)
+}
+
+// ShortcutTaken says "Another app already uses this shortcut. Try a different one."
+// in the language the app shows.
+//
+// Shortcuts: the system refused it.
+func ShortcutTaken() string { return In(i18n.Locale()).ShortcutTaken() }
+
+// ShortcutTaken says "Another app already uses this shortcut. Try a different one."
+// in the language of msgs.
+//
+// Shortcuts: the system refused it.
+func (msgs Messages) ShortcutTaken() string {
+	return Catalog.Format(msgs.locale, "shortcutTaken", nil)
+}
+
+// ShortcutUsedFor says "This shortcut is already used for “{other}”."
+// in the language the app shows.
+//
+// Shortcuts: the other row has it.
+func ShortcutUsedFor(other string) string { return In(i18n.Locale()).ShortcutUsedFor(other) }
+
+// ShortcutUsedFor says "This shortcut is already used for “{other}”."
+// in the language of msgs.
+//
+// Shortcuts: the other row has it.
+func (msgs Messages) ShortcutUsedFor(other string) string {
+	return Catalog.Format(msgs.locale, "shortcutUsedFor", map[string]any{"other": other})
+}
+
+// PresetsIntro says "A preset remembers which command to run in which folder. Type its name in the search panel to open it."
+// in the language the app shows.
+//
+// Terminal Presets: intro.
+func PresetsIntro() string { return In(i18n.Locale()).PresetsIntro() }
+
+// PresetsIntro says "A preset remembers which command to run in which folder. Type its name in the search panel to open it."
+// in the language of msgs.
+//
+// Terminal Presets: intro.
+func (msgs Messages) PresetsIntro() string {
+	return Catalog.Format(msgs.locale, "presetsIntro", nil)
+}
+
+// PresetsEmptyTitle says "No presets yet"
+// in the language the app shows.
+//
+// Terminal Presets: empty state.
+func PresetsEmptyTitle() string { return In(i18n.Locale()).PresetsEmptyTitle() }
+
+// PresetsEmptyTitle says "No presets yet"
+// in the language of msgs.
+//
+// Terminal Presets: empty state.
+func (msgs Messages) PresetsEmptyTitle() string {
+	return Catalog.Format(msgs.locale, "presetsEmptyTitle", nil)
+}
+
+// PresetsEmptyExample says "For example: start pi right inside your my-app folder."
+// in the language the app shows.
+//
+// Terminal Presets: empty state.
+func PresetsEmptyExample() string { return In(i18n.Locale()).PresetsEmptyExample() }
+
+// PresetsEmptyExample says "For example: start pi right inside your my-app folder."
+// in the language of msgs.
+//
+// Terminal Presets: empty state.
+func (msgs Messages) PresetsEmptyExample() string {
+	return Catalog.Format(msgs.locale, "presetsEmptyExample", nil)
+}
+
+// PresetsAdd says "Add Preset"
+// in the language the app shows.
+//
+// Button; also the title of the new preset editor.
+func PresetsAdd() string { return In(i18n.Locale()).PresetsAdd() }
+
+// PresetsAdd says "Add Preset"
+// in the language of msgs.
+//
+// Button; also the title of the new preset editor.
+func (msgs Messages) PresetsAdd() string {
+	return Catalog.Format(msgs.locale, "presetsAdd", nil)
+}
+
+// PresetName says "Name"
+// in the language the app shows.
+//
+// Preset editor field.
+func PresetName() string { return In(i18n.Locale()).PresetName() }
+
+// PresetName says "Name"
+// in the language of msgs.
+//
+// Preset editor field.
+func (msgs Messages) PresetName() string {
+	return Catalog.Format(msgs.locale, "presetName", nil)
+}
+
+// PresetNamePlaceholder says "e.g. my-app · pi"
+// in the language the app shows.
+//
+// Preset editor placeholder.
+func PresetNamePlaceholder() string { return In(i18n.Locale()).PresetNamePlaceholder() }
+
+// PresetNamePlaceholder says "e.g. my-app · pi"
+// in the language of msgs.
+//
+// Preset editor placeholder.
+func (msgs Messages) PresetNamePlaceholder() string {
+	return Catalog.Format(msgs.locale, "presetNamePlaceholder", nil)
+}
+
+// PresetFolder says "Folder"
+// in the language the app shows.
+//
+// Preset editor field.
+func PresetFolder() string { return In(i18n.Locale()).PresetFolder() }
+
+// PresetFolder says "Folder"
+// in the language of msgs.
+//
+// Preset editor field.
+func (msgs Messages) PresetFolder() string {
+	return Catalog.Format(msgs.locale, "presetFolder", nil)
+}
+
+// PresetChoose says "Choose…"
+// in the language the app shows.
+//
+// Preset editor: picks the folder.
+func PresetChoose() string { return In(i18n.Locale()).PresetChoose() }
+
+// PresetChoose says "Choose…"
+// in the language of msgs.
+//
+// Preset editor: picks the folder.
+func (msgs Messages) PresetChoose() string {
+	return Catalog.Format(msgs.locale, "presetChoose", nil)
+}
+
+// PresetCommand says "Command"
+// in the language the app shows.
+//
+// Preset editor field.
+func PresetCommand() string { return In(i18n.Locale()).PresetCommand() }
+
+// PresetCommand says "Command"
+// in the language of msgs.
+//
+// Preset editor field.
+func (msgs Messages) PresetCommand() string {
+	return Catalog.Format(msgs.locale, "presetCommand", nil)
+}
+
+// PresetCommandPlaceholder says "Leave empty for a plain terminal"
+// in the language the app shows.
+//
+// Preset editor placeholder.
+func PresetCommandPlaceholder() string { return In(i18n.Locale()).PresetCommandPlaceholder() }
+
+// PresetCommandPlaceholder says "Leave empty for a plain terminal"
+// in the language of msgs.
+//
+// Preset editor placeholder.
+func (msgs Messages) PresetCommandPlaceholder() string {
+	return Catalog.Format(msgs.locale, "presetCommandPlaceholder", nil)
+}
+
+// PresetEnv says "Environment variables (optional)"
+// in the language the app shows.
+//
+// Preset editor: collapsed section.
+func PresetEnv() string { return In(i18n.Locale()).PresetEnv() }
+
+// PresetEnv says "Environment variables (optional)"
+// in the language of msgs.
+//
+// Preset editor: collapsed section.
+func (msgs Messages) PresetEnv() string {
+	return Catalog.Format(msgs.locale, "presetEnv", nil)
+}
+
+// PresetEnvHint says "One per line, like NAME=value"
+// in the language the app shows.
+//
+// Preset editor: env format.
+func PresetEnvHint() string { return In(i18n.Locale()).PresetEnvHint() }
+
+// PresetEnvHint says "One per line, like NAME=value"
+// in the language of msgs.
+//
+// Preset editor: env format.
+func (msgs Messages) PresetEnvHint() string {
+	return Catalog.Format(msgs.locale, "presetEnvHint", nil)
+}
+
+// PresetMakeDefault says "Make Default"
+// in the language the app shows.
+//
+// Preset editor check box.
+func PresetMakeDefault() string { return In(i18n.Locale()).PresetMakeDefault() }
+
+// PresetMakeDefault says "Make Default"
+// in the language of msgs.
+//
+// Preset editor check box.
+func (msgs Messages) PresetMakeDefault() string {
+	return Catalog.Format(msgs.locale, "presetMakeDefault", nil)
+}
+
+// PresetDefaultBadge says "Default"
+// in the language the app shows.
+//
+// Badge of the default preset.
+func PresetDefaultBadge() string { return In(i18n.Locale()).PresetDefaultBadge() }
+
+// PresetDefaultBadge says "Default"
+// in the language of msgs.
+//
+// Badge of the default preset.
+func (msgs Messages) PresetDefaultBadge() string {
+	return Catalog.Format(msgs.locale, "presetDefaultBadge", nil)
+}
+
+// PresetDefaultHint says "The first time you press the terminal shortcut, this preset opens."
+// in the language the app shows.
+//
+// Under Make Default.
+func PresetDefaultHint() string { return In(i18n.Locale()).PresetDefaultHint() }
+
+// PresetDefaultHint says "The first time you press the terminal shortcut, this preset opens."
+// in the language of msgs.
+//
+// Under Make Default.
+func (msgs Messages) PresetDefaultHint() string {
+	return Catalog.Format(msgs.locale, "presetDefaultHint", nil)
+}
+
+// Save says "Save"
+// in the language the app shows.
+//
+// Button.
+func Save() string { return In(i18n.Locale()).Save() }
+
+// Save says "Save"
+// in the language of msgs.
+//
+// Button.
+func (msgs Messages) Save() string {
+	return Catalog.Format(msgs.locale, "save", nil)
+}
+
+// Cancel says "Cancel"
+// in the language the app shows.
+//
+// Button.
+func Cancel() string { return In(i18n.Locale()).Cancel() }
+
+// Cancel says "Cancel"
+// in the language of msgs.
+//
+// Button.
+func (msgs Messages) Cancel() string {
+	return Catalog.Format(msgs.locale, "cancel", nil)
+}
+
+// PresetDelete says "Delete Preset"
+// in the language the app shows.
+//
+// Preset editor button.
+func PresetDelete() string { return In(i18n.Locale()).PresetDelete() }
+
+// PresetDelete says "Delete Preset"
+// in the language of msgs.
+//
+// Preset editor button.
+func (msgs Messages) PresetDelete() string {
+	return Catalog.Format(msgs.locale, "presetDelete", nil)
+}
+
+// PresetDeleteTitle says "Delete “{name}”?"
+// in the language the app shows.
+//
+// Delete confirmation title.
+func PresetDeleteTitle(name string) string { return In(i18n.Locale()).PresetDeleteTitle(name) }
+
+// PresetDeleteTitle says "Delete “{name}”?"
+// in the language of msgs.
+//
+// Delete confirmation title.
+func (msgs Messages) PresetDeleteTitle(name string) string {
+	return Catalog.Format(msgs.locale, "presetDeleteTitle", map[string]any{"name": name})
+}
+
+// PresetDeleteMessage says "Tabs already running stay open, but you won’t find this preset in search anymore."
+// in the language the app shows.
+//
+// Delete confirmation message.
+func PresetDeleteMessage() string { return In(i18n.Locale()).PresetDeleteMessage() }
+
+// PresetDeleteMessage says "Tabs already running stay open, but you won’t find this preset in search anymore."
+// in the language of msgs.
+//
+// Delete confirmation message.
+func (msgs Messages) PresetDeleteMessage() string {
+	return Catalog.Format(msgs.locale, "presetDeleteMessage", nil)
+}
+
+// Delete says "Delete"
+// in the language the app shows.
+//
+// Delete confirmation button (not in copy.md, from design.md).
+func Delete() string { return In(i18n.Locale()).Delete() }
+
+// Delete says "Delete"
+// in the language of msgs.
+//
+// Delete confirmation button (not in copy.md, from design.md).
+func (msgs Messages) Delete() string {
+	return Catalog.Format(msgs.locale, "delete", nil)
+}
+
+// PresetNameEmpty says "Give this preset a name."
+// in the language the app shows.
+//
+// Preset editor error.
+func PresetNameEmpty() string { return In(i18n.Locale()).PresetNameEmpty() }
+
+// PresetNameEmpty says "Give this preset a name."
+// in the language of msgs.
+//
+// Preset editor error.
+func (msgs Messages) PresetNameEmpty() string {
+	return Catalog.Format(msgs.locale, "presetNameEmpty", nil)
+}
+
+// PresetNameTaken says "A preset named “{name}” already exists."
+// in the language the app shows.
+//
+// Preset editor error.
+func PresetNameTaken(name string) string { return In(i18n.Locale()).PresetNameTaken(name) }
+
+// PresetNameTaken says "A preset named “{name}” already exists."
+// in the language of msgs.
+//
+// Preset editor error.
+func (msgs Messages) PresetNameTaken(name string) string {
+	return Catalog.Format(msgs.locale, "presetNameTaken", map[string]any{"name": name})
+}
+
+// PresetFolderEmpty says "Choose a folder."
+// in the language the app shows.
+//
+// Preset editor error.
+func PresetFolderEmpty() string { return In(i18n.Locale()).PresetFolderEmpty() }
+
+// PresetFolderEmpty says "Choose a folder."
+// in the language of msgs.
+//
+// Preset editor error.
+func (msgs Messages) PresetFolderEmpty() string {
+	return Catalog.Format(msgs.locale, "presetFolderEmpty", nil)
+}
+
+// GeneralLogin says "Open Gocast at login"
+// in the language the app shows.
+//
+// General: switch.
+func GeneralLogin() string { return In(i18n.Locale()).GeneralLogin() }
+
+// GeneralLogin says "Open Gocast at login"
+// in the language of msgs.
+//
+// General: switch.
+func (msgs Messages) GeneralLogin() string {
+	return Catalog.Format(msgs.locale, "generalLogin", nil)
+}
+
+// GeneralLoginHint says "Then your shortcuts work right after you log in."
+// in the language the app shows.
+//
+// General: under the switch.
+func GeneralLoginHint() string { return In(i18n.Locale()).GeneralLoginHint() }
+
+// GeneralLoginHint says "Then your shortcuts work right after you log in."
+// in the language of msgs.
+//
+// General: under the switch.
+func (msgs Messages) GeneralLoginHint() string {
+	return Catalog.Format(msgs.locale, "generalLoginHint", nil)
+}
+
+// GeneralFontSize says "Terminal font size"
+// in the language the app shows.
+//
+// General: stepper.
+func GeneralFontSize() string { return In(i18n.Locale()).GeneralFontSize() }
+
+// GeneralFontSize says "Terminal font size"
+// in the language of msgs.
+//
+// General: stepper.
+func (msgs Messages) GeneralFontSize() string {
+	return Catalog.Format(msgs.locale, "generalFontSize", nil)
+}
+
+// GeneralHideOnBlur says "Hide floating terminal when you click away"
+// in the language the app shows.
+//
+// General: switch.
+func GeneralHideOnBlur() string { return In(i18n.Locale()).GeneralHideOnBlur() }
+
+// GeneralHideOnBlur says "Hide floating terminal when you click away"
+// in the language of msgs.
+//
+// General: switch.
+func (msgs Messages) GeneralHideOnBlur() string {
+	return Catalog.Format(msgs.locale, "generalHideOnBlur", nil)
+}
+
+// GeneralHideOnBlurHint says "When off, the terminal stays on screen while you work in other windows."
+// in the language the app shows.
+//
+// General: under the switch.
+func GeneralHideOnBlurHint() string { return In(i18n.Locale()).GeneralHideOnBlurHint() }
+
+// GeneralHideOnBlurHint says "When off, the terminal stays on screen while you work in other windows."
+// in the language of msgs.
+//
+// General: under the switch.
+func (msgs Messages) GeneralHideOnBlurHint() string {
+	return Catalog.Format(msgs.locale, "generalHideOnBlurHint", nil)
+}
+
+// GeneralAppearance says "Appearance"
+// in the language the app shows.
+//
+// General: row label.
+func GeneralAppearance() string { return In(i18n.Locale()).GeneralAppearance() }
+
+// GeneralAppearance says "Appearance"
+// in the language of msgs.
+//
+// General: row label.
+func (msgs Messages) GeneralAppearance() string {
+	return Catalog.Format(msgs.locale, "generalAppearance", nil)
+}
+
+// GeneralAppearanceHint says "Light or dark follows your Mac."
+// in the language the app shows.
+//
+// General: appearance note.
+func GeneralAppearanceHint() string { return In(i18n.Locale()).GeneralAppearanceHint() }
+
+// GeneralAppearanceHint says "Light or dark follows your Mac."
+// in the language of msgs.
+//
+// General: appearance note.
+func (msgs Messages) GeneralAppearanceHint() string {
+	return Catalog.Format(msgs.locale, "generalAppearanceHint", nil)
+}
+
+// AboutTagline says "One key. Apps and terminal, right there."
+// in the language the app shows.
+//
+// About: the one-liner.
+func AboutTagline() string { return In(i18n.Locale()).AboutTagline() }
+
+// AboutTagline says "One key. Apps and terminal, right there."
+// in the language of msgs.
+//
+// About: the one-liner.
+func (msgs Messages) AboutTagline() string {
+	return Catalog.Format(msgs.locale, "aboutTagline", nil)
+}
+
+// AboutVersion says "Version {version}"
+// in the language the app shows.
+//
+// About.
+func AboutVersion(version string) string { return In(i18n.Locale()).AboutVersion(version) }
+
+// AboutVersion says "Version {version}"
+// in the language of msgs.
+//
+// About.
+func (msgs Messages) AboutVersion(version string) string {
+	return Catalog.Format(msgs.locale, "aboutVersion", map[string]any{"version": version})
+}
+
+// AboutCheck says "Check for Updates"
+// in the language the app shows.
+//
+// About: button.
+func AboutCheck() string { return In(i18n.Locale()).AboutCheck() }
+
+// AboutCheck says "Check for Updates"
+// in the language of msgs.
+//
+// About: button.
+func (msgs Messages) AboutCheck() string {
+	return Catalog.Format(msgs.locale, "aboutCheck", nil)
+}
+
+// AboutChecking says "Checking…"
+// in the language the app shows.
+//
+// About: while checking.
+func AboutChecking() string { return In(i18n.Locale()).AboutChecking() }
+
+// AboutChecking says "Checking…"
+// in the language of msgs.
+//
+// About: while checking.
+func (msgs Messages) AboutChecking() string {
+	return Catalog.Format(msgs.locale, "aboutChecking", nil)
+}
+
+// AboutUpToDate says "You’re up to date."
+// in the language the app shows.
+//
+// About: no update.
+func AboutUpToDate() string { return In(i18n.Locale()).AboutUpToDate() }
+
+// AboutUpToDate says "You’re up to date."
+// in the language of msgs.
+//
+// About: no update.
+func (msgs Messages) AboutUpToDate() string {
+	return Catalog.Format(msgs.locale, "aboutUpToDate", nil)
+}
+
+// AboutUpdateTitle says "Gocast {version} is available"
+// in the language the app shows.
+//
+// About: alert title.
+func AboutUpdateTitle(version string) string { return In(i18n.Locale()).AboutUpdateTitle(version) }
+
+// AboutUpdateTitle says "Gocast {version} is available"
+// in the language of msgs.
+//
+// About: alert title.
+func (msgs Messages) AboutUpdateTitle(version string) string {
+	return Catalog.Format(msgs.locale, "aboutUpdateTitle", map[string]any{"version": version})
+}
+
+// AboutUpdateRestart says "Update and Restart"
+// in the language the app shows.
+//
+// About: alert button.
+func AboutUpdateRestart() string { return In(i18n.Locale()).AboutUpdateRestart() }
+
+// AboutUpdateRestart says "Update and Restart"
+// in the language of msgs.
+//
+// About: alert button.
+func (msgs Messages) AboutUpdateRestart() string {
+	return Catalog.Format(msgs.locale, "aboutUpdateRestart", nil)
+}
+
+// AboutUpdateLater says "Later"
+// in the language the app shows.
+//
+// About: alert button.
+func AboutUpdateLater() string { return In(i18n.Locale()).AboutUpdateLater() }
+
+// AboutUpdateLater says "Later"
+// in the language of msgs.
+//
+// About: alert button.
+func (msgs Messages) AboutUpdateLater() string {
+	return Catalog.Format(msgs.locale, "aboutUpdateLater", nil)
+}
+
+// AboutCheckFailed says "Couldn’t check for updates. Try again later."
+// in the language the app shows.
+//
+// About: the check failed.
+func AboutCheckFailed() string { return In(i18n.Locale()).AboutCheckFailed() }
+
+// AboutCheckFailed says "Couldn’t check for updates. Try again later."
+// in the language of msgs.
+//
+// About: the check failed.
+func (msgs Messages) AboutCheckFailed() string {
+	return Catalog.Format(msgs.locale, "aboutCheckFailed", nil)
 }

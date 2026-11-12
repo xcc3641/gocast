@@ -23,9 +23,17 @@ func (g *gocast) setUpTray() {
 		log.Print("no tray icon: ", err)
 		return
 	}
-	g.tray.SetMenu(g.trayMenu())
-	mygo.App.OnLocaleChanged(func(string) { g.tray.SetMenu(g.trayMenu()) })
+	g.updateTray()
+	mygo.App.OnLocaleChanged(func(string) { g.updateTray() })
 	mygo.App.OnWillQuit(func(*mygo.QuitEvent) { g.tray.Destroy() })
+}
+
+// updateTray builds the tray's menu again, as the shortcuts it shows
+// change.
+func (g *gocast) updateTray() {
+	if g.tray != nil {
+		g.tray.SetMenu(g.trayMenu())
+	}
 }
 
 func (g *gocast) trayMenu() *mygo.Menu {
@@ -33,13 +41,7 @@ func (g *gocast) trayMenu() *mygo.Menu {
 		{Label: locales.TraySearch(), Accelerator: g.launcherKey, Click: func(*mygo.MenuItem, *mygo.Window) { g.launcher.show() }},
 		{Label: locales.TrayTerminal(), Accelerator: g.terminalKey, Click: func(*mygo.MenuItem, *mygo.Window) { g.term.toggle() }},
 		mygo.Separator(),
-		{Label: locales.TraySettings(), Disabled: true},
-		{Label: locales.TrayEditPresets(), Click: func(*mygo.MenuItem, *mygo.Window) {
-			g.loadPresets() // writes the defaults when there is no file
-			if err := mygo.Shell.OpenPath(g.presetsPath()); err != nil {
-				log.Print(err)
-			}
-		}},
+		{Label: locales.TraySettings(), Click: func(*mygo.MenuItem, *mygo.Window) { g.openSettings("") }},
 		{Label: locales.TrayCheckUpdates(), Disabled: true},
 		mygo.Separator(),
 		{Label: locales.TrayQuit(), Accelerator: "CmdOrCtrl+Q", Click: func(*mygo.MenuItem, *mygo.Window) { mygo.App.Quit() }},

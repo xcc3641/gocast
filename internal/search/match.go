@@ -176,7 +176,9 @@ type Item struct {
 	ID    string // stable: usage counts and list keys use it
 	Title string // what the list shows
 	Keys  []Key  // the names it is found by: the title first, then others (English, Chinese…)
-	Boost int    // how often it was opened: higher shows first among equals
+	// Score is how often and lately it was opened (frecency): higher
+	// shows first among matches of one rank.
+	Score float64
 }
 
 // NewItem makes an item found by title and the other names.
@@ -207,9 +209,11 @@ func (it Item) Rank(query string) (rank int, byTitle bool) {
 }
 
 // Filter returns the indexes of the items matching query, best first:
-// by rank, then the most opened, then a match of the title over one of
-// another name, then shorter titles, then in their order.
-func Filter(items []Item, query string) []int {
+// the item the same query opened last (chosen, "" for none) when it
+// matches, then by rank, then the highest Score, then a match of the
+// title over one of another name, then shorter titles, then in their
+// order.
+func Filter(items []Item, query, chosen string) []int {
 	type found struct {
 		i, rank int
 		byTitle bool
@@ -221,10 +225,16 @@ func Filter(items []Item, query string) []int {
 		}
 	}
 	slices.SortStableFunc(fs, func(a, b found) int {
+		if ac, bc := items[a.i].ID == chosen, items[b.i].ID == chosen; chosen != "" && ac != bc {
+			if ac {
+				return -1
+			}
+			return 1
+		}
 		if c := cmp.Compare(a.rank, b.rank); c != 0 {
 			return c
 		}
-		if c := cmp.Compare(items[b.i].Boost, items[a.i].Boost); c != 0 {
+		if c := cmp.Compare(items[b.i].Score, items[a.i].Score); c != 0 {
 			return c
 		}
 		if a.byTitle != b.byTitle {

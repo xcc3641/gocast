@@ -11,6 +11,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"gocast/internal/presets"
+	"gocast/internal/shortcut"
 	"gocast/locales"
 )
 
@@ -63,7 +64,12 @@ func newTermPanel(g *gocast) *termPanel {
 	// Hiding never ends the programs: Cmd-W, an Escape the terminal
 	// leaves, and going elsewhere hide the panel, as Ghostty's quick
 	// terminal does.
-	g.hideOnClose(p.win)
+	p.win.OnClose(func(e *mygo.CloseEvent) {
+		if !g.quitting {
+			e.PreventDefault()
+			p.win.Hide()
+		}
+	})
 	p.win.OnBlur(p.win.Hide)
 	mygo.App.OnWillQuit(func(*mygo.QuitEvent) {
 		for _, s := range p.sessions {
@@ -176,13 +182,13 @@ func (p *termPanel) tabBar(c *ui.Context) {
 					ui.Box(c).Size(6, 6).Radius(3).Background(dot)
 				}
 				ui.Text(c, label).FontSize(12).TextColor(fg).SingleLine()
-			}).Tooltip(tip).Label(label).OnClick(func() { p.openPreset(name) })
+			}).Tooltip(tip).Label(label).OnClick(func() { p.open(name) })
 		}
 		ui.Box(c).Grow(1).FillHeight().DragWindow()
 		hide := ui.Box(c).Padding(4, 6).Radius(6).Children(func() {
 			ui.Icon(c, hideIcon).FontSize(14).TextColor(t.TextMuted)
 		})
-		hide.Tooltip(locales.TermHide(keys(p.g.terminalKey))).Label(locales.TermHide(keys(p.g.terminalKey))).OnClick(p.win.Hide)
+		hide.Tooltip(locales.TermHide(shortcut.Glyphs(p.g.terminalKey))).Label(locales.TermHide(shortcut.Glyphs(p.g.terminalKey))).OnClick(p.win.Hide)
 	})
 }
 
@@ -192,7 +198,7 @@ func (p *termPanel) tabShortcuts(c *ui.Context) {
 	digits := []ui.Key{ui.Key1, ui.Key2, ui.Key3, ui.Key4, ui.Key5, ui.Key6, ui.Key7, ui.Key8, ui.Key9}
 	for i, k := range digits {
 		if i < len(p.g.presets) && c.Shortcut(ui.Cmd, k) {
-			p.openPreset(p.g.presets[i].Name)
+			p.open(p.g.presets[i].Name)
 		}
 	}
 	step := 0
@@ -210,7 +216,7 @@ func (p *termPanel) tabShortcuts(c *ui.Context) {
 			}
 		}
 		n := len(p.g.presets)
-		p.openPreset(p.g.presets[(cur+step+n)%n].Name)
+		p.open(p.g.presets[(cur+step+n)%n].Name)
 	}
 }
 
@@ -294,9 +300,30 @@ func (p *termPanel) closeTab(s *session) {
 	p.win.Hide()
 }
 
-// openPreset shows the panel on the preset's tab, starting it the first
-// time.
-func (p *termPanel) openPreset(name string) {
+// openPreset shows the panel on the tab of the preset with the ID,
+// starting it the first time.
+func (p *termPanel) openPreset(id string, _ bool) {
+	if i := presets.Find(p.g.presets, id); i >= 0 {
+		p.open(p.g.presets[i].Name)
+	}
+}
+
+// presetsChanged closes the tabs of presets that are gone.
+func (p *termPanel) presetsChanged() {
+	for name, s := range p.sessions {
+		found := false
+		for _, pr := range p.g.presets {
+			found = found || pr.Name == name
+		}
+		if !found {
+			p.closeTab(s)
+		}
+	}
+	p.win.Invalidate()
+}
+
+// open shows the panel on the preset's tab, starting it the first time.
+func (p *termPanel) open(name string) {
 	p.syncPresets()
 	var pr *presets.Preset
 	for i := range p.g.presets {
@@ -325,18 +352,8 @@ func (p *termPanel) openPreset(name string) {
 // syncPresets reads presets.json again when it changed, and closes the
 // tabs of presets that are gone.
 func (p *termPanel) syncPresets() {
-	if !p.g.loadPresets() {
-		return
-	}
-	p.g.launcher.rebuild()
-	for name, s := range p.sessions {
-		found := false
-		for _, pr := range p.g.presets {
-			found = found || pr.Name == name
-		}
-		if !found {
-			p.closeTab(s)
-		}
+	if p.g.loadPresets() {
+		p.g.presetsChanged()
 	}
 }
 
@@ -361,5 +378,5 @@ func (p *termPanel) toggle() {
 	if name == "" && len(p.g.presets) > 0 {
 		name = p.g.presets[0].Name
 	}
-	p.openPreset(name)
+	p.open(name)
 }

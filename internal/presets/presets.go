@@ -1,9 +1,11 @@
 // Package presets reads and writes the floating terminal's presets: a name,
-// a working directory, a command and environment variables, kept as JSON
-// in the app's support directory.
+// a folder, a command and environment variables, kept as JSON in the app's
+// support directory.
 package presets
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -14,14 +16,20 @@ import (
 	"strings"
 )
 
-// Preset is a terminal session the user can open: Command runs in Dir
-// through the user's shell, as a login and interactive shell, so that
-// their PATH and profile apply; an empty Command is the login shell.
+// Preset is a terminal the user can open: Command runs in Dir through the
+// user's shell, as a login and interactive shell, so that their PATH and
+// profile apply; an empty Command is the login shell.
 type Preset struct {
+	// ID tells presets apart across renames: tabs, usage and the search
+	// list key by it. Load gives one to a preset without.
+	ID      string            `json:"id"`
 	Name    string            `json:"name"`
 	Dir     string            `json:"dir"`
 	Command string            `json:"command"`
 	Env     map[string]string `json:"env,omitempty"`
+	// Default is the preset the floating terminal opens the first time
+	// (and for a new tab): at most one has it.
+	Default bool `json:"default,omitempty"`
 }
 
 // File is the presets file.
@@ -29,43 +37,57 @@ type File struct {
 	Presets []Preset `json:"presets"`
 }
 
-// DefaultPiDir is where the default "pi" preset starts: Gocast's own
-// project, on the developer's Mac. Users change it in presets.json.
-const DefaultPiDir = "~"
-
-// Defaults are the presets of a new presets file.
-func Defaults() []Preset {
-	return []Preset{
-		{Name: "Shell", Dir: "~"},
-		{Name: "pi", Dir: DefaultPiDir, Command: "pi"},
-	}
+// NewID returns a new preset ID.
+func NewID() string {
+	var b [6]byte
+	_, _ = rand.Read(b[:])
+	return hex.EncodeToString(b[:])
 }
 
-// Load reads the presets at path, writing the defaults there first when
-// there is no file. A file that can't be read or parsed is an error, and
-// the defaults are returned with it, so that the terminal still works.
+// Load reads the presets at path: none where there is no file. A file
+// that can't be read or parsed is an error, with no presets. Presets
+// without an ID get one, and the file is written again with them.
 func Load(path string) ([]Preset, error) {
 	data, err := os.ReadFile(path)
 	if errors.Is(err, fs.ErrNotExist) {
-		ps := Defaults()
-		return ps, Save(path, ps)
+		return nil, nil
 	}
 	if err != nil {
-		return Defaults(), err
+		return nil, err
 	}
 	var f File
 	if err := json.Unmarshal(data, &f); err != nil {
-		return Defaults(), fmt.Errorf("%s: %w", path, err)
+		return nil, fmt.Errorf("%s: %w", path, err)
 	}
 	ps := slices.DeleteFunc(f.Presets, func(p Preset) bool { return strings.TrimSpace(p.Name) == "" })
-	if len(ps) == 0 {
-		ps = Defaults()
+	changed := false
+	seen := map[string]bool{}
+	hasDefault := false
+	for i := range ps {
+		if ps[i].ID == "" || seen[ps[i].ID] {
+			ps[i].ID = NewID()
+			changed = true
+		}
+		seen[ps[i].ID] = true
+		if ps[i].Default {
+			if hasDefault {
+				ps[i].Default = false
+				changed = true
+			}
+			hasDefault = true
+		}
+	}
+	if changed {
+		return ps, Save(path, ps)
 	}
 	return ps, nil
 }
 
 // Save writes presets to path, making its directory.
 func Save(path string, ps []Preset) error {
+	if ps == nil {
+		ps = []Preset{}
+	}
 	data, err := json.MarshalIndent(File{Presets: ps}, "", "  ")
 	if err != nil {
 		return err
@@ -78,6 +100,42 @@ func Save(path string, ps []Preset) error {
 		return err
 	}
 	return os.Rename(tmp, path)
+}
+
+// Find returns the index of the preset with the ID, or -1.
+func Find(ps []Preset, id string) int {
+	return slices.IndexFunc(ps, func(p Preset) bool { return p.ID == id })
+}
+
+// DefaultPreset returns the index of the default preset, or -1.
+func DefaultPreset(ps []Preset) int {
+	return slices.IndexFunc(ps, func(p Preset) bool { return p.Default })
+}
+
+// Problems with a preset, as Validate reports them.
+type Problem int
+
+const (
+	OK Problem = iota
+	NameEmpty
+	NameTaken
+	DirEmpty
+)
+
+// Validate checks p as it is about to be saved among ps (where it may be
+// already, by its ID): the first problem of its name, and of its folder.
+func Validate(p Preset, ps []Preset) (name, dir Problem) {
+	n := strings.TrimSpace(p.Name)
+	switch {
+	case n == "":
+		name = NameEmpty
+	case slices.ContainsFunc(ps, func(o Preset) bool { return o.ID != p.ID && strings.EqualFold(strings.TrimSpace(o.Name), n) }):
+		name = NameTaken
+	}
+	if strings.TrimSpace(p.Dir) == "" {
+		dir = DirEmpty
+	}
+	return name, dir
 }
 
 // ExpandHome replaces a leading ~ with the home directory.
@@ -124,10 +182,41 @@ func (p Preset) Environ() []string {
 	return env
 }
 
+// ParseEnv reads environment variables written one per line, NAME=value;
+// blank lines, lines starting with # and lines without a name are left out.
+func ParseEnv(text string) map[string]string {
+	env := map[string]string{}
+	for _, line := range strings.Split(text, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		k, v, _ := strings.Cut(line, "=")
+		k = strings.TrimSpace(strings.TrimPrefix(k, "export "))
+		if k == "" {
+			continue
+		}
+		env[k] = strings.TrimSpace(v)
+	}
+	if len(env) == 0 {
+		return nil
+	}
+	return env
+}
+
+// FormatEnv writes env one variable per line, as ParseEnv reads it.
+func FormatEnv(env map[string]string) string {
+	return strings.Join(Preset{Env: env}.Environ(), "\n")
+}
+
 // ShortDir is the preset's folder as the user reads it: ~ for the home
 // directory.
 func (p Preset) ShortDir() string {
-	dir := p.Dir
+	return ShortPath(p.Dir)
+}
+
+// ShortPath is a path as the user reads it: ~ for the home directory.
+func ShortPath(dir string) string {
 	if strings.TrimSpace(dir) == "" {
 		return "~"
 	}
@@ -137,6 +226,15 @@ func (p Preset) ShortDir() string {
 		}
 	}
 	return dir
+}
+
+// LastDir is the last element of the preset's folder, as "my-app".
+func (p Preset) LastDir() string {
+	d := strings.TrimRight(p.ShortDir(), "/")
+	if d == "~" || d == "" {
+		return "~"
+	}
+	return filepath.Base(d)
 }
 
 // UserShell is the user's shell: $SHELL, else /bin/zsh.
