@@ -253,11 +253,22 @@ func newGroup(c *ui.Context, k tokens, rows func(g *group)) {
 	ui.Column(c).Background(k.groupFill).Radius(10).Padding(0, 0, 0, 14).Margin(0, 0, 20, 0).Children(func() { rows(g) })
 }
 
+// groupDivider is the hairline between a group's rows, inset 14 from
+// both of the group's edges, as System Settings draws it (design.md 4.3):
+// the group pads 14 on the left, the divider keeps 14 on the right.
+func groupDivider(c *ui.Context, k tokens) {
+	ui.Box(c).Height(1).Background(k.hairline).Margin(0, groupInset, 0, 0).Shrink(0)
+}
+
+// groupInset is where a group's rows and dividers start and end, from
+// its edges.
+const groupInset = 14
+
 // row is a row of a group: label and a description under it at the left,
 // the control at the right.
 func (g *group) row(c *ui.Context, k tokens, label, desc string, descColor ui.Color, control func()) {
 	if g.rows > 0 {
-		ui.Box(c).Height(1).Background(k.hairline)
+		groupDivider(c, k)
 	}
 	g.rows++
 	ui.Row(c).MinHeight(44).Padding(8, 14, 8, 0).Gap(12).AlignItems(ui.Center).Children(func() {
@@ -499,7 +510,7 @@ func (p *prefsWindow) presetsPage(c *ui.Context, k tokens) {
 	ui.Column(c).Background(k.groupFill).Radius(10).Padding(0, 0, 0, 14).Children(func() {
 		for i, pr := range p.g.presets {
 			if i > 0 {
-				ui.Box(c).Height(1).Background(k.hairline)
+				groupDivider(c, k)
 			}
 			id := pr.ID
 			c.Key(id)
