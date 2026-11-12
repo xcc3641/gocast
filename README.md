@@ -14,6 +14,8 @@ Gocast is a small launcher for the Mac. Press ⌘Space to find and open an app. 
 
 **Presets.** A preset remembers which command to run in which folder, for example `pi` in `~/Projects/my-app`. Add presets in Settings, then type a preset's name in the search panel to open it in the floating terminal.
 
+**Clipboard history.** Press ⌃⌘V to find the text, links, images and files you copied before, and press ↵ to paste into the app you were in. Pin the ones you use often.
+
 It lives in the menu bar, with no Dock icon. It follows your Mac's light or dark appearance and speaks English and Simplified Chinese. It updates itself.
 
 ## Install
@@ -32,7 +34,7 @@ To uninstall:
 curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh | sh -s -- --uninstall
 ```
 
-Your presets and settings stay.
+Your presets, settings and clipboard history stay.
 
 **Requires** macOS 13 or later on Apple silicon. Intel support is planned.
 
@@ -46,6 +48,7 @@ Gocast wants ⌘Space, which Spotlight uses by default. If Spotlight still has i
 | --- | --- | --- |
 | ⌘Space | anywhere | Open the search panel |
 | ⌃\` | anywhere | Show or hide the floating terminal |
+| ⌃⌘V | anywhere | Open clipboard history |
 | ↵ | search panel | Open the selected app or preset |
 | ⌘K | search panel | More actions |
 | ⌘, | search panel | Settings |
@@ -53,11 +56,13 @@ Gocast wants ⌘Space, which Spotlight uses by default. If Spotlight still has i
 | ⌘T | floating terminal | New tab |
 | ⌘W | floating terminal | Close tab |
 
-Both shortcuts can be changed in Settings › Shortcuts.
+All three shortcuts can be changed in Settings › Shortcuts.
 
 ## Your data
 
 Gocast has no account and sends nothing about you anywhere. It only goes online to check for updates, which you can turn off in Settings › General. Your presets and settings are plain files in `~/Library/Application Support/dev.gocast.app/`.
+
+Clipboard history stays on this Mac too, in the same folder, encrypted, and is never uploaded. Passwords from password managers are never kept. Turn it off, clear it, or exclude apps in Settings › Clipboard.
 
 ## Build from source
 

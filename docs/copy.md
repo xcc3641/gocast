@@ -421,13 +421,23 @@ English: No clipboard history yet / Copy something and it shows up here. · Clip
 
 读「乘」不读「×」。时间读系统的相对写法（今天 14:05）。
 
-### 6.11 README「你的数据」（这个功能合进去时再加，现在不改）
+### 6.11 README（已写入 README.md / README.zh-Hans.md）
 
-中文：剪贴板历史也只存在这台 Mac 上（同一个文件夹，加密保存）。密码管理器拷贝的密码不会记。可以在设置 › 剪贴板里关掉、清空，或者选哪些应用不记。
+能做什么：
 
-English: Clipboard history stays on this Mac too, in the same folder, encrypted. Passwords from password managers are never kept. Turn it off, clear it, or exclude apps in Settings › Clipboard.
+中文：按 ⌃⌘V，找回之前拷贝过的文字、链接、图片和文件，按 ↵ 粘贴到刚才的应用。常用的可以置顶。
 
-快捷键表加一行：⌃⌘V · 任何地方 · 打开剪贴板历史 / anywhere / Open clipboard history。
+English: Press ⌃⌘V to find the text, links, images and files you copied before, and press ↵ to paste into the app you were in. Pin the ones you use often.
+
+快捷键表加一行：⌃⌘V · 任何地方 · 打开剪贴板历史 / anywhere / Open clipboard history。三个全局快捷键都可以在设置 › 快捷键里改。
+
+你的数据：
+
+中文：剪贴板历史也只存在这台 Mac 上（同一个文件夹，加密保存），不会上传。密码管理器拷贝的密码不会记。可以在设置 › 剪贴板里关掉、清空，或者选哪些应用不记。
+
+English: Clipboard history stays on this Mac too, in the same folder, encrypted, and is never uploaded. Passwords from password managers are never kept. Turn it off, clear it, or exclude apps in Settings › Clipboard.
+
+卸载说明改成：预设、设置和剪贴板历史会留着。 / Your presets, settings and clipboard history stay.
 
 ## 5. 系统弹窗里会出现的文字（系统要求写明用途）
 
