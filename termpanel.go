@@ -516,9 +516,9 @@ func (p *termPanel) capsules(c *ui.Context, k tokens, s *session) {
 		}
 		room = width - actionsCapsuleWidth(c, segs...) - 3*termInset
 	}
-	noticeCapsule(c, k, termInset, max(room, 160), n)
+	noticeCapsule(c, k, termInset, termInset, max(room, 160), n)
 	if s.exited {
-		actionsCapsule(c, k, termInset, segs...)
+		actionsCapsule(c, k, termInset, termInset, segs...)
 	}
 }
 

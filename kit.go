@@ -172,23 +172,24 @@ func outlineKeycaps(c *ui.Context, k tokens, color ui.Color, caps ...string) {
 // --- Capsules ---
 
 // capsule is a glass capsule floating at the bottom of a glass window,
-// inset from its bottom (8 in the search panel, 12 in the terminal):
-// place it with Left or Right, and fill it.
-func capsule(c *ui.Context, k tokens, inset float32) ui.Element {
+// bottom from its bottom (8 in the search panel, 12 in the terminal; in
+// the search bar alone, centred in it: capsuleBottom): place it with Left
+// or Right, and fill it.
+func capsule(c *ui.Context, k tokens, bottom float32) ui.Element {
 	// The capsules are the system's glass, as the panel: MyGo's glass
 	// over the window's would show what the window painted under it,
 	// nothing, as gray.
-	return ui.Row(c).Absolute().Bottom(inset).Height(capsuleHeight).Radius(capsuleHeight/2).
+	return ui.Row(c).Absolute().Bottom(bottom).Height(capsuleHeight).Radius(capsuleHeight/2).
 		AlignItems(ui.Center).Material(glassOf(k, searchTint)).Border(1, k.capsuleBorder).
 		Shadow(0, 4, 12, 0, ui.RGBA(0, 0, 0, 0.12))
 }
 
-// actionsCapsule is the capsule of actions at the bottom right, as wide
-// as its segments are, never shortened (design.md 2.4): the notice
-// capsule beside it gives way.
-func actionsCapsule(c *ui.Context, k tokens, inset float32, segs ...segment) {
+// actionsCapsule is the capsule of actions at the bottom right, inset
+// from the right and bottom from the bottom, as wide as its segments are,
+// never shortened (design.md 2.4): the notice capsule beside it gives way.
+func actionsCapsule(c *ui.Context, k tokens, inset, bottom float32, segs ...segment) {
 	c.Key("actions")
-	e := capsule(c, k, inset)
+	e := capsule(c, k, bottom)
 	e.Right(inset).Shrink(0).Padding(0, capsulePadR, 0, capsulePadL).Gap(segmentGap).Children(func() {
 		for _, sg := range segs {
 			sg.draw(c, k)
@@ -289,16 +290,17 @@ type notice struct {
 	extra func()
 }
 
-// noticeCapsule shows a notice at the bottom left, at most maxWidth wide,
+// noticeCapsule shows a notice at the bottom left, inset from the left
+// and bottom from the bottom, at most maxWidth wide,
 // its text cut at the end if it must, which its label and tooltip say
 // whole; fading in and out (design.md 2.4, 3.6).
-func noticeCapsule(c *ui.Context, k tokens, inset, maxWidth float32, n notice) {
+func noticeCapsule(c *ui.Context, k tokens, inset, bottom, maxWidth float32, n notice) {
 	size := n.size
 	if size == 0 {
 		size = 12
 	}
 	c.Key("notice")
-	e := capsule(c, k, inset).Left(inset).MaxWidth(maxWidth).Padding(0, 14).Gap(6).Label(n.text).Tooltip(n.text)
+	e := capsule(c, k, bottom).Left(inset).MaxWidth(maxWidth).Padding(0, 14).Gap(6).Label(n.text).Tooltip(n.text)
 	if n.extra != nil {
 		e.Padding(0, 8, 0, 14)
 	}

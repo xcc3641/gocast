@@ -146,6 +146,15 @@ Keys are boxes and end on the line exactly. Text glyphs end inside their advance
 
 Captures: `screens/v9/align-right-before.png` and `align-right-after.png` (light, query "t3", ⌘K open), `align-right-after-capsule.png` (no popup), `align-right-after-en.png`, `align-right-empty-{en,zh-Hans}.png`, `align-right-spinner.png` (a build with the spinner forced on).
 
+### Compact capsule (design.md 2.4, 2.6, measured on 2× captures)
+
+With the search bar alone (66 high) the 「操作 ⌘K」 capsule is centred in it, 15 above and 15 below, with the same right margin 8, so K stays on the right line. Before, it sat at the bottom-right inset 8, as in the expanded panel, 21.5 above and 8.5 below (its box, from the panel's outer edges).
+- `capsuleBottom(h)` in launcher.go takes the panel's height as drawn. At 66 it gives 14.5, counted from inside the panel's 0.5 border, which is where absolute children are placed. From 72.5 up it gives 8, so the expanded capsule is unchanged. In between it moves smoothly: as the panel grows it comes down to the bottom inset, and as it shrinks it rides the bottom edge up to the centre, with no jump.
+- In compact mode the segment is no longer dimmed: ⌘K works there (it opens Gocast's own actions). Only the no-results capsule is dimmed (design.md 2.6).
+- When ⌘K grows the panel into Gocast's own actions, the capsule is gone. Esc or ⌘K folds the list back, and the capsule comes back as it folds. Before, it stayed hidden until the panel was shown again.
+- Measured, light and dark: box edges at 30 px and 102 px of 132, so 15.0 above and 15.0 below. The light rim's outer line is 14.5 / 14.5. The segment's centre is 33.0. K's box ends 41 px from the panel's outer right edge, 20.5, which is 20.0 inside the 0.5 border, the same as before. The expanded capsule is at the same pixel rows before and after.
+- Captures: `screens/v11/compact-capsule-before.png`, `compact-capsule-after-light.png` and `compact-capsule-after-dark.png`.
+
 ### Copies and names (design.md 2.3)
 
 - `apps.Unique`: copies with one bundle ID are one app. The one kept is in /Applications or /System/Applications, else ~/Applications, else the first found.

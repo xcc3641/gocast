@@ -207,6 +207,9 @@ func (l *launcher) view(c *ui.Context) {
 		l.searchBar(c, k)
 		if body > barHeight && l.compact() && l.ownShown {
 			ui.Column(c).Height(body - barHeight).Shrink(0).Children(func() { l.ownList(c, k) })
+			if !l.ownOpen { // folding back to the bar, which has its capsule
+				l.footer(c, k, h)
+			}
 		} else if body > barHeight {
 			ui.Column(c).Height(body - barHeight).Shrink(0).Children(func() {
 				if len(l.results) > 0 {
@@ -215,7 +218,7 @@ func (l *launcher) view(c *ui.Context) {
 					l.noResults(c, k)
 				}
 			})
-			l.footer(c, k)
+			l.footer(c, k, h)
 		}
 		if l.menuOpen {
 			l.actionsMenu(c, k)
@@ -484,8 +487,9 @@ func around(s, mark string) (before, after string) {
 // footer floats over the end of the list, as Raycast's (design.md 2.4):
 // a glass capsule at the bottom right with the primary action and the
 // actions menu, each clickable, and one at the bottom left with a notice,
-// for a few seconds.
-func (l *launcher) footer(c *ui.Context, k tokens) {
+// for a few seconds. h is the panel's height as drawn: with the search bar
+// alone the capsule is centred in it (capsuleBottom).
+func (l *launcher) footer(c *ui.Context, k tokens, h float32) {
 	e, ok := l.current()
 	var segs []segment
 	if ok {
@@ -495,17 +499,31 @@ func (l *launcher) footer(c *ui.Context, k tokens) {
 		}
 		segs = append(segs, segment{label: name, color: k.text, key: ui.KeyEnter, caps: []string{"↩"}, act: l.primary})
 	}
-	// No results: nothing to act on.
+	// No results: nothing to act on. The search bar alone: Gocast's own
+	// actions (design.md 2.5a).
 	segs = append(segs, segment{label: locales.FooterActions(), color: k.textOnGlass, mods: ui.Cmd, key: ui.KeyK,
-		caps: []string{"⌘", "K"}, dim: !ok, act: l.toggleMenu})
+		caps: []string{"⌘", "K"}, dim: !ok && !l.compact(), act: l.toggleMenu})
+	bottom := capsuleBottom(h)
 	if l.notice != "" {
 		n := notice{icon: "checkmark.circle", iconColor: k.textOnGlass, color: k.textOnGlass, text: l.notice}
 		if l.noticeDanger {
 			n.icon, n.iconColor, n.color = "exclamationmark.triangle.fill", k.danger, k.danger
 		}
-		noticeCapsule(c, k, capsuleInset, noticeRoom(panelWidth, actionsCapsuleWidth(c, segs...)), n)
+		noticeCapsule(c, k, capsuleInset, bottom, noticeRoom(panelWidth, actionsCapsuleWidth(c, segs...)), n)
 	}
-	actionsCapsule(c, k, capsuleInset, segs...)
+	actionsCapsule(c, k, capsuleInset, bottom, segs...)
+}
+
+// capsuleBottom is how far the actions capsule is from the bottom of the
+// panel's inside, within its 0.5 border, at the height h (design.md 2.4):
+// 8 at the bottom right of the list, and centred in the search bar alone,
+// 15 above and below from the panel's edges (14.5 within the border),
+// where it would otherwise sit low (22 above, 8 below). Between the two,
+// as the panel grows or shrinks, it comes down to 8 over the panel's first
+// 6.5 and then follows its bottom, so that it never jumps.
+func capsuleBottom(h float32) float32 {
+	const centred = (barHeight-capsuleHeight)/2 - panelBorderWidth // 14.5
+	return capsuleInset + max(0, centred-capsuleInset-(h-barHeight))
 }
 
 // isRunning reports whether the app with the bundle ID runs, as it did
