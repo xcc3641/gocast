@@ -175,3 +175,96 @@ Automation can't cover these:
 - **App icon.** None yet (design.md 1.6). About uses `command.square` 48 as a placeholder.
 - **`mygo build` locales warning.** It warns "The app does not import gocast/locales". This is a false positive and harmless: MyGo's `compiledDirs` splits `go list` output with `strings.Fields`, which breaks on the space in "Application Support". It should be reported upstream.
 - **Unbundled app names.** An unbundled binary gets app names in English from Launch Services; `Localized(App.Locale())` corrects them.
+
+## Terminal theming options
+
+This is what `plugins/terminal` allows, at the MyGo version in go.mod. Sources: `plugins/terminal/{terminal.go,theme.go,ghostty.go,font.go,paint.go,view.go}` and `docs/plugins/terminal.md`.
+
+**Summary:**
+
+| Want | Possible? | How |
+| --- | --- | --- |
+| Glass showing through the terminal | Yes | `Options.Transparent` |
+| A semi-transparent background (a tint) | Yes, indirectly | `Transparent` plus a translucent background on an element under the view. The theme's `Background` alpha is ignored. |
+| Foreground, background, cursor, cursor text, selection colors | Yes | `Theme` fields |
+| A custom 16-color palette | Yes | `Theme.Palette [16]ui.Color`. Colors 16–255 are always xterm's cube and grays. |
+| Ghostty themes | Yes | `GhosttyTheme(name)`, `GhosttyThemes()`, `ParseGhosttyTheme(data)` |
+| Separate light and dark themes, switched live | Yes, automatically | `Options.Theme` + `Options.DarkTheme`, chosen each frame from the window's `c.Theme().Dark` |
+| Change colors in a running terminal | Yes | `SetTheme(light, dark)`, `SetMinimumContrast(r)` |
+| Font family, size, weight, line height, cell width, features | Yes, live | `Font` + `SetFont` |
+| Padding | Only at `New` | `Options.Padding{X, Y}`. There is no setter. |
+| Cursor shape and blink | Only at `New` | `Options.Cursor` (block, bar, underline) and `NoBlink`. Programs may change the shape. |
+
+**Transparency.** `Options.Transparent` leaves the terminal's background undrawn, so the window's material (or anything under the view) shows through. This works like Ghostty's background-opacity:
+- Cells with a background color of their own still draw it.
+- A background a program sets with OSC 11 is also drawn, over the whole view.
+
+`theme.apply` passes only RGB to libghostty-vt, so a translucent `Theme.Background` is not possible. For a tint, paint it under the view:
+
+```go
+ui.Column(c).Grow(1).Background(k.glassTint).Children(func() { // e.g. rgba(246,246,248,0.88)
+	terminal.View(c, term).Grow(1)
+})
+// with
+terminal.New(terminal.Options{Transparent: true, Theme: light, DarkTheme: dark, …})
+```
+
+Still set `Theme.Background` to the color the terminal shows on: the tint over the average glass, e.g. `#F6F6F8` / `#1C1C1E`. It is used in three places:
+- the text under a block cursor (when `CursorText` is zero);
+- the reference for `MinimumContrast` (cells without a background are measured against `Theme.Background`, not against the real glass);
+- the light/dark answer to programs (CSI ? 996 n, mode 2031) and OSC 11 queries.
+
+**Colors.** `terminal.Theme`:
+
+```go
+type Theme struct {
+	Foreground, Background ui.Color
+	Cursor, CursorText     ui.Color // zero: foreground / background
+	Selection, SelectionText ui.Color // zero: foreground at 0.3 alpha / the cell's own colors
+	Search, SearchText, SearchSelected, SearchSelectedText ui.Color // zero: Ghostty's amber/orange
+	Palette [16]ui.Color // black, red, green, yellow, blue, magenta, cyan, white, then bright
+}
+```
+
+`Selection` may be translucent: it is filled over the cells with its alpha. Programs can still change colors (OSC 4/10/11/12) until the terminal resets.
+
+The defaults are `terminal.LightTheme()` and `terminal.DarkTheme()`: MyGo's window background and text with VS Code's palette. Today Gocast uses these, through `Options.Theme == nil`.
+
+**Light and dark.** Give both themes. The view picks `DarkTheme` when the window's theme is dark, every frame, so `GOCAST_APPEARANCE` and a system switch apply live with no code:
+
+```go
+opts.Theme, opts.DarkTheme = gocastLight(), gocastDark()
+// later, e.g. if the tokens change:
+term.SetTheme(gocastLight(), gocastDark())
+```
+
+When the scheme flips, programs that asked (mode 2031) are told, as in Ghostty.
+
+**Minimum contrast.** `Options.MinimumContrast` (a WCAG ratio, 1–21; 0 = off) and `term.SetMinimumContrast(4.5)`. A cell's foreground is darkened or lightened toward black or white, keeping its hue, until it reaches the ratio against the cell's background (`Theme.Background` for cells without one). Faint text is then drawn at half alpha, so faint text stays below the ratio.
+
+**Ghostty themes.**
+- `terminal.GhosttyTheme("Catppuccin Latte")` returns a new `*Theme`. Several hundred themes are embedded in `ghostty_themes.go` (iTerm2-Color-Schemes, MIT).
+- A file in `~/.config/ghostty/themes/<name>` comes first, and an absolute path names a theme file.
+- `terminal.GhosttyThemes()` lists the names, for a picker.
+- `terminal.ParseGhosttyTheme([]byte)` reads Ghostty's format (`palette = N=#rrggbb`, `background`, `foreground`, `cursor-color`, `cursor-text`, `selection-background`, `selection-foreground`). Missing colors come from Light/DarkTheme.
+
+The result is a plain `*Theme`, so it can be adjusted afterwards (e.g. `th.Cursor = accent`).
+
+**Font.** `terminal.Font{Family, Size, Weight, Features, CellWidth, LineHeight, Thicken}`:
+- `Family` is a comma list as `ui.Element.Font` takes it ("monospace" by default; app fonts via `ui.RegisterFont`).
+- `Size` defaults to 13.
+- `LineHeight` is a multiplier (1.2 = Ghostty's adjust-cell-height 20%).
+- Features are OpenType tags ("-calt").
+- `term.SetFont(f)` applies live and resets zoom (Gocast already uses it for the font-size setting and ⌘+/−).
+
+**Padding.** `Options.Padding{X, Y}` in DIPs (default 6×4; negative = none). It is fixed at `New`: there is no `SetPadding`. `PaddingColor` (`PaddingBackground` / `PaddingExtend` / `PaddingExtendAlways`) extends cell backgrounds into the padding. With `Transparent` and `PaddingBackground` the padding shows the glass.
+
+To change the room around the grid live (e.g. room for a floating capsule at the bottom), pad or margin the element around `terminal.View`. With `Transparent` it looks the same as terminal padding. The grid resizes either way, so programs get SIGWINCH.
+
+**Cursor.** `Options.Cursor` (`CursorBlock`, `CursorBar`, `CursorUnderline`) and `Options.NoBlink` are fixed at `New`; programs can change the shape (DECSCUSR). Its color is `Theme.Cursor`, which can be the accent: `th.Cursor = accent`, `th.CursorText = th.Background`.
+
+**Not possible:**
+- per-cell or whole-terminal opacity other than `Transparent` (no background-opacity number);
+- blur or vibrancy of the terminal's own (that comes from the window's `Vibrancy`);
+- a palette beyond the 16 colors;
+- changing padding or cursor style after `New`.
