@@ -42,7 +42,7 @@ func (g *gocast) trayMenu() *mygo.Menu {
 		{Label: locales.TrayTerminal(), Accelerator: g.terminalKey, Click: func(*mygo.MenuItem, *mygo.Window) { g.term.toggle() }},
 		mygo.Separator(),
 		{Label: locales.TraySettings(), Click: func(*mygo.MenuItem, *mygo.Window) { g.openSettings("") }},
-		{Label: locales.TrayCheckUpdates(), Disabled: true},
+		{Label: locales.TrayCheckUpdates(), Click: func(*mygo.MenuItem, *mygo.Window) { g.checkForUpdates() }},
 		mygo.Separator(),
 		{Label: locales.TrayQuit(), Accelerator: "CmdOrCtrl+Q", Click: func(*mygo.MenuItem, *mygo.Window) { mygo.App.Quit() }},
 	})
