@@ -87,7 +87,7 @@ Both can be changed in Settings → 快捷键, and a change takes effect at once
 
 `gofmt -l`, `go vet ./...`, `mygo vet` and `go test ./...` are all clean.
 
-Screenshots are real window captures, in `.airbuild/artifacts/screens/v2/`.
+The v2 screenshots are real window captures, in `.airbuild/artifacts/screens/v2/`.
 
 **Search panel:**
 - Compact at 66. Typing expands it, and a capture taken right after the keystroke already shows the results (no blank frame).
@@ -118,6 +118,15 @@ Screenshots are real window captures, in `.airbuild/artifacts/screens/v2/`.
 - **Other:** About reads "版本 dev" when unpackaged, and the sidebar works with ↑/↓. ⌘W hides the window, and it reopens on the last page.
 - **Material:** the sidebar is on the sidebar material, confirmed in a capture of the real window.
 
+**v3 (designer review), `.airbuild/artifacts/screens/v3/`.** These are on-screen region captures (`screencapture -R`) of the panel's rect over the real desktop, in light mode:
+- **Glass.** The glass now has a tint, rgba(246,246,248,0.72) in light mode and rgba(28,28,30,0.72) in dark mode, so the light panel no longer turns gray.
+- **应用 tag contrast** (text #5E5E63):
+  - Over the real desktop: 6.1:1 on a plain row and 5.1:1 on the selected row.
+  - Over a pure black backdrop (worst case): 4.6:1 plain and 3.85:1 selected. The selected row is still under 4.5 there.
+- **App icons.** Cell 26, with the row's left padding 10 and a gap of 10, so the title starts at 54. A preset's square is 22, centered in the cell. The running dot is centered at row y 35 (`3-search-preset-running-light.png`).
+- **Gocast mark.** 20 seen.
+- **⌘K menu.** Its bottom is 8 above the capsule (`2-search-actions-light.png`).
+
 The earlier skeleton checks still hold (`.airbuild/artifacts/screens/`):
 - Quitting ends the child processes.
 - pi uses the full panel width.
@@ -125,11 +134,9 @@ The earlier skeleton checks still hold (`.airbuild/artifacts/screens/`):
 ## Deviations from design.md
 
 1. **Terminal drop (1.5, 3.2).** AppKit keeps a window's top under the menu bar; a frameless window is a titled one underneath, so `constrainFrameRect` applies. The panel can't slide in from above the screen.
-   - Showing: it drops the 8 DIP from the work area's top edge while fading in (200 ms ease-out).
-   - Hiding: the reverse (150 ms ease-in).
+   - Showing: it fades in while dropping from 12 above its place (180 ms ease-out). It is held at the menu bar for the first frames, so only the last 8 of the 12 show (measured 33→41).
+   - Hiding: it fades out while rising 8 (120 ms ease-in), no higher than the menu bar.
    - With Reduce Motion it only fades.
-
-   This is the opacity fallback that design.md 1.5 allows. Before this fix (in 17f5b93) it moved only those 8 DIP and didn't fade.
 2. **Tray icon (1.6).** `command.square` is drawn ahead of time by AppKit into `assets/tray.png` and embedded. `sfsymbols.Image` returns a `ui.Bitmap` whose pixels can't be read back, and the tray only takes PNG bytes. The drawn magnifier is the fallback.
 3. **Delete confirmation (4.4).** It is drawn inside the editor's modal, not as a `ui.AlertDialog`, because AlertDialog has no destructive style.
    - 删除 has `danger` text.

@@ -22,18 +22,21 @@ import (
 
 // The floating terminal's measures (design.md 3.2–3.6), in DIPs.
 const (
-	termMaxWidth    = 1200
-	termMinHeight   = 360
-	termTopGap      = 8
-	termRadius      = 16
-	tabBarH         = 40
-	tabH            = 26
-	bannerH         = 36
-	endBarH         = 44
-	minFontSize     = 11
-	maxFontSize     = 20
-	slideIn         = 200 * time.Millisecond
-	slideOut        = 150 * time.Millisecond
+	termMaxWidth  = 1200
+	termMinHeight = 360
+	termTopGap    = 8
+	termRadius    = 16
+	tabBarH       = 40
+	tabH          = 26
+	bannerH       = 36
+	endBarH       = 44
+	minFontSize   = 11
+	maxFontSize   = 20
+	slideIn       = 180 * time.Millisecond
+	slideOut      = 120 * time.Millisecond
+	// The panel drops dropIn to its place as it shows, and rises
+	// riseOut as it hides (design.md 1.5).
+	dropIn, riseOut = 12, 8
 	fadeIn, fadeOut = 120 * time.Millisecond, 100 * time.Millisecond
 	animationFrame  = time.Second / 120
 )
@@ -583,9 +586,10 @@ func (p *termPanel) show() {
 	reduce := mygo.Theme.Preferences().ReduceMotion
 	// AppKit keeps a window's top under the menu bar (a frameless window
 	// is a titled one underneath), so the panel cannot slide from above
-	// the screen: it drops the termTopGap from the work area's top edge as
-	// it fades in, design.md 1.5's fallback to opacity.
-	from := wa.Y
+	// the screen: it fades in as it drops the last dropIn (design.md
+	// 1.5), held at the menu bar for the first frames where termTopGap is
+	// less.
+	from := y - dropIn
 	if reduce {
 		from = y
 	}
@@ -606,7 +610,7 @@ func (p *termPanel) show() {
 	}, nil)
 }
 
-// hide lifts the panel to the menu bar as it fades out (fades it only,
+// hide lifts the panel riseOut as it fades out (fades it only,
 // with Reduce Motion), its tabs and programs kept.
 func (p *termPanel) hide() {
 	if !p.shown {
@@ -626,7 +630,7 @@ func (p *termPanel) hide() {
 		return
 	}
 	b := p.win.Bounds()
-	to := p.top // as high as AppKit lets it go (see show)
+	to := max(b.Y-riseOut, p.top) // no higher than AppKit lets it (see show)
 	p.animate(gen, slideOut, easeIn, func(t float64) {
 		p.win.SetOpacity(1 - t)
 		p.win.SetPosition(b.X, b.Y+int(math.Round(float64(to-b.Y)*t)))

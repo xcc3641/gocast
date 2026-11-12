@@ -11,7 +11,12 @@ type tokens struct {
 	text, textSecondary, textOnGlass ui.Color
 	selection, hairline, keycap      ui.Color
 	surface, groupFill               ui.Color
-	danger, warning                  ui.Color
+	// glassTint is laid over the system's glass, which turns mid-gray
+	// over a dark desktop in light mode (and over a light one in dark
+	// mode), too close to textSecondaryOnGlass: it keeps the glass light,
+	// or dark (design.md 1.2).
+	glassTint       ui.Color
+	danger, warning ui.Color
 }
 
 func tokensFor(c *ui.Context) tokens {
@@ -23,14 +28,16 @@ func tokensFor(c *ui.Context) tokens {
 			text: ui.Hex("#F5F5F7"), textSecondary: ui.Hex("#A1A1A6"), textOnGlass: ui.Hex("#AEAEB2"),
 			selection: ui.RGBA(255, 255, 255, 0.10), hairline: ui.RGBA(255, 255, 255, 0.10), keycap: ui.RGBA(255, 255, 255, 0.10),
 			surface: ui.Hex("#1C1C1E"), groupFill: ui.Hex("#2C2C2E"),
-			danger: ui.Hex("#FF6961"), warning: ui.Hex("#FFB340"),
+			glassTint: ui.RGBA(28, 28, 30, 0.72),
+			danger:    ui.Hex("#FF6961"), warning: ui.Hex("#FFB340"),
 		}
 	} else {
 		k = tokens{
 			text: ui.Hex("#1D1D1F"), textSecondary: ui.Hex("#6E6E73"), textOnGlass: ui.Hex("#5E5E63"),
 			selection: ui.RGBA(0, 0, 0, 0.08), hairline: ui.RGBA(0, 0, 0, 0.10), keycap: ui.RGBA(0, 0, 0, 0.06),
 			surface: ui.Hex("#FFFFFF"), groupFill: ui.Hex("#F5F5F7"),
-			danger: ui.Hex("#D70015"), warning: ui.Hex("#A05A00"),
+			glassTint: ui.RGBA(246, 246, 248, 0.72),
+			danger:    ui.Hex("#D70015"), warning: ui.Hex("#A05A00"),
 		}
 	}
 	if p.HighContrast {
@@ -69,10 +76,12 @@ func listTheme(c *ui.Context, k tokens) *ui.Theme {
 	return &t
 }
 
-// panelGlass is the material of the search panel: the system's Liquid
-// Glass where it has it, else the opaque surface (older macOS, Reduce
-// Transparency), as design.md 2.1 asks.
-type panelGlass struct{ fallback ui.Color }
+// panelGlass is the material of the search panel, its capsules and menu:
+// the system's Liquid Glass under tint where it has it, else the opaque
+// fallback (older macOS, Reduce Transparency), as design.md 2.1 asks.
+type panelGlass struct{ fallback, tint ui.Color }
+
+func glassOf(k tokens) panelGlass { return panelGlass{fallback: k.surface, tint: k.glassTint} }
 
 func (g panelGlass) NativeGlass() (ui.NativeGlassSpec, bool) {
 	return glass.Glass{Native: true}.NativeGlass()
@@ -81,6 +90,9 @@ func (g panelGlass) NativeGlass() (ui.NativeGlassSpec, bool) {
 func (g panelGlass) PaintMaterial(p *ui.Painter, box ui.Rect, radii [4]float32) {
 	if p.NativeGlassSupported() && !p.Preferences().ReduceTransparency {
 		p.Hole(box, radii)
+		if g.tint.A > 0 {
+			p.FillRadii(box, radii, g.tint)
+		}
 		return
 	}
 	p.FillRadii(box, radii, g.fallback)

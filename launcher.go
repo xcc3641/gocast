@@ -35,7 +35,10 @@ const (
 	noResultHeight = barHeight + emptyHeight // 260
 	panelRadius    = 26
 	rowHeight      = 40
-	iconSize       = 22
+	iconSize       = 22 // a preset's square, a letter avatar
+	// iconCell is an app icon's frame, wider than iconSize: macOS app
+	// icons have about 10% clear around them (design.md 2.3).
+	iconCell = 26
 
 	marginX, marginTop, marginBottom = 32, 12, 44
 	windowWidth                      = panelWidth + 2*marginX
@@ -185,7 +188,7 @@ func (l *launcher) view(c *ui.Context) {
 
 	c.Key(l.gen)
 	panel := ui.Column(c).Absolute().Left(marginX).Top(marginTop).Width(panelWidth).
-		Radius(panelRadius).Material(panelGlass{fallback: k.surface}).Clip().
+		Radius(panelRadius).Material(glassOf(k)).Clip().
 		Shadow(0, 10, 30, 0, ui.RGBA(0, 0, 0, 0.22))
 	h := target
 	if !reduce {
@@ -240,7 +243,12 @@ func (l *launcher) shortcuts(c *ui.Context) {
 
 func (l *launcher) searchBar(c *ui.Context, k tokens) {
 	ui.Row(c).Height(barHeight).Shrink(0).Padding(0, 20).Gap(12).AlignItems(ui.Center).Children(func() {
-		sfsymbols.Symbol(c, "command.square").Size(20).Color(k.textOnGlass).AccessHidden(true) // Gocast's mark, as the tray's
+		// Gocast's mark, as the tray's: the square is 20 seen (design.md
+		// 1.6), the symbol drawn larger for the room SF Symbols leave
+		// around it, in a box of 20 for the layout.
+		ui.Box(c).Size(20, 20).Center().Shrink(0).AccessHidden(true).Children(func() {
+			sfsymbols.Symbol(c, "command.square").Size(23.5).Color(k.textOnGlass)
+		})
 		field := ui.TextInputBase(c, &l.query).Bind(&l.input).Grow(1).FontSize(20).
 			Placeholder(locales.SearchPlaceholder()).Label(locales.SearchPlaceholder()).
 			OnTextKey(l.textKey)
@@ -360,24 +368,28 @@ func (l *launcher) row(c *ui.Context, k tokens, i int) {
 			subtitle = presetSubtitle(l.g.presets[j])
 		}
 	}
-	ui.Row(c).Height(rowHeight).Padding(0, 12).Gap(12).AlignItems(ui.Center).Children(func() {
+	// Left 10, the icon's cell 26, 10: the title starts 54 from the
+	// panel's edge, the list's 8 included.
+	ui.Row(c).Height(rowHeight).Padding(0, 12, 0, 10).Gap(10).AlignItems(ui.Center).Children(func() {
 		switch {
 		case e.app == nil:
-			ui.Box(c).Size(iconSize, iconSize).Radius(6).Background(k.keycap).Center().Shrink(0).Children(func() {
-				sfsymbols.Symbol(c, "apple.terminal.fill").Size(13).Color(k.text)
+			ui.Box(c).Size(iconCell, iconCell).Center().Shrink(0).Children(func() {
+				ui.Box(c).Size(iconSize, iconSize).Radius(6).Background(k.keycap).Center().Children(func() {
+					sfsymbols.Symbol(c, "apple.terminal.fill").Size(13).Color(k.text)
+				})
 			})
 		default:
 			app := *e.app
-			ui.Box(c).Size(iconSize, iconSize).Shrink(0).Children(func() {
+			ui.Box(c).Size(iconCell, iconCell).Center().Shrink(0).Children(func() {
 				if b := l.icon(app); b != nil {
-					ui.Image(c, b).Size(iconSize, iconSize)
+					ui.Image(c, b).Size(iconCell, iconCell)
 				} else {
 					ui.Avatar(c, it.Title, nil).Size(iconSize, iconSize) // its initial
 				}
 				if l.isRunning(app.ID) {
-					// A dot under the icon, as the Dock's and Raycast's.
-					// 2 under the icon, in the row's height.
-					ui.Box(c).Absolute().Left(iconSize/2-2).Bottom(-6).Size(4, 4).Radius(2).Background(k.textSecondary)
+					// A dot under the icon, as the Dock's and Raycast's:
+					// centered at the row's y 35, the cell spanning 7–33.
+					ui.Box(c).Absolute().Left(iconCell/2-2).Bottom(-4).Size(4, 4).Radius(2).Background(k.textSecondary)
 				}
 			})
 		}
@@ -385,9 +397,9 @@ func (l *launcher) row(c *ui.Context, k tokens, i int) {
 		// shrinking first, the title only once it is all but gone.
 		title := ui.Text(c, it.Title).FontSize(14).TextColor(k.text).SingleLine().Shrink(1)
 		if subtitle != "" {
-			title.Margin(0, -4, 0, 0) // 8 to the subtitle, not the row's 12
+			title.Margin(0, -2, 0, 0) // 8 to the subtitle, not the row's 10
 			ui.Text(c, subtitle).FontSize(13).TextColor(k.textOnGlass).SingleLine().TruncateMiddle().
-				MaxWidth((panelWidth - 16 - 24) * 0.45).Shrink(1000)
+				MaxWidth((panelWidth - 16 - 22) * 0.45).Shrink(1000)
 		}
 		ui.Spacer(c)
 		ui.Text(c, tag).FontSize(12).TextColor(k.textOnGlass).SingleLine().Shrink(0)
@@ -437,7 +449,7 @@ func (l *launcher) footer(c *ui.Context, k tokens) {
 	// nothing, as gray.
 	capsule := func() ui.Element {
 		return ui.Row(c).Absolute().Bottom(capsuleInset).Height(capsuleHeight).Radius(capsuleHeight/2).
-			AlignItems(ui.Center).Material(panelGlass{fallback: k.surface}).Border(1, capsuleBorder(c)).
+			AlignItems(ui.Center).Material(glassOf(k)).Border(1, capsuleBorder(c)).
 			Shadow(0, 4, 12, 0, ui.RGBA(0, 0, 0, 0.12))
 	}
 	// segment is a clickable part of the actions capsule, in the selection
@@ -646,7 +658,7 @@ func (l *launcher) actionsMenu(c *ui.Context, k tokens, reduce bool) {
 	}
 	c.Key("actions")
 	ui.Column(c).Absolute().Right(capsuleInset).Bottom(capsuleInset+capsuleHeight+8).Width(320).MaxHeight(300).
-		Radius(12).Material(panelGlass{fallback: k.surface}).Shadow(0, 8, 24, 0, ui.RGBA(0, 0, 0, 0.20)).Clip().
+		Radius(12).Material(glassOf(k)).Shadow(0, 8, 24, 0, ui.RGBA(0, 0, 0, 0.20)).Clip().
 		TransformOrigin(1, 1).Transition(tr).Children(func() {
 		ui.Row(c).Height(36).Shrink(0).Padding(0, 12).AlignItems(ui.Center).Children(func() {
 			f := ui.TextInputBase(c, &l.menuQuery).Bind(&l.menuInput).Grow(1).FontSize(13).
@@ -917,7 +929,7 @@ func (l *launcher) icon(app mygo.InstalledApp) *ui.Bitmap {
 		scale = max(scale, d.ScaleFactor)
 	}
 	var bitmap *ui.Bitmap
-	if data, err := mygo.Shell.FileIcon(app.Path, int(iconSize*scale)); err == nil {
+	if data, err := mygo.Shell.FileIcon(app.Path, int(iconCell*scale)); err == nil {
 		bitmap, _ = ui.DecodeBitmap(data)
 	}
 	l.icons[app.Path] = bitmap
