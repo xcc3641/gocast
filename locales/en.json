@@ -627,5 +627,427 @@
   "updateRelaunch": "Relaunch",
   "@updateRelaunch": {
     "description": "Update window: default button once installed."
+  },
+  "clipboardHistory": "Clipboard History",
+  "@clipboardHistory": {
+    "description": "The clipboard history: the tray menu's item, the search row, the empty-query Cmd-K row, the clip view's list (for assistive technology)."
+  },
+  "searchTagGocast": "Gocast",
+  "@searchTagGocast": {
+    "description": "Tag at the right of the Clipboard History search row."
+  },
+  "pageClipboard": "Clipboard",
+  "@pageClipboard": {
+    "description": "Settings sidebar and page title: the clipboard history."
+  },
+  "shortcutClipboard": "Open clipboard history",
+  "@shortcutClipboard": {
+    "description": "Shortcuts: the third row's label."
+  },
+  "clipPlaceholder": "Search clipboard history",
+  "@clipPlaceholder": {
+    "description": "The clip view's search field placeholder."
+  },
+  "clipFilterAll": "All Types",
+  "@clipFilterAll": {
+    "description": "Type filter: every kind."
+  },
+  "clipFilterText": "Text",
+  "@clipFilterText": {
+    "description": "Type filter: text."
+  },
+  "clipFilterLinks": "Links",
+  "@clipFilterLinks": {
+    "description": "Type filter: links."
+  },
+  "clipFilterImages": "Images",
+  "@clipFilterImages": {
+    "description": "Type filter: images."
+  },
+  "clipFilterFiles": "Files",
+  "@clipFilterFiles": {
+    "description": "Type filter: files."
+  },
+  "clipSectionPinned": "Pinned",
+  "@clipSectionPinned": {
+    "description": "Clip list section: pinned items."
+  },
+  "clipSectionToday": "Today",
+  "@clipSectionToday": {
+    "description": "Clip list section."
+  },
+  "clipSectionYesterday": "Yesterday",
+  "@clipSectionYesterday": {
+    "description": "Clip list section."
+  },
+  "clipSectionEarlier": "Earlier",
+  "@clipSectionEarlier": {
+    "description": "Clip list section."
+  },
+  "clipImageTitle": "Image {w}×{h}",
+  "@clipImageTitle": {
+    "description": "Clip row title of an image, in pixels.",
+    "placeholders": {
+      "w": {
+        "type": "int",
+        "example": "756"
+      },
+      "h": {
+        "type": "int",
+        "example": "133"
+      }
+    }
+  },
+  "clipFilesTitle": "{n, plural, offset:1 one {{first} and # more} other {{first} and # more}}",
+  "@clipFilesTitle": {
+    "description": "Clip row title of several files; n is how many files there are.",
+    "placeholders": {
+      "first": {
+        "type": "String",
+        "example": "report.pdf"
+      },
+      "n": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "clipUnknownApp": "Unknown app",
+  "@clipUnknownApp": {
+    "description": "Info: the app copied from is not known."
+  },
+  "clipInfoSource": "Source",
+  "@clipInfoSource": {
+    "description": "Info row label."
+  },
+  "clipInfoCopied": "Copied",
+  "@clipInfoCopied": {
+    "description": "Info row label: when it was last copied."
+  },
+  "clipInfoCharacters": "Characters",
+  "@clipInfoCharacters": {
+    "description": "Info row label."
+  },
+  "clipInfoDimensions": "Dimensions",
+  "@clipInfoDimensions": {
+    "description": "Info row label of an image."
+  },
+  "clipInfoSize": "Size",
+  "@clipInfoSize": {
+    "description": "Info row label."
+  },
+  "clipInfoLocation": "Location",
+  "@clipInfoLocation": {
+    "description": "Info row label of files: their folder."
+  },
+  "clipInfoLink": "Link",
+  "@clipInfoLink": {
+    "description": "Info row label of a link: its domain."
+  },
+  "clipDimensions": "{w} × {h}",
+  "@clipDimensions": {
+    "description": "Info value: an image's size in pixels.",
+    "placeholders": {
+      "w": {
+        "type": "int",
+        "example": "756"
+      },
+      "h": {
+        "type": "int",
+        "example": "133"
+      }
+    }
+  },
+  "clipFileMissing": "This file has been moved or deleted.",
+  "@clipFileMissing": {
+    "description": "Preview and notice: a file of the item is gone."
+  },
+  "clipEmptyTitle": "No clipboard history yet",
+  "@clipEmptyTitle": {
+    "description": "Empty state title."
+  },
+  "clipEmptyBody": "Copy something and it shows up here.",
+  "@clipEmptyBody": {
+    "description": "Empty state description."
+  },
+  "clipOffTitle": "Clipboard history is off",
+  "@clipOffTitle": {
+    "description": "Recording is off: title (empty state and banner)."
+  },
+  "clipOffBody": "Turn it on and what you copy is kept here.",
+  "@clipOffBody": {
+    "description": "Recording is off: description."
+  },
+  "clipTurnOn": "Turn On",
+  "@clipTurnOn": {
+    "description": "Recording is off: the button turning it on."
+  },
+  "clipNoResultsHint": "Try words from the item itself. Pinyin isn’t matched here.",
+  "@clipNoResultsHint": {
+    "description": "Under the clip view's no-results title."
+  },
+  "clipNoText": "No text",
+  "@clipNoText": {
+    "description": "The type filter leaves nothing: text."
+  },
+  "clipNoLinks": "No links",
+  "@clipNoLinks": {
+    "description": "The type filter leaves nothing: links."
+  },
+  "clipNoImages": "No images",
+  "@clipNoImages": {
+    "description": "The type filter leaves nothing: images."
+  },
+  "clipNoFiles": "No files",
+  "@clipNoFiles": {
+    "description": "The type filter leaves nothing: files."
+  },
+  "clipUnreadableTitle": "Can’t read clipboard history",
+  "@clipUnreadableTitle": {
+    "description": "The saved history can't be opened: title."
+  },
+  "clipUnreadableBody": "Your saved history can’t be opened. Go to Settings › Clipboard and click Clear History… to start fresh.",
+  "@clipUnreadableBody": {
+    "description": "The saved history can't be opened: description."
+  },
+  "clipPasteTo": "Paste to {app}",
+  "@clipPasteTo": {
+    "description": "Primary action: paste into the app the user was in.",
+    "placeholders": {
+      "app": {
+        "type": "String",
+        "example": "Notes"
+      }
+    }
+  },
+  "clipPaste": "Paste",
+  "@clipPaste": {
+    "description": "Primary action: paste, the app not known."
+  },
+  "clipCopy": "Copy to Clipboard",
+  "@clipCopy": {
+    "description": "Action: put the item on the clipboard."
+  },
+  "clipPastePlain": "Paste as Plain Text",
+  "@clipPastePlain": {
+    "description": "Action (text only)."
+  },
+  "clipOpenLink": "Open Link",
+  "@clipOpenLink": {
+    "description": "Action (links only)."
+  },
+  "clipPin": "Pin",
+  "@clipPin": {
+    "description": "Action."
+  },
+  "clipUnpin": "Unpin",
+  "@clipUnpin": {
+    "description": "Action."
+  },
+  "clipClear": "Clear History…",
+  "@clipClear": {
+    "description": "Action and Settings button: clear the history, after a confirmation."
+  },
+  "clipCopiedPressCmdV": "Copied. Press ⌘V to paste.",
+  "@clipCopiedPressCmdV": {
+    "description": "Notice: Return copied, as Gocast may not paste yet."
+  },
+  "clipDeleted": "Deleted",
+  "@clipDeleted": {
+    "description": "Notice."
+  },
+  "clipPinned": "Pinned",
+  "@clipPinned": {
+    "description": "Notice."
+  },
+  "clipUnpinned": "Unpinned",
+  "@clipUnpinned": {
+    "description": "Notice."
+  },
+  "clipAXTitle": "Allow Gocast to paste for you",
+  "@clipAXTitle": {
+    "description": "Accessibility banner: title."
+  },
+  "clipAXBody": "Gocast presses ⌘V for you. macOS asks you to turn on Gocast in Accessibility first. It’s only used to paste.",
+  "@clipAXBody": {
+    "description": "Accessibility banner: description."
+  },
+  "clipOpenSettings": "Open System Settings",
+  "@clipOpenSettings": {
+    "description": "Opens System Settings › Privacy & Security › Accessibility."
+  },
+  "clipJustCopy": "Just Copy",
+  "@clipJustCopy": {
+    "description": "Accessibility banner: turns Press Return to paste off."
+  },
+  "clipAXReady": "Ready to paste",
+  "@clipAXReady": {
+    "description": "Accessibility banner, once allowed."
+  },
+  "clipKeep": "Keep clipboard history",
+  "@clipKeep": {
+    "description": "Settings › Clipboard: switch."
+  },
+  "clipKeepHint": "Stored only on this Mac, encrypted, never uploaded.",
+  "@clipKeepHint": {
+    "description": "Settings › Clipboard: the switch's description."
+  },
+  "clipRetention": "Keep for",
+  "@clipRetention": {
+    "description": "Settings › Clipboard: how long items are kept."
+  },
+  "clipRetentionDay": "1 Day",
+  "@clipRetentionDay": {
+    "description": "Retention option."
+  },
+  "clipRetentionWeek": "1 Week",
+  "@clipRetentionWeek": {
+    "description": "Retention option."
+  },
+  "clipRetentionMonth": "1 Month",
+  "@clipRetentionMonth": {
+    "description": "Retention option."
+  },
+  "clipRetention3Months": "3 Months",
+  "@clipRetention3Months": {
+    "description": "Retention option."
+  },
+  "clipRetentionForever": "Forever",
+  "@clipRetentionForever": {
+    "description": "Retention option."
+  },
+  "clipRetentionHint": "Pinned items never expire.",
+  "@clipRetentionHint": {
+    "description": "Settings › Clipboard: the retention's description."
+  },
+  "clipPasteOnEnter": "Press Return to paste",
+  "@clipPasteOnEnter": {
+    "description": "Settings › Clipboard: switch."
+  },
+  "clipPasteOnEnterHint": "Needs Gocast turned on in Accessibility. When off, Return only copies.",
+  "@clipPasteOnEnterHint": {
+    "description": "Settings › Clipboard: the switch's description."
+  },
+  "clipNoAXHint": "Gocast isn’t turned on in Accessibility yet.",
+  "@clipNoAXHint": {
+    "description": "Settings › Clipboard: the switch's description while Gocast may not paste."
+  },
+  "clipIgnoredTitle": "Don’t keep from these apps",
+  "@clipIgnoredTitle": {
+    "description": "Settings › Clipboard: group title."
+  },
+  "clipIgnoredHint": "Nothing you copy in these apps is kept. Passwords from password managers are never kept anyway.",
+  "@clipIgnoredHint": {
+    "description": "Settings › Clipboard: group description."
+  },
+  "clipAddApp": "Add App…",
+  "@clipAddApp": {
+    "description": "Settings › Clipboard: the + button (for assistive technology)."
+  },
+  "clipRemoveApp": "Remove",
+  "@clipRemoveApp": {
+    "description": "Settings › Clipboard: the − button (for assistive technology)."
+  },
+  "clipAddButton": "Add",
+  "@clipAddButton": {
+    "description": "The app chooser's confirm button."
+  },
+  "clipClearTitle": "Clear clipboard history?",
+  "@clipClearTitle": {
+    "description": "Clear confirmation: title."
+  },
+  "clipClearBody": "Pinned items stay. Everything else is deleted for good.",
+  "@clipClearBody": {
+    "description": "Clear confirmation: description."
+  },
+  "clipClearBodyUnreadable": "All saved history is deleted, including pinned items. This can’t be undone.",
+  "@clipClearBodyUnreadable": {
+    "description": "Clear confirmation while the history can't be read."
+  },
+  "clipClearConfirm": "Clear",
+  "@clipClearConfirm": {
+    "description": "Clear confirmation: the button clearing."
+  },
+  "clipLabelText": "Text",
+  "@clipLabelText": {
+    "description": "Screen reader: a text row's kind."
+  },
+  "clipLabelLink": "Link",
+  "@clipLabelLink": {
+    "description": "Screen reader: a link row's kind."
+  },
+  "clipLabelImage": "Image, {w} by {h}",
+  "@clipLabelImage": {
+    "description": "Screen reader: an image row.",
+    "placeholders": {
+      "w": {
+        "type": "int",
+        "example": "756"
+      },
+      "h": {
+        "type": "int",
+        "example": "133"
+      }
+    }
+  },
+  "clipLabelFile": "File",
+  "@clipLabelFile": {
+    "description": "Screen reader: a file row's kind."
+  },
+  "clipLabelFiles": "{n, plural, offset:1 one {{first} and # more, Files} other {{first} and # more, Files}}",
+  "@clipLabelFiles": {
+    "description": "Screen reader: a row of several files; n is how many.",
+    "placeholders": {
+      "first": {
+        "type": "String",
+        "example": "report.pdf"
+      },
+      "n": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "clipLabelPinned": "Pinned",
+  "@clipLabelPinned": {
+    "description": "Screen reader: after a pinned row."
+  },
+  "clipHeading": "{name}, heading",
+  "@clipHeading": {
+    "description": "Screen reader: a section title of the clip list.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Today"
+      }
+    }
+  },
+  "clipPreview": "Preview",
+  "@clipPreview": {
+    "description": "Screen reader: the preview."
+  },
+  "clipTypeLabel": "Type, {current}",
+  "@clipTypeLabel": {
+    "description": "Screen reader: the type filter button.",
+    "placeholders": {
+      "current": {
+        "type": "String",
+        "example": "All Types"
+      }
+    }
+  },
+  "clipInfoLabel": "{label}, {value}",
+  "@clipInfoLabel": {
+    "description": "Screen reader: an info row.",
+    "placeholders": {
+      "label": {
+        "type": "String",
+        "example": "Source"
+      },
+      "value": {
+        "type": "String",
+        "example": "Safari"
+      }
+    }
   }
 }

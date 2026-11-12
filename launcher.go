@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/egoist/mygo"
-	"github.com/egoist/mygo/i18n"
 	"github.com/egoist/mygo/ui"
 
 	"gocast/internal/apps"
@@ -33,9 +32,13 @@ const (
 	expandedHeight = barHeight + listHeight  // 475
 	noResultHeight = barHeight + emptyHeight // 260
 
-	// The window's room around the panel, for its shadow.
+	// The window's room around the panel, for its shadow. The window is
+	// as wide as the clipboard view (design.md 2.8.1), the search panel
+	// centred in it: the view grows 60 at each side, its middle where the
+	// search panel's is.
 	marginX, marginTop, marginBottom = shadowLeft, shadowTop, shadowBottom
-	windowWidth                      = panelWidth + 2*marginX
+	windowWidth                      = clipWidth + 2*marginX
+	searchLeft                       = marginX + (clipWidth-panelWidth)/2
 	windowHeight                     = marginTop + expandedHeight + marginBottom
 
 	// restoreFor is how long the panel keeps its query and choice once
@@ -50,12 +53,17 @@ const (
 	noticeFor  = 4 * time.Second
 )
 
-// entry is what a search result opens: an app, or a terminal preset.
+// entry is what a search result opens: an app, a terminal preset, or the
+// clipboard history.
 type entry struct {
 	app    *mygo.InstalledApp
 	place  string // what tells the app from another of its name: its file name or folder (apps.Places)
 	preset string // its ID, when app is nil
+	clip   bool   // the clipboard history's row (design.md 2.3)
 }
+
+// clipItemID is the search item of the clipboard history's row.
+const clipItemID = "gocast:clipboard"
 
 // action is an item of the actions menu (Cmd-K).
 type action struct {
@@ -114,10 +122,17 @@ type launcher struct {
 	ownOpen   bool
 	ownChosen int
 	ownShown  bool
+
+	// clip is the clipboard history's view, which the panel turns into
+	// (design.md 2.8).
+	clip *clipView
+	// regionW is the width of the panel the input region is for.
+	regionW float32
 }
 
 func newLauncher(g *gocast) *launcher {
 	l := &launcher{g: g, icons: map[string]*ui.Bitmap{}, running: map[string]bool{}, filtered: noQuery}
+	l.clip = newClipView(l)
 	l.win = mygo.NewWindow(mygo.WindowOptions{
 		Title:         appName,
 		Panel:         true,
@@ -175,13 +190,15 @@ func (l *launcher) view(c *ui.Context) {
 	c.Root().Background(ui.Transparent)
 	reduce := c.Preferences().ReduceMotion
 
+	if l.clip.open {
+		l.setRegion(clipWidth, expandedHeight)
+		l.clip.view(c, k)
+		return
+	}
 	l.shortcuts(c)
 
 	target := l.targetHeight()
-	if target != l.region {
-		l.region = target
-		l.win.SetInputRegion([]mygo.Rectangle{{X: marginX, Y: marginTop, Width: panelWidth, Height: int(target)}})
-	}
+	l.setRegion(panelWidth, target)
 	// What the panel lays out below its bar: the results, the "no
 	// results" message, or, while it shrinks to its bar, what it showed.
 	body := target
@@ -196,7 +213,7 @@ func (l *launcher) view(c *ui.Context) {
 	}
 
 	c.Key(l.gen)
-	panel := ui.Column(c).Absolute().Left(marginX).Top(marginTop).Width(panelWidth).
+	panel := ui.Column(c).Absolute().Left(searchLeft).Top(marginTop).Width(panelWidth).
 		Material(glassOf(k, searchTint)).Clip()
 	panelShadow(panelOutline(panel, k), k)
 	h := target
@@ -228,6 +245,17 @@ func (l *launcher) view(c *ui.Context) {
 		l.announce = false
 		c.Announce(l.notice)
 	}
+}
+
+// setRegion takes the mouse over the panel, w wide and h high, centred in
+// the window; it goes through the rest of it.
+func (l *launcher) setRegion(w, h float32) {
+	if w == l.regionW && h == l.region {
+		return
+	}
+	l.regionW, l.region = w, h
+	left := marginX + (clipWidth-w)/2
+	l.win.SetInputRegion([]mygo.Rectangle{{X: int(left), Y: marginTop, Width: int(w), Height: int(h)}})
 }
 
 // shortcuts are the panel's Command keys, whatever has the focus.
@@ -376,7 +404,9 @@ func (l *launcher) row(c *ui.Context, k tokens, i int) {
 	e := l.entries[l.results[i]]
 	subtitle := e.place // what tells an app from another of its name (design.md 2.3)
 	tag := locales.SearchTagApp()
-	if e.app == nil {
+	if e.clip {
+		tag = locales.SearchTagGocast()
+	} else if e.app == nil {
 		tag = locales.SearchTagPreset()
 		if j := presets.Find(l.g.presets, e.preset); j >= 0 {
 			subtitle = presetSubtitle(l.g.presets[j])
@@ -384,6 +414,8 @@ func (l *launcher) row(c *ui.Context, k tokens, i int) {
 	}
 	listRow(c, k, false, func() {
 		switch {
+		case e.clip:
+			symbolSquare(c, k, "doc.on.clipboard")
 		case e.app == nil:
 			presetSquare(c, k)
 		default:
@@ -421,9 +453,9 @@ func (l *launcher) row(c *ui.Context, k tokens, i int) {
 // shown; a preset's folder after.
 func (l *launcher) rowLabel(item int) string {
 	it, e := l.items[item], l.entries[item]
-	sep := ", "
-	if strings.HasPrefix(i18n.Locale(), "zh") {
-		sep = "，"
+	sep := listSep()
+	if e.clip {
+		return it.Title + sep + locales.SearchTagGocast()
 	}
 	if e.app != nil {
 		s := it.Title
@@ -445,10 +477,7 @@ func (l *launcher) rowLabel(item int) string {
 // presetLabel is what assistive technology reads of a preset's row:
 // "my-app · pi, Preset, ~/Projects/my-app".
 func presetLabel(p presets.Preset) string {
-	sep := ", "
-	if strings.HasPrefix(i18n.Locale(), "zh") {
-		sep = "，"
-	}
+	sep := listSep()
 	return presetTitle(p) + sep + locales.SearchTagPreset() + sep + p.ShortDir()
 }
 
@@ -497,7 +526,7 @@ func (l *launcher) footer(c *ui.Context, k tokens, h float32) {
 	var segs []segment
 	if ok {
 		name := locales.FooterOpen()
-		if e.app == nil {
+		if e.app == nil && !e.clip {
 			name = locales.FooterOpenInTerminal()
 		}
 		segs = append(segs, segment{label: name, color: k.text, key: ui.KeyEnter, caps: []string{"↩"}, act: l.primary})
@@ -595,6 +624,9 @@ func (l *launcher) actions() []action {
 	e, ok := l.current()
 	if !ok {
 		return nil
+	}
+	if e.clip {
+		return []action{{"doc.on.clipboard", locales.ActionOpen(), []string{"↩"}, l.primary}}
 	}
 	if e.app != nil {
 		app := *e.app
@@ -717,15 +749,16 @@ type ownAction struct {
 
 // gocastDo is what Gocast's own actions do.
 type gocastDo struct {
-	terminal, addPreset, settings, quit func()
-	preset                              func(id string)
+	terminal, clipboard, addPreset, settings, quit func()
+	preset                                         func(id string)
 }
 
 // gocastActions are Gocast's own actions (design.md 2.5a, copy.md 2.2):
 // show the floating terminal, with its shortcut; under Open with Preset,
-// if there are any, each preset, to open it in a new tab; add a preset;
-// then Settings… and Quit Gocast.
-func gocastActions(ps []presets.Preset, terminalKey string, do gocastDo) []ownAction {
+// if there are any, each preset, to open it in a new tab; the clipboard
+// history, with its shortcut; add a preset; then Settings… and Quit
+// Gocast.
+func gocastActions(ps []presets.Preset, terminalKey, clipKey string, do gocastDo) []ownAction {
 	as := []ownAction{{symbol: "apple.terminal", label: locales.MenuTerminal(), caps: shortcut.Caps(terminalKey), run: do.terminal}}
 	for i, p := range ps {
 		id := p.ID
@@ -736,6 +769,7 @@ func gocastActions(ps []presets.Preset, terminalKey string, do gocastDo) []ownAc
 		as = append(as, a)
 	}
 	return append(as,
+		ownAction{symbol: "doc.on.clipboard", label: locales.ClipboardHistory(), caps: shortcut.Caps(clipKey), run: do.clipboard},
 		ownAction{symbol: "plus", label: locales.PresetsAdd(), run: do.addPreset},
 		ownAction{symbol: "gearshape", label: locales.TraySettings(), caps: []string{"⌘", ","}, run: do.settings, divided: true},
 		ownAction{symbol: "power", label: locales.TrayQuit(), run: do.quit},
@@ -760,8 +794,9 @@ func ownListHeight(as []ownAction) float32 {
 }
 
 func (l *launcher) openOwn() {
-	l.own = gocastActions(l.g.presets, l.g.terminalKey, gocastDo{
+	l.own = gocastActions(l.g.presets, l.g.terminalKey, l.g.clipKey, gocastDo{
 		terminal:  func() { l.hide(); l.g.term.open() },
+		clipboard: func() { l.openClip(true) },
 		preset:    func(id string) { l.hide(); l.g.term.openPreset(id, true) },
 		addPreset: func() { l.hide(); l.g.addPreset() },
 		settings:  func() { l.hide(); l.g.openSettings("") },
@@ -869,6 +904,10 @@ func (l *launcher) act(second bool) {
 		return
 	}
 	l.g.record(l.currentID(), l.query)
+	if e.clip {
+		l.openClip(true)
+		return
+	}
 	l.hide() // the keyboard goes back to the app the user was in first
 	if e.app == nil {
 		l.g.term.openPreset(e.preset, second)
@@ -924,6 +963,12 @@ func (l *launcher) rebuild() {
 		l.items = append(l.items, it)
 		l.entries = append(l.entries, entry{preset: p.ID})
 	}
+	// The clipboard history, by its names in both languages and the words
+	// users say for it (copy.md 6.1).
+	clip := search.NewItem(clipItemID, locales.ClipboardHistory(), clipSearchWords...)
+	clip.Score = l.g.usage.Score(clipItemID, now)
+	l.items = append(l.items, clip)
+	l.entries = append(l.entries, entry{clip: true})
 	for i := range l.apps {
 		app := &l.apps[i]
 		id := "app:" + app.ID
@@ -1032,6 +1077,9 @@ func (l *launcher) load() {
 		l.win.Update(func() {
 			l.apps, l.alts, l.places, l.loading, l.loaded = found, alts, places, false, true
 			l.rebuild()
+			if l.g.prefs != nil {
+				l.g.prefs.win.Invalidate() // Settings › Clipboard shows the apps it ignores
+			}
 		})
 	}()
 }
@@ -1043,9 +1091,13 @@ func (l *launcher) load() {
 // selected so that typing replaces it; else empty, its bar alone.
 func (l *launcher) show() {
 	if l.win.IsVisible() {
+		if l.clip.open {
+			l.leaveClip()
+		}
 		l.input.Focus()
 		return
 	}
+	l.clip.open = false
 	restore := !l.hiddenAt.IsZero() && time.Since(l.hiddenAt) < restoreFor
 	if !restore {
 		l.query, l.filtered, l.results, l.moved = "", noQuery, nil, false
@@ -1074,12 +1126,22 @@ func (l *launcher) hide() {
 	if !l.win.IsVisible() {
 		return
 	}
-	l.hiddenAt = time.Now()
+	if l.clip.open {
+		l.clip.closed()
+	} else {
+		l.hiddenAt = time.Now() // the clipboard view isn't restored (design.md 2.8.1)
+	}
 	l.menuOpen, l.ownOpen = false, false
 	l.win.Hide()
 }
 
+// toggle shows or hides the search panel: from the clipboard view, it goes
+// back to the search panel, its bar alone (design.md 2.8.1).
 func (l *launcher) toggle() {
+	if l.win.IsVisible() && l.clip.open {
+		l.leaveClip()
+		return
+	}
 	if l.win.IsVisible() {
 		l.hide()
 	} else {

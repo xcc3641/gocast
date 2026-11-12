@@ -486,10 +486,14 @@ func listSymbol(c *ui.Context, k tokens, symbol string) {
 }
 
 // presetSquare is a preset's icon: a terminal on a keycap-gray square.
-func presetSquare(c *ui.Context, k tokens) {
+func presetSquare(c *ui.Context, k tokens) { symbolSquare(c, k, "apple.terminal.fill") }
+
+// symbolSquare is a symbol on a keycap-gray square, as a preset's icon:
+// Gocast's own rows in the results, as the clipboard history's.
+func symbolSquare(c *ui.Context, k tokens, symbol string) {
 	listIcon(c, func() {
 		ui.Box(c).Size(iconSize, iconSize).Radius(6).Background(k.keycap).Center().Children(func() {
-			sfsymbols.Symbol(c, "apple.terminal.fill").Size(13).Color(k.text)
+			sfsymbols.Symbol(c, symbol).Size(13).Color(k.text)
 		})
 	})
 }

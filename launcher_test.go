@@ -41,17 +41,19 @@ func TestGocastActions(t *testing.T) {
 	var did []string
 	do := gocastDo{
 		terminal:  func() { did = append(did, "terminal") },
+		clipboard: func() { did = append(did, "clipboard") },
 		preset:    func(id string) { did = append(did, "preset "+id) },
 		addPreset: func() { did = append(did, "add") },
 		settings:  func() { did = append(did, "settings") },
 		quit:      func() { did = append(did, "quit") },
 	}
-	as := gocastActions(ps, "Ctrl+`", do)
+	as := gocastActions(ps, "Ctrl+`", "Ctrl+Cmd+V", do)
 	want := []string{
 		locales.MenuTerminal() + " ⌃`",
 		"[" + locales.MenuWithPreset() + "]",
 		presetTitle(ps[0]) + " · ~",
 		presetTitle(ps[1]) + " · my-app",
+		locales.ClipboardHistory() + " ⌃⌘V",
 		locales.PresetsAdd(),
 		"---",
 		locales.TraySettings() + " ⌘,",
@@ -63,7 +65,7 @@ func TestGocastActions(t *testing.T) {
 	for _, a := range as {
 		a.run()
 	}
-	if want := []string{"terminal", "preset a", "preset b", "add", "settings", "quit"}; !slices.Equal(did, want) {
+	if want := []string{"terminal", "preset a", "preset b", "clipboard", "add", "settings", "quit"}; !slices.Equal(did, want) {
 		t.Errorf("ran %q, want %q", did, want)
 	}
 	// Presets read as in the results; the other rows, their names.
@@ -74,16 +76,16 @@ func TestGocastActions(t *testing.T) {
 		t.Errorf("terminal row %+v, preset row %+v", as[0], as[1])
 	}
 
-	// No presets: no section, straight to Add Preset; the terminal's
-	// shortcut as the user set it.
-	as = gocastActions(nil, "Cmd+Alt+T", do)
-	want = []string{locales.MenuTerminal() + " ⌥⌘T", locales.PresetsAdd(), "---", locales.TraySettings() + " ⌘,", locales.TrayQuit()}
+	// No presets: no section, straight to the clipboard history; the
+	// shortcuts as the user set them.
+	as = gocastActions(nil, "Cmd+Alt+T", "Cmd+Shift+V", do)
+	want = []string{locales.MenuTerminal() + " ⌥⌘T", locales.ClipboardHistory() + " ⇧⌘V", locales.PresetsAdd(), "---", locales.TraySettings() + " ⌘,", locales.TrayQuit()}
 	if got := rows(as); !slices.Equal(got, want) {
 		t.Errorf("rows without presets:\n got %q\nwant %q", got, want)
 	}
 	// No shortcut registered: no keys.
-	if as := gocastActions(nil, "", do); len(as[0].caps) != 0 {
-		t.Errorf("caps without a shortcut: %q", as[0].caps)
+	if as := gocastActions(nil, "", "", do); len(as[0].caps) != 0 || len(as[1].caps) != 0 {
+		t.Errorf("caps without a shortcut: %q, %q", as[0].caps, as[1].caps)
 	}
 }
 
@@ -102,18 +104,18 @@ func TestGocastActionsCopy(t *testing.T) {
 }
 
 func TestOwnListHeight(t *testing.T) {
-	// design.md 2.5a: the panel 351 high with 2 presets, 243 with none,
+	// design.md 2.5a: the panel 391 high with 2 presets, 283 with none,
 	// 475 at most.
 	ps := []presets.Preset{{ID: "a", Name: "Shell", Dir: "~"}, {ID: "b", Name: "pi", Dir: "~", Command: "pi"}}
 	for _, c := range []struct {
 		n    int
 		want float32
-	}{{2, 351}, {0, 243}, {20, expandedHeight}} {
+	}{{2, 391}, {0, 283}, {20, expandedHeight}} {
 		many := ps
 		if c.n > 2 {
 			many = make([]presets.Preset, c.n)
 		}
-		if got := barHeight + ownListHeight(gocastActions(many[:c.n], "Ctrl+`", gocastDo{})); got != c.want {
+		if got := barHeight + ownListHeight(gocastActions(many[:c.n], "Ctrl+`", "Ctrl+Cmd+V", gocastDo{})); got != c.want {
 			t.Errorf("%d presets: panel %v high, want %v", c.n, got, c.want)
 		}
 	}

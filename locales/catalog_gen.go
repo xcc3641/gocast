@@ -1939,3 +1939,1213 @@ func UpdateRelaunch() string { return In(i18n.Locale()).UpdateRelaunch() }
 func (msgs Messages) UpdateRelaunch() string {
 	return Catalog.Format(msgs.locale, "updateRelaunch", nil)
 }
+
+// ClipboardHistory says "Clipboard History"
+// in the language the app shows.
+//
+// The clipboard history: the tray menu's item, the search row, the
+// empty-query Cmd-K row, the clip view's list (for assistive technology).
+func ClipboardHistory() string { return In(i18n.Locale()).ClipboardHistory() }
+
+// ClipboardHistory says "Clipboard History"
+// in the language of msgs.
+//
+// The clipboard history: the tray menu's item, the search row, the
+// empty-query Cmd-K row, the clip view's list (for assistive technology).
+func (msgs Messages) ClipboardHistory() string {
+	return Catalog.Format(msgs.locale, "clipboardHistory", nil)
+}
+
+// SearchTagGocast says "Gocast"
+// in the language the app shows.
+//
+// Tag at the right of the Clipboard History search row.
+func SearchTagGocast() string { return In(i18n.Locale()).SearchTagGocast() }
+
+// SearchTagGocast says "Gocast"
+// in the language of msgs.
+//
+// Tag at the right of the Clipboard History search row.
+func (msgs Messages) SearchTagGocast() string {
+	return Catalog.Format(msgs.locale, "searchTagGocast", nil)
+}
+
+// PageClipboard says "Clipboard"
+// in the language the app shows.
+//
+// Settings sidebar and page title: the clipboard history.
+func PageClipboard() string { return In(i18n.Locale()).PageClipboard() }
+
+// PageClipboard says "Clipboard"
+// in the language of msgs.
+//
+// Settings sidebar and page title: the clipboard history.
+func (msgs Messages) PageClipboard() string {
+	return Catalog.Format(msgs.locale, "pageClipboard", nil)
+}
+
+// ShortcutClipboard says "Open clipboard history"
+// in the language the app shows.
+//
+// Shortcuts: the third row's label.
+func ShortcutClipboard() string { return In(i18n.Locale()).ShortcutClipboard() }
+
+// ShortcutClipboard says "Open clipboard history"
+// in the language of msgs.
+//
+// Shortcuts: the third row's label.
+func (msgs Messages) ShortcutClipboard() string {
+	return Catalog.Format(msgs.locale, "shortcutClipboard", nil)
+}
+
+// ClipPlaceholder says "Search clipboard history"
+// in the language the app shows.
+//
+// The clip view's search field placeholder.
+func ClipPlaceholder() string { return In(i18n.Locale()).ClipPlaceholder() }
+
+// ClipPlaceholder says "Search clipboard history"
+// in the language of msgs.
+//
+// The clip view's search field placeholder.
+func (msgs Messages) ClipPlaceholder() string {
+	return Catalog.Format(msgs.locale, "clipPlaceholder", nil)
+}
+
+// ClipFilterAll says "All Types"
+// in the language the app shows.
+//
+// Type filter: every kind.
+func ClipFilterAll() string { return In(i18n.Locale()).ClipFilterAll() }
+
+// ClipFilterAll says "All Types"
+// in the language of msgs.
+//
+// Type filter: every kind.
+func (msgs Messages) ClipFilterAll() string {
+	return Catalog.Format(msgs.locale, "clipFilterAll", nil)
+}
+
+// ClipFilterText says "Text"
+// in the language the app shows.
+//
+// Type filter: text.
+func ClipFilterText() string { return In(i18n.Locale()).ClipFilterText() }
+
+// ClipFilterText says "Text"
+// in the language of msgs.
+//
+// Type filter: text.
+func (msgs Messages) ClipFilterText() string {
+	return Catalog.Format(msgs.locale, "clipFilterText", nil)
+}
+
+// ClipFilterLinks says "Links"
+// in the language the app shows.
+//
+// Type filter: links.
+func ClipFilterLinks() string { return In(i18n.Locale()).ClipFilterLinks() }
+
+// ClipFilterLinks says "Links"
+// in the language of msgs.
+//
+// Type filter: links.
+func (msgs Messages) ClipFilterLinks() string {
+	return Catalog.Format(msgs.locale, "clipFilterLinks", nil)
+}
+
+// ClipFilterImages says "Images"
+// in the language the app shows.
+//
+// Type filter: images.
+func ClipFilterImages() string { return In(i18n.Locale()).ClipFilterImages() }
+
+// ClipFilterImages says "Images"
+// in the language of msgs.
+//
+// Type filter: images.
+func (msgs Messages) ClipFilterImages() string {
+	return Catalog.Format(msgs.locale, "clipFilterImages", nil)
+}
+
+// ClipFilterFiles says "Files"
+// in the language the app shows.
+//
+// Type filter: files.
+func ClipFilterFiles() string { return In(i18n.Locale()).ClipFilterFiles() }
+
+// ClipFilterFiles says "Files"
+// in the language of msgs.
+//
+// Type filter: files.
+func (msgs Messages) ClipFilterFiles() string {
+	return Catalog.Format(msgs.locale, "clipFilterFiles", nil)
+}
+
+// ClipSectionPinned says "Pinned"
+// in the language the app shows.
+//
+// Clip list section: pinned items.
+func ClipSectionPinned() string { return In(i18n.Locale()).ClipSectionPinned() }
+
+// ClipSectionPinned says "Pinned"
+// in the language of msgs.
+//
+// Clip list section: pinned items.
+func (msgs Messages) ClipSectionPinned() string {
+	return Catalog.Format(msgs.locale, "clipSectionPinned", nil)
+}
+
+// ClipSectionToday says "Today"
+// in the language the app shows.
+//
+// Clip list section.
+func ClipSectionToday() string { return In(i18n.Locale()).ClipSectionToday() }
+
+// ClipSectionToday says "Today"
+// in the language of msgs.
+//
+// Clip list section.
+func (msgs Messages) ClipSectionToday() string {
+	return Catalog.Format(msgs.locale, "clipSectionToday", nil)
+}
+
+// ClipSectionYesterday says "Yesterday"
+// in the language the app shows.
+//
+// Clip list section.
+func ClipSectionYesterday() string { return In(i18n.Locale()).ClipSectionYesterday() }
+
+// ClipSectionYesterday says "Yesterday"
+// in the language of msgs.
+//
+// Clip list section.
+func (msgs Messages) ClipSectionYesterday() string {
+	return Catalog.Format(msgs.locale, "clipSectionYesterday", nil)
+}
+
+// ClipSectionEarlier says "Earlier"
+// in the language the app shows.
+//
+// Clip list section.
+func ClipSectionEarlier() string { return In(i18n.Locale()).ClipSectionEarlier() }
+
+// ClipSectionEarlier says "Earlier"
+// in the language of msgs.
+//
+// Clip list section.
+func (msgs Messages) ClipSectionEarlier() string {
+	return Catalog.Format(msgs.locale, "clipSectionEarlier", nil)
+}
+
+// ClipImageTitle says "Image {w}×{h}"
+// in the language the app shows.
+//
+// Clip row title of an image, in pixels.
+func ClipImageTitle(w int, h int) string { return In(i18n.Locale()).ClipImageTitle(w, h) }
+
+// ClipImageTitle says "Image {w}×{h}"
+// in the language of msgs.
+//
+// Clip row title of an image, in pixels.
+func (msgs Messages) ClipImageTitle(w int, h int) string {
+	return Catalog.Format(msgs.locale, "clipImageTitle", map[string]any{"w": w, "h": h})
+}
+
+// ClipFilesTitle says "{n, plural, offset:1 one {{first} and # more} other {{first} and # more}}"
+// in the language the app shows.
+//
+// Clip row title of several files; n is how many files there are.
+func ClipFilesTitle(first string, n int) string { return In(i18n.Locale()).ClipFilesTitle(first, n) }
+
+// ClipFilesTitle says "{n, plural, offset:1 one {{first} and # more} other {{first} and # more}}"
+// in the language of msgs.
+//
+// Clip row title of several files; n is how many files there are.
+func (msgs Messages) ClipFilesTitle(first string, n int) string {
+	return Catalog.Format(msgs.locale, "clipFilesTitle", map[string]any{"first": first, "n": n})
+}
+
+// ClipUnknownApp says "Unknown app"
+// in the language the app shows.
+//
+// Info: the app copied from is not known.
+func ClipUnknownApp() string { return In(i18n.Locale()).ClipUnknownApp() }
+
+// ClipUnknownApp says "Unknown app"
+// in the language of msgs.
+//
+// Info: the app copied from is not known.
+func (msgs Messages) ClipUnknownApp() string {
+	return Catalog.Format(msgs.locale, "clipUnknownApp", nil)
+}
+
+// ClipInfoSource says "Source"
+// in the language the app shows.
+//
+// Info row label.
+func ClipInfoSource() string { return In(i18n.Locale()).ClipInfoSource() }
+
+// ClipInfoSource says "Source"
+// in the language of msgs.
+//
+// Info row label.
+func (msgs Messages) ClipInfoSource() string {
+	return Catalog.Format(msgs.locale, "clipInfoSource", nil)
+}
+
+// ClipInfoCopied says "Copied"
+// in the language the app shows.
+//
+// Info row label: when it was last copied.
+func ClipInfoCopied() string { return In(i18n.Locale()).ClipInfoCopied() }
+
+// ClipInfoCopied says "Copied"
+// in the language of msgs.
+//
+// Info row label: when it was last copied.
+func (msgs Messages) ClipInfoCopied() string {
+	return Catalog.Format(msgs.locale, "clipInfoCopied", nil)
+}
+
+// ClipInfoCharacters says "Characters"
+// in the language the app shows.
+//
+// Info row label.
+func ClipInfoCharacters() string { return In(i18n.Locale()).ClipInfoCharacters() }
+
+// ClipInfoCharacters says "Characters"
+// in the language of msgs.
+//
+// Info row label.
+func (msgs Messages) ClipInfoCharacters() string {
+	return Catalog.Format(msgs.locale, "clipInfoCharacters", nil)
+}
+
+// ClipInfoDimensions says "Dimensions"
+// in the language the app shows.
+//
+// Info row label of an image.
+func ClipInfoDimensions() string { return In(i18n.Locale()).ClipInfoDimensions() }
+
+// ClipInfoDimensions says "Dimensions"
+// in the language of msgs.
+//
+// Info row label of an image.
+func (msgs Messages) ClipInfoDimensions() string {
+	return Catalog.Format(msgs.locale, "clipInfoDimensions", nil)
+}
+
+// ClipInfoSize says "Size"
+// in the language the app shows.
+//
+// Info row label.
+func ClipInfoSize() string { return In(i18n.Locale()).ClipInfoSize() }
+
+// ClipInfoSize says "Size"
+// in the language of msgs.
+//
+// Info row label.
+func (msgs Messages) ClipInfoSize() string {
+	return Catalog.Format(msgs.locale, "clipInfoSize", nil)
+}
+
+// ClipInfoLocation says "Location"
+// in the language the app shows.
+//
+// Info row label of files: their folder.
+func ClipInfoLocation() string { return In(i18n.Locale()).ClipInfoLocation() }
+
+// ClipInfoLocation says "Location"
+// in the language of msgs.
+//
+// Info row label of files: their folder.
+func (msgs Messages) ClipInfoLocation() string {
+	return Catalog.Format(msgs.locale, "clipInfoLocation", nil)
+}
+
+// ClipInfoLink says "Link"
+// in the language the app shows.
+//
+// Info row label of a link: its domain.
+func ClipInfoLink() string { return In(i18n.Locale()).ClipInfoLink() }
+
+// ClipInfoLink says "Link"
+// in the language of msgs.
+//
+// Info row label of a link: its domain.
+func (msgs Messages) ClipInfoLink() string {
+	return Catalog.Format(msgs.locale, "clipInfoLink", nil)
+}
+
+// ClipDimensions says "{w} × {h}"
+// in the language the app shows.
+//
+// Info value: an image's size in pixels.
+func ClipDimensions(w int, h int) string { return In(i18n.Locale()).ClipDimensions(w, h) }
+
+// ClipDimensions says "{w} × {h}"
+// in the language of msgs.
+//
+// Info value: an image's size in pixels.
+func (msgs Messages) ClipDimensions(w int, h int) string {
+	return Catalog.Format(msgs.locale, "clipDimensions", map[string]any{"w": w, "h": h})
+}
+
+// ClipFileMissing says "This file has been moved or deleted."
+// in the language the app shows.
+//
+// Preview and notice: a file of the item is gone.
+func ClipFileMissing() string { return In(i18n.Locale()).ClipFileMissing() }
+
+// ClipFileMissing says "This file has been moved or deleted."
+// in the language of msgs.
+//
+// Preview and notice: a file of the item is gone.
+func (msgs Messages) ClipFileMissing() string {
+	return Catalog.Format(msgs.locale, "clipFileMissing", nil)
+}
+
+// ClipEmptyTitle says "No clipboard history yet"
+// in the language the app shows.
+//
+// Empty state title.
+func ClipEmptyTitle() string { return In(i18n.Locale()).ClipEmptyTitle() }
+
+// ClipEmptyTitle says "No clipboard history yet"
+// in the language of msgs.
+//
+// Empty state title.
+func (msgs Messages) ClipEmptyTitle() string {
+	return Catalog.Format(msgs.locale, "clipEmptyTitle", nil)
+}
+
+// ClipEmptyBody says "Copy something and it shows up here."
+// in the language the app shows.
+//
+// Empty state description.
+func ClipEmptyBody() string { return In(i18n.Locale()).ClipEmptyBody() }
+
+// ClipEmptyBody says "Copy something and it shows up here."
+// in the language of msgs.
+//
+// Empty state description.
+func (msgs Messages) ClipEmptyBody() string {
+	return Catalog.Format(msgs.locale, "clipEmptyBody", nil)
+}
+
+// ClipOffTitle says "Clipboard history is off"
+// in the language the app shows.
+//
+// Recording is off: title (empty state and banner).
+func ClipOffTitle() string { return In(i18n.Locale()).ClipOffTitle() }
+
+// ClipOffTitle says "Clipboard history is off"
+// in the language of msgs.
+//
+// Recording is off: title (empty state and banner).
+func (msgs Messages) ClipOffTitle() string {
+	return Catalog.Format(msgs.locale, "clipOffTitle", nil)
+}
+
+// ClipOffBody says "Turn it on and what you copy is kept here."
+// in the language the app shows.
+//
+// Recording is off: description.
+func ClipOffBody() string { return In(i18n.Locale()).ClipOffBody() }
+
+// ClipOffBody says "Turn it on and what you copy is kept here."
+// in the language of msgs.
+//
+// Recording is off: description.
+func (msgs Messages) ClipOffBody() string {
+	return Catalog.Format(msgs.locale, "clipOffBody", nil)
+}
+
+// ClipTurnOn says "Turn On"
+// in the language the app shows.
+//
+// Recording is off: the button turning it on.
+func ClipTurnOn() string { return In(i18n.Locale()).ClipTurnOn() }
+
+// ClipTurnOn says "Turn On"
+// in the language of msgs.
+//
+// Recording is off: the button turning it on.
+func (msgs Messages) ClipTurnOn() string {
+	return Catalog.Format(msgs.locale, "clipTurnOn", nil)
+}
+
+// ClipNoResultsHint says "Try words from the item itself. Pinyin isn’t matched here."
+// in the language the app shows.
+//
+// Under the clip view's no-results title.
+func ClipNoResultsHint() string { return In(i18n.Locale()).ClipNoResultsHint() }
+
+// ClipNoResultsHint says "Try words from the item itself. Pinyin isn’t matched here."
+// in the language of msgs.
+//
+// Under the clip view's no-results title.
+func (msgs Messages) ClipNoResultsHint() string {
+	return Catalog.Format(msgs.locale, "clipNoResultsHint", nil)
+}
+
+// ClipNoText says "No text"
+// in the language the app shows.
+//
+// The type filter leaves nothing: text.
+func ClipNoText() string { return In(i18n.Locale()).ClipNoText() }
+
+// ClipNoText says "No text"
+// in the language of msgs.
+//
+// The type filter leaves nothing: text.
+func (msgs Messages) ClipNoText() string {
+	return Catalog.Format(msgs.locale, "clipNoText", nil)
+}
+
+// ClipNoLinks says "No links"
+// in the language the app shows.
+//
+// The type filter leaves nothing: links.
+func ClipNoLinks() string { return In(i18n.Locale()).ClipNoLinks() }
+
+// ClipNoLinks says "No links"
+// in the language of msgs.
+//
+// The type filter leaves nothing: links.
+func (msgs Messages) ClipNoLinks() string {
+	return Catalog.Format(msgs.locale, "clipNoLinks", nil)
+}
+
+// ClipNoImages says "No images"
+// in the language the app shows.
+//
+// The type filter leaves nothing: images.
+func ClipNoImages() string { return In(i18n.Locale()).ClipNoImages() }
+
+// ClipNoImages says "No images"
+// in the language of msgs.
+//
+// The type filter leaves nothing: images.
+func (msgs Messages) ClipNoImages() string {
+	return Catalog.Format(msgs.locale, "clipNoImages", nil)
+}
+
+// ClipNoFiles says "No files"
+// in the language the app shows.
+//
+// The type filter leaves nothing: files.
+func ClipNoFiles() string { return In(i18n.Locale()).ClipNoFiles() }
+
+// ClipNoFiles says "No files"
+// in the language of msgs.
+//
+// The type filter leaves nothing: files.
+func (msgs Messages) ClipNoFiles() string {
+	return Catalog.Format(msgs.locale, "clipNoFiles", nil)
+}
+
+// ClipUnreadableTitle says "Can’t read clipboard history"
+// in the language the app shows.
+//
+// The saved history can't be opened: title.
+func ClipUnreadableTitle() string { return In(i18n.Locale()).ClipUnreadableTitle() }
+
+// ClipUnreadableTitle says "Can’t read clipboard history"
+// in the language of msgs.
+//
+// The saved history can't be opened: title.
+func (msgs Messages) ClipUnreadableTitle() string {
+	return Catalog.Format(msgs.locale, "clipUnreadableTitle", nil)
+}
+
+// ClipUnreadableBody says "Your saved history can’t be opened. Go to Settings › Clipboard and click Clear History… to start fresh."
+// in the language the app shows.
+//
+// The saved history can't be opened: description.
+func ClipUnreadableBody() string { return In(i18n.Locale()).ClipUnreadableBody() }
+
+// ClipUnreadableBody says "Your saved history can’t be opened. Go to Settings › Clipboard and click Clear History… to start fresh."
+// in the language of msgs.
+//
+// The saved history can't be opened: description.
+func (msgs Messages) ClipUnreadableBody() string {
+	return Catalog.Format(msgs.locale, "clipUnreadableBody", nil)
+}
+
+// ClipPasteTo says "Paste to {app}"
+// in the language the app shows.
+//
+// Primary action: paste into the app the user was in.
+func ClipPasteTo(app string) string { return In(i18n.Locale()).ClipPasteTo(app) }
+
+// ClipPasteTo says "Paste to {app}"
+// in the language of msgs.
+//
+// Primary action: paste into the app the user was in.
+func (msgs Messages) ClipPasteTo(app string) string {
+	return Catalog.Format(msgs.locale, "clipPasteTo", map[string]any{"app": app})
+}
+
+// ClipPaste says "Paste"
+// in the language the app shows.
+//
+// Primary action: paste, the app not known.
+func ClipPaste() string { return In(i18n.Locale()).ClipPaste() }
+
+// ClipPaste says "Paste"
+// in the language of msgs.
+//
+// Primary action: paste, the app not known.
+func (msgs Messages) ClipPaste() string {
+	return Catalog.Format(msgs.locale, "clipPaste", nil)
+}
+
+// ClipCopy says "Copy to Clipboard"
+// in the language the app shows.
+//
+// Action: put the item on the clipboard.
+func ClipCopy() string { return In(i18n.Locale()).ClipCopy() }
+
+// ClipCopy says "Copy to Clipboard"
+// in the language of msgs.
+//
+// Action: put the item on the clipboard.
+func (msgs Messages) ClipCopy() string {
+	return Catalog.Format(msgs.locale, "clipCopy", nil)
+}
+
+// ClipPastePlain says "Paste as Plain Text"
+// in the language the app shows.
+//
+// Action (text only).
+func ClipPastePlain() string { return In(i18n.Locale()).ClipPastePlain() }
+
+// ClipPastePlain says "Paste as Plain Text"
+// in the language of msgs.
+//
+// Action (text only).
+func (msgs Messages) ClipPastePlain() string {
+	return Catalog.Format(msgs.locale, "clipPastePlain", nil)
+}
+
+// ClipOpenLink says "Open Link"
+// in the language the app shows.
+//
+// Action (links only).
+func ClipOpenLink() string { return In(i18n.Locale()).ClipOpenLink() }
+
+// ClipOpenLink says "Open Link"
+// in the language of msgs.
+//
+// Action (links only).
+func (msgs Messages) ClipOpenLink() string {
+	return Catalog.Format(msgs.locale, "clipOpenLink", nil)
+}
+
+// ClipPin says "Pin"
+// in the language the app shows.
+//
+// Action.
+func ClipPin() string { return In(i18n.Locale()).ClipPin() }
+
+// ClipPin says "Pin"
+// in the language of msgs.
+//
+// Action.
+func (msgs Messages) ClipPin() string {
+	return Catalog.Format(msgs.locale, "clipPin", nil)
+}
+
+// ClipUnpin says "Unpin"
+// in the language the app shows.
+//
+// Action.
+func ClipUnpin() string { return In(i18n.Locale()).ClipUnpin() }
+
+// ClipUnpin says "Unpin"
+// in the language of msgs.
+//
+// Action.
+func (msgs Messages) ClipUnpin() string {
+	return Catalog.Format(msgs.locale, "clipUnpin", nil)
+}
+
+// ClipClear says "Clear History…"
+// in the language the app shows.
+//
+// Action and Settings button: clear the history, after a confirmation.
+func ClipClear() string { return In(i18n.Locale()).ClipClear() }
+
+// ClipClear says "Clear History…"
+// in the language of msgs.
+//
+// Action and Settings button: clear the history, after a confirmation.
+func (msgs Messages) ClipClear() string {
+	return Catalog.Format(msgs.locale, "clipClear", nil)
+}
+
+// ClipCopiedPressCmdV says "Copied. Press ⌘V to paste."
+// in the language the app shows.
+//
+// Notice: Return copied, as Gocast may not paste yet.
+func ClipCopiedPressCmdV() string { return In(i18n.Locale()).ClipCopiedPressCmdV() }
+
+// ClipCopiedPressCmdV says "Copied. Press ⌘V to paste."
+// in the language of msgs.
+//
+// Notice: Return copied, as Gocast may not paste yet.
+func (msgs Messages) ClipCopiedPressCmdV() string {
+	return Catalog.Format(msgs.locale, "clipCopiedPressCmdV", nil)
+}
+
+// ClipDeleted says "Deleted"
+// in the language the app shows.
+//
+// Notice.
+func ClipDeleted() string { return In(i18n.Locale()).ClipDeleted() }
+
+// ClipDeleted says "Deleted"
+// in the language of msgs.
+//
+// Notice.
+func (msgs Messages) ClipDeleted() string {
+	return Catalog.Format(msgs.locale, "clipDeleted", nil)
+}
+
+// ClipPinned says "Pinned"
+// in the language the app shows.
+//
+// Notice.
+func ClipPinned() string { return In(i18n.Locale()).ClipPinned() }
+
+// ClipPinned says "Pinned"
+// in the language of msgs.
+//
+// Notice.
+func (msgs Messages) ClipPinned() string {
+	return Catalog.Format(msgs.locale, "clipPinned", nil)
+}
+
+// ClipUnpinned says "Unpinned"
+// in the language the app shows.
+//
+// Notice.
+func ClipUnpinned() string { return In(i18n.Locale()).ClipUnpinned() }
+
+// ClipUnpinned says "Unpinned"
+// in the language of msgs.
+//
+// Notice.
+func (msgs Messages) ClipUnpinned() string {
+	return Catalog.Format(msgs.locale, "clipUnpinned", nil)
+}
+
+// ClipAXTitle says "Allow Gocast to paste for you"
+// in the language the app shows.
+//
+// Accessibility banner: title.
+func ClipAXTitle() string { return In(i18n.Locale()).ClipAXTitle() }
+
+// ClipAXTitle says "Allow Gocast to paste for you"
+// in the language of msgs.
+//
+// Accessibility banner: title.
+func (msgs Messages) ClipAXTitle() string {
+	return Catalog.Format(msgs.locale, "clipAXTitle", nil)
+}
+
+// ClipAXBody says "Gocast presses ⌘V for you. macOS asks you to turn on Gocast in Accessibility first. It’s only used to paste."
+// in the language the app shows.
+//
+// Accessibility banner: description.
+func ClipAXBody() string { return In(i18n.Locale()).ClipAXBody() }
+
+// ClipAXBody says "Gocast presses ⌘V for you. macOS asks you to turn on Gocast in Accessibility first. It’s only used to paste."
+// in the language of msgs.
+//
+// Accessibility banner: description.
+func (msgs Messages) ClipAXBody() string {
+	return Catalog.Format(msgs.locale, "clipAXBody", nil)
+}
+
+// ClipOpenSettings says "Open System Settings"
+// in the language the app shows.
+//
+// Opens System Settings › Privacy & Security › Accessibility.
+func ClipOpenSettings() string { return In(i18n.Locale()).ClipOpenSettings() }
+
+// ClipOpenSettings says "Open System Settings"
+// in the language of msgs.
+//
+// Opens System Settings › Privacy & Security › Accessibility.
+func (msgs Messages) ClipOpenSettings() string {
+	return Catalog.Format(msgs.locale, "clipOpenSettings", nil)
+}
+
+// ClipJustCopy says "Just Copy"
+// in the language the app shows.
+//
+// Accessibility banner: turns Press Return to paste off.
+func ClipJustCopy() string { return In(i18n.Locale()).ClipJustCopy() }
+
+// ClipJustCopy says "Just Copy"
+// in the language of msgs.
+//
+// Accessibility banner: turns Press Return to paste off.
+func (msgs Messages) ClipJustCopy() string {
+	return Catalog.Format(msgs.locale, "clipJustCopy", nil)
+}
+
+// ClipAXReady says "Ready to paste"
+// in the language the app shows.
+//
+// Accessibility banner, once allowed.
+func ClipAXReady() string { return In(i18n.Locale()).ClipAXReady() }
+
+// ClipAXReady says "Ready to paste"
+// in the language of msgs.
+//
+// Accessibility banner, once allowed.
+func (msgs Messages) ClipAXReady() string {
+	return Catalog.Format(msgs.locale, "clipAXReady", nil)
+}
+
+// ClipKeep says "Keep clipboard history"
+// in the language the app shows.
+//
+// Settings › Clipboard: switch.
+func ClipKeep() string { return In(i18n.Locale()).ClipKeep() }
+
+// ClipKeep says "Keep clipboard history"
+// in the language of msgs.
+//
+// Settings › Clipboard: switch.
+func (msgs Messages) ClipKeep() string {
+	return Catalog.Format(msgs.locale, "clipKeep", nil)
+}
+
+// ClipKeepHint says "Stored only on this Mac, encrypted, never uploaded."
+// in the language the app shows.
+//
+// Settings › Clipboard: the switch's description.
+func ClipKeepHint() string { return In(i18n.Locale()).ClipKeepHint() }
+
+// ClipKeepHint says "Stored only on this Mac, encrypted, never uploaded."
+// in the language of msgs.
+//
+// Settings › Clipboard: the switch's description.
+func (msgs Messages) ClipKeepHint() string {
+	return Catalog.Format(msgs.locale, "clipKeepHint", nil)
+}
+
+// ClipRetention says "Keep for"
+// in the language the app shows.
+//
+// Settings › Clipboard: how long items are kept.
+func ClipRetention() string { return In(i18n.Locale()).ClipRetention() }
+
+// ClipRetention says "Keep for"
+// in the language of msgs.
+//
+// Settings › Clipboard: how long items are kept.
+func (msgs Messages) ClipRetention() string {
+	return Catalog.Format(msgs.locale, "clipRetention", nil)
+}
+
+// ClipRetentionDay says "1 Day"
+// in the language the app shows.
+//
+// Retention option.
+func ClipRetentionDay() string { return In(i18n.Locale()).ClipRetentionDay() }
+
+// ClipRetentionDay says "1 Day"
+// in the language of msgs.
+//
+// Retention option.
+func (msgs Messages) ClipRetentionDay() string {
+	return Catalog.Format(msgs.locale, "clipRetentionDay", nil)
+}
+
+// ClipRetentionWeek says "1 Week"
+// in the language the app shows.
+//
+// Retention option.
+func ClipRetentionWeek() string { return In(i18n.Locale()).ClipRetentionWeek() }
+
+// ClipRetentionWeek says "1 Week"
+// in the language of msgs.
+//
+// Retention option.
+func (msgs Messages) ClipRetentionWeek() string {
+	return Catalog.Format(msgs.locale, "clipRetentionWeek", nil)
+}
+
+// ClipRetentionMonth says "1 Month"
+// in the language the app shows.
+//
+// Retention option.
+func ClipRetentionMonth() string { return In(i18n.Locale()).ClipRetentionMonth() }
+
+// ClipRetentionMonth says "1 Month"
+// in the language of msgs.
+//
+// Retention option.
+func (msgs Messages) ClipRetentionMonth() string {
+	return Catalog.Format(msgs.locale, "clipRetentionMonth", nil)
+}
+
+// ClipRetention3Months says "3 Months"
+// in the language the app shows.
+//
+// Retention option.
+func ClipRetention3Months() string { return In(i18n.Locale()).ClipRetention3Months() }
+
+// ClipRetention3Months says "3 Months"
+// in the language of msgs.
+//
+// Retention option.
+func (msgs Messages) ClipRetention3Months() string {
+	return Catalog.Format(msgs.locale, "clipRetention3Months", nil)
+}
+
+// ClipRetentionForever says "Forever"
+// in the language the app shows.
+//
+// Retention option.
+func ClipRetentionForever() string { return In(i18n.Locale()).ClipRetentionForever() }
+
+// ClipRetentionForever says "Forever"
+// in the language of msgs.
+//
+// Retention option.
+func (msgs Messages) ClipRetentionForever() string {
+	return Catalog.Format(msgs.locale, "clipRetentionForever", nil)
+}
+
+// ClipRetentionHint says "Pinned items never expire."
+// in the language the app shows.
+//
+// Settings › Clipboard: the retention's description.
+func ClipRetentionHint() string { return In(i18n.Locale()).ClipRetentionHint() }
+
+// ClipRetentionHint says "Pinned items never expire."
+// in the language of msgs.
+//
+// Settings › Clipboard: the retention's description.
+func (msgs Messages) ClipRetentionHint() string {
+	return Catalog.Format(msgs.locale, "clipRetentionHint", nil)
+}
+
+// ClipPasteOnEnter says "Press Return to paste"
+// in the language the app shows.
+//
+// Settings › Clipboard: switch.
+func ClipPasteOnEnter() string { return In(i18n.Locale()).ClipPasteOnEnter() }
+
+// ClipPasteOnEnter says "Press Return to paste"
+// in the language of msgs.
+//
+// Settings › Clipboard: switch.
+func (msgs Messages) ClipPasteOnEnter() string {
+	return Catalog.Format(msgs.locale, "clipPasteOnEnter", nil)
+}
+
+// ClipPasteOnEnterHint says "Needs Gocast turned on in Accessibility. When off, Return only copies."
+// in the language the app shows.
+//
+// Settings › Clipboard: the switch's description.
+func ClipPasteOnEnterHint() string { return In(i18n.Locale()).ClipPasteOnEnterHint() }
+
+// ClipPasteOnEnterHint says "Needs Gocast turned on in Accessibility. When off, Return only copies."
+// in the language of msgs.
+//
+// Settings › Clipboard: the switch's description.
+func (msgs Messages) ClipPasteOnEnterHint() string {
+	return Catalog.Format(msgs.locale, "clipPasteOnEnterHint", nil)
+}
+
+// ClipNoAXHint says "Gocast isn’t turned on in Accessibility yet."
+// in the language the app shows.
+//
+// Settings › Clipboard: the switch's description while Gocast may not
+// paste.
+func ClipNoAXHint() string { return In(i18n.Locale()).ClipNoAXHint() }
+
+// ClipNoAXHint says "Gocast isn’t turned on in Accessibility yet."
+// in the language of msgs.
+//
+// Settings › Clipboard: the switch's description while Gocast may not
+// paste.
+func (msgs Messages) ClipNoAXHint() string {
+	return Catalog.Format(msgs.locale, "clipNoAXHint", nil)
+}
+
+// ClipIgnoredTitle says "Don’t keep from these apps"
+// in the language the app shows.
+//
+// Settings › Clipboard: group title.
+func ClipIgnoredTitle() string { return In(i18n.Locale()).ClipIgnoredTitle() }
+
+// ClipIgnoredTitle says "Don’t keep from these apps"
+// in the language of msgs.
+//
+// Settings › Clipboard: group title.
+func (msgs Messages) ClipIgnoredTitle() string {
+	return Catalog.Format(msgs.locale, "clipIgnoredTitle", nil)
+}
+
+// ClipIgnoredHint says "Nothing you copy in these apps is kept. Passwords from password managers are never kept anyway."
+// in the language the app shows.
+//
+// Settings › Clipboard: group description.
+func ClipIgnoredHint() string { return In(i18n.Locale()).ClipIgnoredHint() }
+
+// ClipIgnoredHint says "Nothing you copy in these apps is kept. Passwords from password managers are never kept anyway."
+// in the language of msgs.
+//
+// Settings › Clipboard: group description.
+func (msgs Messages) ClipIgnoredHint() string {
+	return Catalog.Format(msgs.locale, "clipIgnoredHint", nil)
+}
+
+// ClipAddApp says "Add App…"
+// in the language the app shows.
+//
+// Settings › Clipboard: the + button (for assistive technology).
+func ClipAddApp() string { return In(i18n.Locale()).ClipAddApp() }
+
+// ClipAddApp says "Add App…"
+// in the language of msgs.
+//
+// Settings › Clipboard: the + button (for assistive technology).
+func (msgs Messages) ClipAddApp() string {
+	return Catalog.Format(msgs.locale, "clipAddApp", nil)
+}
+
+// ClipRemoveApp says "Remove"
+// in the language the app shows.
+//
+// Settings › Clipboard: the − button (for assistive technology).
+func ClipRemoveApp() string { return In(i18n.Locale()).ClipRemoveApp() }
+
+// ClipRemoveApp says "Remove"
+// in the language of msgs.
+//
+// Settings › Clipboard: the − button (for assistive technology).
+func (msgs Messages) ClipRemoveApp() string {
+	return Catalog.Format(msgs.locale, "clipRemoveApp", nil)
+}
+
+// ClipAddButton says "Add"
+// in the language the app shows.
+//
+// The app chooser's confirm button.
+func ClipAddButton() string { return In(i18n.Locale()).ClipAddButton() }
+
+// ClipAddButton says "Add"
+// in the language of msgs.
+//
+// The app chooser's confirm button.
+func (msgs Messages) ClipAddButton() string {
+	return Catalog.Format(msgs.locale, "clipAddButton", nil)
+}
+
+// ClipClearTitle says "Clear clipboard history?"
+// in the language the app shows.
+//
+// Clear confirmation: title.
+func ClipClearTitle() string { return In(i18n.Locale()).ClipClearTitle() }
+
+// ClipClearTitle says "Clear clipboard history?"
+// in the language of msgs.
+//
+// Clear confirmation: title.
+func (msgs Messages) ClipClearTitle() string {
+	return Catalog.Format(msgs.locale, "clipClearTitle", nil)
+}
+
+// ClipClearBody says "Pinned items stay. Everything else is deleted for good."
+// in the language the app shows.
+//
+// Clear confirmation: description.
+func ClipClearBody() string { return In(i18n.Locale()).ClipClearBody() }
+
+// ClipClearBody says "Pinned items stay. Everything else is deleted for good."
+// in the language of msgs.
+//
+// Clear confirmation: description.
+func (msgs Messages) ClipClearBody() string {
+	return Catalog.Format(msgs.locale, "clipClearBody", nil)
+}
+
+// ClipClearBodyUnreadable says "All saved history is deleted, including pinned items. This can’t be undone."
+// in the language the app shows.
+//
+// Clear confirmation while the history can't be read.
+func ClipClearBodyUnreadable() string { return In(i18n.Locale()).ClipClearBodyUnreadable() }
+
+// ClipClearBodyUnreadable says "All saved history is deleted, including pinned items. This can’t be undone."
+// in the language of msgs.
+//
+// Clear confirmation while the history can't be read.
+func (msgs Messages) ClipClearBodyUnreadable() string {
+	return Catalog.Format(msgs.locale, "clipClearBodyUnreadable", nil)
+}
+
+// ClipClearConfirm says "Clear"
+// in the language the app shows.
+//
+// Clear confirmation: the button clearing.
+func ClipClearConfirm() string { return In(i18n.Locale()).ClipClearConfirm() }
+
+// ClipClearConfirm says "Clear"
+// in the language of msgs.
+//
+// Clear confirmation: the button clearing.
+func (msgs Messages) ClipClearConfirm() string {
+	return Catalog.Format(msgs.locale, "clipClearConfirm", nil)
+}
+
+// ClipLabelText says "Text"
+// in the language the app shows.
+//
+// Screen reader: a text row's kind.
+func ClipLabelText() string { return In(i18n.Locale()).ClipLabelText() }
+
+// ClipLabelText says "Text"
+// in the language of msgs.
+//
+// Screen reader: a text row's kind.
+func (msgs Messages) ClipLabelText() string {
+	return Catalog.Format(msgs.locale, "clipLabelText", nil)
+}
+
+// ClipLabelLink says "Link"
+// in the language the app shows.
+//
+// Screen reader: a link row's kind.
+func ClipLabelLink() string { return In(i18n.Locale()).ClipLabelLink() }
+
+// ClipLabelLink says "Link"
+// in the language of msgs.
+//
+// Screen reader: a link row's kind.
+func (msgs Messages) ClipLabelLink() string {
+	return Catalog.Format(msgs.locale, "clipLabelLink", nil)
+}
+
+// ClipLabelImage says "Image, {w} by {h}"
+// in the language the app shows.
+//
+// Screen reader: an image row.
+func ClipLabelImage(w int, h int) string { return In(i18n.Locale()).ClipLabelImage(w, h) }
+
+// ClipLabelImage says "Image, {w} by {h}"
+// in the language of msgs.
+//
+// Screen reader: an image row.
+func (msgs Messages) ClipLabelImage(w int, h int) string {
+	return Catalog.Format(msgs.locale, "clipLabelImage", map[string]any{"w": w, "h": h})
+}
+
+// ClipLabelFile says "File"
+// in the language the app shows.
+//
+// Screen reader: a file row's kind.
+func ClipLabelFile() string { return In(i18n.Locale()).ClipLabelFile() }
+
+// ClipLabelFile says "File"
+// in the language of msgs.
+//
+// Screen reader: a file row's kind.
+func (msgs Messages) ClipLabelFile() string {
+	return Catalog.Format(msgs.locale, "clipLabelFile", nil)
+}
+
+// ClipLabelFiles says "{n, plural, offset:1 one {{first} and # more, Files} other {{first} and # more, Files}}"
+// in the language the app shows.
+//
+// Screen reader: a row of several files; n is how many.
+func ClipLabelFiles(first string, n int) string { return In(i18n.Locale()).ClipLabelFiles(first, n) }
+
+// ClipLabelFiles says "{n, plural, offset:1 one {{first} and # more, Files} other {{first} and # more, Files}}"
+// in the language of msgs.
+//
+// Screen reader: a row of several files; n is how many.
+func (msgs Messages) ClipLabelFiles(first string, n int) string {
+	return Catalog.Format(msgs.locale, "clipLabelFiles", map[string]any{"first": first, "n": n})
+}
+
+// ClipLabelPinned says "Pinned"
+// in the language the app shows.
+//
+// Screen reader: after a pinned row.
+func ClipLabelPinned() string { return In(i18n.Locale()).ClipLabelPinned() }
+
+// ClipLabelPinned says "Pinned"
+// in the language of msgs.
+//
+// Screen reader: after a pinned row.
+func (msgs Messages) ClipLabelPinned() string {
+	return Catalog.Format(msgs.locale, "clipLabelPinned", nil)
+}
+
+// ClipHeading says "{name}, heading"
+// in the language the app shows.
+//
+// Screen reader: a section title of the clip list.
+func ClipHeading(name string) string { return In(i18n.Locale()).ClipHeading(name) }
+
+// ClipHeading says "{name}, heading"
+// in the language of msgs.
+//
+// Screen reader: a section title of the clip list.
+func (msgs Messages) ClipHeading(name string) string {
+	return Catalog.Format(msgs.locale, "clipHeading", map[string]any{"name": name})
+}
+
+// ClipPreview says "Preview"
+// in the language the app shows.
+//
+// Screen reader: the preview.
+func ClipPreview() string { return In(i18n.Locale()).ClipPreview() }
+
+// ClipPreview says "Preview"
+// in the language of msgs.
+//
+// Screen reader: the preview.
+func (msgs Messages) ClipPreview() string {
+	return Catalog.Format(msgs.locale, "clipPreview", nil)
+}
+
+// ClipTypeLabel says "Type, {current}"
+// in the language the app shows.
+//
+// Screen reader: the type filter button.
+func ClipTypeLabel(current string) string { return In(i18n.Locale()).ClipTypeLabel(current) }
+
+// ClipTypeLabel says "Type, {current}"
+// in the language of msgs.
+//
+// Screen reader: the type filter button.
+func (msgs Messages) ClipTypeLabel(current string) string {
+	return Catalog.Format(msgs.locale, "clipTypeLabel", map[string]any{"current": current})
+}
+
+// ClipInfoLabel says "{label}, {value}"
+// in the language the app shows.
+//
+// Screen reader: an info row.
+func ClipInfoLabel(label string, value string) string {
+	return In(i18n.Locale()).ClipInfoLabel(label, value)
+}
+
+// ClipInfoLabel says "{label}, {value}"
+// in the language of msgs.
+//
+// Screen reader: an info row.
+func (msgs Messages) ClipInfoLabel(label string, value string) string {
+	return Catalog.Format(msgs.locale, "clipInfoLabel", map[string]any{"label": label, "value": value})
+}

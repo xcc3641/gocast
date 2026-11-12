@@ -23,6 +23,7 @@ import (
 const (
 	pageShortcuts = "shortcuts"
 	pagePresets   = "presets"
+	pageClipboard = "clipboard"
 	pageGeneral   = "general"
 	pageAbout     = "about"
 )
@@ -36,10 +37,11 @@ type prefsWindow struct {
 	page string
 
 	// The shortcut recorder: the row recording (0 for none, 1 the search
-	// panel's, 2 the terminal's), and each row's problem.
+	// panel's, 2 the terminal's, 3 the clipboard history's), and each
+	// row's problem.
 	recording int
-	problem   [3]string
-	recorder  [3]ui.Handle
+	problem   [4]string
+	recorder  [4]ui.Handle
 	// The notice over the shortcuts that Spotlight has ⌘Space, or that
 	// ⌘Space is the search panel's now (design.md 4.4).
 	notice    int
@@ -65,6 +67,12 @@ type prefsWindow struct {
 	termWidth  float64 // percent of the work area
 	termHeight float64
 	hideBlur   bool
+
+	// Clipboard.
+	clipKeep, clipPaste bool
+	clipRetention       string // the label chosen
+	clipIgnoredSel      string // the bundle ID of the ignored app chosen
+	clipConfirm         bool   // asking before clearing the history
 }
 
 func newPrefsWindow(g *gocast) *prefsWindow {
@@ -111,6 +119,7 @@ func (p *prefsWindow) show(page string) {
 	p.termWidth = float64(p.g.settings.TermWidth())
 	p.termHeight = float64(p.g.settings.TermHeight())
 	p.hideBlur = !p.g.settings.KeepTerminalOnBlur
+	p.loadClipboard()
 	if !p.win.IsVisible() {
 		p.win.Center()
 	}
@@ -147,6 +156,8 @@ func (p *prefsWindow) view(c *ui.Context) {
 				switch p.page {
 				case pagePresets:
 					p.presetsPage(c, k)
+				case pageClipboard:
+					p.clipboardPage(c, k)
 				case pageGeneral:
 					p.generalPage(c, k)
 				case pageAbout:
@@ -158,6 +169,7 @@ func (p *prefsWindow) view(c *ui.Context) {
 		})
 	})
 	p.editor(c, k)
+	p.clearConfirmation(c, k)
 }
 
 // sidebar lists the pages, under room for the traffic lights, on the
@@ -166,6 +178,7 @@ func (p *prefsWindow) sidebar(c *ui.Context, k tokens) {
 	pages := []struct{ id, icon, label string }{
 		{pageShortcuts, "keyboard", locales.PageShortcuts()},
 		{pagePresets, "apple.terminal", locales.PagePresets()},
+		{pageClipboard, "doc.on.clipboard", locales.PageClipboard()},
 		{pageGeneral, "gearshape", locales.PageGeneral()},
 		{pageAbout, "info.circle", locales.PageAbout()},
 	}
@@ -219,6 +232,9 @@ func (p *prefsWindow) goTo(page string) {
 	p.page = page
 	if page == pageGeneral {
 		p.autoUpdate = updater.AutomaticChecks()
+	}
+	if page == pageClipboard {
+		p.loadClipboard()
 	}
 }
 
@@ -296,6 +312,7 @@ func (p *prefsWindow) shortcutsPage(c *ui.Context, k tokens) {
 	newGroup(c, k, func(g *group) {
 		p.shortcutRow(c, k, g, 1)
 		p.shortcutRow(c, k, g, 2)
+		p.shortcutRow(c, k, g, 3)
 	})
 }
 
@@ -370,13 +387,20 @@ func (p *prefsWindow) shortcutRow(c *ui.Context, k tokens, g *group, row int) {
 	if p.g.spotlight { // ⌥⇧Space is the default while Spotlight has ⌘Space
 		def = settings.FallbackLauncherShortcut
 	}
-	if row == 2 {
+	switch row {
+	case 2:
 		label, current, def = locales.ShortcutTerminal(), p.g.terminalKey, settings.DefaultTerminalShortcut
+	case 3:
+		label, current, def = locales.ShortcutClipboard(), p.g.clipKey, settings.DefaultClipboardShortcut
 	}
 	if current == "" { // the system refused it: what the settings ask for
-		current = p.g.settings.Launcher()
-		if row == 2 {
+		switch row {
+		case 1:
+			current = p.g.settings.Launcher()
+		case 2:
 			current = p.g.settings.Terminal()
+		case 3:
+			current = p.g.settings.Clipboard()
 		}
 	}
 	desc, descColor := "", k.textSecondary
@@ -462,24 +486,33 @@ func (p *prefsWindow) recordKey(row int, ev ui.InputEvent) bool {
 	return true
 }
 
-// apply makes accel the row's shortcut, unless the other row has it or
+// shortcutUser is the row of another shortcut that is accel, and its
+// label, or 0.
+func (p *prefsWindow) shortcutUser(row int, accel string) (int, string) {
+	labels := [4]string{"", locales.ShortcutLauncher(), locales.ShortcutTerminal(), locales.ShortcutClipboard()}
+	for r, s := range p.g.shortcutRows() {
+		if r > 0 && r != row && *s.key != "" && strings.EqualFold(accel, *s.key) {
+			return r, labels[r]
+		}
+	}
+	return 0, ""
+}
+
+// apply makes accel the row's shortcut, unless another row has it or
 // another app does; the shortcut stays as it was then, and the row says
 // why. It resumes the global shortcuts.
 func (p *prefsWindow) apply(row int, accel string) {
-	other, otherLabel := p.g.terminalKey, locales.ShortcutTerminal()
-	if row == 2 {
-		other, otherLabel = p.g.launcherKey, locales.ShortcutLauncher()
-	}
+	other, otherLabel := p.shortcutUser(row, accel)
 	p.g.suspendShortcuts()
 	switch {
-	case strings.EqualFold(accel, other):
+	case other != 0:
 		p.g.resumeShortcuts()
 		p.problem[row] = locales.ShortcutUsedFor(otherLabel)
 	case row == 1 && strings.EqualFold(accel, settings.DefaultLauncherShortcut) && shortcut.SpotlightHasCmdSpace():
 		// Both would open: the system's hot keys don't refuse it.
 		p.g.resumeShortcuts()
 		p.problem[row] = locales.ShortcutSpotlightBusy()
-	case p.g.setShortcut(row == 2, accel) != nil:
+	case p.g.setShortcut(row, accel) != nil:
 		p.problem[row] = locales.ShortcutTaken()
 	default:
 		p.problem[row] = ""

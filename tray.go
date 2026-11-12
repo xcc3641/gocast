@@ -18,7 +18,8 @@ import (
 var trayPNG []byte
 
 // setUpTray puts Gocast's icon in the menu bar, with its menu (copy.md 1):
-// search, the floating terminal, Settings, updates, and quitting, each
+// search, the floating terminal, the clipboard history (copy.md 6.1),
+// Settings, updates, and quitting, each
 // with its shortcut.
 func (g *gocast) setUpTray() {
 	var err error
@@ -44,6 +45,7 @@ func (g *gocast) trayMenu() *mygo.Menu {
 	return mygo.NewMenu([]*mygo.MenuItem{
 		{Label: locales.TraySearch(), Accelerator: g.launcherKey, Click: func(*mygo.MenuItem, *mygo.Window) { g.launcher.show() }},
 		{Label: locales.TrayTerminal(), Accelerator: g.terminalKey, Click: func(*mygo.MenuItem, *mygo.Window) { g.term.toggle() }},
+		{Label: locales.ClipboardHistory(), Accelerator: g.clipKey, Click: func(*mygo.MenuItem, *mygo.Window) { g.launcher.openClip(false) }},
 		mygo.Separator(),
 		{Label: locales.TraySettings(), Accelerator: "Cmd+,", Click: func(*mygo.MenuItem, *mygo.Window) { g.openSettings("") }},
 		updater.MenuItem(), // 检查更新…: the update window

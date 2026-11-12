@@ -47,9 +47,12 @@ type gocast struct {
 	term     *termPanel
 	prefs    *prefsWindow
 	tray     *mygo.Tray
+	clip     *clipService
 
-	settings                 settings.Settings
-	launcherKey, terminalKey string // the shortcuts registered, or ""
+	settings settings.Settings
+	// The shortcuts registered, or "": the search panel's, the floating
+	// terminal's and the clipboard history's.
+	launcherKey, terminalKey, clipKey string
 	// spotlight: Spotlight has ⌘Space, the search panel's shortcut, which
 	// would open both; ⌥⇧Space stands in until it doesn't.
 	spotlight bool
@@ -164,6 +167,23 @@ func (g *gocast) registerShortcuts() {
 	}
 	g.launcherKey = try(1, launcher, g.launcher.toggle)
 	g.terminalKey = try(2, g.settings.Terminal(), g.term.toggle)
+	g.clipKey = try(3, g.settings.Clipboard(), g.launcher.toggleClip)
+}
+
+// shortcutRows are the shortcuts by their row in Settings › Shortcuts
+// (1 to 3): what each is registered as, and what it does.
+func (g *gocast) shortcutRows() [4]struct {
+	key *string
+	fn  func()
+} {
+	var rows [4]struct {
+		key *string
+		fn  func()
+	}
+	rows[1].key, rows[1].fn = &g.launcherKey, g.launcher.toggle
+	rows[2].key, rows[2].fn = &g.terminalKey, g.term.toggle
+	rows[3].key, rows[3].fn = &g.clipKey, g.launcher.toggleClip
+	return rows
 }
 
 // spotlightChanged checks again whether Spotlight has ⌘Space, as the user
@@ -176,7 +196,7 @@ func (g *gocast) spotlightChanged() bool {
 	}
 	g.spotlight = false
 	g.suspendShortcuts()
-	if err := g.setShortcut(false, settings.DefaultLauncherShortcut); err != nil {
+	if err := g.setShortcut(1, settings.DefaultLauncherShortcut); err != nil {
 		g.prefs.problem[1] = locales.ShortcutTaken() // another app has it: ⌥⇧Space stays
 		return false
 	}
@@ -196,61 +216,64 @@ func (g *gocast) keepFallback() {
 		return
 	}
 	g.suspendShortcuts()
-	if err := g.setShortcut(false, settings.FallbackLauncherShortcut); err != nil {
+	if err := g.setShortcut(1, settings.FallbackLauncherShortcut); err != nil {
 		g.prefs.problem[1] = locales.ShortcutTaken()
 		g.saveSettings()
 	}
 }
 
-// suspendShortcuts lets the keys of both shortcuts through to the app,
+// suspendShortcuts lets the keys of the shortcuts through to the app,
 // while the user records a new one; resumeShortcuts takes them again.
 func (g *gocast) suspendShortcuts() {
-	for _, k := range []string{g.launcherKey, g.terminalKey} {
-		if k != "" {
-			mygo.GlobalShortcut.Unregister(k)
+	rows := g.shortcutRows()
+	for _, r := range rows[1:] {
+		if *r.key != "" {
+			mygo.GlobalShortcut.Unregister(*r.key)
 		}
 	}
 }
 
 func (g *gocast) resumeShortcuts() {
-	if g.launcherKey != "" {
-		_ = mygo.GlobalShortcut.Register(g.launcherKey, g.launcher.toggle)
-	}
-	if g.terminalKey != "" {
-		_ = mygo.GlobalShortcut.Register(g.terminalKey, g.term.toggle)
+	rows := g.shortcutRows()
+	for _, r := range rows[1:] {
+		if *r.key != "" {
+			_ = mygo.GlobalShortcut.Register(*r.key, r.fn)
+		}
 	}
 }
 
-// setShortcut makes accel the shortcut of the search panel (terminal
-// false) or of the floating terminal, at once, keeping the old one when
-// the system refuses it (errShortcutTaken). Call it with the shortcuts
-// suspended; it resumes them.
-func (g *gocast) setShortcut(terminalKey bool, accel string) error {
-	cur, fn := &g.launcherKey, g.launcher.toggle
-	if terminalKey {
-		cur, fn = &g.terminalKey, g.term.toggle
-	}
-	if err := mygo.GlobalShortcut.Register(accel, fn); err != nil {
+// setShortcut makes accel the shortcut of the row (1 the search panel, 2
+// the floating terminal, 3 the clipboard history), at once, keeping the
+// old one when the system refuses it (errShortcutTaken). Call it with the
+// shortcuts suspended; it resumes them.
+func (g *gocast) setShortcut(row int, accel string) error {
+	rows := g.shortcutRows()
+	if err := mygo.GlobalShortcut.Register(accel, rows[row].fn); err != nil {
 		log.Printf("shortcut %s: %v", accel, err)
 		g.resumeShortcuts()
 		return errShortcutTaken
 	}
-	*cur = accel
-	if terminalKey {
-		g.settings.TerminalShortcut = accel
-		if accel == settings.DefaultTerminalShortcut {
-			g.settings.TerminalShortcut = ""
-		}
-		if g.launcherKey != "" {
-			_ = mygo.GlobalShortcut.Register(g.launcherKey, g.launcher.toggle)
-		}
-	} else {
+	*rows[row].key = accel
+	switch row {
+	case 1:
 		g.settings.LauncherShortcut = accel
 		if accel == g.settings.DefaultLauncher() {
 			g.settings.LauncherShortcut = ""
 		}
-		if g.terminalKey != "" {
-			_ = mygo.GlobalShortcut.Register(g.terminalKey, g.term.toggle)
+	case 2:
+		g.settings.TerminalShortcut = accel
+		if accel == settings.DefaultTerminalShortcut {
+			g.settings.TerminalShortcut = ""
+		}
+	case 3:
+		g.settings.ClipboardShortcut = accel
+		if accel == settings.DefaultClipboardShortcut {
+			g.settings.ClipboardShortcut = ""
+		}
+	}
+	for i, r := range rows[1:] {
+		if i+1 != row && *r.key != "" {
+			_ = mygo.GlobalShortcut.Register(*r.key, r.fn)
 		}
 	}
 	g.saveSettings()
@@ -275,16 +298,22 @@ func (g *gocast) ready() {
 		log.Printf("usage: %v", err)
 	}
 	g.loadPresets()
+	// The clipboard history, read on a goroutine from now: the view shows
+	// it at once later (design.md 2.8.8).
+	g.clip = newClipService(g)
 	g.launcher = newLauncher(g)
 	g.term = newTermPanel(g)
 	g.prefs = newPrefsWindow(g)
 	g.registerShortcuts()
 	g.setUpTray()
+	g.clip.start()
+	mygo.App.OnWillQuit(func(*mygo.QuitEvent) { g.clip.stop() })
 	// Back from System Settings, where the user may have freed ⌘Space.
 	mygo.App.OnDidBecomeActive(func() {
 		if g.spotlightChanged() {
 			g.prefs.spotlightSolved()
 		}
+		g.prefs.win.Invalidate() // Settings › Clipboard asks for the permission again
 	})
 	if !g.settings.SpotlightChecked {
 		// The first launch says that Spotlight has ⌘Space, in Settings,
