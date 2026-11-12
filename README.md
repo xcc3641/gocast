@@ -14,7 +14,7 @@ Gocast is a small launcher for the Mac. Press ⌘Space to find and open an app. 
 
 **Presets.** A preset remembers which command to run in which folder, for example `pi` in `~/Projects/my-app`. Add presets in Settings, then type a preset's name in the search panel to open it in the floating terminal.
 
-**Clipboard history.** Press ⌃⌘V to find the text, links, images and files you copied before, and press ↵ to paste into the app you were in. Pin the ones you use often.
+**Clipboard history.** Press ⌃⌘V to find the text, links, images and files you copied before, and press ↵ to paste into the app you were in. Pin the ones you use often. Paste an image into a terminal and you get the image's file path on this Mac.
 
 It lives in the menu bar, with no Dock icon. It follows your Mac's light or dark appearance and speaks English and Simplified Chinese. It updates itself.
 

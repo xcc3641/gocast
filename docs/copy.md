@@ -1,4 +1,6 @@
-# Gocast 界面文案 v1.12（搜索面板 · 悬浮终端 · 设置）
+# Gocast 界面文案 v1.13（搜索面板 · 悬浮终端 · 设置）
+
+v1.13 改动：参考 Tinycast 的三点。「粘贴到“{应用名}”」就是粘贴去向，去向是悬浮终端时写「粘贴到悬浮终端」。往终端贴图片时主操作不改名，README 说一句。README 已写入剪贴板历史（6.11）。
 
 v1.12 改动：第 6 节跟 design.md 对齐。补「读不出剪贴板历史」，以及这时的清空确认。拷贝或粘贴后面板直接收起，所以去掉「已拷贝」提示。剪贴板快捷键只放在设置 › 快捷键。入口那一行的主操作是「打开」。
 v1.11 改动：新增第 6 节「剪贴板历史」（入口、视图、操作、权限提示、设置页、清空确认、读屏）。统一用词加「剪贴板历史」「置顶」「拷贝」。菜单栏和设置 › 快捷键各加一行。
@@ -333,6 +335,7 @@ English: No clipboard history yet / Copy something and it shows up here. · Clip
 | 位置 | 中文 | English | 键 |
 |---|---|---|---|
 | 主操作（可以直接粘贴时） | 粘贴到“{应用名}” | Paste to {app} | ↵ |
+| 主操作（去向是悬浮终端时） | 粘贴到悬浮终端 | Paste to Floating Terminal | ↵ |
 | 主操作（不知道刚才是哪个应用时） | 粘贴 | Paste | ↵ |
 | 主操作（没有辅助功能权限时） | 拷贝到剪贴板 | Copy to Clipboard | ↵ |
 | 次入口 | 操作 | Actions | ⌘K |
@@ -346,6 +349,12 @@ English: No clipboard history yet / Copy something and it shows up here. · Clip
 | ⌘K · 8 | 清空历史… | Clear History… | ⌃⇧X |
 
 主操作写的就是按回车会发生的事：没有权限时回车只会拷贝，就别写「粘贴」。不写「复制」，Mac 菜单里是「拷贝」。「清空历史…」和设置页按钮是同一个动作，用同一句、同一个确认框。
+
+粘贴去向（参考 Tinycast）就是上面「粘贴到“{应用名}”」这一句，写在右下操作胶囊里（design.md），不另写一句。应用名用系统显示的名字（备忘录、终端、iTerm）；去向是 Gocast 自己的悬浮终端时写「粘贴到悬浮终端」（Paste to Floating Terminal），不写“Gocast”。
+
+往终端里粘贴图片：贴进去的是这张图在本机的文件路径。主操作还是「粘贴到“{应用名}”」，不改成「粘贴路径」：要的就是把这张图交给终端里的程序。界面里不加提示，只在 README 里说一句（见 6.11）。
+
+取消置顶的那条变成最新一条：提示还是「已取消置顶」，不另写。
 
 ### 6.6 提示（左下角胶囊，4 秒后淡出）
 
@@ -425,9 +434,9 @@ English: No clipboard history yet / Copy something and it shows up here. · Clip
 
 能做什么：
 
-中文：按 ⌃⌘V，找回之前拷贝过的文字、链接、图片和文件，按 ↵ 粘贴到刚才的应用。常用的可以置顶。
+中文：按 ⌃⌘V，找回之前拷贝过的文字、链接、图片和文件，按 ↵ 粘贴到刚才的应用。常用的可以置顶。往终端里粘贴图片时，贴进去的是图片在本机的文件路径。
 
-English: Press ⌃⌘V to find the text, links, images and files you copied before, and press ↵ to paste into the app you were in. Pin the ones you use often.
+English: Press ⌃⌘V to find the text, links, images and files you copied before, and press ↵ to paste into the app you were in. Pin the ones you use often. Paste an image into a terminal and you get the image's file path on this Mac.
 
 快捷键表加一行：⌃⌘V · 任何地方 · 打开剪贴板历史 / anywhere / Open clipboard history。三个全局快捷键都可以在设置 › 快捷键里改。
 
