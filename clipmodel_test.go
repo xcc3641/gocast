@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/egoist/mygo/i18n"
+	"github.com/egoist/mygo/ui"
 
 	"gocast/internal/clipboard"
 	"gocast/locales"
@@ -72,6 +73,36 @@ func TestClipRows(t *testing.T) {
 	}
 	if r := freshChoice(nil, nil); r != -1 {
 		t.Errorf("empty: row %d", r)
+	}
+
+	// A query chooses its first item; cleared, the newest unpinned again
+	// (design.md 2.8.1), not the first row, which is pinned.
+	for _, c := range []struct {
+		query string
+		want  int
+	}{{"ssh", 1}, {"", 3}, {"  ", 3}} {
+		if got := queryChoice(rows, es, c.query); got != c.want {
+			t.Errorf("queryChoice(%q) = %d, want %d", c.query, got, c.want)
+		}
+	}
+	if r := queryChoice(nil, nil, ""); r != -1 {
+		t.Errorf("queryChoice with none: %d", r)
+	}
+
+	// The first item of a section scrolls into view with its title.
+	for _, c := range []struct{ chosen, first, last, want int }{
+		{1, 1, 6, 0},  // the pinned title scrolled off above
+		{1, 0, 6, 0},  // the title cut at the top
+		{3, 3, 8, 2},  // Today's title off above
+		{3, 0, 8, 3},  // in view: nothing to add
+		{6, 0, 4, 6},  // below: the item, its title over it
+		{4, 4, 8, 4},  // not the first of its section
+		{3, 0, -1, 3}, // before the list was laid out
+		{-1, 0, 8, -1},
+	} {
+		if got := revealRow(rows, c.chosen, c.first, c.last); got != c.want {
+			t.Errorf("revealRow(%d) showing %d–%d = %d, want %d", c.chosen, c.first, c.last, got, c.want)
+		}
 	}
 
 	// Moving skips the titles and stops at the ends.
@@ -166,6 +197,9 @@ func TestClipActions(t *testing.T) {
 	}
 	if !slices.Equal(got, want) {
 		t.Errorf("text, may paste:\n got %v\nwant %v", got, want)
+	}
+	if as := clipActions(text, true, "备忘录"); as[1].symbol != "doc.plaintext" {
+		t.Errorf("Paste as Plain Text shows %q, want doc.plaintext (design.md 2.8)", as[1].symbol)
 	}
 	// Without the permission, copying is first, on Return; a link opens;
 	// a pinned item unpins.
@@ -360,5 +394,22 @@ func TestMemPasteboard(t *testing.T) {
 	}
 	if c, _ := p.Read(); c.Text != "x" {
 		t.Errorf("read %q", c.Text)
+	}
+}
+
+func TestClipCardColors(t *testing.T) {
+	// design.md 2.5 and 2.8: the cards' border is the capsules'; the clear
+	// confirmation's scrim thicker in dark mode.
+	for _, c := range []struct {
+		dark          bool
+		border, scrim ui.Color
+	}{
+		{false, ui.RGBA(0, 0, 0, 0.08), ui.RGBA(0, 0, 0, 0.12)},
+		{true, ui.RGBA(255, 255, 255, 0.12), ui.RGBA(0, 0, 0, 0.30)},
+	} {
+		k := tokensOf(c.dark, false)
+		if k.capsuleBorder != c.border || k.scrim != c.scrim {
+			t.Errorf("dark %v: border %v, scrim %v", c.dark, k.capsuleBorder, k.scrim)
+		}
 	}
 }

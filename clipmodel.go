@@ -97,6 +97,29 @@ func firstItem(rows []clipRow) int {
 	return -1
 }
 
+// queryChoice is the row a query chooses as it changes: the first item;
+// the query cleared, the newest unpinned again, as a fresh view's
+// (design.md 2.8.1).
+func queryChoice(rows []clipRow, entries []clipboard.Entry, query string) int {
+	if strings.TrimSpace(query) == "" {
+		return freshChoice(rows, entries)
+	}
+	return firstItem(rows)
+}
+
+// revealRow is the row to scroll into view to show row chosen, where the
+// list showed rows first to last in the last frame (last below first
+// before it was laid out). The first item of a section shows with the
+// section's title (design.md 2.8.1): the title when it is at or above the
+// top, the list scrolling up as little as shows it whole, chosen below
+// it; else chosen, the title over it once it is at the bottom.
+func revealRow(rows []clipRow, chosen, first, last int) int {
+	if chosen > 0 && chosen < len(rows) && rows[chosen-1].title && last >= first && chosen-1 <= first {
+		return chosen - 1
+	}
+	return chosen
+}
+
 // moveChoice moves the choice from row by step items, over the sections'
 // titles, stopping at either end without wrapping.
 func moveChoice(rows []clipRow, from, step int) int {
@@ -373,7 +396,7 @@ func clipActions(e clipboard.Entry, canPaste bool, app string) []clipAction {
 	if canPaste {
 		as = append(as, clipAction{id: actPaste, symbol: "doc.on.clipboard", label: pasteLabel(app), caps: []string{"↩"}})
 		if e.Kind == clipboard.KindText || e.Kind == clipboard.KindRichText {
-			as = append(as, clipAction{id: actPastePlain, symbol: "textformat", label: locales.ClipPastePlain()})
+			as = append(as, clipAction{id: actPastePlain, symbol: "doc.plaintext", label: locales.ClipPastePlain()})
 		}
 	} else {
 		copyCaps = []string{"↩"}

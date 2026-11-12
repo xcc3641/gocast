@@ -370,6 +370,7 @@ func (v *clipView) queryChanged() {
 	v.chosenID = ""
 	v.menuOpen = false
 	v.refresh()
+	v.choose(queryChoice(v.rows, v.entries, v.query))
 }
 
 // textKey takes the search field's keys that move the choice and act on
@@ -472,7 +473,8 @@ func (v *clipView) listPane(c *ui.Context, k tokens) {
 	})
 	if v.scroll && v.chosen >= 0 && v.chosen < len(v.rows) {
 		v.scroll = false
-		v.list.ScrollIntoView(v.chosen)
+		first, last := v.list.Visible()
+		v.list.ScrollIntoView(revealRow(v.rows, v.chosen, first, last))
 	}
 	if list.Changed() {
 		v.choose(v.chosen) // off a section's title
@@ -947,7 +949,7 @@ func (v *clipView) setFilter(f clipboard.Filter) {
 func (v *clipView) filterCard(c *ui.Context, k tokens) {
 	c.Key("filterCard")
 	top := float32(barHeight-28)/2 + 28 + 6
-	popupMenu(c, k, 1, 0).Width(clipFilterW).Right(menuTextInsetR - menuRowPadR + 8).Top(top).
+	popupMenu(c, k, 1, 0).Width(clipFilterW).Right(capsuleInset).Top(top).
 		Role(ui.RoleMenu).Label(locales.ClipTypeLabel(filterOf(v.filter).label())).Children(func() {
 		ui.Column(c).Padding(menuPad).Children(func() {
 			for i, f := range clipFilters {
@@ -1240,10 +1242,10 @@ func (v *clipView) clear() {
 
 func (v *clipView) confirmation(c *ui.Context, k tokens) {
 	c.Key("confirmClear")
-	ui.Box(c).Absolute().Left(0).Top(0).Right(0).Bottom(0).Background(ui.RGBA(0, 0, 0, 0.12)).Center().
+	ui.Box(c).Absolute().Left(0).Top(0).Right(0).Bottom(0).Background(k.scrim).Center().
 		OnClick(func() {}).Children(func() {
 		ui.Column(c).Width(clipConfirmW).Padding(20).Radius(12).Material(glassOf(k, searchTint)).
-			Shadow(0, 8, 24, 0, ui.RGBA(0, 0, 0, 0.20)).Role(ui.RoleAlertDialog).Label(locales.ClipClearTitle()).Children(func() {
+			Border(1, k.capsuleBorder).Shadow(0, 8, 24, 0, ui.RGBA(0, 0, 0, 0.20)).Role(ui.RoleAlertDialog).Label(locales.ClipClearTitle()).Children(func() {
 			ui.Text(c, locales.ClipClearTitle()).FontSize(14).FontWeight(600).TextColor(k.text).Role(ui.RoleHeading)
 			ui.Text(c, locales.ClipClearBody()).FontSize(13).TextColor(k.textOnGlass).Margin(6, 0, 0, 0)
 			ui.Row(c).Gap(8).Justify(ui.End).Margin(16, 0, 0, 0).Children(func() {

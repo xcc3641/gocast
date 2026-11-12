@@ -392,7 +392,8 @@ func popupMenu(c *ui.Context, k tokens, originX, originY float32) ui.Element {
 		tr = ui.ElementTransition{Enter: fade, Exit: fade, Duration: 80 * time.Millisecond}
 	}
 	return ui.Column(c).Absolute().Width(menuWidth).MaxHeight(menuMaxHeight).
-		Radius(12).Material(glassOf(k, searchTint)).Shadow(0, 8, 24, 0, ui.RGBA(0, 0, 0, 0.20)).Clip().
+		Radius(12).Material(glassOf(k, searchTint)).Border(1, k.capsuleBorder).
+		Shadow(0, 8, 24, 0, ui.RGBA(0, 0, 0, 0.20)).Clip().
 		TransformOrigin(originX, originY).Transition(tr)
 }
 
