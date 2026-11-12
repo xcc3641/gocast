@@ -4,6 +4,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 	"time"
 )
@@ -63,5 +64,23 @@ func TestLoadOldCounts(t *testing.T) {
 	}
 	if s2.Choice("y", now) != "app:y" || s2.Score("app:x", now) != 2*OpenWeight {
 		t.Fatalf("round trip lost data: %+v", s2)
+	}
+}
+
+func TestRanked(t *testing.T) {
+	now := time.Date(2026, 11, 12, 12, 0, 0, 0, time.UTC)
+	s := New()
+	s.Record("app:a", "", now.Add(-20*24*time.Hour)) // 25 now
+	s.Record("app:b", "", now.Add(-time.Hour))
+	s.Record("app:b", "", now.Add(-time.Hour)) // ~200
+	s.Record("preset:c", "", now.Add(-2*time.Hour))
+	// Equal scores (100): the one opened last first.
+	s.Items["app:d"] = Item{Score: 200, At: now.Add(-HalfLife)}
+	s.Items["app:e"] = Item{Score: 100, At: now}
+	s.Items["app:f"] = Item{Score: 0, At: now} // no score: not ranked
+	got := s.Ranked(now)
+	want := []string{"app:b", "app:e", "app:d", "preset:c", "app:a"}
+	if !slices.Equal(got, want) {
+		t.Errorf("Ranked = %q, want %q", got, want)
 	}
 }

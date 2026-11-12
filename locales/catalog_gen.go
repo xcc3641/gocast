@@ -223,17 +223,47 @@ func (msgs Messages) SearchNoPresetsHint() string {
 // SearchSuggestions says "Suggestions"
 // in the language the app shows.
 //
-// Search panel: header of the most used items under an empty query (off in
-// v1; not in copy.md).
+// Search panel, under an empty query: title of the group of the items
+// opened most (copy.md 2.2a).
 func SearchSuggestions() string { return In(i18n.Locale()).SearchSuggestions() }
 
 // SearchSuggestions says "Suggestions"
 // in the language of msgs.
 //
-// Search panel: header of the most used items under an empty query (off in
-// v1; not in copy.md).
+// Search panel, under an empty query: title of the group of the items
+// opened most (copy.md 2.2a).
 func (msgs Messages) SearchSuggestions() string {
 	return Catalog.Format(msgs.locale, "searchSuggestions", nil)
+}
+
+// SearchGocastGroup says "Gocast"
+// in the language the app shows.
+//
+// Search panel, under an empty query: title of the group of Gocast's own
+// items (copy.md 2.2a). Not “Commands”.
+func SearchGocastGroup() string { return In(i18n.Locale()).SearchGocastGroup() }
+
+// SearchGocastGroup says "Gocast"
+// in the language of msgs.
+//
+// Search panel, under an empty query: title of the group of Gocast's own
+// items (copy.md 2.2a). Not “Commands”.
+func (msgs Messages) SearchGocastGroup() string {
+	return Catalog.Format(msgs.locale, "searchGocastGroup", nil)
+}
+
+// SearchHeading says "{name}, heading"
+// in the language the app shows.
+//
+// Screen reader: a group title of the search panel's list (copy.md 2.3).
+func SearchHeading(name string) string { return In(i18n.Locale()).SearchHeading(name) }
+
+// SearchHeading says "{name}, heading"
+// in the language of msgs.
+//
+// Screen reader: a group title of the search panel's list (copy.md 2.3).
+func (msgs Messages) SearchHeading(name string) string {
+	return Catalog.Format(msgs.locale, "searchHeading", map[string]any{"name": name})
 }
 
 // SearchRunning says "Running"
@@ -292,6 +322,22 @@ func FooterOpenInTerminal() string { return In(i18n.Locale()).FooterOpenInTermin
 // Footer: the primary action of a preset (Enter).
 func (msgs Messages) FooterOpenInTerminal() string {
 	return Catalog.Format(msgs.locale, "footerOpenInTerminal", nil)
+}
+
+// FooterQuit says "Quit"
+// in the language the app shows.
+//
+// Actions capsule and Cmd-K: the primary action of the Quit Gocast row
+// (copy.md 2.2a).
+func FooterQuit() string { return In(i18n.Locale()).FooterQuit() }
+
+// FooterQuit says "Quit"
+// in the language of msgs.
+//
+// Actions capsule and Cmd-K: the primary action of the Quit Gocast row
+// (copy.md 2.2a).
+func (msgs Messages) FooterQuit() string {
+	return Catalog.Format(msgs.locale, "footerQuit", nil)
 }
 
 // FooterActions says "Actions"
@@ -1192,6 +1238,36 @@ func (msgs Messages) GeneralLoginHint() string {
 	return Catalog.Format(msgs.locale, "generalLoginHint", nil)
 }
 
+// GeneralSearchOnly says "Show only the search field"
+// in the language the app shows.
+//
+// General: switch; off by default. Not “compact mode” (copy.md 4.3).
+func GeneralSearchOnly() string { return In(i18n.Locale()).GeneralSearchOnly() }
+
+// GeneralSearchOnly says "Show only the search field"
+// in the language of msgs.
+//
+// General: switch; off by default. Not “compact mode” (copy.md 4.3).
+func (msgs Messages) GeneralSearchOnly() string {
+	return Catalog.Format(msgs.locale, "generalSearchOnly", nil)
+}
+
+// GeneralSearchOnlyHint says "When on, {shortcut} shows just the search field. Results appear as you type."
+// in the language the app shows.
+//
+// General: under the switch.
+func GeneralSearchOnlyHint(shortcut string) string {
+	return In(i18n.Locale()).GeneralSearchOnlyHint(shortcut)
+}
+
+// GeneralSearchOnlyHint says "When on, {shortcut} shows just the search field. Results appear as you type."
+// in the language of msgs.
+//
+// General: under the switch.
+func (msgs Messages) GeneralSearchOnlyHint(shortcut string) string {
+	return Catalog.Format(msgs.locale, "generalSearchOnlyHint", map[string]any{"shortcut": shortcut})
+}
+
 // GeneralAutoUpdate says "Check for updates automatically"
 // in the language the app shows.
 //
@@ -1505,59 +1581,17 @@ func (msgs Messages) ShortcutSpotlightBusy() string {
 // MenuTerminal says "Open Floating Terminal"
 // in the language the app shows.
 //
-// Actions menu with an empty query: shows the floating terminal.
+// Search panel, under an empty query: the Gocast group's row that shows the
+// floating terminal (copy.md 2.2a).
 func MenuTerminal() string { return In(i18n.Locale()).MenuTerminal() }
 
 // MenuTerminal says "Open Floating Terminal"
 // in the language of msgs.
 //
-// Actions menu with an empty query: shows the floating terminal.
+// Search panel, under an empty query: the Gocast group's row that shows the
+// floating terminal (copy.md 2.2a).
 func (msgs Messages) MenuTerminal() string {
 	return Catalog.Format(msgs.locale, "menuTerminal", nil)
-}
-
-// MenuWithPreset says "Open with Preset"
-// in the language the app shows.
-//
-// Actions menu with an empty query: header over the presets.
-func MenuWithPreset() string { return In(i18n.Locale()).MenuWithPreset() }
-
-// MenuWithPreset says "Open with Preset"
-// in the language of msgs.
-//
-// Actions menu with an empty query: header over the presets.
-func (msgs Messages) MenuWithPreset() string {
-	return Catalog.Format(msgs.locale, "menuWithPreset", nil)
-}
-
-// MenuList says "Gocast Actions"
-// in the language the app shows.
-//
-// Accessibility label of the list of Gocast actions shown by Cmd-K with an
-// empty query.
-func MenuList() string { return In(i18n.Locale()).MenuList() }
-
-// MenuList says "Gocast Actions"
-// in the language of msgs.
-//
-// Accessibility label of the list of Gocast actions shown by Cmd-K with an
-// empty query.
-func (msgs Messages) MenuList() string {
-	return Catalog.Format(msgs.locale, "menuList", nil)
-}
-
-// MenuWithPresetHeading says "Open with Preset, heading"
-// in the language the app shows.
-//
-// Accessibility label of the Open with Preset section title in that list.
-func MenuWithPresetHeading() string { return In(i18n.Locale()).MenuWithPresetHeading() }
-
-// MenuWithPresetHeading says "Open with Preset, heading"
-// in the language of msgs.
-//
-// Accessibility label of the Open with Preset section title in that list.
-func (msgs Messages) MenuWithPresetHeading() string {
-	return Catalog.Format(msgs.locale, "menuWithPresetHeading", nil)
 }
 
 // UpdateTitle says "Software Update"

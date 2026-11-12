@@ -63,6 +63,7 @@ type prefsWindow struct {
 	// General.
 	login      bool
 	autoUpdate bool // the updater's automatic checks (updater.json)
+	searchOnly bool // the search panel opens with its search field alone
 	fontSize   float64
 	termWidth  float64 // percent of the work area
 	termHeight float64
@@ -115,6 +116,7 @@ func (p *prefsWindow) show(page string) {
 	}
 	p.login = mygo.App.OpenAtLogin()
 	p.autoUpdate = updater.AutomaticChecks()
+	p.searchOnly = p.g.settings.SearchOnly
 	p.fontSize = float64(p.g.settings.Font())
 	p.termWidth = float64(p.g.settings.TermWidth())
 	p.termHeight = float64(p.g.settings.TermHeight())
@@ -738,6 +740,15 @@ func (p *prefsWindow) delete() {
 
 // --- General ---
 
+// searchOnlyHint is the note under "Show only the search field", with the
+// search panel's shortcut as registered, else as set (copy.md 4.3).
+func searchOnlyHint(registered, set string) string {
+	if registered == "" {
+		registered = set
+	}
+	return locales.GeneralSearchOnlyHint(shortcut.Glyphs(registered))
+}
+
 func (p *prefsWindow) generalPage(c *ui.Context, k tokens) {
 	pageTitle(c, k, locales.PageGeneral())
 	newGroup(c, k, func(g *group) {
@@ -757,6 +768,13 @@ func (p *prefsWindow) generalPage(c *ui.Context, k tokens) {
 		g.row(c, k, locales.GeneralAutoUpdate(), locales.GeneralAutoUpdateHint(), k.textSecondary, func() {
 			if ui.Switch(c, &p.autoUpdate).Label(locales.GeneralAutoUpdate()).Changed() {
 				updater.SetAutomaticChecks(p.autoUpdate)
+			}
+		})
+		// Taken as the panel next shows (design.md 4.4).
+		g.row(c, k, locales.GeneralSearchOnly(), searchOnlyHint(p.g.launcherKey, p.g.settings.Launcher()), k.textSecondary, func() {
+			if ui.Switch(c, &p.searchOnly).Label(locales.GeneralSearchOnly()).Changed() {
+				p.g.settings.SearchOnly = p.searchOnly
+				p.g.saveSettings()
 			}
 		})
 	})

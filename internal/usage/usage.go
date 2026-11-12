@@ -5,12 +5,14 @@
 package usage
 
 import (
+	"cmp"
 	"encoding/json"
 	"errors"
 	"io/fs"
 	"math"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 )
@@ -129,6 +131,30 @@ func decay(score float64, age time.Duration) float64 {
 		return score
 	}
 	return score * math.Pow(0.5, float64(age)/float64(HalfLife))
+}
+
+// Ranked lists the items with a score now, the highest first, and of
+// equal scores the one opened last first (design.md 2.5a).
+func (s *Store) Ranked(now time.Time) []string {
+	type scored struct {
+		id    string
+		score float64
+		at    time.Time
+	}
+	var list []scored
+	for id, it := range s.Items {
+		if sc := s.Score(id, now); sc > 0 {
+			list = append(list, scored{id, sc, it.At})
+		}
+	}
+	slices.SortFunc(list, func(a, b scored) int {
+		return cmp.Or(cmp.Compare(b.score, a.score), b.at.Compare(a.at), strings.Compare(a.id, b.id))
+	})
+	ids := make([]string, len(list))
+	for i, it := range list {
+		ids[i] = it.id
+	}
+	return ids
 }
 
 // Record notes that query (maybe empty) opened the item id now.

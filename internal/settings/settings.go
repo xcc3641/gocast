@@ -58,6 +58,10 @@ type Settings struct {
 	TerminalHeight int `json:"terminalHeightPercent,omitempty"`
 	// PlainTipDismissed: the tip over a plain terminal, closed for good.
 	PlainTipDismissed bool `json:"plainTerminalTipDismissed,omitempty"`
+	// SearchOnly: the search panel shows its search field alone as it
+	// opens, without the suggestions (the switch "Show only the search
+	// field", off by default; design.md 2.5a).
+	SearchOnly bool `json:"searchFieldOnly,omitempty"`
 
 	// The clipboard history (design.md 4.4 剪贴板). ClipboardShortcut
 	// opens it, "" for the default ⌃⌘V.

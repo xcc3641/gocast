@@ -128,7 +128,7 @@ func (l *launcher) openClip(fromSearch bool) {
 	v.checkTrust()
 	v.refresh()
 	v.choose(freshChoice(v.rows, v.entries))
-	l.menuOpen, l.ownOpen, l.ownShown = false, false, false
+	l.menuOpen = false
 	l.gen++ // at its size at once, without animating to it
 	if !l.win.IsVisible() {
 		d := mygo.Screen.DisplayNearestPoint(mygo.Screen.CursorScreenPoint())
@@ -153,13 +153,14 @@ func (l *launcher) toggleClip() {
 	}
 }
 
-// leaveClip goes back to the search panel, its bar alone and empty.
+// leaveClip goes back to the search panel, empty: its suggestions, the
+// first chosen, or its bar alone (design.md 2.8.1).
 func (l *launcher) leaveClip() {
 	l.clip.closed()
-	l.query, l.filtered, l.results, l.moved = "", noQuery, nil, false
+	l.query, l.filtered, l.rows, l.moved, l.expanded = "", noQuery, nil, false, false
 	l.notice = ""
 	l.list = ui.ListState{}
-	l.choose(0)
+	l.filter() // the suggestions, the first chosen (design.md 2.8.1)
 	l.gen++
 	l.input.Focus()
 	l.win.Invalidate()

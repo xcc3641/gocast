@@ -76,7 +76,21 @@
   },
   "searchSuggestions": "Suggestions",
   "@searchSuggestions": {
-    "description": "Search panel: header of the most used items under an empty query (off in v1; not in copy.md)."
+    "description": "Search panel, under an empty query: title of the group of the items opened most (copy.md 2.2a)."
+  },
+  "searchGocastGroup": "Gocast",
+  "@searchGocastGroup": {
+    "description": "Search panel, under an empty query: title of the group of Gocast's own items (copy.md 2.2a). Not “Commands”."
+  },
+  "searchHeading": "{name}, heading",
+  "@searchHeading": {
+    "description": "Screen reader: a group title of the search panel's list (copy.md 2.3).",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Suggestions"
+      }
+    }
   },
   "searchRunning": "Running",
   "@searchRunning": {
@@ -99,6 +113,10 @@
   "footerOpenInTerminal": "Open in Floating Terminal",
   "@footerOpenInTerminal": {
     "description": "Footer: the primary action of a preset (Enter)."
+  },
+  "footerQuit": "Quit",
+  "@footerQuit": {
+    "description": "Actions capsule and Cmd-K: the primary action of the Quit Gocast row (copy.md 2.2a)."
   },
   "footerActions": "Actions",
   "@footerActions": {
@@ -404,6 +422,20 @@
   "@generalLoginHint": {
     "description": "General: under the switch."
   },
+  "generalSearchOnly": "Show only the search field",
+  "@generalSearchOnly": {
+    "description": "General: switch; off by default. Not “compact mode” (copy.md 4.3)."
+  },
+  "generalSearchOnlyHint": "When on, {shortcut} shows just the search field. Results appear as you type.",
+  "@generalSearchOnlyHint": {
+    "description": "General: under the switch.",
+    "placeholders": {
+      "shortcut": {
+        "type": "String",
+        "example": "⌘Space"
+      }
+    }
+  },
   "generalAutoUpdate": "Check for updates automatically",
   "@generalAutoUpdate": {
     "description": "General: switch, in the first group under Open at login. It is the updater's automatic checks."
@@ -506,19 +538,7 @@
   },
   "menuTerminal": "Open Floating Terminal",
   "@menuTerminal": {
-    "description": "Actions menu with an empty query: shows the floating terminal."
-  },
-  "menuWithPreset": "Open with Preset",
-  "@menuWithPreset": {
-    "description": "Actions menu with an empty query: header over the presets."
-  },
-  "menuList": "Gocast Actions",
-  "@menuList": {
-    "description": "Accessibility label of the list of Gocast actions shown by Cmd-K with an empty query."
-  },
-  "menuWithPresetHeading": "Open with Preset, heading",
-  "@menuWithPresetHeading": {
-    "description": "Accessibility label of the Open with Preset section title in that list."
+    "description": "Search panel, under an empty query: the Gocast group's row that shows the floating terminal (copy.md 2.2a)."
   },
   "updateTitle": "Software Update",
   "@updateTitle": {

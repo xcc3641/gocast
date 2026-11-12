@@ -13,7 +13,6 @@ import (
 	"gocast/internal/presets"
 	"gocast/internal/running"
 	"gocast/internal/search"
-	"gocast/internal/shortcut"
 	"gocast/locales"
 )
 
@@ -41,29 +40,26 @@ const (
 	searchLeft                       = marginX + (clipWidth-panelWidth)/2
 	windowHeight                     = marginTop + expandedHeight + marginBottom
 
-	// restoreFor is how long the panel keeps its query and choice once
-	// hidden (Raycast's "pop to root" delay).
-	// suggestionsEnabled shows the most used items (frecency) under an
-	// empty query, under a "Suggestions" header, as Raycast does, rather
-	// than the search bar alone. Off until product decides (design.md).
-	suggestionsEnabled = false
-	suggestionCount    = 9
+	// The suggestions under an empty query (design.md 2.5a): the items
+	// opened most, at most suggestMost, padded to suggestLeast with
+	// common ones while there are fewer.
+	suggestMost  = 8
+	suggestLeast = 5
 
+	// restoreFor is how long the panel keeps its query, choice and
+	// suggestions once hidden (Raycast's "pop to root" delay).
 	restoreFor = 90 * time.Second
 	noticeFor  = 4 * time.Second
 )
 
-// entry is what a search result opens: an app, a terminal preset, or the
-// clipboard history.
+// entry is what a row opens: an app, a terminal preset, or one of
+// Gocast's own items (the clipboard history, ...).
 type entry struct {
 	app    *mygo.InstalledApp
 	place  string // what tells the app from another of its name: its file name or folder (apps.Places)
-	preset string // its ID, when app is nil
-	clip   bool   // the clipboard history's row (design.md 2.3)
+	preset string // its ID, for a preset
+	own    string // the ID of Gocast's own item (clipItemID, ...)
 }
-
-// clipItemID is the search item of the clipboard history's row.
-const clipItemID = "gocast:clipboard"
 
 // action is an item of the actions menu (Cmd-K).
 type action struct {
@@ -78,16 +74,20 @@ type launcher struct {
 	g   *gocast
 	win *mygo.Window
 
-	apps     []mygo.InstalledApp
-	alts     [][]string // the apps' other names (English, Chinese), by index
-	places   []string   // by index, what tells an app from another of its name (apps.Places)
-	items    []search.Item
-	entries  []entry // by item
-	results  []int   // items matching the query, best first; kept as the query empties, for the panel to shrink with them
+	apps    []mygo.InstalledApp
+	alts    [][]string // the apps' other names (English, Chinese), by index
+	places  []string   // by index, what tells an app from another of its name (apps.Places)
+	items   []search.Item
+	entries []entry        // by item
+	itemAt  map[string]int // the index of each item, by ID
+	// rows are the list's: the items matching the query, best first, or
+	// the suggestions and Gocast's own items under an empty one; kept as
+	// the panel shrinks to its bar alone, for it to shrink with them.
+	rows     []panelRow
 	query    string
-	filtered string // the query of the results
-	chosen   int
-	moved    bool // the user moved the choice since the results changed
+	filtered string // the query of the rows
+	chosen   int    // the row chosen
+	moved    bool   // the user moved the choice since the rows changed
 	list     ui.ListState
 	input    ui.Handle
 	scroll   bool                  // show the choice in the next frame
@@ -115,13 +115,16 @@ type launcher struct {
 	menuItems     []action // the menu's actions, as it opened
 	menuShown     []int    // those matching menuQuery
 
-	// Gocast's own actions, the list Cmd-K opens under an empty query
-	// (design.md 2.5a): open, chosen; and shown, open or the panel
-	// shrinking from it.
-	own       []ownAction
-	ownOpen   bool
-	ownChosen int
-	ownShown  bool
+	// own are Gocast's own items, the Gocast group's rows (design.md
+	// 2.5a).
+	own []ownItem
+	// ranked are the items opened most, as they ranked as the panel
+	// showed: the suggestions do not move while it shows.
+	ranked []string
+	// searchOnly: the panel shows its search bar alone under an empty
+	// query (Settings › General, as it showed), until expanded (Cmd-K or
+	// Down) to the suggestions.
+	searchOnly, expanded bool
 
 	// clip is the clipboard history's view, which the panel turns into
 	// (design.md 2.8).
@@ -158,11 +161,10 @@ func newLauncher(g *gocast) *launcher {
 	return l
 }
 
-// compact reports whether the panel shows its search bar alone: while the
-// query is empty.
-// query is empty, and no suggestions show (suggestionsEnabled).
+// compact reports whether the panel shows its search bar alone: under an
+// empty query, as Settings › General asks, until expanded (design.md 2.5a).
 func (l *launcher) compact() bool {
-	return l.empty() && (!suggestionsEnabled || len(l.results) == 0)
+	return l.empty() && l.searchOnly && !l.expanded
 }
 
 // empty reports whether the query is empty.
@@ -171,14 +173,14 @@ func (l *launcher) empty() bool { return strings.TrimSpace(l.query) == "" }
 // targetHeight is the height of the panel for what it shows now.
 func (l *launcher) targetHeight() float32 {
 	switch {
-	case l.ownOpen:
-		return barHeight + ownListHeight(l.own)
 	case l.compact():
 		return barHeight
-	case len(l.results) > 0:
+	case len(l.rows) > 0:
 		return expandedHeight
-	case l.loading && !l.loaded:
+	case l.loading && !l.loaded && l.searchOnly:
 		return barHeight // the apps come: no "no results" yet
+	case l.loading && !l.loaded:
+		return expandedHeight // as it was: it does not move as the user types
 	default:
 		return noResultHeight
 	}
@@ -199,15 +201,12 @@ func (l *launcher) view(c *ui.Context) {
 
 	target := l.targetHeight()
 	l.setRegion(panelWidth, target)
-	// What the panel lays out below its bar: the results, the "no
-	// results" message, or, while it shrinks to its bar, what it showed.
+	// What the panel lays out below its bar: the rows, the "no results"
+	// message, or, while it shrinks to its bar, what it showed.
 	body := target
-	switch {
-	case l.compact() && l.ownShown:
-		body = barHeight + ownListHeight(l.own)
-	case l.compact():
+	if l.compact() {
 		body = expandedHeight
-		if len(l.results) == 0 {
+		if len(l.rows) == 0 {
 			body = noResultHeight
 		}
 	}
@@ -222,16 +221,13 @@ func (l *launcher) view(c *ui.Context) {
 	}
 	panel.Height(h).Children(func() {
 		l.searchBar(c, k)
-		if body > barHeight && l.compact() && l.ownShown {
-			ui.Column(c).Height(body - barHeight).Shrink(0).Children(func() { l.ownList(c, k) })
-			if !l.ownOpen { // folding back to the bar, which has its capsule
-				l.footer(c, k, h)
-			}
-		} else if body > barHeight {
+		if body > barHeight {
 			ui.Column(c).Height(body - barHeight).Shrink(0).Children(func() {
-				if len(l.results) > 0 {
+				switch {
+				case len(l.rows) > 0:
 					l.resultList(c, k)
-				} else {
+				case l.loading && !l.loaded: // the apps come: no "no results" yet
+				default:
 					l.noResults(c, k)
 				}
 			})
@@ -276,7 +272,7 @@ func (l *launcher) shortcuts(c *ui.Context) {
 		}
 	}
 	if c.Shortcut(ui.Cmd, ui.KeyE) {
-		if e, ok := l.current(); ok && e.app == nil {
+		if e, ok := l.current(); ok && e.preset != "" {
 			l.editPreset(e.preset)
 		}
 	}
@@ -299,7 +295,7 @@ func (l *launcher) searchBar(c *ui.Context, k tokens) {
 		if field.Changed() {
 			l.filter()
 		}
-		if l.loading && !l.loaded && !l.compact() {
+		if l.loading && !l.loaded && !l.empty() {
 			ui.Spinner(c).Size(14, 14)
 		}
 	})
@@ -324,16 +320,17 @@ func (l *launcher) textKey(key ui.TextKey) bool {
 		defer func() { l.query = bound }()
 	}
 	mods := key.Mods
-	if l.ownOpen && l.ownKey(key.Key, mods) {
-		return true
-	}
 	switch {
 	case key.Key == ui.KeyEscape && mods == 0:
-		if l.query != "" {
+		switch {
+		case l.query != "":
 			key.SetText("") // and the bound value
 			bound, l.query = "", ""
 			l.filter()
-		} else {
+		case l.searchOnly && l.expanded: // back to the bar alone
+			l.expanded = false
+			l.filter()
+		default:
 			l.hide()
 		}
 		return true
@@ -354,17 +351,37 @@ func (l *launcher) textKey(key ui.TextKey) bool {
 }
 
 func (l *launcher) move(step int) {
-	if l.compact() || len(l.results) == 0 {
+	if l.compact() {
+		if step > 0 {
+			l.expand()
+		}
+		return
+	}
+	if len(l.rows) == 0 {
 		return
 	}
 	l.moved = true
-	l.choose(max(0, min(l.chosen+step, len(l.results)-1))) // no wrapping
+	l.choose(stepRow(l.rows, l.chosen, step)) // no wrapping
 }
 
-// choose chooses the result i, telling the list the app chose it (else
-// it keeps the choice on the item it had, or on none when the item is
-// gone), and shows it in the next frame.
+// expand shows the suggestions under the search bar alone (Cmd-K or Down,
+// design.md 2.5a), the first chosen.
+func (l *launcher) expand() {
+	l.expanded = true
+	l.filtered = noQuery
+	l.filter()
+	if l.win != nil {
+		l.win.Invalidate()
+	}
+}
+
+// choose chooses the row i, off a title, telling the list the app chose
+// it (else it keeps the choice on the item it had, or on none when the
+// item is gone), and shows it in the next frame.
 func (l *launcher) choose(i int) {
+	if i >= 0 && i < len(l.rows) && l.rows[i].title != "" {
+		i = stepRow(l.rows, i, 1)
+	}
 	l.list.Selected = &l.chosen
 	l.list.Choose(i)
 	l.scroll = true
@@ -372,23 +389,24 @@ func (l *launcher) choose(i int) {
 
 func (l *launcher) resultList(c *ui.Context, k tokens) {
 	l.list.Selected = &l.chosen
-	l.list.Key = func(i int) any { return l.items[l.results[i]].ID }
-	l.list.Label = func(i int) string { return l.rowLabel(l.results[i]) }
+	l.list.Key = l.rowKey
+	l.list.Label = l.rowLabel
 	var list ui.Element
-	if l.empty() { // suggestions
-		ui.Text(c, locales.SearchSuggestions()).FontSize(12).TextColor(k.textOnGlass).Padding(0, 20, 4, 20).Shrink(0)
-	}
 	ui.Themed(c, listTheme(c, k)).Background(ui.Transparent).Grow(1).Children(func() { // the glass shows through
 		// Room at the end for the last row to scroll above the actions
 		// capsule, which floats over the list.
-		list = ui.List(c, &l.list, len(l.results), func(i int) { l.row(c, k, i) }).Grow(1).Padding(0, 8, capsuleInset+capsuleHeight+capsuleInset, 8)
+		list = ui.List(c, &l.list, len(l.rows), func(i int) { l.row(c, k, i) }).Grow(1).Padding(0, listInset, capsuleInset+capsuleHeight+capsuleInset, listInset)
 	})
-	if l.scroll && l.chosen >= 0 && l.chosen < len(l.results) {
+	if l.scroll && l.chosen >= 0 && l.chosen < len(l.rows) {
 		l.scroll = false
-		l.list.ScrollIntoView(l.chosen)
+		first, _ := l.list.Visible()
+		l.list.ScrollIntoView(revealedRow(l.rows, l.chosen, first))
 	}
 	if list.Changed() {
-		// A click chose a row: the keyboard stays in the field.
+		// A click chose a row (off a title): the keyboard stays in the
+		// field.
+		l.choose(l.chosen)
+		l.scroll = false
 		l.moved = true
 		l.input.Focus()
 	}
@@ -397,16 +415,46 @@ func (l *launcher) resultList(c *ui.Context, k tokens) {
 	}
 }
 
-// row shows a result: its icon, its name, a preset's folder and command,
-// and what it is.
+// row shows a row: a group's title, Gocast's own item, or a search item.
 func (l *launcher) row(c *ui.Context, k tokens, i int) {
-	it := l.items[l.results[i]]
-	e := l.entries[l.results[i]]
+	r := l.rows[i]
+	switch {
+	case r.title != "":
+		listSection(c, k, r.title, locales.SearchHeading(r.title))
+	case r.own >= 0:
+		l.ownRow(c, k, l.own[r.own], r.group)
+	default:
+		l.itemRow(c, k, r.item)
+	}
+}
+
+// ownRow shows Gocast's own item as a search result shows (design.md
+// 2.5a): its symbol on a square, its name, and "Gocast" at the right; in
+// the Gocast group, its shortcut instead.
+func (l *launcher) ownRow(c *ui.Context, k tokens, o ownItem, group bool) {
+	listRow(c, k, false, func() {
+		symbolSquare(c, k, o.symbol)
+		listTitle(c, k, o.label)
+		ui.Spacer(c)
+		if !group {
+			listNote(c, k, locales.SearchTagGocast()).Shrink(0)
+		} else if len(o.caps) > 0 {
+			keycaps(c, k, o.caps, 12)
+		}
+	})
+}
+
+// itemRow shows a search item: its icon, its name, a preset's folder and
+// command, and what it is.
+func (l *launcher) itemRow(c *ui.Context, k tokens, item int) {
+	it := l.items[item]
+	e := l.entries[item]
 	subtitle := e.place // what tells an app from another of its name (design.md 2.3)
 	tag := locales.SearchTagApp()
-	if e.clip {
+	switch {
+	case e.own != "":
 		tag = locales.SearchTagGocast()
-	} else if e.app == nil {
+	case e.app == nil:
 		tag = locales.SearchTagPreset()
 		if j := presets.Find(l.g.presets, e.preset); j >= 0 {
 			subtitle = presetSubtitle(l.g.presets[j])
@@ -414,8 +462,8 @@ func (l *launcher) row(c *ui.Context, k tokens, i int) {
 	}
 	listRow(c, k, false, func() {
 		switch {
-		case e.clip:
-			symbolSquare(c, k, "doc.on.clipboard")
+		case e.own != "":
+			symbolSquare(c, k, "doc.on.clipboard") // the one searched
 		case e.app == nil:
 			presetSquare(c, k)
 		default:
@@ -448,13 +496,44 @@ func (l *launcher) row(c *ui.Context, k tokens, i int) {
 	})
 }
 
-// rowLabel is what assistive technology reads of a result: "Safari, App";
-// "Siri, Siri AI, App" for an app told from another of its name, as
+// rowKey keeps the choice on its row as the rows change: its item's ID,
+// in the Gocast group apart from the suggestions.
+func (l *launcher) rowKey(i int) any {
+	r := l.rows[i]
+	switch {
+	case r.title != "":
+		return "title:" + r.title
+	case r.own >= 0 && r.group:
+		return "group:" + l.own[r.own].id
+	case r.own >= 0:
+		return l.own[r.own].id
+	}
+	return l.items[r.item].ID
+}
+
+// rowLabel is what assistive technology reads of a row (copy.md 2.3): a
+// group's title, "Suggestions, heading"; in the Gocast group, the name;
+// Gocast's own item elsewhere, as the clipboard history's result.
+func (l *launcher) rowLabel(i int) string {
+	r := l.rows[i]
+	switch {
+	case r.title != "":
+		return locales.SearchHeading(r.title)
+	case r.own >= 0 && r.group:
+		return l.own[r.own].label
+	case r.own >= 0:
+		return l.own[r.own].label + listSep() + locales.SearchTagGocast()
+	}
+	return l.itemLabel(r.item)
+}
+
+// itemLabel is what assistive technology reads of a search item: "Safari,
+// App"; "Siri, Siri AI, App" for an app told from another of its name, as
 // shown; a preset's folder after.
-func (l *launcher) rowLabel(item int) string {
+func (l *launcher) itemLabel(item int) string {
 	it, e := l.items[item], l.entries[item]
 	sep := listSep()
-	if e.clip {
+	if e.own != "" {
 		return it.Title + sep + locales.SearchTagGocast()
 	}
 	if e.app != nil {
@@ -525,14 +604,10 @@ func (l *launcher) footer(c *ui.Context, k tokens, h float32) {
 	e, ok := l.current()
 	var segs []segment
 	if ok {
-		name := locales.FooterOpen()
-		if e.app == nil && !e.clip {
-			name = locales.FooterOpenInTerminal()
-		}
-		segs = append(segs, segment{label: name, color: k.text, key: ui.KeyEnter, caps: []string{"↩"}, act: l.primary})
+		segs = append(segs, segment{label: primaryName(e), color: k.text, key: ui.KeyEnter, caps: []string{"↩"}, act: l.primary})
 	}
-	// No results: nothing to act on. The search bar alone: Gocast's own
-	// actions (design.md 2.5a).
+	// No results: nothing to act on. The search bar alone: the
+	// suggestions (design.md 2.5a).
 	segs = append(segs, segment{label: locales.FooterActions(), color: k.textOnGlass, mods: ui.Cmd, key: ui.KeyK,
 		caps: []string{"⌘", "K"}, dim: !ok && !l.compact(), act: l.toggleMenu})
 	bottom := capsuleBottom(h)
@@ -558,6 +633,19 @@ func capsuleBottom(h float32) float32 {
 	return capsuleInset + max(0, centred-capsuleInset-(h-barHeight))
 }
 
+// primaryName is the name of the primary action of what the row opens
+// (copy.md 2.2a): Open; Open in Floating Terminal for a preset; Quit for
+// Quit Gocast.
+func primaryName(e entry) string {
+	switch {
+	case e.own == quitItemID:
+		return locales.FooterQuit()
+	case e.own == "" && e.app == nil:
+		return locales.FooterOpenInTerminal()
+	}
+	return locales.FooterOpen()
+}
+
 // isRunning reports whether the app with the bundle ID runs, as it did
 // when the panel showed.
 func (l *launcher) isRunning(id string) bool {
@@ -569,20 +657,37 @@ func (l *launcher) isRunning(id string) bool {
 	return on
 }
 
-// current returns the result chosen, while the panel shows results.
-func (l *launcher) current() (entry, bool) {
-	if l.compact() || l.chosen < 0 || l.chosen >= len(l.results) {
-		return entry{}, false
+// chosenRow returns the row chosen, while the panel shows rows.
+func (l *launcher) chosenRow() (panelRow, bool) {
+	if l.compact() || l.chosen < 0 || l.chosen >= len(l.rows) || l.rows[l.chosen].title != "" {
+		return panelRow{}, false
 	}
-	return l.entries[l.results[l.chosen]], true
+	return l.rows[l.chosen], true
 }
 
-// currentID returns the item ID of the result chosen.
-func (l *launcher) currentID() string {
-	if l.compact() || l.chosen < 0 || l.chosen >= len(l.results) {
-		return ""
+// current returns what the row chosen opens.
+func (l *launcher) current() (entry, bool) {
+	r, ok := l.chosenRow()
+	switch {
+	case !ok:
+		return entry{}, false
+	case r.own >= 0:
+		return entry{own: l.own[r.own].id}, true
 	}
-	return l.items[l.results[l.chosen]].ID
+	return l.entries[r.item], true
+}
+
+// currentID returns the item ID of the row chosen, which usage.json
+// scores.
+func (l *launcher) currentID() string {
+	r, ok := l.chosenRow()
+	switch {
+	case !ok:
+		return ""
+	case r.own >= 0:
+		return l.own[r.own].id
+	}
+	return l.items[r.item].ID
 }
 
 // --- The actions menu (Cmd-K) ---
@@ -592,12 +697,8 @@ func (l *launcher) toggleMenu() {
 		l.closeMenu()
 		return
 	}
-	if l.ownOpen {
-		l.closeOwn()
-		return
-	}
-	if l.compact() { // the query empty: Gocast's own actions
-		l.openOwn()
+	if l.compact() { // the search bar alone: the suggestions
+		l.expand()
 		return
 	}
 	if _, ok := l.current(); !ok {
@@ -625,8 +726,12 @@ func (l *launcher) actions() []action {
 	if !ok {
 		return nil
 	}
-	if e.clip {
-		return []action{{"doc.on.clipboard", locales.ActionOpen(), []string{"↩"}, l.primary}}
+	if e.own != "" { // its primary action alone (design.md 2.5a)
+		symbol := "doc.on.clipboard"
+		if i := ownIndex(l.own, e.own); i >= 0 {
+			symbol = l.own[i].symbol
+		}
+		return []action{{symbol, primaryName(e), []string{"↩"}, l.primary}}
 	}
 	if e.app != nil {
 		app := *e.app
@@ -730,165 +835,6 @@ func (l *launcher) actionsMenu(c *ui.Context, k tokens) {
 	})
 }
 
-// --- Gocast's own actions (Cmd-K under an empty query) ---
-
-// ownAction is a row of Gocast's own actions.
-type ownAction struct {
-	// symbol is the row's icon, or "" for a preset's square.
-	symbol, label string
-	// label2 is what assistive technology reads of the row, if not label.
-	label2 string
-	note   string   // a preset's folder, at the right
-	caps   []string // its shortcut, at the right
-	// section is the title of the section the row begins, divided that
-	// a divider goes over it.
-	section string
-	divided bool
-	run     func()
-}
-
-// gocastDo is what Gocast's own actions do.
-type gocastDo struct {
-	terminal, clipboard, addPreset, settings, quit func()
-	preset                                         func(id string)
-}
-
-// gocastActions are Gocast's own actions (design.md 2.5a, copy.md 2.2):
-// show the floating terminal, with its shortcut; under Open with Preset,
-// if there are any, each preset, to open it in a new tab; the clipboard
-// history, with its shortcut; add a preset; then Settings… and Quit
-// Gocast.
-func gocastActions(ps []presets.Preset, terminalKey, clipKey string, do gocastDo) []ownAction {
-	as := []ownAction{{symbol: "apple.terminal", label: locales.MenuTerminal(), caps: shortcut.Caps(terminalKey), run: do.terminal}}
-	for i, p := range ps {
-		id := p.ID
-		a := ownAction{label: presetTitle(p), label2: presetLabel(p), note: lastDir(p.ShortDir()), run: func() { do.preset(id) }}
-		if i == 0 {
-			a.section = locales.MenuWithPreset()
-		}
-		as = append(as, a)
-	}
-	return append(as,
-		ownAction{symbol: "doc.on.clipboard", label: locales.ClipboardHistory(), caps: shortcut.Caps(clipKey), run: do.clipboard},
-		ownAction{symbol: "plus", label: locales.PresetsAdd(), run: do.addPreset},
-		ownAction{symbol: "gearshape", label: locales.TraySettings(), caps: []string{"⌘", ","}, run: do.settings, divided: true},
-		ownAction{symbol: "power", label: locales.TrayQuit(), run: do.quit},
-	)
-}
-
-// ownListHeight is the height of the list of the actions under the
-// search bar: its rows, sections and dividers, its padding (none over, 8
-// under), within the panel's most.
-func ownListHeight(as []ownAction) float32 {
-	h := float32(listInset)
-	for _, a := range as {
-		h += rowHeight
-		if a.section != "" {
-			h += sectionHeight
-		}
-		if a.divided {
-			h += dividerHeight
-		}
-	}
-	return min(h, listHeight)
-}
-
-func (l *launcher) openOwn() {
-	l.own = gocastActions(l.g.presets, l.g.terminalKey, l.g.clipKey, gocastDo{
-		terminal:  func() { l.hide(); l.g.term.open() },
-		clipboard: func() { l.openClip(true) },
-		preset:    func(id string) { l.hide(); l.g.term.openPreset(id, true) },
-		addPreset: func() { l.hide(); l.g.addPreset() },
-		settings:  func() { l.hide(); l.g.openSettings("") },
-		quit:      mygo.App.Quit,
-	})
-	l.ownOpen, l.ownShown, l.ownChosen = true, true, 0
-	l.scroll = true
-	l.input.Focus()
-	l.win.Invalidate()
-}
-
-// closeOwn folds the list back under the bar, which it shows as the panel
-// shrinks.
-func (l *launcher) closeOwn() {
-	l.ownOpen = false
-	l.win.Invalidate()
-}
-
-func (l *launcher) runOwn(i int) {
-	if i < 0 || i >= len(l.own) {
-		return
-	}
-	l.ownOpen = false
-	l.own[i].run()
-}
-
-// ownKey takes the search field's keys for the list: moving, running,
-// Escape to fold it. Typing goes to the field, whose query ends the list.
-func (l *launcher) ownKey(key ui.Key, mods ui.Modifiers) bool {
-	switch {
-	case key == ui.KeyEscape && mods == 0:
-		l.closeOwn()
-	case key == ui.KeyEnter && mods == 0:
-		l.runOwn(l.ownChosen)
-	case key == ui.KeyEnter: // no other action
-	case key == ui.KeyDown && mods == 0, key == ui.KeyN && mods == ui.Ctrl, key == ui.KeyJ && mods == ui.Ctrl:
-		l.ownChosen = min(l.ownChosen+1, len(l.own)-1)
-		l.scroll = true
-	case key == ui.KeyUp && mods == 0, key == ui.KeyP && mods == ui.Ctrl, key == ui.KeyK && mods == ui.Ctrl:
-		l.ownChosen = max(l.ownChosen-1, 0)
-		l.scroll = true
-	default:
-		return false
-	}
-	return true
-}
-
-// ownList shows Gocast's own actions as the results show, a click
-// running one.
-func (l *launcher) ownList(c *ui.Context, k tokens) {
-	bottom := float32(listInset)
-	if barHeight+ownListHeight(l.own) >= expandedHeight { // it scrolls
-		bottom = capsuleInset + capsuleHeight + capsuleInset
-	}
-	ui.Scroll(c).Grow(1).Role(ui.RoleList).Label(locales.MenuList()).Children(func() {
-		ui.Column(c).Padding(0, listInset, bottom, listInset).Children(func() {
-			for i, a := range l.own {
-				if a.divided {
-					listDivider(c, k)
-				}
-				if a.section != "" {
-					listSection(c, k, a.section, locales.MenuWithPresetHeading())
-				}
-				label := a.label
-				if a.label2 != "" {
-					label = a.label2
-				}
-				c.Key(i)
-				row := listRow(c, k, i == l.ownChosen, func() {
-					if a.symbol == "" {
-						presetSquare(c, k)
-					} else {
-						listSymbol(c, k, a.symbol)
-					}
-					listTitle(c, k, a.label)
-					ui.Spacer(c)
-					if a.note != "" {
-						listNote(c, k, a.note).MaxWidth(listNoteMax).TruncateMiddle().Shrink(1)
-					}
-					if len(a.caps) > 0 {
-						keycaps(c, k, a.caps, 12)
-					}
-				}).Role(ui.RoleListItem).Label(label).OnClick(func() { l.runOwn(i) })
-				if l.scroll && i == l.ownChosen {
-					l.scroll = false
-					row.ScrollIntoView()
-				}
-			}
-		})
-	})
-}
-
 // --- Acting ---
 
 // primary opens the result chosen: an app, or a preset in the floating
@@ -903,11 +849,19 @@ func (l *launcher) act(second bool) {
 	if !ok {
 		return
 	}
-	l.g.record(l.currentID(), l.query)
-	if e.clip {
-		l.openClip(true)
+	if e.own != "" { // its primary action alone
+		if second {
+			return
+		}
+		if scored(e.own) {
+			l.g.record(e.own, l.query)
+		}
+		if i := ownIndex(l.own, e.own); i >= 0 && l.own[i].run != nil {
+			l.own[i].run()
+		}
 		return
 	}
+	l.g.record(l.currentID(), l.query)
 	l.hide() // the keyboard goes back to the app the user was in first
 	if e.app == nil {
 		l.g.term.openPreset(e.preset, second)
@@ -951,9 +905,28 @@ func (l *launcher) say(text string, danger bool) {
 
 // --- Items ---
 
+// ownItems are Gocast's own items, with the shortcuts as they are.
+func (l *launcher) ownItems() []ownItem {
+	return gocastItems(l.g.terminalKey, l.g.clipKey, gocastDo{
+		clipboard: func() { l.openClip(true) },
+		terminal:  func() { l.hide(); l.g.term.open() },
+		addPreset: func() { l.hide(); l.g.addPreset() },
+		settings:  func() { l.hide(); l.g.openSettings("") },
+		quit:      mygo.App.Quit,
+	})
+}
+
 // rebuild makes the searchable items, the terminal presets then the apps,
-// and filters them again, keeping the choice on its item.
+// and finds the rows again, keeping the choice on its row.
 func (l *launcher) rebuild() {
+	// Keep the choice on its row as the apps come in, unless it is the
+	// first row the user left as it was: the new first row takes it.
+	var was any
+	if _, ok := l.chosenRow(); ok {
+		was = l.rowKey(l.chosen)
+	}
+	first := l.chosen == firstRow(l.rows) && !l.moved
+	l.own = l.ownItems()
 	l.items, l.entries = l.items[:0], l.entries[:0]
 	now := time.Now()
 	for _, p := range l.g.presets {
@@ -968,7 +941,7 @@ func (l *launcher) rebuild() {
 	clip := search.NewItem(clipItemID, locales.ClipboardHistory(), clipSearchWords...)
 	clip.Score = l.g.usage.Score(clipItemID, now)
 	l.items = append(l.items, clip)
-	l.entries = append(l.entries, entry{clip: true})
+	l.entries = append(l.entries, entry{own: clipItemID})
 	for i := range l.apps {
 		app := &l.apps[i]
 		id := "app:" + app.ID
@@ -977,54 +950,86 @@ func (l *launcher) rebuild() {
 		l.items = append(l.items, it)
 		l.entries = append(l.entries, entry{app: app, place: l.places[i]})
 	}
-	if l.empty() && !suggestionsEnabled {
+	l.itemAt = make(map[string]int, len(l.items))
+	for i, it := range l.items {
+		l.itemAt[it.ID] = i
+	}
+	if l.compact() {
+		l.rows = l.find() // of the items as they are, for the panel to shrink with
 		return
 	}
-	// Keep the choice on its item as the apps come in, unless it is the
-	// first row the user left as it was: the new first row takes it.
-	was := l.currentID()
-	first := l.chosen == 0 && !l.moved
-	l.filtered = l.query
-	l.results = l.find()
-	chosen := 0
-	if !first {
-		if i := slices.IndexFunc(l.results, func(r int) bool { return l.items[r].ID == was }); i >= 0 {
-			chosen = i
+	l.filtered = l.queryKey()
+	l.rows = l.find()
+	chosen := firstRow(l.rows)
+	if !first && was != nil {
+		for i := range l.rows {
+			if l.rowKey(i) == was {
+				chosen = i
+				break
+			}
 		}
 	}
 	l.choose(chosen)
 }
 
-// filter finds the results of a new query, the first chosen. An empty
-// query keeps the results it had, which the panel shrinks with.
+// filter finds the rows of a new query, the first chosen: the results, or
+// the suggestions under an empty one, first at the top (design.md 2.5a).
+// The search bar alone keeps the rows it had, which the panel shrinks
+// with.
 func (l *launcher) filter() {
 	if !l.empty() {
-		l.ownOpen, l.ownShown = false, false
+		l.expanded = false // cleared again, the search bar alone
 	}
-	if l.empty() && !suggestionsEnabled {
-		l.filtered = noQuery // the same query again starts afresh
+	if l.compact() {
+		l.filtered = noQuery // expanded, it starts afresh
 		return
 	}
-	if l.query == l.filtered {
+	if l.queryKey() == l.filtered {
 		return
 	}
-	l.filtered = l.query
+	l.filtered = l.queryKey()
 	l.moved = false
 	l.menuOpen = false
-	l.results = l.find()
-	l.choose(0)
+	l.rows = l.find()
+	l.choose(firstRow(l.rows))
 }
 
-// noQuery is l.filtered when no results were found for the query.
+// queryKey is the query the rows are for: "" for an empty one.
+func (l *launcher) queryKey() string {
+	if l.empty() {
+		return ""
+	}
+	return l.query
+}
+
+// noQuery is l.filtered when no rows were found for the query.
 const noQuery = "\x00"
 
-// find returns the results of the query, or the suggestions for an empty
-// one.
-func (l *launcher) find() []int {
+// find returns the rows of the query: its results, or the suggestions and
+// Gocast's own items for an empty one.
+func (l *launcher) find() []panelRow {
 	if l.empty() {
-		return search.Suggestions(l.items, suggestionCount)
+		return suggestionRows(suggested(l.ranked, padIDs(l.g.presets), l.exists), l.itemIndex, l.own)
 	}
-	return search.Filter(l.items, l.query, l.g.usage.Choice(l.query, time.Now()))
+	return itemRows(search.Filter(l.items, l.query, l.g.usage.Choice(l.query, time.Now())))
+}
+
+// exists reports whether the item with the ID is there to open: an app
+// still installed, a preset not deleted.
+func (l *launcher) exists(id string) bool {
+	if strings.HasPrefix(id, ownItemPrefix) {
+		return ownIndex(l.own, id) >= 0
+	}
+	_, ok := l.itemAt[id]
+	return ok
+}
+
+// itemIndex is the index of the search item with the ID, or -1.
+func (l *launcher) itemIndex(id string) int {
+	if i, ok := l.itemAt[id]; ok {
+		return i
+	}
+	return -1
 }
 
 // load lists the installed apps and their other names on a goroutine, as
@@ -1088,7 +1093,8 @@ func (l *launcher) load() {
 
 // show shows the panel on the display with the pointer, its top a fifth of
 // the way down: as it was if it hid less than 90 seconds ago, its query
-// selected so that typing replaces it; else empty, its bar alone.
+// selected so that typing replaces it; else empty, with the suggestions
+// (or its bar alone, as Settings › General asks).
 func (l *launcher) show() {
 	if l.win.IsVisible() {
 		if l.clip.open {
@@ -1098,17 +1104,26 @@ func (l *launcher) show() {
 		return
 	}
 	l.clip.open = false
-	restore := !l.hiddenAt.IsZero() && time.Since(l.hiddenAt) < restoreFor
+	now := time.Now()
+	restore := restoring(l.hiddenAt, now)
+	// The setting as the panel shows: switched while it shows, it does not
+	// change (design.md 4.4).
+	l.searchOnly = l.g.settings.SearchOnly
+	l.own = l.ownItems()
+	// Ranked as it shows, the suggestions do not move until it shows again
+	// with an empty query after 90 seconds (design.md 2.5a).
+	if !restore || !l.empty() {
+		l.ranked = l.g.usage.Ranked(now)
+	}
 	if !restore {
-		l.query, l.filtered, l.results, l.moved = "", noQuery, nil, false
+		l.query, l.filtered, l.rows, l.moved, l.expanded = "", noQuery, nil, false, false
 		l.notice = ""
 		l.list = ui.ListState{}
-		l.choose(0)
-		l.filter() // the suggestions, when they show
 	}
+	l.filter() // afresh; as they were, if restored
 	l.selectAll = restore && l.query != ""
 	clear(l.running) // apps started or quit meanwhile
-	l.menuOpen, l.ownOpen, l.ownShown = false, false, false
+	l.menuOpen = false
 	l.gen++ // appears at its size, without animating to it
 	d := mygo.Screen.DisplayNearestPoint(mygo.Screen.CursorScreenPoint())
 	wa := d.WorkArea
@@ -1131,12 +1146,12 @@ func (l *launcher) hide() {
 	} else {
 		l.hiddenAt = time.Now() // the clipboard view isn't restored (design.md 2.8.1)
 	}
-	l.menuOpen, l.ownOpen = false, false
+	l.menuOpen = false
 	l.win.Hide()
 }
 
 // toggle shows or hides the search panel: from the clipboard view, it goes
-// back to the search panel, its bar alone (design.md 2.8.1).
+// back to the search panel, empty (design.md 2.8.1).
 func (l *launcher) toggle() {
 	if l.win.IsVisible() && l.clip.open {
 		l.leaveClip()
