@@ -55,9 +55,11 @@ type prefsWindow struct {
 	confirmDelete bool // the editor asks before deleting
 
 	// General.
-	login    bool
-	fontSize float64
-	hideBlur bool
+	login      bool
+	fontSize   float64
+	termWidth  float64 // percent of the work area
+	termHeight float64
+	hideBlur   bool
 
 	// About.
 	checking     bool
@@ -102,6 +104,8 @@ func (p *prefsWindow) show(page string) {
 	}
 	p.login = mygo.App.OpenAtLogin()
 	p.fontSize = float64(p.g.settings.Font())
+	p.termWidth = float64(p.g.settings.TermWidth())
+	p.termHeight = float64(p.g.settings.TermHeight())
 	p.hideBlur = !p.g.settings.KeepTerminalOnBlur
 	if !p.win.IsVisible() {
 		p.win.Center()
@@ -220,6 +224,11 @@ func (p *prefsWindow) goTo(page string) {
 
 func pageTitle(c *ui.Context, k tokens, title string) {
 	ui.Text(c, title).FontSize(20).FontWeight(600).TextColor(k.text).Margin(0, 0, 16, 0).Role(ui.RoleHeading)
+}
+
+// groupTitle is the title over a group.
+func groupTitle(c *ui.Context, k tokens, title string) {
+	ui.Text(c, title).FontSize(12).TextColor(k.textSecondary).Margin(0, 14, 8, 14).Role(ui.RoleHeading)
 }
 
 // group is a rounded block of rows, rows separated by hairlines.
@@ -608,6 +617,7 @@ func (p *prefsWindow) generalPage(c *ui.Context, k tokens) {
 			}
 		})
 	})
+	groupTitle(c, k, locales.GeneralTerminalGroup())
 	newGroup(c, k, func(g *group) {
 		g.row(c, k, locales.GeneralFontSize(), "", k.textSecondary, func() {
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
@@ -622,6 +632,21 @@ func (p *prefsWindow) generalPage(c *ui.Context, k tokens) {
 				}
 			})
 		})
+		sizeHint := locales.GeneralSizeHint()
+		g.row(c, k, locales.GeneralWidth(), sizeHint+"\n"+locales.GeneralSizeDragHint(), k.textSecondary, func() {
+			if p.percentSlider(c, k, locales.GeneralWidth(), &p.termWidth, settings.MinTerminalWidth, settings.MaxTerminalWidth) {
+				p.g.settings.TerminalWidth = int(p.termWidth)
+				p.g.saveSettings()
+				p.g.term.sizeChanged()
+			}
+		})
+		g.row(c, k, locales.GeneralHeight(), sizeHint, k.textSecondary, func() {
+			if p.percentSlider(c, k, locales.GeneralHeight(), &p.termHeight, settings.MinTerminalHeight, settings.MaxTerminalHeight) {
+				p.g.settings.TerminalHeight = int(p.termHeight)
+				p.g.saveSettings()
+				p.g.term.sizeChanged()
+			}
+		})
 		g.row(c, k, locales.GeneralHideOnBlur(), locales.GeneralHideOnBlurHint(), k.textSecondary, func() {
 			if ui.Switch(c, &p.hideBlur).Label(locales.GeneralHideOnBlur()).Changed() {
 				p.g.settings.KeepTerminalOnBlur = !p.hideBlur
@@ -634,6 +659,29 @@ func (p *prefsWindow) generalPage(c *ui.Context, k tokens) {
 			ui.Text(c, locales.GeneralAppearanceHint()).FontSize(12).TextColor(k.textSecondary)
 		})
 	})
+}
+
+// percentSlider is a slider of the floating terminal's size, in steps of
+// settings.SizeStep, with its value at its left, as the font size's; it
+// reports a new value.
+func (p *prefsWindow) percentSlider(c *ui.Context, k tokens, label string, value *float64, lo, hi int) bool {
+	changed := false
+	ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
+		ui.Text(c, locales.GeneralPercent(int(*value))).FontSize(13).Font("monospace").TextColor(k.text).
+			Width(40).TextAlign(ui.End)
+		changed = ui.Slider(c, value, float64(lo), float64(hi)).Step(settings.SizeStep).Width(160).Label(label).Changed()
+	})
+	if changed {
+		*value = float64(settings.SnapPercent(*value, lo, hi))
+	}
+	return changed
+}
+
+// terminalSizeChanged shows the size the floating terminal was dragged to.
+func (p *prefsWindow) terminalSizeChanged() {
+	p.termWidth = float64(p.g.settings.TermWidth())
+	p.termHeight = float64(p.g.settings.TermHeight())
+	p.win.Invalidate()
 }
 
 // --- About ---

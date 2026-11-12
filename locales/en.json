@@ -404,9 +404,39 @@
   "@generalLoginHint": {
     "description": "General: under the switch."
   },
-  "generalFontSize": "Terminal font size",
+  "generalTerminalGroup": "Floating Terminal",
+  "@generalTerminalGroup": {
+    "description": "General: title over the floating terminal group."
+  },
+  "generalFontSize": "Font size",
   "@generalFontSize": {
     "description": "General: stepper."
+  },
+  "generalWidth": "Width",
+  "@generalWidth": {
+    "description": "General: slider, the floating terminal's width."
+  },
+  "generalHeight": "Height",
+  "@generalHeight": {
+    "description": "General: slider, the floating terminal's height."
+  },
+  "generalSizeHint": "How much of the screen.",
+  "@generalSizeHint": {
+    "description": "General: under the width and height sliders."
+  },
+  "generalSizeDragHint": "Dragging the bottom edge updates this.",
+  "@generalSizeDragHint": {
+    "description": "General: under the width slider, after generalSizeHint."
+  },
+  "generalPercent": "{n}%",
+  "@generalPercent": {
+    "description": "General: a slider's value, beside it.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "80"
+      }
+    }
   },
   "generalHideOnBlur": "Hide floating terminal when you click away",
   "@generalHideOnBlur": {

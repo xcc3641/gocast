@@ -1190,18 +1190,102 @@ func (msgs Messages) GeneralLoginHint() string {
 	return Catalog.Format(msgs.locale, "generalLoginHint", nil)
 }
 
-// GeneralFontSize says "Terminal font size"
+// GeneralTerminalGroup says "Floating Terminal"
+// in the language the app shows.
+//
+// General: title over the floating terminal group.
+func GeneralTerminalGroup() string { return In(i18n.Locale()).GeneralTerminalGroup() }
+
+// GeneralTerminalGroup says "Floating Terminal"
+// in the language of msgs.
+//
+// General: title over the floating terminal group.
+func (msgs Messages) GeneralTerminalGroup() string {
+	return Catalog.Format(msgs.locale, "generalTerminalGroup", nil)
+}
+
+// GeneralFontSize says "Font size"
 // in the language the app shows.
 //
 // General: stepper.
 func GeneralFontSize() string { return In(i18n.Locale()).GeneralFontSize() }
 
-// GeneralFontSize says "Terminal font size"
+// GeneralFontSize says "Font size"
 // in the language of msgs.
 //
 // General: stepper.
 func (msgs Messages) GeneralFontSize() string {
 	return Catalog.Format(msgs.locale, "generalFontSize", nil)
+}
+
+// GeneralWidth says "Width"
+// in the language the app shows.
+//
+// General: slider, the floating terminal's width.
+func GeneralWidth() string { return In(i18n.Locale()).GeneralWidth() }
+
+// GeneralWidth says "Width"
+// in the language of msgs.
+//
+// General: slider, the floating terminal's width.
+func (msgs Messages) GeneralWidth() string {
+	return Catalog.Format(msgs.locale, "generalWidth", nil)
+}
+
+// GeneralHeight says "Height"
+// in the language the app shows.
+//
+// General: slider, the floating terminal's height.
+func GeneralHeight() string { return In(i18n.Locale()).GeneralHeight() }
+
+// GeneralHeight says "Height"
+// in the language of msgs.
+//
+// General: slider, the floating terminal's height.
+func (msgs Messages) GeneralHeight() string {
+	return Catalog.Format(msgs.locale, "generalHeight", nil)
+}
+
+// GeneralSizeHint says "How much of the screen."
+// in the language the app shows.
+//
+// General: under the width and height sliders.
+func GeneralSizeHint() string { return In(i18n.Locale()).GeneralSizeHint() }
+
+// GeneralSizeHint says "How much of the screen."
+// in the language of msgs.
+//
+// General: under the width and height sliders.
+func (msgs Messages) GeneralSizeHint() string {
+	return Catalog.Format(msgs.locale, "generalSizeHint", nil)
+}
+
+// GeneralSizeDragHint says "Dragging the bottom edge updates this."
+// in the language the app shows.
+//
+// General: under the width slider, after generalSizeHint.
+func GeneralSizeDragHint() string { return In(i18n.Locale()).GeneralSizeDragHint() }
+
+// GeneralSizeDragHint says "Dragging the bottom edge updates this."
+// in the language of msgs.
+//
+// General: under the width slider, after generalSizeHint.
+func (msgs Messages) GeneralSizeDragHint() string {
+	return Catalog.Format(msgs.locale, "generalSizeDragHint", nil)
+}
+
+// GeneralPercent says "{n}%"
+// in the language the app shows.
+//
+// General: a slider's value, beside it.
+func GeneralPercent(n int) string { return In(i18n.Locale()).GeneralPercent(n) }
+
+// GeneralPercent says "{n}%"
+// in the language of msgs.
+//
+// General: a slider's value, beside it.
+func (msgs Messages) GeneralPercent(n int) string {
+	return Catalog.Format(msgs.locale, "generalPercent", map[string]any{"n": n})
 }
 
 // GeneralHideOnBlur says "Hide floating terminal when you click away"

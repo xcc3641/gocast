@@ -16,24 +16,29 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"gocast/internal/presets"
+	"gocast/internal/settings"
 	"gocast/internal/shortcut"
 	"gocast/locales"
 )
 
 // The floating terminal's measures (design.md 3.2–3.6), in DIPs.
 const (
-	termMaxWidth  = 1200
-	termMinHeight = 360
-	termTopGap    = 8
-	termRadius    = 16
-	tabBarH       = 40
-	tabH          = 26
-	bannerH       = 36
-	endBarH       = 44
-	minFontSize   = 11
-	maxFontSize   = 20
-	slideIn       = 180 * time.Millisecond
-	slideOut      = 120 * time.Millisecond
+	termMinWidth  = 480 // as small as the panel gets, by any setting or drag
+	termMinHeight = 240
+	// The size until the user sets one: 80% of the work area's width up to
+	// termDefaultMaxWidth, half its height, at least termDefaultMinHeight.
+	termDefaultMaxWidth  = 1200
+	termDefaultMinHeight = 360
+	termTopGap           = 8
+	termRadius           = 16
+	tabBarH              = 40
+	tabH                 = 26
+	bannerH              = 36
+	endBarH              = 44
+	minFontSize          = 11
+	maxFontSize          = 20
+	slideIn              = 180 * time.Millisecond
+	slideOut             = 120 * time.Millisecond
 	// The panel drops dropIn to its place as it shows, and rises
 	// riseOut as it hides (design.md 1.5).
 	dropIn, riseOut = 12, 8
@@ -91,6 +96,10 @@ type termPanel struct {
 	reveal bool         // scroll the tab bar to the active tab
 	menu   bool         // the new tab menu shows
 	top    int          // the top of the work area the panel shows in
+
+	wa      mygo.Rectangle // the work area the panel shows in
+	size    [2]int         // the panel's width and height as last placed or resized
+	placing bool           // the panel's bounds are being set, not dragged
 }
 
 func newTermPanel(g *gocast) *termPanel {
@@ -103,10 +112,10 @@ func newTermPanel(g *gocast) *termPanel {
 		Transparent:  true,
 		Vibrancy:     mygo.VibrancyGlass,
 		CornerRadius: termRadius,
-		Width:        termMaxWidth,
-		Height:       termMinHeight * 2,
-		MinWidth:     480,
-		MinHeight:    240,
+		Width:        termDefaultMaxWidth,
+		Height:       termDefaultMinHeight * 2,
+		MinWidth:     termMinWidth,
+		MinHeight:    termMinHeight,
 		Content:      ui.View(p.view),
 	})
 	// Hiding never ends the programs: Cmd-W closes a tab, and going
@@ -118,6 +127,7 @@ func newTermPanel(g *gocast) *termPanel {
 			p.hide()
 		}
 	})
+	p.win.OnResize(p.resized)
 	p.win.OnBlur(func() {
 		if !g.settings.KeepTerminalOnBlur && !p.menu {
 			p.hide()
@@ -578,10 +588,9 @@ func (p *termPanel) show() {
 	}
 	p.shown = true
 	wa := mygo.Screen.DisplayNearestPoint(mygo.Screen.CursorScreenPoint()).WorkArea
-	w := min(termMaxWidth, wa.Width*4/5)
-	h := max(termMinHeight, wa.Height/2)
+	w, h := termSize(wa.Width, wa.Height, p.g.settings)
 	x, y := wa.X+(wa.Width-w)/2, wa.Y+termTopGap
-	p.top = wa.Y
+	p.top, p.wa = wa.Y, wa
 	gen := p.anim.Add(1)
 	reduce := mygo.Theme.Preferences().ReduceMotion
 	// AppKit keeps a window's top under the menu bar (a frameless window
@@ -593,7 +602,7 @@ func (p *termPanel) show() {
 	if reduce {
 		from = y
 	}
-	p.win.SetBounds(mygo.Rectangle{X: x, Y: from, Width: w, Height: h})
+	p.place(mygo.Rectangle{X: x, Y: from, Width: w, Height: h})
 	p.win.SetOpacity(0)
 	if s := p.current(); s != nil {
 		s.focus.Focus()
@@ -608,6 +617,79 @@ func (p *termPanel) show() {
 		p.win.SetOpacity(t)
 		p.win.SetPosition(x, from+int(math.Round(float64(y-from)*t)))
 	}, nil)
+}
+
+// place sets the panel's bounds, which resized then knows the user did not
+// drag.
+func (p *termPanel) place(r mygo.Rectangle) {
+	p.placing = true
+	p.win.SetBounds(r)
+	p.placing = false
+	b := p.win.Bounds() // as AppKit constrained it
+	p.size = [2]int{b.Width, b.Height}
+}
+
+// resized saves the size the user dragged the panel to, in percent of
+// the work area, rounded to the settings' steps: the next show uses it,
+// and Settings shows it. Only the side that changed is saved, so that a
+// side held at the panel's minimum does not drift.
+func (p *termPanel) resized() {
+	if p.placing || !p.shown || p.wa.Width <= 0 || p.wa.Height <= 0 {
+		return
+	}
+	b := p.win.Bounds()
+	st := &p.g.settings
+	was := *st
+	if b.Width != p.size[0] {
+		st.TerminalWidth = termPercent(b.Width, p.wa.Width, settings.MinTerminalWidth, settings.MaxTerminalWidth)
+	}
+	if b.Height != p.size[1] {
+		st.TerminalHeight = termPercent(b.Height, p.wa.Height, settings.MinTerminalHeight, settings.MaxTerminalHeight)
+	}
+	p.size = [2]int{b.Width, b.Height}
+	if st.TerminalWidth != was.TerminalWidth || st.TerminalHeight != was.TerminalHeight {
+		p.g.saveSettings()
+		p.g.prefs.terminalSizeChanged()
+	}
+}
+
+// sizeChanged gives the panel showing the size of Settings, at the top
+// of its work area, centered.
+func (p *termPanel) sizeChanged() {
+	if !p.shown || p.wa.Width <= 0 {
+		return
+	}
+	p.anim.Add(1) // ends a drop in progress where it would end
+	p.win.SetOpacity(1)
+	w, h := termSize(p.wa.Width, p.wa.Height, p.g.settings)
+	p.place(mygo.Rectangle{X: p.wa.X + (p.wa.Width-w)/2, Y: p.wa.Y + termTopGap, Width: w, Height: h})
+}
+
+// termSize is the panel's size in a work area of waW×waH: the
+// percentages of the settings, or the default size while they are unset,
+// no smaller than termMinWidth×termMinHeight, no larger than the work
+// area.
+func termSize(waW, waH int, st settings.Settings) (w, h int) {
+	if st.TerminalWidth == 0 {
+		w = min(termDefaultMaxWidth, percentOf(waW, settings.DefaultTerminalWidth))
+	} else {
+		w = percentOf(waW, st.TermWidth())
+	}
+	if st.TerminalHeight == 0 {
+		h = max(termDefaultMinHeight, percentOf(waH, settings.DefaultTerminalHeight))
+	} else {
+		h = percentOf(waH, st.TermHeight())
+	}
+	return min(max(w, termMinWidth), waW), min(max(h, termMinHeight), waH)
+}
+
+// percentOf is pct percent of n, rounded.
+func percentOf(n, pct int) int { return int(math.Round(float64(n) * float64(pct) / 100)) }
+
+// termPercent is px in percent of the work area's wa, rounded to the
+// settings' step, within lo and hi.
+func termPercent(px, wa, lo, hi int) int {
+	return settings.SnapPercent(float64(px)*100/float64(wa), lo, hi)
 }
 
 // hide lifts the panel riseOut as it fades out (fades it only,
