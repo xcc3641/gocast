@@ -1,5 +1,6 @@
-# Gocast 界面文案 v1.13（搜索面板 · 悬浮终端 · 设置）
+# Gocast 界面文案 v1.14（搜索面板 · 悬浮终端 · 设置）
 
+v1.14 改动：剪贴板历史不加密了。设置里的说明和 README 改成「只存在这台 Mac 上，不会上传」，不提加密。「读不出历史」只剩文件坏了这一种情况，文案不变。
 v1.13 改动：参考 Tinycast 的三点。「粘贴到“{应用名}”」就是粘贴去向，去向是悬浮终端时写「粘贴到悬浮终端」。往终端贴图片时主操作不改名，README 说一句。README 已写入剪贴板历史（6.11）。
 
 v1.12 改动：第 6 节跟 design.md 对齐。补「读不出剪贴板历史」，以及这时的清空确认。拷贝或粘贴后面板直接收起，所以去掉「已拷贝」提示。剪贴板快捷键只放在设置 › 快捷键。入口那一行的主操作是「打开」。
@@ -324,7 +325,7 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 | 记录已关闭 | 剪贴板历史已关闭 | 打开后，你拷贝的内容会记在这里。 | 打开 |
 | 搜不到 | 没有找到“{输入}” | 试试内容里的原话。这里不按拼音搜。 | 无 |
 | 筛选后没有 | 没有{类型} | 无 | 无 |
-| 读不出历史（钥匙丢了或文件坏了） | 读不出剪贴板历史 | 保存的历史打不开了。去设置 › 剪贴板点“清空历史…”，从头开始记录。 | 无 |
+| 读不出历史（文件坏了） | 读不出剪贴板历史 | 保存的历史打不开了。去设置 › 剪贴板点“清空历史…”，从头开始记录。 | 无 |
 
 English: No clipboard history yet / Copy something and it shows up here. · Clipboard history is off / Turn it on and what you copy is kept here. / Turn On · No results for “{query}” / Try words from the item itself. Pinyin isn’t matched here. · No {type}（No text / No links / No images / No files）· Can’t read clipboard history / Your saved history can’t be opened. Go to Settings › Clipboard and click Clear History… to start fresh.
 
@@ -385,7 +386,7 @@ English: No clipboard history yet / Copy something and it shows up here. · Clip
 | 位置 | 中文 | English |
 |---|---|---|
 | 开关 | 记录剪贴板历史 | Keep clipboard history |
-| 开关说明 | 只存在这台 Mac 上，加密保存，不会上传。 | Stored only on this Mac, encrypted, never uploaded. |
+| 开关说明 | 只存在这台 Mac 上，不会上传。 | Stored only on this Mac, never uploaded. |
 | 保留时长 | 保留 | Keep for |
 | 保留选项 | 1 天 / 1 周 / 1 个月 / 3 个月 / 一直保留 | 1 Day / 1 Week / 1 Month / 3 Months / Forever |
 | 保留说明 | 置顶的不会过期。 | Pinned items never expire. |
@@ -442,9 +443,9 @@ English: Press ⌃⌘V to find the text, links, images and files you copied befo
 
 你的数据：
 
-中文：剪贴板历史也只存在这台 Mac 上（同一个文件夹，加密保存），不会上传。密码管理器拷贝的密码不会记。可以在设置 › 剪贴板里关掉、清空，或者选哪些应用不记。
+中文：剪贴板历史也只存在这台 Mac 上（同一个文件夹），不会上传。密码管理器拷贝的密码不会记。可以在设置 › 剪贴板里关掉、清空，或者选哪些应用不记。
 
-English: Clipboard history stays on this Mac too, in the same folder, encrypted, and is never uploaded. Passwords from password managers are never kept. Turn it off, clear it, or exclude apps in Settings › Clipboard.
+English: Clipboard history stays on this Mac too, in the same folder, and is never uploaded. Passwords from password managers are never kept. Turn it off, clear it, or exclude apps in Settings › Clipboard.
 
 卸载说明改成：预设、设置和剪贴板历史会留着。 / Your presets, settings and clipboard history stay.
 

@@ -62,7 +62,7 @@ All three shortcuts can be changed in Settings › Shortcuts.
 
 Gocast has no account and sends nothing about you anywhere. It only goes online to check for updates, which you can turn off in Settings › General. Your presets and settings are plain files in `~/Library/Application Support/dev.gocast.app/`.
 
-Clipboard history stays on this Mac too, in the same folder, encrypted, and is never uploaded. Passwords from password managers are never kept. Turn it off, clear it, or exclude apps in Settings › Clipboard.
+Clipboard history stays on this Mac too, in the same folder, and is never uploaded. Passwords from password managers are never kept. Turn it off, clear it, or exclude apps in Settings › Clipboard.
 
 ## Build from source
 
