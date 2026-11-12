@@ -186,7 +186,7 @@ func TestClipActions(t *testing.T) {
 		return out
 	}
 	text := clipboard.Entry{Kind: clipboard.KindText, Text: "hi"}
-	got := spell(clipActions(text, true, "备忘录"))
+	got := spell(clipActions(text, true, appTarget("备忘录")))
 	want := []row{
 		{actPaste, "粘贴到“备忘录”", "↩", false},
 		{actPastePlain, "粘贴为纯文本", "", false},
@@ -198,13 +198,13 @@ func TestClipActions(t *testing.T) {
 	if !slices.Equal(got, want) {
 		t.Errorf("text, may paste:\n got %v\nwant %v", got, want)
 	}
-	if as := clipActions(text, true, "备忘录"); as[1].symbol != "doc.plaintext" {
+	if as := clipActions(text, true, appTarget("备忘录")); as[1].symbol != "doc.plaintext" {
 		t.Errorf("Paste as Plain Text shows %q, want doc.plaintext (design.md 2.8)", as[1].symbol)
 	}
 	// Without the permission, copying is first, on Return; a link opens;
 	// a pinned item unpins.
 	link := clipboard.Entry{Kind: clipboard.KindLink, Text: "https://a.b", Pinned: true}
-	got = spell(clipActions(link, false, "Safari"))
+	got = spell(clipActions(link, false, appTarget("Safari")))
 	want = []row{
 		{actCopy, "拷贝到剪贴板", "↩", false},
 		{actOpenLink, "打开链接", "⌘O", false},
@@ -217,7 +217,7 @@ func TestClipActions(t *testing.T) {
 	}
 	// An unknown app: Paste. Images don't paste as plain text. Files show
 	// in Finder while there.
-	as := clipActions(clipboard.Entry{Kind: clipboard.KindImage}, true, "")
+	as := clipActions(clipboard.Entry{Kind: clipboard.KindImage}, true, pasteTarget{})
 	if as[0].label != "粘贴" || as[1].id != actCopy {
 		t.Errorf("image, unknown app: %v", spell(as))
 	}
@@ -226,15 +226,77 @@ func TestClipActions(t *testing.T) {
 	has := func(as []clipAction, id clipActionID) bool {
 		return slices.ContainsFunc(as, func(a clipAction) bool { return a.id == id })
 	}
-	if !has(clipActions(clipboard.Entry{Kind: clipboard.KindFiles, Files: []string{"/here"}}, true, "x"), actShowInFinder) {
+	if !has(clipActions(clipboard.Entry{Kind: clipboard.KindFiles, Files: []string{"/here"}}, true, appTarget("x")), actShowInFinder) {
 		t.Error("a file there: no Show in Finder")
 	}
-	if has(clipActions(clipboard.Entry{Kind: clipboard.KindFiles, Files: []string{"/gone"}}, true, "x"), actShowInFinder) {
+	if has(clipActions(clipboard.Entry{Kind: clipboard.KindFiles, Files: []string{"/gone"}}, true, appTarget("x")), actShowInFinder) {
 		t.Error("a file gone: Show in Finder")
+	}
+	// The floating terminal: its own label, in the ⌘K menu too.
+	if as := clipActions(text, true, pasteTarget{floating: true}); as[0].label != "粘贴到悬浮终端" {
+		t.Errorf("floating terminal: %v", spell(as))
 	}
 	inLocale(t, "en")
 	if got := pasteLabel("Notes"); got != "Paste to Notes" {
 		t.Errorf("pasteLabel = %q", got)
+	}
+	if got := (pasteTarget{floating: true}).label("Gocast"); got != "Paste to Floating Terminal" {
+		t.Errorf("floating terminal label = %q", got)
+	}
+	if got := (pasteTarget{app: clipboard.App{BundleID: "com.apple.Terminal", Name: "Terminal"}}).label("Terminal"); got != "Paste to Terminal" {
+		t.Errorf("Terminal label = %q", got)
+	}
+}
+
+func appTarget(name string) pasteTarget { return pasteTarget{app: clipboard.App{Name: name}} }
+
+func TestPasteWay(t *testing.T) {
+	app := func(id string) pasteTarget { return pasteTarget{app: clipboard.App{BundleID: id, Name: id}} }
+	terminals := []pasteTarget{
+		{floating: true},
+		app("com.apple.Terminal"), app("com.googlecode.iterm2"), app("com.mitchellh.ghostty"),
+		app("dev.warp.Warp-Stable"), app("net.kovidgoyal.kitty"), app("org.alacritty"),
+		app("com.github.wez.wezterm"),
+	}
+	others := []pasteTarget{{}, app("com.apple.Notes"), app("com.apple.Safari"), app("com.microsoft.VSCode"), app("com.apple.terminal")}
+	kinds := []clipboard.Kind{clipboard.KindText, clipboard.KindRichText, clipboard.KindLink, clipboard.KindImage, clipboard.KindFiles}
+	for _, tg := range terminals {
+		if !tg.terminal() {
+			t.Errorf("%+v: not a terminal", tg)
+		}
+	}
+	for _, tg := range others {
+		if tg.terminal() {
+			t.Errorf("%+v: a terminal", tg)
+		}
+	}
+	for _, k := range kinds {
+		for _, plain := range []bool{false, true} {
+			for _, tg := range terminals {
+				want := pasteAll
+				switch {
+				case k == clipboard.KindImage:
+					want = pasteImagePath
+				case plain:
+					want = pastePlainText
+				}
+				if got := pasteWayFor(k, plain, tg); got != want {
+					t.Errorf("%s, plain %v, into %+v: %d, want %d", k, plain, tg, got, want)
+				}
+			}
+			for _, tg := range others {
+				want := pasteAll
+				if plain && k != clipboard.KindImage {
+					want = pastePlainText
+				}
+				if got := pasteWayFor(k, plain, tg); got != want {
+					t.Errorf("%s, plain %v, into %+v: %d, want %d", k, plain, tg, got, want)
+				}
+			}
+		}
+	}
+	if len(terminalApps) != 7 {
+		t.Errorf("%d terminals", len(terminalApps))
 	}
 }
 

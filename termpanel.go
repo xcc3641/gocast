@@ -711,6 +711,22 @@ func (p *termPanel) toggle() {
 	p.show()
 }
 
+// focused reports whether the panel shows and is the key window: where
+// the clipboard history pastes.
+func (p *termPanel) focused() bool { return p.shown && p.win.IsFocused() }
+
+// paste focuses the panel and pastes text into its tab, as the paste keys
+// paste the clipboard: false when it has no tab running.
+func (p *termPanel) paste(text string) bool {
+	s := p.current()
+	if s == nil || s.term == nil {
+		return false
+	}
+	p.show()
+	s.term.Paste(text)
+	return true
+}
+
 // open shows the panel as toggle does, or focuses it where it shows.
 func (p *termPanel) open() {
 	if p.shown {

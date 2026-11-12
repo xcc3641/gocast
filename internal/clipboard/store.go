@@ -89,6 +89,10 @@ type Options struct {
 	Pasteboard Pasteboard
 	// Now is the clock; nil is time.Now.
 	Now func() time.Time
+	// ImageDir is the folder of the image files pasted into terminals
+	// (ImageFile; the app's is DefaultImageDir), which Open empties; ""
+	// is none.
+	ImageDir string
 }
 
 type item struct {
@@ -166,6 +170,7 @@ func NewMemoryStore(opts Options) *Store { return newStore(opts) }
 func Open(dir string, keys KeyStore, opts Options) (*Store, error) {
 	s := newStore(opts)
 	s.dir, s.keys = dir, keys
+	s.removeImageFiles(nil) // an earlier run's
 	s.err = s.open()
 	return s, s.err
 }
@@ -380,6 +385,7 @@ func (s *Store) forget(it *item) {
 }
 
 func (s *Store) removeBlobs(v *vault, items []*item) {
+	s.removeImageFiles(items)
 	if v == nil {
 		return
 	}
@@ -524,13 +530,18 @@ func (s *Store) Touch(id string) error {
 }
 
 // SetPinned pins or unpins the entry. Pinned entries list first and never
-// expire.
+// expire. Unpinned, the entry becomes the newest, as copied now: at the
+// top of today's, not back among those of the day it was copied.
 func (s *Store) SetPinned(id string, pinned bool) error {
 	s.mu.Lock()
 	it := s.byID[id]
 	if it == nil {
 		s.mu.Unlock()
 		return ErrNotFound
+	}
+	if it.Pinned && !pinned {
+		it.Time = s.opts.Now()
+		s.toFront(it)
 	}
 	it.Pinned = pinned
 	s.mu.Unlock()
@@ -593,6 +604,7 @@ func (s *Store) Clear() error {
 func (s *Store) reset() error {
 	s.addMu.Lock()
 	defer s.addMu.Unlock()
+	s.removeImageFiles(nil)
 	if err := wipe(s.dir); err != nil {
 		s.mu.Lock()
 		s.err = err

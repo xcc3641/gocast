@@ -65,9 +65,9 @@ type clipView struct {
 	composing bool
 	scroll    bool
 
-	// target is the app to paste into: the one frontmost as the view
-	// opened, Gocast aside.
-	target  clipboard.App
+	// target is where to paste: the app frontmost as the view opened,
+	// Gocast aside, or the floating terminal when it was key.
+	target  pasteTarget
 	trusted bool // Gocast may press ⌘V, as of the view opening
 	ready   bool // "Ready to paste" shows
 	readyN  int
@@ -116,7 +116,7 @@ func (v *clipView) svc() *clipService { return v.l.g.clip }
 // from the search panel, which Escape goes back to; else shown at once.
 func (l *launcher) openClip(fromSearch bool) {
 	v := l.clip
-	v.target = frontmostOther()
+	v.target = pasteTarget{app: frontmostOther(), floating: l.g.term.focused()}
 	v.fromSearch = fromSearch
 	v.open = true
 	v.query, v.filter = "", clipboard.FilterAll
@@ -898,11 +898,11 @@ func (v *clipView) primaryLabel(c *ui.Context) string {
 	if !v.canPaste() {
 		return locales.ClipCopy()
 	}
-	name := fitText(v.target.Name, clipAppNameMax, func(s string) float32 {
+	name := fitText(v.target.app.Name, clipAppNameMax, func(s string) float32 {
 		w, _ := c.MeasureText(0, ui.Span{Text: s, Size: 13})
 		return w
 	})
-	return pasteLabel(name)
+	return v.target.label(name)
 }
 
 // say shows a notice at the bottom left for a few seconds, read out.
@@ -989,7 +989,7 @@ func (v *clipView) toggleMenu() {
 	v.menuOpen = true
 	v.menuQuery = ""
 	v.menuChosen = 0
-	v.menuItems = clipActions(e, v.canPaste(), v.target.Name)
+	v.menuItems = clipActions(e, v.canPaste(), v.target)
 	v.filterMenu()
 	v.menuInput.Focus()
 	v.l.win.Invalidate()
@@ -1159,8 +1159,7 @@ func (v *clipView) run(id clipActionID, e clipboard.Entry) {
 			v.run(actCopy, e)
 			return
 		}
-		target := v.target
-		if err := s.paste(e.ID, id == actPastePlain, target); err != nil {
+		if err := s.paste(e.ID, id == actPastePlain, v.target); err != nil {
 			if err == errFilesGone {
 				v.say(locales.ClipFileMissing(), true)
 			} else {

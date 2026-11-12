@@ -820,6 +820,10 @@
       }
     }
   },
+  "clipPasteToTerminal": "Paste to Floating Terminal",
+  "@clipPasteToTerminal": {
+    "description": "Primary action: paste into Gocast's floating terminal, which the user was in."
+  },
   "clipPaste": "Paste",
   "@clipPaste": {
     "description": "Primary action: paste, the app not known."

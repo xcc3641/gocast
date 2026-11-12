@@ -116,7 +116,10 @@ func (s *clipService) trusted() bool {
 // start reads the history on a goroutine, then starts recording.
 func (s *clipService) start() {
 	set := s.g.settings
-	opts := clipboard.Options{Retention: clipboard.Retention(set.ClipboardRetention)}
+	opts := clipboard.Options{Retention: clipboard.Retention(set.ClipboardRetention), ImageDir: clipboard.DefaultImageDir()}
+	if s.dry { // leaves the app's image files alone
+		opts.ImageDir += "-dev"
+	}
 	var keys clipboard.KeyStore = clipboard.NewKeyFile(s.keyPath())
 	switch {
 	case s.seed != "":
@@ -269,33 +272,57 @@ func (s *clipService) copy(id string) error {
 	return s.store.CopyToPasteboard(id)
 }
 
-// paste puts the item on the pasteboard (its plain text alone, plain),
-// brings the app the user was in to the front and presses ⌘V there, on a
-// goroutine: the panel is hidden first. A development run pastes nowhere.
-func (s *clipService) paste(id string, plain bool, target clipboard.App) error {
+// paste puts the item on the pasteboard (its plain text alone, plain;
+// an image's file path into a terminal, pasteWayFor), brings the app the
+// user was in to the front and presses ⌘V there, on a goroutine: the
+// panel is hidden first. Into the floating terminal it pastes directly,
+// once the panel is hidden. A development run pastes nowhere.
+func (s *clipService) paste(id string, plain bool, target pasteTarget) error {
 	if s.store == nil {
 		return clipboard.ErrNotFound
 	}
-	if e, ok := s.store.Get(id); ok && missingFile(e.Files) {
+	e, ok := s.store.Get(id)
+	if !ok {
+		return clipboard.ErrNotFound
+	}
+	if missingFile(e.Files) {
 		return errFilesGone
 	}
+	way := pasteWayFor(e.Kind, plain, target)
+	store := s.store
 	if s.dry {
-		err := s.store.CopyToPasteboard(id)
-		log.Printf("clipboard: a development run: %s put on the pasteboard in memory, not pasted into %q", id, target.Name)
+		_, err := copyFor(store, e, way)
+		log.Printf("clipboard: a development run: %s put on the pasteboard in memory (way %d), not pasted into %q (floating terminal %v)", id, way, target.app.Name, target.floating)
 		return err
 	}
-	if target.PID > 0 {
-		clipActivate(target.PID)
+	if target.floating {
+		text, err := copyFor(store, e, way)
+		if err != nil {
+			return err
+		}
+		term := s.g.term
+		term.win.Update(func() {
+			if !term.paste(text) {
+				log.Printf("clipboard: the floating terminal has no tab to paste into")
+			}
+		})
+		return nil
 	}
-	store := s.store
+	app := target.app
+	if app.PID > 0 {
+		clipActivate(app.PID)
+	}
 	go func() {
-		if target.PID > 0 && !clipWaitFront(target.PID, time.Second) {
-			log.Printf("clipboard: %s did not come to the front", target.Name)
+		if app.PID > 0 && !clipWaitFront(app.PID, time.Second) {
+			log.Printf("clipboard: %s did not come to the front", app.Name)
 		}
 		var err error
-		if plain {
+		switch way {
+		case pasteImagePath:
+			err = store.PasteImagePath(id)
+		case pastePlainText:
 			err = store.PasteAsPlainText(id)
-		} else {
+		default:
 			err = store.Paste(id)
 		}
 		if err != nil {
@@ -303,6 +330,19 @@ func (s *clipService) paste(id string, plain bool, target clipboard.App) error {
 		}
 	}()
 	return nil
+}
+
+// copyFor puts the entry e on the pasteboard as way pastes it, and
+// returns the text a terminal is given: the image file's path, else the
+// entry's plain text.
+func copyFor(store *clipboard.Store, e clipboard.Entry, way pasteWay) (string, error) {
+	switch way {
+	case pasteImagePath:
+		return store.CopyImagePath(e.ID)
+	case pastePlainText:
+		return e.Text, store.CopyAsPlainText(e.ID)
+	}
+	return e.Text, store.CopyToPasteboard(e.ID)
 }
 
 // openAccessibility opens System Settings › Privacy & Security ›

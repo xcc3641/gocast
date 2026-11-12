@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -387,14 +388,14 @@ type clipAction struct {
 }
 
 // clipActions are the actions of an item, the primary one first
-// (design.md 2.8.6, copy.md 6.5): pasting when Gocast may paste (app is
-// the app it pastes into, "" when not known), copying, opening a link,
-// showing a file still there, pinning, deleting and clearing.
-func clipActions(e clipboard.Entry, canPaste bool, app string) []clipAction {
+// (design.md 2.8.6, copy.md 6.5): pasting when Gocast may paste (into
+// target), copying, opening a link, showing a file still there, pinning,
+// deleting and clearing.
+func clipActions(e clipboard.Entry, canPaste bool, target pasteTarget) []clipAction {
 	var as []clipAction
 	copyCaps := []string{"⌘", "↩"}
 	if canPaste {
-		as = append(as, clipAction{id: actPaste, symbol: "doc.on.clipboard", label: pasteLabel(app), caps: []string{"↩"}})
+		as = append(as, clipAction{id: actPaste, symbol: "doc.on.clipboard", label: target.label(target.app.Name), caps: []string{"↩"}})
 		if e.Kind == clipboard.KindText || e.Kind == clipboard.KindRichText {
 			as = append(as, clipAction{id: actPastePlain, symbol: "doc.plaintext", label: locales.ClipPastePlain()})
 		}
@@ -425,6 +426,63 @@ func pasteLabel(app string) string {
 		return locales.ClipPaste()
 	}
 	return locales.ClipPasteTo(app)
+}
+
+// pasteTarget is where Return pastes: the app the user was in as the
+// clipboard view opened, or Gocast's own floating terminal.
+type pasteTarget struct {
+	app      clipboard.App // the zero App: not known, or Gocast
+	floating bool          // the floating terminal was key
+}
+
+// label names pasting into t (copy.md 6.5): 粘贴到悬浮终端 for the
+// floating terminal, else pasteLabel of the app's name, as shown.
+func (t pasteTarget) label(name string) string {
+	if t.floating {
+		return locales.ClipPasteToTerminal()
+	}
+	return pasteLabel(name)
+}
+
+// terminalApps are the bundle IDs of the terminals, into which an image
+// pastes as its file's path: Terminal, iTerm2, Ghostty, Warp, kitty,
+// Alacritty and WezTerm.
+var terminalApps = []string{
+	"com.apple.Terminal",
+	"com.googlecode.iterm2",
+	"com.mitchellh.ghostty",
+	"dev.warp.Warp-Stable",
+	"net.kovidgoyal.kitty",
+	"org.alacritty",
+	"com.github.wez.wezterm",
+}
+
+// terminal reports whether t is a terminal: the floating terminal, or
+// one of terminalApps.
+func (t pasteTarget) terminal() bool {
+	return t.floating || (t.app.BundleID != "" && slices.Contains(terminalApps, t.app.BundleID))
+}
+
+// pasteWay is what pasting an item puts on the pasteboard and pastes.
+type pasteWay int
+
+const (
+	pasteAll       pasteWay = iota // everything the item holds
+	pastePlainText                 // its plain text alone
+	pasteImagePath                 // an image's file, decrypted: its path, as text
+)
+
+// pasteWayFor is how an item of kind pastes into target, as plain text
+// when plain: an image into a terminal as its file's path, which the
+// program there can open.
+func pasteWayFor(kind clipboard.Kind, plain bool, target pasteTarget) pasteWay {
+	switch {
+	case kind == clipboard.KindImage && target.terminal():
+		return pasteImagePath
+	case plain && kind != clipboard.KindImage:
+		return pastePlainText
+	}
+	return pasteAll
 }
 
 // fitText cuts s at its end, with an ellipsis, to at most max wide as

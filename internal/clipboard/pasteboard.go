@@ -132,10 +132,10 @@ func (s *Store) Paste(id string) error {
 	return pasteNow()
 }
 
-// PasteAsPlainText is Paste with the plain text only: no formatting, a
-// link as text, files as their paths one per line. Images have no text:
-// ErrNoText.
-func (s *Store) PasteAsPlainText(id string) error {
+// CopyAsPlainText is CopyToPasteboard with the plain text only: no
+// formatting, a link as text, files as their paths one per line. Images
+// have no text: ErrNoText.
+func (s *Store) CopyAsPlainText(id string) error {
 	e, ok := s.Get(id)
 	if !ok {
 		return ErrNotFound
@@ -146,7 +146,13 @@ func (s *Store) PasteAsPlainText(id string) error {
 	if err := s.write(Content{Text: e.Text}); err != nil {
 		return err
 	}
-	if err := s.Touch(id); err != nil {
+	return s.Touch(id)
+}
+
+// PasteAsPlainText is Paste with the plain text only, as
+// CopyAsPlainText.
+func (s *Store) PasteAsPlainText(id string) error {
+	if err := s.CopyAsPlainText(id); err != nil {
 		return err
 	}
 	return pasteNow()

@@ -2488,6 +2488,22 @@ func (msgs Messages) ClipPasteTo(app string) string {
 	return Catalog.Format(msgs.locale, "clipPasteTo", map[string]any{"app": app})
 }
 
+// ClipPasteToTerminal says "Paste to Floating Terminal"
+// in the language the app shows.
+//
+// Primary action: paste into Gocast's floating terminal, which the user was
+// in.
+func ClipPasteToTerminal() string { return In(i18n.Locale()).ClipPasteToTerminal() }
+
+// ClipPasteToTerminal says "Paste to Floating Terminal"
+// in the language of msgs.
+//
+// Primary action: paste into Gocast's floating terminal, which the user was
+// in.
+func (msgs Messages) ClipPasteToTerminal() string {
+	return Catalog.Format(msgs.locale, "clipPasteToTerminal", nil)
+}
+
 // ClipPaste says "Paste"
 // in the language the app shows.
 //
