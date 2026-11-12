@@ -744,6 +744,8 @@ func (v *clipView) filesPreview(c *ui.Context, k tokens, e clipboard.Entry) {
 			ui.Row(c).Height(24).Gap(8).AlignItems(ui.Center).Children(func() {
 				if b := v.fileIcon(path, 16); b != nil {
 					ui.Image(c, b).Size(16, 16).Shrink(0).AccessHidden(true)
+				} else { // a file gone has no icon: keep the names in line
+					sfsymbols.Symbol(c, "doc").Size(16).Color(k.textOnGlass).Shrink(0)
 				}
 				t := ui.Text(c, baseName(path)).FontSize(13).TextColor(k.text).SingleLine().Shrink(1)
 				if gone {
