@@ -581,16 +581,16 @@ func (p *termPanel) show() {
 	p.top = wa.Y
 	gen := p.anim.Add(1)
 	reduce := mygo.Theme.Preferences().ReduceMotion
-	from := y
-	if !reduce {
-		from = wa.Y - h // above the work area: slides down from under the menu bar
+	// AppKit keeps a window's top under the menu bar (a frameless window
+	// is a titled one underneath), so the panel cannot slide from above
+	// the screen: it drops the termTopGap from the work area's top edge as
+	// it fades in, design.md 1.5's fallback to opacity.
+	from := wa.Y
+	if reduce {
+		from = y
 	}
 	p.win.SetBounds(mygo.Rectangle{X: x, Y: from, Width: w, Height: h})
-	if reduce {
-		p.win.SetOpacity(0)
-	} else {
-		p.win.SetOpacity(1)
-	}
+	p.win.SetOpacity(0)
 	if s := p.current(); s != nil {
 		s.focus.Focus()
 	}
@@ -601,12 +601,13 @@ func (p *termPanel) show() {
 		return
 	}
 	p.animate(gen, slideIn, easeOut, func(t float64) {
+		p.win.SetOpacity(t)
 		p.win.SetPosition(x, from+int(math.Round(float64(y-from)*t)))
 	}, nil)
 }
 
-// hide slides the panel up and out (fades it, with Reduce Motion), its
-// tabs and programs kept.
+// hide lifts the panel to the menu bar as it fades out (fades it only,
+// with Reduce Motion), its tabs and programs kept.
 func (p *termPanel) hide() {
 	if !p.shown {
 		return
@@ -625,8 +626,9 @@ func (p *termPanel) hide() {
 		return
 	}
 	b := p.win.Bounds()
-	to := p.top - b.Height
+	to := p.top // as high as AppKit lets it go (see show)
 	p.animate(gen, slideOut, easeIn, func(t float64) {
+		p.win.SetOpacity(1 - t)
 		p.win.SetPosition(b.X, b.Y+int(math.Round(float64(to-b.Y)*t)))
 	}, done)
 }

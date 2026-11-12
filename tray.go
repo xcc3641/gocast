@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	_ "embed"
 	"image"
 	"image/color"
 	"image/draw"
@@ -13,9 +14,17 @@ import (
 	"gocast/locales"
 )
 
-// setUpTray puts Gocast's icon in the menu bar, with its menu: search,
-// the floating terminal, the presets file (until Settings exist), and
-// quitting.
+// trayPNG is SF Symbols' command.square, 18 DIP (36 px), black on
+// transparent for macOS to tint (design.md 1.6). ui's symbols are drawn
+// into bitmaps the tray cannot take, so it is drawn ahead, by AppKit:
+// see docs/dev-notes.md.
+//
+//go:embed assets/tray.png
+var trayPNG []byte
+
+// setUpTray puts Gocast's icon in the menu bar, with its menu (copy.md 1):
+// search, the floating terminal, Settings, updates, and quitting, each
+// with its shortcut.
 func (g *gocast) setUpTray() {
 	var err error
 	g.tray, err = mygo.NewTray(mygo.TrayOptions{Icon: trayIcon(), IconIsTemplate: true, ToolTip: appName})
@@ -41,16 +50,25 @@ func (g *gocast) trayMenu() *mygo.Menu {
 		{Label: locales.TraySearch(), Accelerator: g.launcherKey, Click: func(*mygo.MenuItem, *mygo.Window) { g.launcher.show() }},
 		{Label: locales.TrayTerminal(), Accelerator: g.terminalKey, Click: func(*mygo.MenuItem, *mygo.Window) { g.term.toggle() }},
 		mygo.Separator(),
-		{Label: locales.TraySettings(), Click: func(*mygo.MenuItem, *mygo.Window) { g.openSettings("") }},
+		{Label: locales.TraySettings(), Accelerator: "Cmd+,", Click: func(*mygo.MenuItem, *mygo.Window) { g.openSettings("") }},
 		{Label: locales.TrayCheckUpdates(), Click: func(*mygo.MenuItem, *mygo.Window) { g.checkForUpdates() }},
 		mygo.Separator(),
 		{Label: locales.TrayQuit(), Accelerator: "CmdOrCtrl+Q", Click: func(*mygo.MenuItem, *mygo.Window) { mygo.App.Quit() }},
 	})
 }
 
-// trayIcon draws a magnifying glass, black on transparent for macOS to
-// tint.
+// trayIcon is the tray's icon: command.square, or a magnifying glass
+// were it missing.
 func trayIcon() []byte {
+	if len(trayPNG) > 0 {
+		return trayPNG
+	}
+	return magnifierIcon()
+}
+
+// magnifierIcon draws a magnifying glass, black on transparent for macOS
+// to tint.
+func magnifierIcon() []byte {
 	img := image.NewNRGBA(image.Rect(0, 0, 32, 32))
 	ink := color.NRGBA{A: 255}
 	for y := 0; y < 32; y++ {

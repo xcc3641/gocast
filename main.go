@@ -247,6 +247,14 @@ func main() {
 		log.Fatal(err)
 	}
 	mygo.App.SetName(appName)
+	// GOCAST_APPEARANCE=dark or light forces Gocast's appearance, whatever
+	// the system's: for screenshots and checking both, the Mac left as is.
+	switch os.Getenv("GOCAST_APPEARANCE") {
+	case "dark":
+		mygo.Theme.SetSource(mygo.ThemeDark)
+	case "light":
+		mygo.Theme.SetSource(mygo.ThemeLight)
+	}
 	// No Dock icon or app switcher entry; a bundle says so from the start
 	// with LSUIElement (mygo.json).
 	mygo.App.SetActivationPolicy(mygo.ActivationPolicyAccessory)

@@ -170,7 +170,30 @@ func (p *prefsWindow) sidebar(c *ui.Context, k tokens) {
 		{pageGeneral, "gearshape", locales.PageGeneral()},
 		{pageAbout, "info.circle", locales.PageAbout()},
 	}
-	ui.Column(c).Width(200).Shrink(0).Padding(52, 10, 10, 10).Gap(2).Role(ui.RoleList).Children(func() {
+	// Not ui.Sidebar, whose items take SVG icons rather than SF Symbols;
+	// as it, one stop of Tab, where Up and Down choose the page.
+	move := func(d int) {
+		i := slices.IndexFunc(pages, func(pg struct{ id, icon, label string }) bool { return pg.id == p.page })
+		if j := i + d; j >= 0 && j < len(pages) {
+			p.goTo(pages[j].id)
+		}
+	}
+	ui.Column(c).Width(200).Shrink(0).Padding(52, 10, 10, 10).Gap(2).Role(ui.RoleList).Label(locales.SettingsTitle()).
+		Focusable().HandleInput(func(ev ui.InputEvent) bool {
+		if ev.Kind != ui.InputKeyDown || ev.Mods != 0 {
+			return false
+		}
+		switch ev.Key {
+		case ui.KeyUp:
+			move(-1)
+		case ui.KeyDown:
+			move(1)
+		default:
+			return false
+		}
+		p.win.Invalidate()
+		return true
+	}).Children(func() {
 		for _, pg := range pages {
 			on := p.page == pg.id
 			fg := k.text
@@ -180,7 +203,7 @@ func (p *prefsWindow) sidebar(c *ui.Context, k tokens) {
 			id := pg.id
 			c.Key(id)
 			ui.Row(c).Height(28).Padding(0, 8).Radius(6).Gap(8).AlignItems(ui.Center).Selected(on).
-				Label(pg.label).OnClick(func() { p.goTo(id) }).Children(func() {
+				Role(ui.RoleListItem).Label(pg.label).OnClick(func() { p.goTo(id) }).Children(func() {
 				sfsymbols.Symbol(c, pg.icon).Size(16).Color(fg)
 				ui.Text(c, pg.label).FontSize(13).TextColor(fg).SingleLine()
 			})
