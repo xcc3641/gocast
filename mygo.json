@@ -10,7 +10,8 @@
     "icon": "assets/icon/AppIcon.icon",
     "infoPlist": {
       "LSUIElement": true
-    }
+    },
+    "entitlements": "entitlements.plist"
   },
   "i18n": {
     "dir": "locales",

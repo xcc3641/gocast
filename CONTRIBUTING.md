@@ -139,10 +139,12 @@ the GitHub CLI (`gh`), signed in with access to the repository.
    in the repository:
 
    ```sh
-   MYGO_UPDATER_PRIVATE_KEY="$(cat path/to/mygo-update.key)" mygo build -upload
+   MYGO_UPDATER_PRIVATE_KEY="$(cat path/to/mygo-update.key)" \
+     mygo build -sign "Gocast Code Signing" -upload
    ```
 
-   This builds the app, the disk image and the signed update files and
+   `-sign` names the release code-signing identity (see below), which
+   must be in a keychain codesign searches. This builds the app, the disk image and the signed update files and
    uploads them to a draft release for the version on xcc3641/gocast.
    Without the key, `mygo build` still builds the app and the disk image
    but skips the update files (fine for local builds), and `-upload`
@@ -156,9 +158,23 @@ the GitHub CLI (`gh`), signed in with access to the repository.
    Publishing makes it the latest release: installed apps find it on their
    next automatic check, or when the user chooses Check for Updates.
 
-Releases are not signed with a Developer ID yet: builds are ad-hoc
-signed, and macOS asks users to confirm the first time they open a
-disk image they downloaded (System Settings › Privacy & Security › Open
-Anyway). Updates and the install script download with no quarantine flag,
-so they open without that prompt; both check the Ed25519 signature of
-what they install against the public key in mygo.json.
+Releases are not signed with a Developer ID yet. They are signed with
+a self-signed certificate, "Gocast Code Signing", that every release
+keeps. macOS identifies an app signed this way by that certificate and
+its bundle identifier rather than by a hash of each build, so what users
+allowed Gocast (Accessibility, to paste from clipboard history, and its
+keychain item) carries over to the next version. The private key of that
+certificate stays with the maintainers, like the update key: anyone who
+has it can sign an app that macOS treats as Gocast. CI never gets it.
+Signing with it turns on the hardened runtime; `entitlements.plist`
+lets the app load the terminal library, which library validation would
+refuse without a Team ID. Builds without `-sign` (anyone building from
+source) are ad-hoc signed and work the same, but macOS asks for their
+permissions again after each build.
+
+Because the certificate is not from Apple, macOS still asks users to
+confirm the first time they open a disk image they downloaded (System
+Settings › Privacy & Security › Open Anyway). Updates and the install
+script download with no quarantine flag, so they open without that
+prompt; both check the Ed25519 signature of what they install against
+the public key in mygo.json.
