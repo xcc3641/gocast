@@ -20,12 +20,12 @@ const (
 	MinFontSize, MaxFontSize = 11, 20
 
 	// The floating terminal's size, in percent of the work area of the
-	// display it shows on, in steps of SizeStep.
+	// display it shows on, in steps of SizeStep (design.md 4.4).
 	DefaultTerminalWidth                 = 80
 	MinTerminalWidth, MaxTerminalWidth   = 50, 100
 	DefaultTerminalHeight                = 50
 	MinTerminalHeight, MaxTerminalHeight = 30, 90
-	SizeStep                             = 5
+	SizeStep                             = 1
 )
 
 // Settings is what settings.json keeps. The zero value is the defaults.

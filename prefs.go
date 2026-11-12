@@ -198,20 +198,24 @@ func (p *prefsWindow) sidebar(c *ui.Context, k tokens) {
 		p.win.Invalidate()
 		return true
 	}).Children(func() {
-		for _, pg := range pages {
-			on := p.page == pg.id
-			fg := k.text
-			if on {
-				fg = c.Theme().AccentText
+		// Chosen in the selection gray, as the search results and the
+		// terminal's tabs (design.md 4.2), not the accent.
+		ui.Themed(c, listTheme(c, k)).Background(ui.Transparent).Gap(2).Children(func() {
+			for _, pg := range pages {
+				on := p.page == pg.id
+				icon := k.textSecondary
+				if on {
+					icon = k.text
+				}
+				id := pg.id
+				c.Key(id)
+				ui.Row(c).Height(28).Padding(0, 8).Radius(8).Gap(8).AlignItems(ui.Center).Selected(on).
+					Role(ui.RoleListItem).Label(pg.label).OnClick(func() { p.goTo(id) }).Children(func() {
+					sfsymbols.Symbol(c, pg.icon).Size(16).Color(icon)
+					ui.Text(c, pg.label).FontSize(13).TextColor(k.text).SingleLine()
+				})
 			}
-			id := pg.id
-			c.Key(id)
-			ui.Row(c).Height(28).Padding(0, 8).Radius(6).Gap(8).AlignItems(ui.Center).Selected(on).
-				Role(ui.RoleListItem).Label(pg.label).OnClick(func() { p.goTo(id) }).Children(func() {
-				sfsymbols.Symbol(c, pg.icon).Size(16).Color(fg)
-				ui.Text(c, pg.label).FontSize(13).TextColor(fg).SingleLine()
-			})
-		}
+		})
 	})
 }
 
@@ -226,9 +230,15 @@ func pageTitle(c *ui.Context, k tokens, title string) {
 	ui.Text(c, title).FontSize(20).FontWeight(600).TextColor(k.text).Margin(0, 0, 16, 0).Role(ui.RoleHeading)
 }
 
-// groupTitle is the title over a group.
-func groupTitle(c *ui.Context, k tokens, title string) {
-	ui.Text(c, title).FontSize(12).TextColor(k.textSecondary).Margin(0, 14, 8, 14).Role(ui.RoleHeading)
+// groupTitle is the title over a group (13 Semibold), and its
+// description under it (12, textSecondary), 8 over the group.
+func groupTitle(c *ui.Context, k tokens, title, desc string) {
+	ui.Column(c).Gap(2).Margin(0, 14, 8, 14).Children(func() {
+		ui.Text(c, title).FontSize(13).FontWeight(600).TextColor(k.text).Role(ui.RoleHeading)
+		if desc != "" {
+			ui.Text(c, desc).FontSize(12).TextColor(k.textSecondary)
+		}
+	})
 }
 
 // group is a rounded block of rows, rows separated by hairlines.
@@ -617,7 +627,7 @@ func (p *prefsWindow) generalPage(c *ui.Context, k tokens) {
 			}
 		})
 	})
-	groupTitle(c, k, locales.GeneralTerminalGroup())
+	groupTitle(c, k, locales.GeneralTerminalGroup(), locales.GeneralTerminalGroupHint())
 	newGroup(c, k, func(g *group) {
 		g.row(c, k, locales.GeneralFontSize(), "", k.textSecondary, func() {
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
@@ -633,7 +643,7 @@ func (p *prefsWindow) generalPage(c *ui.Context, k tokens) {
 			})
 		})
 		sizeHint := locales.GeneralSizeHint()
-		g.row(c, k, locales.GeneralWidth(), sizeHint+"\n"+locales.GeneralSizeDragHint(), k.textSecondary, func() {
+		g.row(c, k, locales.GeneralWidth(), sizeHint, k.textSecondary, func() {
 			if p.percentSlider(c, k, locales.GeneralWidth(), &p.termWidth, settings.MinTerminalWidth, settings.MaxTerminalWidth) {
 				p.g.settings.TerminalWidth = int(p.termWidth)
 				p.g.saveSettings()
@@ -666,10 +676,10 @@ func (p *prefsWindow) generalPage(c *ui.Context, k tokens) {
 // reports a new value.
 func (p *prefsWindow) percentSlider(c *ui.Context, k tokens, label string, value *float64, lo, hi int) bool {
 	changed := false
-	ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
+	ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 		ui.Text(c, locales.GeneralPercent(int(*value))).FontSize(13).Font("monospace").TextColor(k.text).
 			Width(40).TextAlign(ui.End)
-		changed = ui.Slider(c, value, float64(lo), float64(hi)).Step(settings.SizeStep).Width(160).Label(label).Changed()
+		changed = ui.Slider(c, value, float64(lo), float64(hi)).Step(settings.SizeStep).Width(200).Label(label).Changed()
 	})
 	if changed {
 		*value = float64(settings.SnapPercent(*value, lo, hi))

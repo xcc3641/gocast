@@ -230,9 +230,9 @@
   "@termPlainTip": {
     "description": "Tip over the first plain terminal when there is no preset."
   },
-  "dismiss": "Close",
+  "dismiss": "Dismiss",
   "@dismiss": {
-    "description": "Label of the × button of a notice (not in copy.md)."
+    "description": "Accessibility label of the × of a notice capsule (copy.md 3)."
   },
   "settingsTitle": "Settings",
   "@settingsTitle": {
@@ -420,13 +420,13 @@
   "@generalHeight": {
     "description": "General: slider, the floating terminal's height."
   },
-  "generalSizeHint": "How much of the screen.",
+  "generalSizeHint": "Percent of the current screen.",
   "@generalSizeHint": {
     "description": "General: under the width and height sliders."
   },
-  "generalSizeDragHint": "Dragging the bottom edge updates this.",
-  "@generalSizeDragHint": {
-    "description": "General: under the width slider, after generalSizeHint."
+  "generalTerminalGroupHint": "You can also drag the terminal's edges. These values update as you do.",
+  "@generalTerminalGroupHint": {
+    "description": "General: under the floating terminal group title, over the group."
   },
   "generalPercent": "{n}%",
   "@generalPercent": {

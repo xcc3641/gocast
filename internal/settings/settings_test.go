@@ -12,14 +12,15 @@ func TestSnapPercent(t *testing.T) {
 		want   int
 	}{
 		{80, 50, 100, 80},
-		{82.4, 50, 100, 80},
-		{82.5, 50, 100, 85}, // halves round up
-		{87.6, 50, 100, 90},
+		{62.4, 50, 100, 62},
+		{62.5, 50, 100, 63}, // halves round up
+		{59.99, 50, 100, 60},
 		{12, 50, 100, 50},   // below the range
 		{140, 50, 100, 100}, // above it
+		{90.4, 30, 90, 90},
 		{91, 30, 90, 90},
-		{27.6, 30, 90, 30},
-		{33, 30, 90, 35},
+		{29.6, 30, 90, 30},
+		{33.3, 30, 90, 33},
 	} {
 		if got := SnapPercent(c.pct, c.lo, c.hi); got != c.want {
 			t.Errorf("SnapPercent(%v, %d, %d) = %d, want %d", c.pct, c.lo, c.hi, got, c.want)
@@ -32,8 +33,8 @@ func TestTerminalSize(t *testing.T) {
 	if s.TermWidth() != DefaultTerminalWidth || s.TermHeight() != DefaultTerminalHeight {
 		t.Fatalf("defaults: %d×%d", s.TermWidth(), s.TermHeight())
 	}
-	s.TerminalWidth, s.TerminalHeight = 63, 200 // edited by hand
-	if s.TermWidth() != 65 || s.TermHeight() != 90 {
+	s.TerminalWidth, s.TerminalHeight = 20, 200 // edited by hand
+	if s.TermWidth() != MinTerminalWidth || s.TermHeight() != MaxTerminalHeight {
 		t.Fatalf("snapped: %d×%d", s.TermWidth(), s.TermHeight())
 	}
 	path := filepath.Join(t.TempDir(), "settings.json")

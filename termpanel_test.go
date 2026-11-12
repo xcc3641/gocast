@@ -4,6 +4,8 @@ import (
 	"math"
 	"testing"
 
+	"github.com/egoist/mygo"
+
 	"gocast/internal/settings"
 )
 
@@ -38,18 +40,17 @@ func TestTermSize(t *testing.T) {
 		st           settings.Settings
 		wantW, wantH int
 	}{
-		// Unset: 80% up to 1200, half the height, at least 360.
-		{"default", 1512, 945, settings.Settings{}, 1200, 473},
-		{"default small", 1000, 600, settings.Settings{}, 800, 360},
-		// Set: no 1200 cap.
-		{"80 set", 1512, 945, settings.Settings{TerminalWidth: 80, TerminalHeight: 50}, 1210, 473},
-		{"60×40", 1512, 945, settings.Settings{TerminalWidth: 60, TerminalHeight: 40}, 907, 378},
-		{"wide display", 2560, 1400, settings.Settings{TerminalWidth: 100, TerminalHeight: 90}, 2560, 1260},
-		// Never under 480×240, never over the work area.
-		{"minimum", 800, 600, settings.Settings{TerminalWidth: 50, TerminalHeight: 30}, 480, 240},
-		{"tiny work area", 400, 200, settings.Settings{TerminalWidth: 50, TerminalHeight: 30}, 400, 200},
+		// Unset: 80% by 50%, with no cap on the width.
+		{"default", 1512, 949, settings.Settings{}, 1210, 475},
+		{"wide display", 2560, 1400, settings.Settings{}, 2048, 700},
+		{"60×40", 1512, 949, settings.Settings{TerminalWidth: 60, TerminalHeight: 40}, 907, 380},
+		{"63×37", 1512, 949, settings.Settings{TerminalWidth: 63, TerminalHeight: 37}, 953, 351},
+		{"largest", 2560, 1400, settings.Settings{TerminalWidth: 100, TerminalHeight: 90}, 2560, 1260},
+		// Never under 640×300, never over the work area.
+		{"minimum", 1000, 800, settings.Settings{TerminalWidth: 50, TerminalHeight: 30}, 640, 300},
+		{"tiny work area", 600, 280, settings.Settings{TerminalWidth: 50, TerminalHeight: 30}, 600, 280},
 		// Out of range values from a hand-edited file are clamped.
-		{"clamped", 1000, 1000, settings.Settings{TerminalWidth: 20, TerminalHeight: 99}, 500, 900},
+		{"clamped", 1000, 1000, settings.Settings{TerminalWidth: 20, TerminalHeight: 99}, 640, 900},
 	} {
 		w, h := termSize(c.waW, c.waH, c.st)
 		if w != c.wantW || h != c.wantH {
@@ -63,35 +64,63 @@ func TestTermPercent(t *testing.T) {
 		px, wa, lo, hi, want int
 	}{
 		{907, 1512, 50, 100, 60},  // 59.99%
-		{1000, 1512, 50, 100, 65}, // 66.1%
-		{1050, 1512, 50, 100, 70}, // 69.4%
-		{480, 1512, 50, 100, 50},  // the minimum width is under 50%
+		{1000, 1512, 50, 100, 66}, // 66.1%
+		{1050, 1512, 50, 100, 69}, // 69.4%
+		{1060, 1512, 50, 100, 70}, // 70.1%
+		{640, 1512, 50, 100, 50},  // the minimum width is under 50%
 		{1512, 1512, 50, 100, 100},
-		{240, 945, 30, 90, 30}, // 25.4%
-		{945, 945, 30, 90, 90}, // dragged to the bottom of the screen
-		{520, 945, 30, 90, 55}, // 55.0%
-		{544, 945, 30, 90, 60}, // 57.6%: rounds up past the half step
-		{540, 945, 30, 90, 55}, // 57.1%
+		{300, 949, 30, 90, 32}, // 31.6%
+		{200, 949, 30, 90, 30}, // under the range
+		{949, 949, 30, 90, 90}, // dragged to the bottom of the screen
+		{522, 949, 30, 90, 55}, // 55.0%
 	} {
 		if got := termPercent(c.px, c.wa, c.lo, c.hi); got != c.want {
 			t.Errorf("termPercent(%d, %d) = %d, want %d", c.px, c.wa, got, c.want)
 		}
 	}
 	// A size set from a percentage reads back as that percentage.
-	for pct := settings.MinTerminalWidth; pct <= settings.MaxTerminalWidth; pct += settings.SizeStep {
-		w, _ := termSize(1512, 945, settings.Settings{TerminalWidth: pct, TerminalHeight: 50})
+	for pct := settings.MinTerminalWidth; pct <= settings.MaxTerminalWidth; pct++ {
+		w, _ := termSize(1512, 949, settings.Settings{TerminalWidth: pct})
 		if w > termMinWidth {
 			if got := termPercent(w, 1512, settings.MinTerminalWidth, settings.MaxTerminalWidth); got != pct {
 				t.Errorf("width %d%% → %d px → %d%%", pct, w, got)
 			}
 		}
 	}
-	for pct := settings.MinTerminalHeight; pct <= settings.MaxTerminalHeight; pct += settings.SizeStep {
-		_, h := termSize(1512, 945, settings.Settings{TerminalWidth: 80, TerminalHeight: pct})
+	for pct := settings.MinTerminalHeight; pct <= settings.MaxTerminalHeight; pct++ {
+		_, h := termSize(1512, 949, settings.Settings{TerminalHeight: pct})
 		if h > termMinHeight {
-			if got := termPercent(h, 945, settings.MinTerminalHeight, settings.MaxTerminalHeight); got != pct {
+			if got := termPercent(h, 949, settings.MinTerminalHeight, settings.MaxTerminalHeight); got != pct {
 				t.Errorf("height %d%% → %d px → %d%%", pct, h, got)
 			}
+		}
+	}
+}
+
+func TestDragSize(t *testing.T) {
+	wa := mygo.Rectangle{X: 0, Y: 33, Width: 1512, Height: 949}
+	prev := mygo.Rectangle{X: 302, Y: 41, Width: 908, Height: 380} // centered at 756
+	r := func(x, y, w, h int) mygo.Rectangle { return mygo.Rectangle{X: x, Y: y, Width: w, Height: h} }
+	for _, c := range []struct {
+		name         string
+		b            mygo.Rectangle
+		wantW, wantH int
+	}{
+		{"bottom edge down", r(302, 41, 908, 480), 908, 480},
+		{"bottom edge up", r(302, 41, 908, 330), 908, 330},
+		{"left edge out by 50: both sides", r(252, 41, 958, 380), 1008, 380},
+		{"left edge in by 40", r(342, 41, 868, 380), 828, 380},
+		{"right edge out by 30: both sides", r(302, 41, 938, 380), 968, 380},
+		{"bottom-right corner", r(302, 41, 938, 420), 968, 420},
+		{"top edge: nothing", r(302, 21, 908, 400), 908, 380},
+		{"under the minimum", r(302, 41, 908, 120), 908, 300},
+		{"over 90% high", r(302, 41, 908, 940), 908, 854},
+		{"wider than the screen", r(0, 41, 1300, 380), 1512, 380},
+		{"under 50% wide", r(500, 41, 512, 380), 756, 380},
+	} {
+		w, h := dragSize(prev, c.b, wa)
+		if w != c.wantW || h != c.wantH {
+			t.Errorf("%s: dragSize = %d×%d, want %d×%d", c.name, w, h, c.wantW, c.wantH)
 		}
 	}
 }

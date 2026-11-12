@@ -87,7 +87,7 @@
   "generalWidth": "宽度",
   "generalHeight": "高度",
   "generalSizeHint": "占当前屏幕的百分之几。",
-  "generalSizeDragHint": "拖底边改大小时，这里会跟着变。",
+  "generalTerminalGroupHint": "也可以直接拖终端边缘来改大小，这里会跟着变。",
   "generalPercent": "{n}%",
   "generalHideOnBlur": "失焦时收起悬浮终端",
   "generalHideOnBlurHint": "关掉后，切去别的窗口时终端还留在屏幕上。",

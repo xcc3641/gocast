@@ -23,22 +23,23 @@ import (
 
 // The floating terminal's measures (design.md 3.2–3.6), in DIPs.
 const (
-	termMinWidth  = 480 // as small as the panel gets, by any setting or drag
-	termMinHeight = 240
-	// The size until the user sets one: 80% of the work area's width up to
-	// termDefaultMaxWidth, half its height, at least termDefaultMinHeight.
-	termDefaultMaxWidth  = 1200
-	termDefaultMinHeight = 360
-	termTopGap           = 8
-	termRadius           = 16
-	tabBarH              = 40
-	tabH                 = 26
-	bannerH              = 36
-	endBarH              = 44
-	minFontSize          = 11
-	maxFontSize          = 20
-	slideIn              = 180 * time.Millisecond
-	slideOut             = 120 * time.Millisecond
+	termMinWidth  = 640 // as small as the panel gets, by any setting or drag
+	termMinHeight = 300
+	termTopGap    = 8
+	tabBarH       = 52
+	tabH          = 32
+	// The terminal's room in the panel: across, under it, and under it
+	// while capsules float over its bottom (design.md 3.3).
+	termPadX, termPadBottom, termPadCapsules = 20, 12, 60
+	termInset                                = 12 // the capsules' inset
+	termLineHeight                           = 1.25
+	minFontSize                              = 11
+	maxFontSize                              = 20
+	// sizeSaveDelay is how long after the last step of a drag of the
+	// panel's edges its size is saved: once the drag ended.
+	sizeSaveDelay = 400 * time.Millisecond
+	slideIn       = 180 * time.Millisecond
+	slideOut      = 120 * time.Millisecond
 	// The panel drops dropIn to its place as it shows, and rises
 	// riseOut as it hides (design.md 1.5).
 	dropIn, riseOut = 12, 8
@@ -95,11 +96,15 @@ type termPanel struct {
 	anim   atomic.Int64 // the generation of the slide in progress
 	reveal bool         // scroll the tab bar to the active tab
 	menu   bool         // the new tab menu shows
+	chosen int          // the row of the new tab menu chosen
 	top    int          // the top of the work area the panel shows in
 
 	wa      mygo.Rectangle // the work area the panel shows in
-	size    [2]int         // the panel's width and height as last placed or resized
+	bounds  mygo.Rectangle // the panel's bounds as last placed or resized
 	placing bool           // the panel's bounds are being set, not dragged
+	saveGen int            // the size dragged to last, to save
+	accents [2]ui.Color    // the light and dark accents of the themes
+	themes  [2]*terminal.Theme
 }
 
 func newTermPanel(g *gocast) *termPanel {
@@ -111,9 +116,9 @@ func newTermPanel(g *gocast) *termPanel {
 		Frameless:    true,
 		Transparent:  true,
 		Vibrancy:     mygo.VibrancyGlass,
-		CornerRadius: termRadius,
-		Width:        termDefaultMaxWidth,
-		Height:       termDefaultMinHeight * 2,
+		CornerRadius: panelRadius,
+		Width:        1200,
+		Height:       600,
 		MinWidth:     termMinWidth,
 		MinHeight:    termMinHeight,
 		Content:      ui.View(p.view),
@@ -129,7 +134,7 @@ func newTermPanel(g *gocast) *termPanel {
 	})
 	p.win.OnResize(p.resized)
 	p.win.OnBlur(func() {
-		if !g.settings.KeepTerminalOnBlur && !p.menu {
+		if !g.settings.KeepTerminalOnBlur {
 			p.hide()
 		}
 	})
@@ -154,11 +159,20 @@ func (p *termPanel) view(c *ui.Context) {
 	c.SetTheme(themed(c))
 	k := tokensFor(c)
 	c.Root().Background(ui.Transparent)
+	p.followAccent(c)
 	p.shortcuts(c)
 	s := p.current()
-	ui.Column(c).Fill().Children(func() {
+	// One surface, the tinted glass, under the tab bar and the terminal,
+	// with no line between them, outlined as the search panel (design.md
+	// 3.2, 3.3).
+	root := ui.Column(c).Fill().Background(glassFill(c, k, terminalTint))
+	panelOutline(root, k).Children(func() {
 		p.tabBar(c, k)
-		ui.Column(c).Grow(1).Background(k.surface).Children(func() {
+		bottom := float32(termPadBottom)
+		if s != nil && p.hasCapsules(s) {
+			bottom = termPadCapsules // the last line and the cursor above the capsules
+		}
+		ui.Column(c).Grow(1).Padding(0, termPadX, bottom, termPadX).Children(func() {
 			if s == nil {
 				return
 			}
@@ -170,23 +184,52 @@ func (p *termPanel) view(c *ui.Context) {
 				s.pending = false
 				p.start(s)
 			}
-			p.banner(c, k, s)
 			if s.term == nil {
-				ui.Box(c).Grow(1) // it could not start: the banner says why
+				ui.Box(c).Grow(1) // it could not start: the capsule says why
 				return
 			}
 			c.Key(strconv.Itoa(s.key) + "#" + strconv.Itoa(s.gen))
 			terminal.View(c, s.term).Grow(1).Bind(&s.focus).AutoFocus()
-			if s.exited {
-				p.endBar(c, k, s)
-			}
 		})
+		if s != nil {
+			p.capsules(c, k, s)
+		}
+		if p.menu {
+			p.newTabMenu(c, k)
+		}
 	})
 }
 
+// followAccent gives the terminals the themes of the user's accent color,
+// which colors their cursor and selection, as it changes.
+func (p *termPanel) followAccent(c *ui.Context) {
+	prefs := c.Preferences()
+	accents := [2]ui.Color{ui.LightTheme().WithPreferences(prefs).Accent, ui.DarkTheme().WithPreferences(prefs).Accent}
+	if p.themes[0] != nil && accents == p.accents {
+		return
+	}
+	p.accents = accents
+	p.themes = [2]*terminal.Theme{terminalTheme(false, accents[0]), terminalTheme(true, accents[1])}
+	for _, s := range p.tabs {
+		if s.term != nil {
+			s.term.SetTheme(p.themes[0], p.themes[1])
+		}
+	}
+}
+
+// termFont is the terminal's font at size: the system's monospaced font
+// (SF Mono), its rows 1.25 its line height (design.md 3.3a).
+func termFont(size float32) terminal.Font {
+	return terminal.Font{Size: size, LineHeight: termLineHeight}
+}
+
 // shortcuts are the panel's Command keys, which never reach the program:
-// Cmd-T, Cmd-W, Cmd-Shift-[ and ], Cmd-1…9, and the font size.
+// Cmd-T, Cmd-W, Cmd-Shift-[ and ], Cmd-1…9, and the font size; the keys of
+// the new tab menu while it shows; Enter once a preset's command ended.
 func (p *termPanel) shortcuts(c *ui.Context) {
+	if p.menu {
+		p.menuKeys(c)
+	}
 	if c.Shortcut(ui.Cmd, ui.KeyT) {
 		p.newTab(p.g.defaultPreset())
 	}
@@ -211,30 +254,39 @@ func (p *termPanel) shortcuts(c *ui.Context) {
 			p.activate((p.active - 1 + n) % n)
 		}
 	}
-	if s := p.current(); s != nil {
-		size := s.fontSize
-		if c.Shortcut(ui.Cmd, ui.KeyEqual) || c.Shortcut(ui.Cmd|ui.Shift, ui.KeyEqual) {
-			size = min(size+1, maxFontSize)
-		}
-		if c.Shortcut(ui.Cmd, ui.KeyMinus) {
-			size = max(size-1, minFontSize)
-		}
-		if c.Shortcut(ui.Cmd, ui.Key0) {
-			size = float32(p.g.settings.Font())
-		}
-		if size != s.fontSize {
-			s.fontSize = size // this tab's, not written to the settings
-			if s.term != nil {
-				s.term.SetFont(terminal.Font{Size: size})
-			}
+	s := p.current()
+	if s == nil {
+		return
+	}
+	// While the command runs Enter is the program's; once it ended, Enter
+	// runs it again, or edits the preset whose command was not found (the
+	// window's shortcut comes before the terminal).
+	if s.exited && !p.menu && c.Shortcut(0, ui.KeyEnter) {
+		p.primary(s)
+	}
+	size := s.fontSize
+	if c.Shortcut(ui.Cmd, ui.KeyEqual) || c.Shortcut(ui.Cmd|ui.Shift, ui.KeyEqual) {
+		size = min(size+1, maxFontSize)
+	}
+	if c.Shortcut(ui.Cmd, ui.KeyMinus) {
+		size = max(size-1, minFontSize)
+	}
+	if c.Shortcut(ui.Cmd, ui.Key0) {
+		size = float32(p.g.settings.Font())
+	}
+	if size != s.fontSize {
+		s.fontSize = size // this tab's, not written to the settings
+		if s.term != nil {
+			s.term.SetFont(termFont(size))
 		}
 	}
 }
 
-// tabBar shows the tabs, the new tab button and its menu, and the hide
-// button, on the glass.
+// tabBar shows Gocast's mark, the tabs, and the new tab and hide buttons,
+// on the glass, as the search bar (design.md 3.4).
 func (p *termPanel) tabBar(c *ui.Context, k tokens) {
-	ui.Row(c).Height(tabBarH).Shrink(0).Padding(7, 8, 7, 12).Gap(4).AlignItems(ui.Center).Children(func() {
+	ui.Row(c).Height(tabBarH).Shrink(0).Padding(0, 12, 0, 20).Gap(12).AlignItems(ui.Center).Children(func() {
+		gocastMark(c, k)
 		ui.ScrollHorizontal(c).Grow(1).Shrink(1).Children(func() {
 			ui.Row(c).Gap(4).AlignItems(ui.Center).Children(func() {
 				for i, s := range p.tabs {
@@ -242,18 +294,18 @@ func (p *termPanel) tabBar(c *ui.Context, k tokens) {
 				}
 			})
 		})
-		newTab := iconButton(c, k, "plus", locales.TermNewTab())
-		newTab.PopoverMenuButton(p.newTabMenu, ui.PopoverMenuButtonOptions{
-			At: ui.AnchorBottomEnd, Self: ui.AnchorTopEnd, Open: &p.menu,
-			Panel: func(panel ui.Element) { panel.Width(240) },
+		ui.Row(c).Gap(4).Shrink(0).AlignItems(ui.Center).Children(func() {
+			roundButton(c, k, "plus", locales.TermNewTab(), p.menu).HasPopup(ui.PopupMenu).Expanded(p.menu).
+				OnClick(p.toggleMenu)
+			hide := locales.TermHide(shortcut.Glyphs(p.g.terminalKey))
+			roundButton(c, k, "chevron.up", hide, false).OnClick(p.hide)
 		})
-		hide := locales.TermHide(shortcut.Glyphs(p.g.terminalKey))
-		iconButton(c, k, "chevron.up", hide).OnClick(p.hide)
 	})
 }
 
-// tab is a tab of the tab bar: its title, a dot once its program ended,
-// and its close button, on the tab showing and the one under the pointer.
+// tab is a tab of the tab bar, a capsule as a search result: its title, a
+// dot once its program ended, and its close button, on the tab showing
+// and the one under the pointer.
 func (p *termPanel) tab(c *ui.Context, k tokens, i int, s *session) {
 	on := i == p.active
 	bg, fg := ui.Transparent, k.textOnGlass
@@ -268,7 +320,7 @@ func (p *termPanel) tab(c *ui.Context, k tokens, i int, s *session) {
 		tip += "  ⌘" + strconv.Itoa(i+1)
 	}
 	c.Key(s.key)
-	tab := ui.Row(c).Height(tabH).MinWidth(96).MaxWidth(220).Padding(0, 6, 0, 10).Radius(7).Background(bg).
+	tab := ui.Row(c).Height(tabH).MinWidth(96).MaxWidth(220).Padding(0, 8, 0, 14).Radius(tabH / 2).Background(bg).
 		Gap(6).AlignItems(ui.Center).Tooltip(tip).Label(s.title())
 	hovered := tab.Hovered()
 	idx := i
@@ -276,8 +328,8 @@ func (p *termPanel) tab(c *ui.Context, k tokens, i int, s *session) {
 		if s.exited {
 			ui.Box(c).Size(6, 6).Radius(3).Background(k.textOnGlass).Shrink(0)
 		}
-		ui.Text(c, s.title()).FontSize(12).FontWeight(500).TextColor(fg).SingleLine().Grow(1).Shrink(1)
-		closeBox := ui.Box(c).Size(16, 16).Radius(4).Center().Shrink(0)
+		ui.Text(c, s.title()).FontSize(13).TextColor(fg).SingleLine().Grow(1).Shrink(1)
+		closeBox := ui.Box(c).Size(16, 16).Radius(8).Center().Shrink(0)
 		if on || hovered {
 			closeBox.Label(locales.TermCloseTabTip()).Tooltip(locales.TermCloseTabTip()).
 				OnClick(func() { p.closeTab(s) }).Children(func() {
@@ -291,118 +343,196 @@ func (p *termPanel) tab(c *ui.Context, k tokens, i int, s *session) {
 	}
 }
 
-// newTabMenu lists the presets, then a plain terminal.
-func (p *termPanel) newTabMenu(m *ui.Menu) {
-	m.Item(locales.TermNewTabMenu()).Disabled(true)
-	for _, pr := range p.g.presets {
-		item := m.Item(presetTitle(pr)).Trailing(pr.LastDir())
-		if item.Chosen() {
-			pr := pr
-			p.newTab(&pr)
-		}
+// --- The new tab menu ---
+
+// menuEntries are the rows of the new tab menu: the presets, then a plain
+// terminal (nil).
+func (p *termPanel) menuEntries() []*presets.Preset {
+	var rows []*presets.Preset
+	for i := range p.g.presets {
+		rows = append(rows, &p.g.presets[i])
 	}
-	if len(p.g.presets) > 0 {
-		m.Separator()
+	return append(rows, nil)
+}
+
+func (p *termPanel) toggleMenu() {
+	p.menu = !p.menu
+	p.chosen = 0
+	if !p.menu {
+		p.refocus()
 	}
-	if m.Item(locales.TermPlain()).Chosen() {
+	p.win.Invalidate()
+}
+
+func (p *termPanel) closeMenu() {
+	if p.menu {
+		p.menu = false
+		p.refocus()
+		p.win.Invalidate()
+	}
+}
+
+// refocus gives the keyboard back to the terminal showing.
+func (p *termPanel) refocus() {
+	if s := p.current(); s != nil {
+		s.focus.Focus()
+	}
+}
+
+// runMenu opens the menu's row i in a new tab.
+func (p *termPanel) runMenu(i int) {
+	rows := p.menuEntries()
+	if i < 0 || i >= len(rows) {
+		return
+	}
+	p.menu = false
+	if pr := rows[i]; pr != nil {
+		pr := *pr
+		p.newTab(&pr)
+	} else {
 		p.newTab(nil)
 	}
 }
 
-// banner is the line over the terminal: the plain terminal's tip, the
-// preset's folder that is gone, or why the terminal could not start.
-func (p *termPanel) banner(c *ui.Context, k tokens, s *session) {
-	var icon, text string
-	color := k.textSecondary
-	var dismiss func()
-	addPreset := false
+// menuKeys are the new tab menu's keys, before the terminal's: Up and
+// Down (and Ctrl-P, Ctrl-N) choose, Enter opens, Escape closes it.
+func (p *termPanel) menuKeys(c *ui.Context) {
+	n := len(p.menuEntries())
+	switch {
+	case c.Shortcut(0, ui.KeyEscape):
+		p.closeMenu()
+	case c.Shortcut(0, ui.KeyDown), c.Shortcut(ui.Ctrl, ui.KeyN):
+		p.chosen = min(p.chosen+1, n-1)
+	case c.Shortcut(0, ui.KeyUp), c.Shortcut(ui.Ctrl, ui.KeyP):
+		p.chosen = max(p.chosen-1, 0)
+	case c.Shortcut(0, ui.KeyEnter):
+		p.runMenu(p.chosen)
+	}
+}
+
+// newTabMenu is the menu of the new tab button, as the search panel's
+// actions menu (design.md 3.4), under the button, at its right: Open
+// with Preset over the presets, then a plain terminal. A click elsewhere
+// closes it.
+func (p *termPanel) newTabMenu(c *ui.Context, k tokens) {
+	ui.Box(c).Absolute().Left(0).Top(0).Right(0).Bottom(0).AccessHidden(true).OnClick(p.closeMenu)
+	right := float32(12 + roundButtonSize + 4)
+	top := float32((tabBarH-roundButtonSize)/2 + roundButtonSize + 8)
+	c.Key("new-tab-menu")
+	popupMenu(c, k, 1, 0).Right(right).Top(top).Role(ui.RoleMenu).Label(locales.TermNewTabMenu()).Children(func() {
+		menuItems(c, func() {
+			menuTitle(c, k, locales.TermNewTabMenu())
+			rows := p.menuEntries()
+			for i, pr := range rows {
+				idx := i
+				if pr == nil {
+					if i > 0 {
+						menuSeparator(c, k)
+					}
+					menuRow(c, k, "", locales.TermPlain(), "", nil, i == p.chosen, func() { p.runMenu(idx) })
+					continue
+				}
+				menuRow(c, k, "", presetTitle(*pr), lastDir(pr.ShortDir()), nil, i == p.chosen, func() { p.runMenu(idx) })
+			}
+		})
+	})
+}
+
+// lastDir is the last folder of a path, as ~/Work/x → x.
+func lastDir(path string) string {
+	path = strings.TrimRight(path, "/")
+	if i := strings.LastIndex(path, "/"); i >= 0 && i < len(path)-1 {
+		return path[i+1:]
+	}
+	return path
+}
+
+// --- Capsules ---
+
+// hasCapsules reports whether capsules float over the bottom of the
+// session's terminal.
+func (p *termPanel) hasCapsules(s *session) bool {
+	return s.failure != "" || s.exited || s.missingDir != "" || p.plainTip(s)
+}
+
+// plainTip reports whether the tip over a plain terminal shows: while
+// there are no presets, until the user closes it.
+func (p *termPanel) plainTip(s *session) bool {
+	return s.plain() && len(p.g.presets) == 0 && !p.g.settings.PlainTipDismissed
+}
+
+// capsules float over the bottom of the terminal, as the search panel's
+// (design.md 3.6): at the left why the terminal could not start, that its
+// command ended, that the preset's folder is gone, or the plain
+// terminal's tip; at the right, once the command ended, Run Again (Edit
+// Preset when the command was not found) and Close Tab.
+func (p *termPanel) capsules(c *ui.Context, k tokens, s *session) {
+	var n notice
 	switch {
 	case s.failure != "":
-		icon, text, color = "exclamationmark.triangle", s.failure, k.danger
+		n = notice{icon: "exclamationmark.triangle", iconColor: k.danger, color: k.danger, text: s.failure}
+	case s.commandMissing():
+		n = notice{icon: "exclamationmark.triangle", iconColor: k.danger, text: locales.TermCommandMissing(s.ranCommand)}
+	case s.exited && s.exitCode != 0:
+		n = notice{icon: "exclamationmark.triangle", iconColor: k.warning, text: locales.TermFinishedCode(s.exitCode)}
+	case s.exited:
+		n = notice{icon: "checkmark.circle", iconColor: k.textOnGlass, text: locales.TermFinished()}
 	case s.missingDir != "":
-		icon, text, color = "exclamationmark.triangle", locales.TermFolderMissing(s.missingDir), k.warning
-		dismiss = func() { s.missingDir = "" }
-	case s.plain() && len(p.g.presets) == 0 && !p.g.settings.PlainTipDismissed:
-		icon, text, addPreset = "info.circle", locales.TermPlainTip(), true
-		dismiss = func() {
-			p.g.settings.PlainTipDismissed = true // never again
-			p.g.saveSettings()
+		n = notice{icon: "exclamationmark.triangle", iconColor: k.warning, text: locales.TermFolderMissing(s.missingDir)}
+		n.extra = func() { dismissButton(c, k, locales.Dismiss(), func() { s.missingDir = "" }) }
+	case p.plainTip(s):
+		n = notice{icon: "info.circle", iconColor: k.textOnGlass, text: locales.TermPlainTip()}
+		n.extra = func() {
+			capsuleButton(c, k, locales.PresetsAdd(), func() {
+				p.hide()
+				p.g.addPreset()
+			})
+			dismissButton(c, k, locales.Dismiss(), func() {
+				p.g.settings.PlainTipDismissed = true // never again
+				p.g.saveSettings()
+			})
 		}
 	default:
 		return
 	}
+	if n.color.A == 0 {
+		n.color = k.text
+	}
 	if !s.announced {
 		s.announced = true
-		c.Announce(text)
+		c.Announce(n.text)
 	}
-	ui.Row(c).Height(bannerH).Shrink(0).Padding(0, 12).Gap(8).AlignItems(ui.Center).Background(k.groupFill).Children(func() {
-		sfsymbols.Symbol(c, icon).Size(14).Color(color)
-		ui.Text(c, text).FontSize(12).TextColor(k.text).SingleLine().Grow(1).Shrink(1)
-		if addPreset {
-			ui.Button(c, locales.PresetsAdd()).Height(24).OnClick(func() {
-				p.hide()
-				p.g.addPreset()
-			})
+	room := float32(p.win.Bounds().Width) - 2*termInset
+	if s.exited {
+		room -= actionsWidth + termInset
+	}
+	noticeCapsule(c, k, termInset, max(room, 160), n)
+	if !s.exited {
+		return
+	}
+	actionsCapsule(c, k, termInset, func() {
+		name := locales.TermRunAgain()
+		if s.commandMissing() {
+			name = locales.ActionEditPreset()
 		}
-		if dismiss != nil {
-			ui.Box(c).Size(20, 20).Radius(4).Center().Label(locales.Dismiss()).Tooltip(locales.Dismiss()).
-				OnClick(dismiss).Children(func() {
-				sfsymbols.Symbol(c, "xmark").Size(10).Color(k.textSecondary)
-			})
-		}
+		segment(c, k, name, k.text, 0, ui.KeyEnter, []string{"↩"}, false, func() { p.primary(s) })
+		segment(c, k, locales.TermCloseTab(), k.textOnGlass, ui.Cmd, ui.KeyW, []string{"⌘", "W"}, false, func() { p.closeTab(s) })
 	})
 }
 
-// endBar says the preset's command ended, under the terminal (which keeps
-// what it showed), with Close Tab and Run Again, which Enter presses, or
-// Edit Preset when the command was not found.
-func (p *termPanel) endBar(c *ui.Context, k tokens, s *session) {
-	icon, color := "checkmark.circle", k.textSecondary
-	msg := locales.TermFinished()
-	if s.exitCode != 0 {
-		icon, color = "exclamationmark.triangle", k.warning
-		msg = locales.TermFinishedCode(s.exitCode)
-	}
-	missing := s.commandMissing()
-	if missing {
-		icon, color = "exclamationmark.triangle", k.danger
-		msg = locales.TermCommandMissing(s.ranCommand)
-	}
-	if !s.announced {
-		s.announced = true
-		c.Announce(msg)
-	}
-	// While the command runs Enter is the program's; once it ended, Enter
-	// presses the primary button (the window's shortcut comes before the
-	// terminal).
-	primary := c.Shortcut(0, ui.KeyEnter)
-	closing := false
-	ui.Column(c).Height(endBarH).Shrink(0).Background(k.groupFill).Children(func() {
-		ui.Box(c).Height(1).Background(k.hairline)
-		ui.Row(c).Grow(1).Padding(0, 12).Gap(8).AlignItems(ui.Center).Children(func() {
-			sfsymbols.Symbol(c, icon).Size(14).Color(color)
-			ui.Text(c, msg).FontSize(13).TextColor(k.text).SingleLine().Grow(1).Shrink(1)
-			if ui.Button(c, locales.TermCloseTab()).KeyShortcuts(ui.Cmd, ui.KeyW).Clicked() {
-				closing = true
-			}
-			name := locales.TermRunAgain()
-			if missing {
-				name = locales.ActionEditPreset()
-			}
-			if ui.PrimaryButton(c, name).KeyShortcuts(0, ui.KeyEnter).Clicked() {
-				primary = true
-			}
-		})
-	})
-	switch {
-	case closing:
-		p.closeTab(s)
-	case primary && missing:
+// actionsWidth is about the width of the terminal's actions capsule,
+// which bounds the notice capsule's.
+const actionsWidth = 260
+
+// primary is the end capsule's first action: run the preset again, or
+// edit it when its command was not found.
+func (p *termPanel) primary(s *session) {
+	if s.commandMissing() {
 		p.hide()
 		p.g.editPreset(s.presetID)
-	case primary:
-		p.restart(s)
+		return
 	}
+	p.restart(s)
 }
 
 // --- Tabs ---
@@ -474,8 +604,15 @@ func (p *termPanel) start(s *session) {
 		Command: pr.Argv(presets.UserShell()),
 		Dir:     dir,
 		Env:     pr.Environ(),
-		Font:    terminal.Font{Size: s.fontSize},
-		Padding: terminal.Padding{X: 12, Y: 7},
+		Font:    termFont(s.fontSize),
+		// The glass shows through the terminal, in the colors of
+		// design.md 3.3a; its room is the view's padding (termPadX…),
+		// which changes as capsules come and go.
+		Transparent:     true,
+		Theme:           p.themes[0],
+		DarkTheme:       p.themes[1],
+		MinimumContrast: terminalContrast,
+		Padding:         terminal.Padding{X: -1, Y: -1},
 		// Programs that read the clipboard themselves, as coding agents
 		// taking pasted images, are offered every format of a paste (the
 		// Kitty clipboard protocol, mode 5522); an image alone pastes an
@@ -552,7 +689,7 @@ func (p *termPanel) fontChanged() {
 	for _, s := range p.tabs {
 		s.fontSize = size
 		if s.term != nil {
-			s.term.SetFont(terminal.Font{Size: size})
+			s.term.SetFont(termFont(size))
 		}
 	}
 	p.win.Invalidate()
@@ -625,32 +762,77 @@ func (p *termPanel) place(r mygo.Rectangle) {
 	p.placing = true
 	p.win.SetBounds(r)
 	p.placing = false
-	b := p.win.Bounds() // as AppKit constrained it
-	p.size = [2]int{b.Width, b.Height}
+	p.bounds = p.win.Bounds() // as AppKit constrained it
 }
 
-// resized saves the size the user dragged the panel to, in percent of
-// the work area, rounded to the settings' steps: the next show uses it,
-// and Settings shows it. Only the side that changed is saved, so that a
-// side held at the panel's minimum does not drift.
+// resized follows the user's drag of the panel's edges (design.md 3.2):
+// the bottom edge sets its height, the left and right ones its width, on
+// both sides, so that it stays centered; its top stays. The size, in
+// percent of the work area, shows in Settings at once, and is saved once
+// the drag ends, for the next show.
 func (p *termPanel) resized() {
 	if p.placing || !p.shown || p.wa.Width <= 0 || p.wa.Height <= 0 {
 		return
 	}
-	b := p.win.Bounds()
+	b, prev := p.win.Bounds(), p.bounds
+	if b == prev {
+		return
+	}
+	w, h := dragSize(prev, b, p.wa)
+	r := mygo.Rectangle{X: prev.X + (prev.Width-w)/2, Y: prev.Y, Width: w, Height: h}
+	if r != b {
+		p.place(r)
+	} else {
+		p.bounds = b
+	}
 	st := &p.g.settings
 	was := *st
-	if b.Width != p.size[0] {
-		st.TerminalWidth = termPercent(b.Width, p.wa.Width, settings.MinTerminalWidth, settings.MaxTerminalWidth)
+	if w != prev.Width {
+		st.TerminalWidth = termPercent(w, p.wa.Width, settings.MinTerminalWidth, settings.MaxTerminalWidth)
 	}
-	if b.Height != p.size[1] {
-		st.TerminalHeight = termPercent(b.Height, p.wa.Height, settings.MinTerminalHeight, settings.MaxTerminalHeight)
+	if h != prev.Height {
+		st.TerminalHeight = termPercent(h, p.wa.Height, settings.MinTerminalHeight, settings.MaxTerminalHeight)
 	}
-	p.size = [2]int{b.Width, b.Height}
-	if st.TerminalWidth != was.TerminalWidth || st.TerminalHeight != was.TerminalHeight {
-		p.g.saveSettings()
-		p.g.prefs.terminalSizeChanged()
+	if st.TerminalWidth == was.TerminalWidth && st.TerminalHeight == was.TerminalHeight {
+		return
 	}
+	p.g.prefs.terminalSizeChanged()
+	p.saveGen++
+	gen := p.saveGen
+	time.AfterFunc(sizeSaveDelay, func() {
+		p.win.Update(func() {
+			if gen == p.saveGen {
+				p.g.saveSettings()
+			}
+		})
+	})
+}
+
+// dragSize is the panel's size as the user drags its edges from prev to
+// b, in the work area wa: a left edge dragged grows or shrinks it on both
+// sides, as does a right one; the bottom edge sets the height; a top edge
+// dragged changes nothing. Within the settings' ranges and the minimum.
+func dragSize(prev, b, wa mygo.Rectangle) (w, h int) {
+	w, h = prev.Width, prev.Height
+	center2 := 2*prev.X + prev.Width // twice the center, in whole DIPs
+	switch {
+	case b.X != prev.X: // the left edge
+		w = center2 - 2*b.X
+	case b.Width != prev.Width: // the right edge
+		w = 2*(b.X+b.Width) - center2
+	}
+	if b.Y == prev.Y && b.Height != prev.Height { // the bottom edge
+		h = b.Height
+	}
+	w = clampSize(w, wa.Width, settings.MinTerminalWidth, settings.MaxTerminalWidth, termMinWidth)
+	h = clampSize(h, wa.Height, settings.MinTerminalHeight, settings.MaxTerminalHeight, termMinHeight)
+	return w, h
+}
+
+// clampSize keeps px within lo% and hi% of wa, at least least, and never
+// over wa.
+func clampSize(px, wa, lo, hi, least int) int {
+	return min(max(px, percentOf(wa, lo), least), percentOf(wa, hi), wa)
 }
 
 // sizeChanged gives the panel showing the size of Settings, at the top
@@ -665,21 +847,11 @@ func (p *termPanel) sizeChanged() {
 	p.place(mygo.Rectangle{X: p.wa.X + (p.wa.Width-w)/2, Y: p.wa.Y + termTopGap, Width: w, Height: h})
 }
 
-// termSize is the panel's size in a work area of waW×waH: the
-// percentages of the settings, or the default size while they are unset,
-// no smaller than termMinWidth×termMinHeight, no larger than the work
-// area.
+// termSize is the panel's size in a work area of waW×waH for the
+// percentages of the settings (design.md 3.2): no smaller than
+// termMinWidth×termMinHeight, no larger than the work area.
 func termSize(waW, waH int, st settings.Settings) (w, h int) {
-	if st.TerminalWidth == 0 {
-		w = min(termDefaultMaxWidth, percentOf(waW, settings.DefaultTerminalWidth))
-	} else {
-		w = percentOf(waW, st.TermWidth())
-	}
-	if st.TerminalHeight == 0 {
-		h = max(termDefaultMinHeight, percentOf(waH, settings.DefaultTerminalHeight))
-	} else {
-		h = percentOf(waH, st.TermHeight())
-	}
+	w, h = percentOf(waW, st.TermWidth()), percentOf(waH, st.TermHeight())
 	return min(max(w, termMinWidth), waW), min(max(h, termMinHeight), waH)
 }
 
@@ -765,15 +937,4 @@ func cubicBezier(x1, y1, x2, y2, x float64) float64 {
 		}
 	}
 	return b(y1, y2, (lo+hi)/2)
-}
-
-// iconButton is a plain 26×26 button with a symbol, for the tab bar:
-// no background, the selection color while pressed.
-func iconButton(c *ui.Context, k tokens, symbol, tip string) ui.Element {
-	b := ui.Box(c).Size(tabH, tabH).Radius(7).Center().Shrink(0).Label(tip).Tooltip(tip)
-	if b.Pressed() {
-		b.Background(k.selection)
-	}
-	b.Children(func() { sfsymbols.Symbol(c, symbol).Size(13).Color(k.textOnGlass) })
-	return b
 }

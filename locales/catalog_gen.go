@@ -644,13 +644,13 @@ func (msgs Messages) TermPlainTip() string {
 	return Catalog.Format(msgs.locale, "termPlainTip", nil)
 }
 
-// Dismiss says "Close"
+// Dismiss says "Dismiss"
 // in the language the app shows.
 //
 // Label of the × button of a notice (not in copy.md).
 func Dismiss() string { return In(i18n.Locale()).Dismiss() }
 
-// Dismiss says "Close"
+// Dismiss says "Dismiss"
 // in the language of msgs.
 //
 // Label of the × button of a notice (not in copy.md).
@@ -1246,13 +1246,13 @@ func (msgs Messages) GeneralHeight() string {
 	return Catalog.Format(msgs.locale, "generalHeight", nil)
 }
 
-// GeneralSizeHint says "How much of the screen."
+// GeneralSizeHint says "Percent of the current screen."
 // in the language the app shows.
 //
 // General: under the width and height sliders.
 func GeneralSizeHint() string { return In(i18n.Locale()).GeneralSizeHint() }
 
-// GeneralSizeHint says "How much of the screen."
+// GeneralSizeHint says "Percent of the current screen."
 // in the language of msgs.
 //
 // General: under the width and height sliders.
@@ -1260,18 +1260,18 @@ func (msgs Messages) GeneralSizeHint() string {
 	return Catalog.Format(msgs.locale, "generalSizeHint", nil)
 }
 
-// GeneralSizeDragHint says "Dragging the bottom edge updates this."
+// GeneralTerminalGroupHint says "You can also drag the terminal's edges. These values update as you do."
 // in the language the app shows.
 //
-// General: under the width slider, after generalSizeHint.
-func GeneralSizeDragHint() string { return In(i18n.Locale()).GeneralSizeDragHint() }
+// General: under the floating terminal group title, over the group.
+func GeneralTerminalGroupHint() string { return In(i18n.Locale()).GeneralTerminalGroupHint() }
 
-// GeneralSizeDragHint says "Dragging the bottom edge updates this."
+// GeneralTerminalGroupHint says "You can also drag the terminal's edges. These values update as you do."
 // in the language of msgs.
 //
-// General: under the width slider, after generalSizeHint.
-func (msgs Messages) GeneralSizeDragHint() string {
-	return Catalog.Format(msgs.locale, "generalSizeDragHint", nil)
+// General: under the floating terminal group title, over the group.
+func (msgs Messages) GeneralTerminalGroupHint() string {
+	return Catalog.Format(msgs.locale, "generalTerminalGroupHint", nil)
 }
 
 // GeneralPercent says "{n}%"
