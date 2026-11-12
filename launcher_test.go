@@ -36,7 +36,7 @@ func rows(as []ownAction) []string {
 func TestGocastActions(t *testing.T) {
 	ps := []presets.Preset{
 		{ID: "a", Name: "Shell", Dir: "~"},
-		{ID: "b", Name: "pi", Dir: "~/Work/my-app", Command: "pi"},
+		{ID: "b", Name: "pi", Dir: "~/Projects/my-app", Command: "pi"},
 	}
 	var did []string
 	do := gocastDo{
@@ -67,7 +67,7 @@ func TestGocastActions(t *testing.T) {
 		t.Errorf("ran %q, want %q", did, want)
 	}
 	// Presets read as in the results; the other rows, their names.
-	if got, want := as[2].label2, presetLabel(ps[1]); got != want || !strings.Contains(got, "~/Work/my-app") {
+	if got, want := as[2].label2, presetLabel(ps[1]); got != want || !strings.Contains(got, "~/Projects/my-app") {
 		t.Errorf("preset row reads %q, want %q", got, want)
 	}
 	if as[0].label2 != "" || as[0].symbol == "" || as[1].symbol != "" {

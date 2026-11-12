@@ -87,7 +87,7 @@ func TestArgv(t *testing.T) {
 	if got := (Preset{Dir: "~/x"}).WorkDir(); got != filepath.Join(home, "x") {
 		t.Errorf("workdir: %q", got)
 	}
-	if got := (Preset{Dir: "~/Work/my-app/"}).LastDir(); got != "my-app" {
+	if got := (Preset{Dir: "~/Projects/my-app/"}).LastDir(); got != "my-app" {
 		t.Errorf("lastdir: %q", got)
 	}
 }

@@ -6,9 +6,7 @@ Gocast v1 (0.1.0). It is written in Go with MyGo's native UI (the `ui` package, 
 
 The sources, in priority order:
 - `docs/design.md` (wins on any conflict)
-- `research/brief.md` v1.3
-- `docs/copy.md` v1.9 (every string is in `locales/`)
-- the `[v1]` items in `research/raycast-reference.md`
+- `docs/copy.md` v1.10 (every string is in `locales/`)
 
 ## Run
 
@@ -45,7 +43,9 @@ For real window captures, `screencapture -x -o -l <CGWindowID>` works. Get the I
 - `<dir>/darwin-arm64/Gocast.app`
 - `gocast-0.1.0-arm64.dmg`
 
-The bundle is ad-hoc signed, and `libghostty-vt.dylib` is bundled in Resources. The default `<dir>` is `build/`.
+The bundle is ad-hoc signed. Contents/Resources holds `libghostty-vt.dylib` and, through `resources` in mygo.json, `THIRD_PARTY_NOTICES.md`, `LICENSE` and `NOTICE`. The default `<dir>` is `build/`.
+
+**Third-party notices.** `THIRD_PARTY_NOTICES.md` is generated: run `go run scripts/gen-third-party-notices.go` after any change to go.mod (CI runs it with `-check`). It reads the license files of the compiled modules from the module cache, the license texts of libghostty-vt's components from `scripts/notices/`, and stops when MyGo bundles a libghostty-vt from another Ghostty commit than those texts describe.
 
 ## Layout
 
@@ -61,6 +61,7 @@ The bundle is ad-hoc signed, and `libghostty-vt.dylib` is bundled in Resources. 
 | `assets/tray.png` | Tray icon; `assets/make-tray-icon.swift` draws it |
 | `assets/update-icon.png` | The update window's icon, a placeholder until the app icon; `assets/make-update-icon.swift` draws it |
 | `CHANGELOG.md` | Keep a Changelog; the version's section is the update's release notes |
+| `scripts/gen-third-party-notices.go` | Writes `THIRD_PARTY_NOTICES.md`; `scripts/notices/` holds the texts that are not in the module cache |
 | `internal/apps` | App scan, localized names |
 | `internal/search` | Matching: substring, word initials, pinyin (full and initials), ranking |
 | `internal/usage` | Frecency, and which result a query chose |
@@ -109,13 +110,12 @@ The text's line box was centered, which leaves baseline glyphs low and arrows, w
 - **Check.** `shortcut.SpotlightHasCmdSpace` reads `defaults export com.apple.symbolichotkeys -` and extracts `AppleSymbolicHotKeys.64` (“Show Spotlight search”) with `plutil`. It only reads. ⌘Space counts as Spotlight's when the entry is enabled with key code 49 and the ⌘ mask (1<<20), and also when the entry is missing or can't be read, since that is the system default.
 - **Why a check is needed.** Carbon's `RegisterEventHotKey`, which MyGo uses, refuses a shortcut that another app registered (its error is “may be used by another application”), but it does not refuse Spotlight's symbolic hot key, so both would open. Each launch checks again: while Spotlight has ⌘Space, ⌥⇧Space is registered instead, and the row says 「⌘Space 被聚焦搜索占用」.
 - **First launch** (`spotlightChecked` not yet in settings.json): if Spotlight has ⌘Space, Settings opens on 快捷键 with the notice at the top, instead of the search panel. Later launches don't open it.
-  - 「打开系统设置」 opens `x-apple.systempreferences:com.apple.preference.keyboard?Shortcuts`. The Keyboard extension allows the URL scheme and maps that legacy ID; the Shortcuts sheet itself was not opened on the user's Mac.
+  - 「打开系统设置」 opens `x-apple.systempreferences:com.apple.preference.keyboard?Shortcuts`. The Keyboard extension allows the URL scheme and maps that legacy ID; whether it lands on the Shortcuts sheet itself has not been checked.
   - Each time Gocast becomes active (`App.OnDidBecomeActive`) it checks again. If ⌘Space is free it takes it, the notice turns into 「已改用 ⌘Space」 for 3 s and then fades out over 150 ms.
   - 「就用 ⌥⇧Space」 saves `launcherDefaultAltShiftSpace: true`. ⌥⇧Space becomes the default from then on, Reset to Default included, and the notice is not shown again.
 - **Recording ⌘Space** while Spotlight has it is refused in the same way as a conflict: red border, dot and 「⌘Space 被聚焦搜索占用」.
 - **Another app holding the shortcut at launch** (registration fails): ⌥⇧Space is used, and the row shows the usual conflict message.
 - **Trying it** without touching the Mac's settings: set `GOCAST_SPOTLIGHT_ENTRY=/path/entry.json`, a file holding the entry as JSON, e.g. `{"enabled":true,"value":{"parameters":[32,49,1048576]}}`. Edit the file, then bring Gocast to the front again.
-- **On this Mac** Spotlight's shortcut is off (`enabled: false`), and Raycast's hot key is `Command-50` (⌘\`), not ⌘Space. Gocast therefore registers ⌘Space and gets it.
 
 ### Widths at 640 (design.md 2.1–2.6, 3.2)
 
@@ -128,8 +128,8 @@ The text's line box was centered, which leaves baseline glyphs low and arrows, w
 - **No-results line.** It is split around the query, using `queryMark` in the catalog string. Only the query shrinks, and the line is at most 544 (640 − 96).
 - **Terminal size.**
   - Defaults are 50% wide and 60% high. Height runs 30–90. The minimum is still 640×300 px.
-  - The width's least is `settings.MinTermWidth(workArea)` = max(30, ⌈640 / work-area width × 100⌉): 43 on this Mac's 1512, 30 on a 2560 display. The work area is that of the display the terminal is on, or of the one under the mouse when it is hidden (`termPanel.workAreaWidth`).
-  - The slider's track starts at that least. The stored `terminalWidthPercent` stays as set (30 stays 30 in settings.json) and is shown and used as max(stored, least) (`Settings.TermWidthOn`), so a wider display gets it back. On 1512, 43% is 650 px, not 640.
+  - The width's least is `settings.MinTermWidth(workArea)` = max(30, ⌈640 / work-area width × 100⌉): 43 on a 1512-wide display, 30 on a 2560-wide one. The work area is that of the display the terminal is on, or of the one under the mouse when it is hidden (`termPanel.workAreaWidth`).
+  - The slider's track starts at that least. The stored `terminalWidthPercent` stays as set (30 stays 30 in settings.json) and is shown and used as max(stored, least) (`Settings.TermWidthOn`), so a wider display gets it back. On a 1512-wide display, 43% is 650, not 640.
   - Dragging an edge clamps the width to the least too and saves the rounded percent.
 
 ### Right line (design.md 2.1a, measured on 2× captures)
@@ -140,7 +140,7 @@ Whatever is at the search panel's right ends on one line 20 from its right edge 
 | --- | --- | --- | --- |
 | Result row tag 应用 / App | list 8 + row 12 (`listRowPadR`) | 21.5 / 20.5 | 20.5 / 19.5 |
 | Empty-query list keycaps (⌃\`, ⌘,) | the same | 20 | 20 |
-| Empty-query list folder (~, …032) | the same | 20.5 / 21.5 | 19.5 / 20.5 |
+| Empty-query list folder (~, a project folder) | the same | 20.5 / 21.5 | 19.5 / 20.5 |
 | Capsule's last key K | inset 8 + border 1 + `capsulePadR` 3 + `segmentPadR` 8 (was 6) | 18 | 20 |
 | ⌘K popup keys | inset 8 + `menuPad` 6 + `menuRowPadR` 6 (was 8; the left stays 8) | 22 | 20 |
 | ⌘K popup filter field | inset 8 + `menuTextInsetR` 12 | 22 (frame) | 20 (frame) |
@@ -148,7 +148,7 @@ Whatever is at the search panel's right ends on one line 20 from its right edge 
 
 Keys are boxes and end on the line exactly. Text glyphs end inside their advance (应用 and digits 1.5, App and ~ 0.5), so `listNote` reaches `noteBearing` = 1 past the row's padding; every item then ends within 0.5 of the line, in both languages. Left side, for reference: the result icons' ink at 20 from the panel's left (cell at 18), titles at 54; in the popup, the icons at 14 (ink 15), the filter text at 14, the names at 26.
 
-Captures: `screens/v9/align-right-before.png` and `align-right-after.png` (light, query "t3", ⌘K open), `align-right-after-capsule.png` (no popup), `align-right-after-en.png`, `align-right-empty-{en,zh-Hans}.png`, `align-right-spinner.png` (a build with the spinner forced on).
+Checked on captures in light mode with the query "t3" and ⌘K open, without the popup, in English, with an empty query in both languages, and on a build with the spinner forced on.
 
 ### Compact capsule (design.md 2.4, 2.6, measured on 2× captures)
 
@@ -157,14 +157,13 @@ With the search bar alone (66 high) the 「操作 ⌘K」 capsule is centred in 
 - In compact mode the segment is no longer dimmed: ⌘K works there (it opens Gocast's own actions). Only the no-results capsule is dimmed (design.md 2.6).
 - When ⌘K grows the panel into Gocast's own actions, the capsule is gone. Esc or ⌘K folds the list back, and the capsule comes back as it folds. Before, it stayed hidden until the panel was shown again.
 - Measured, light and dark: box edges at 30 px and 102 px of 132, so 15.0 above and 15.0 below. The light rim's outer line is 14.5 / 14.5. The segment's centre is 33.0. K's box ends 41 px from the panel's outer right edge, 20.5, which is 20.0 inside the 0.5 border, the same as before. The expanded capsule is at the same pixel rows before and after.
-- Captures: `screens/v11/compact-capsule-before.png`, `compact-capsule-after-light.png` and `compact-capsule-after-dark.png`.
 
 ### Copies and names (design.md 2.3)
 
 - `apps.Unique`: copies with one bundle ID are one app. The one kept is in /Applications or /System/Applications, else ~/Applications, else the first found.
 - `apps.Places`: apps of one name (any case) with different IDs all stay. After the name, styled as a preset's subtitle (13 secondary, at most 40%, cut in the middle), each shows its bundle's file name without .app, or nothing when that is its name: Siri (`com.apple.campo`, Siri AI.app) shows 「Siri AI」, Siri (`com.apple.siri.launcher`, Siri.app) nothing. Only those whose file names collide too (any case) show their folder, as Finder names it, or the whole path if they share it. Assistive technology reads it after the name: 「Siri，Siri AI，应用」.
-- On this Mac the 180 apps before and after are the same: no ID has two copies. Only the Siri AI row gets a subtitle.
-- Background-only (`LSBackgroundOnly`) apps found: Claude Code URL Handler, Parsec. Agents (`LSUIElement`): Apps, Bob, 调度中心, 飞连, 关于本机, Input Source Pro, iOS App安装器, 截屏, KeepingYouAwake, LunarBar, MEGAsync, NordVPN, Raycast, Rectangle, Scroll Reverser, 时间机器, both Siris, Stats, Tailscale, 系统信息. None is left out.
+- On a typical Mac no bundle ID has two copies, so the list is the same before and after `Unique`; of the system's apps only the Siri AI row gets a subtitle.
+- Background-only (`LSBackgroundOnly`) apps and agents (`LSUIElement`) are listed too; none is left out.
 
 ### ⌘K with an empty query (design.md 2.5a, copy.md v1.7)
 
@@ -175,26 +174,26 @@ With the search bar alone (66 high) the 「操作 ⌘K」 capsule is centred in 
 - The panel no longer takes ⌘Q (design.md 2.5a). Quitting happens from the row or the tray menu.
 - With a result chosen, ⌘K still opens that result's popup.
 
-## Verified (2026-11-12, MacBook Pro M1 Pro, zh-Hans, dev build driven by mygo-automation)
+## Verified (0.1.0, Apple silicon, zh-Hans, dev build driven by mygo-automation)
 
 `gofmt -l`, `go vet ./...`, `mygo vet` and `go test ./...` are all clean.
 
-The v2 screenshots are real window captures, in `.airbuild/artifacts/screens/v2/`.
+The checks below were made on real window captures (the screenshots are not in the repository).
 
 **Search panel:**
 - Compact at 66. Typing expands it, and a capture taken right after the keystroke already shows the results (no blank frame).
-- `wx` → 微信 first, and app rows have no subtitle (`0-…`, `1-search-expanded-{light,dark}.png`).
-- Preset row with `{folder} · {command}`, middle-truncated, tag 预设, primary action 在悬浮终端打开 (`2-search-preset-light.png`).
-- ⌘K menu over the capsule (`3-search-actions-{light,dark}.png`).
+- `wx` → 微信 first, and app rows have no subtitle.
+- Preset row with `{folder} · {command}`, middle-truncated, tag 预设, primary action 在悬浮终端打开.
+- ⌘K menu over the capsule, light and dark.
 
 **Floating terminal:**
-- Opening the pi preset from search shows the panel at the top with pi running (`4-terminal-pi-{light,dark}.png`).
-- ⌘T adds a plain shell tab (`4b-terminal-shell-tab-dark.png`).
-- I hid the panel (收起) and showed it again. Both tabs were still there, and the shell still had its earlier output.
-- A preset whose command ends shows 命令已结束, 关闭标签 and 重新运行 (`5-terminal-finished-light.png`).
+- Opening a preset from search shows the panel at the top with its command running.
+- ⌘T adds a plain shell tab.
+- Hiding the panel (收起) and showing it again keeps both tabs, and the shell keeps its earlier output.
+- A preset whose command ends shows 命令已结束, 关闭标签 and 重新运行.
 - A plain shell that exits closes its tab, as designed.
 
-**Settings** (`6-…`–`10-settings-*.png`):
+**Settings:**
 - **Shortcuts:**
   - Recording saves at once, and the new shortcut takes effect.
   - Esc cancels.
@@ -210,18 +209,18 @@ The v2 screenshots are real window captures, in `.airbuild/artifacts/screens/v2/
 - **Other:** About reads "版本 dev" when unpackaged, and the sidebar works with ↑/↓. ⌘W hides the window, and it reopens on the last page.
 - **Material:** the sidebar is on the sidebar material, confirmed in a capture of the real window.
 
-**v3 (designer review), `.airbuild/artifacts/screens/v3/`.** These are on-screen region captures (`screencapture -R`) of the panel's rect over the real desktop, in light mode:
+**Design review.** On-screen region captures (`screencapture -R`) of the panel's rect over the real desktop, in light mode:
 - **Glass.** The glass now has a tint, rgba(246,246,248,0.72) in light mode and rgba(28,28,30,0.72) in dark mode, so the light panel no longer turns gray.
 - **应用 tag contrast** (text #5E5E63):
   - Over the real desktop: 6.1:1 on a plain row and 5.1:1 on the selected row.
   - Over a pure black backdrop (worst case): 4.6:1 plain and 3.85:1 selected. The selected row is still under 4.5 there.
-- **App icons.** Cell 26, with the row's left padding 10 and a gap of 10, so the title starts at 54. A preset's square is 22, centered in the cell. The running dot is centered at row y 35 (`3-search-preset-running-light.png`).
+- **App icons.** Cell 26, with the row's left padding 10 and a gap of 10, so the title starts at 54. A preset's square is 22, centered in the cell. The running dot is centered at row y 35.
 - **Gocast mark.** 20 seen.
-- **⌘K menu.** Its bottom is 8 above the capsule (`2-search-actions-light.png`).
+- **⌘K menu.** Its bottom is 8 above the capsule.
 
-The earlier skeleton checks still hold (`.airbuild/artifacts/screens/`):
+The earlier checks still hold:
 - Quitting ends the child processes.
-- pi uses the full panel width.
+- A full-screen program (e.g. an editor or a TUI) uses the full panel width.
 
 ## Deviations from design.md
 
@@ -237,9 +236,9 @@ The earlier skeleton checks still hold (`.airbuild/artifacts/screens/`):
 4. **Settings sidebar (4.2).** It is a custom list, not `ui.Sidebar`, because `SidebarItem` takes SVG icons and not SF Symbols. It keeps Sidebar's behavior: one Tab stop, ↑/↓ choose the page, and the accent-colored selection.
 5. **Preset editor (4.4).** It is a `ui.Modal` with a `ui.Form`; MyGo has no `ui.Dialog` widget.
 6. **List bottom fade (2.3).** Not done. MyGo has no mask, and design.md says this is not a defect.
-7. **Empty query (2.6).** The list of suggestions (frecency) is built but off (`suggestionsEnabled = false` in launcher.go) until decided. Compact is the default.
+7. **Empty query (2.6).** The list of suggestions (frecency) is built but off (`suggestionsEnabled = false` in launcher.go) until the product decision on it is made. Compact is the default.
 8. **Tray menu.** 设置… shows ⌘, on the right as well, the Mac's usual Settings shortcut; it also works in the search panel.
-9. **Same-name apps (2.3; product's rule, v10).** Not the folder first: the bundle's file name without .app, and nothing where that is the name (「Siri」 with 「Siri AI」, and plain 「Siri」). Only apps whose file names collide too get their folder, or their whole path if they share it, cut in the middle.
+9. **Same-name apps (2.3; a product decision).** Not the folder first: the bundle's file name without .app, and nothing where that is the name (「Siri」 with 「Siri AI」, and plain 「Siri」). Only apps whose file names collide too get their folder, or their whole path if they share it, cut in the middle.
 10. **Right line (2.1a).** The gray texts at the right (tags, folders) reach 1 past the row's 12 padding, so that their glyphs, not their advances, end on the line with the keys.
 
 ## Manual tests still needed
@@ -266,24 +265,24 @@ Automation can't cover these:
 - **About.** A plain 检查更新 button calling `updater.CheckForUpdates()`. The page doesn't change: the earlier spinner, the 已是最新版本 line and the own update alert are gone, with their catalog keys.
 - **General.** 自动检查更新 is the second row of the first group, under 登录时自动启动. It reads `updater.AutomaticChecks()` when Settings shows and when the General page is chosen, and on `updater.OnChange`; it writes `updater.SetAutomaticChecks`. It is on by default (no `DisableAutomaticChecks`), and it is not the window's download-and-install checkbox.
 - **What a build says when 检查更新 is pressed:**
-  - `go run` / `go build` (dev): 没法在这里更新 / 开发版本不会自己更新。 (en: Updates Unavailable / Development builds don’t update themselves.) Captures: `screens/v12/update-window-dev{,-en,-dark}.png`.
-  - `mygo build` today, with no `updates` in mygo.json: `Updater.Enabled()` is false but the build is not dev, so it says 没法在这里更新 / Gocast 没法在当前安装位置自己更新。如果是用其他方式装的，请在那里更新。 This is misleading until the feed exists (checked with a `-X github.com/egoist/mygo.production=1` build: `screens/v12/update-window-production-no-feed.png`). It never checks in the background.
-- **Keys.** `mygo keygen -o ~/.config/gocast-update-keys` made `mygo-update.key` (secret, 0600) and `mygo-update.pub` there, outside the repo. The public key is `7xqUsSnSTZgGQ69hBuh+pm1jexm7Z3Ngl0lQ17EKPRQ=`. Put the secret in a password manager and in CI as `MYGO_UPDATER_PRIVATE_KEY`; never commit it.
+  - `go run` / `go build` (dev): 没法在这里更新 / 开发版本不会自己更新。 (en: Updates Unavailable / Development builds don’t update themselves.)
+  - `mygo build` today, with no `updates` in mygo.json: `Updater.Enabled()` is false but the build is not dev, so it says 没法在这里更新 / Gocast 没法在当前安装位置自己更新。如果是用其他方式装的，请在那里更新。 This is misleading until the feed exists (checked with a `-X github.com/egoist/mygo.production=1` build). It never checks in the background.
+- **Keys.** `mygo keygen` made `mygo-update.key` (secret) and `mygo-update.pub`; the maintainer keeps them outside the repository. The public key is `7xqUsSnSTZgGQ69hBuh+pm1jexm7Z3Ngl0lQ17EKPRQ=`. Put the secret in a password manager and in CI as `MYGO_UPDATER_PRIVATE_KEY`; never commit it.
 - **mygo.json has no `updates` yet.** `mygo build` refuses `updates` with a `publicKey` and neither `github` nor `url` ("updates needs either github (owner/name) or url"); `mygo vet` doesn't check it.
-- **TODO when the repository is decided** (likely `xcc3641/gocast`):
-  1. add to mygo.json `"updates": {"publicKey": "7xqUsSnSTZgGQ69hBuh+pm1jexm7Z3Ngl0lQ17EKPRQ=", "github": "xcc3641/gocast"}` (the repository must be public; releases tagged `v0.1.0` …);
-  2. build with `MYGO_UPDATER_PRIVATE_KEY="$(cat ~/.config/gocast-update-keys/mygo-update.key)" mygo build`, which then also writes `gocast-<version>-darwin-arm64.tar.gz` and `update-darwin-arm64.json`, and needs the version's `## [x.y.z]` section in CHANGELOG.md;
+- **TODO when the repository is decided** (`<owner>/gocast` below):
+  1. add to mygo.json `"updates": {"publicKey": "7xqUsSnSTZgGQ69hBuh+pm1jexm7Z3Ngl0lQ17EKPRQ=", "github": "<owner>/gocast"}` (the repository must be public; releases tagged `v0.1.0` …);
+  2. build with `MYGO_UPDATER_PRIVATE_KEY="$(cat path/to/mygo-update.key)" mygo build`, which then also writes `gocast-<version>-darwin-arm64.tar.gz` and `update-darwin-arm64.json`, and needs the version's `## [x.y.z]` section in CHANGELOG.md;
   3. `mygo build -upload` makes a draft release; publishing it makes it the latest, which apps check.
   Installed apps update only from builds that had `updates`: 0.1.0 builds made before that never update themselves.
 
 ## Open issues
 
 - **Platform:**
-  - `minimumSystemVersion` is 13.0, MyGo's floor (brief v1.3 agrees).
-  - `mygo build` makes arm64 only. The universal build is planned for the second release (brief).
-- **Signing.** There is no Developer ID on this Mac, so the bundle is ad-hoc signed and not notarized.
+  - `minimumSystemVersion` is 13.0, MyGo's floor.
+  - `mygo build` makes arm64 only. A universal (Intel too) build is planned for a later release.
+- **Signing.** Developer ID signing and notarization are not set up (not decided yet), so the bundle is ad-hoc signed and not notarized.
 - **App icon.** None yet (design.md 1.6). About uses `command.square` 48 as a placeholder, and so does the update window (`assets/update-icon.png`, in system gray #8E8E93 since one PNG serves both appearances). Replace both with the icon when it comes.
-- **`mygo build` locales warning.** It warns "The app does not import gocast/locales". This is a false positive and harmless: MyGo's `compiledDirs` splits `go list` output with `strings.Fields`, which breaks on the space in "Application Support". It should be reported upstream.
+- **`mygo build` locales warning.** It warns "The app does not import gocast/locales". This is a false positive and harmless: MyGo's `compiledDirs` splits `go list` output with `strings.Fields`, which breaks when the project's path has a space in it. It should be reported upstream.
 - **Unbundled app names.** An unbundled binary gets app names in English from Launch Services; `Localized(App.Locale())` corrects them.
 
 ## Terminal theming options

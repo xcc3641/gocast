@@ -38,7 +38,7 @@
     "placeholders": {
       "folder": {
         "type": "String",
-        "example": "~/Work/my-app"
+        "example": "~/Projects/my-app"
       },
       "command": {
         "type": "String",
@@ -222,7 +222,7 @@
     "placeholders": {
       "folder": {
         "type": "String",
-        "example": "~/Work/my-app"
+        "example": "~/Projects/my-app"
       }
     }
   },

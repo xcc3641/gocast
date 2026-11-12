@@ -440,7 +440,7 @@ func (l *launcher) rowLabel(item int) string {
 }
 
 // presetLabel is what assistive technology reads of a preset's row:
-// "my-app · pi, Preset, ~/Work/my-app".
+// "my-app · pi, Preset, ~/Projects/my-app".
 func presetLabel(p presets.Preset) string {
 	sep := ", "
 	if strings.HasPrefix(i18n.Locale(), "zh") {
@@ -1110,7 +1110,7 @@ func presetTitle(p presets.Preset) string {
 	return p.Name
 }
 
-// presetSubtitle says where and what a preset runs: "~/Work/x · pi".
+// presetSubtitle says where and what a preset runs: "~/Projects/x · pi".
 func presetSubtitle(p presets.Preset) string {
 	if strings.TrimSpace(p.Command) == "" {
 		return locales.PresetSubtitleShell(p.ShortDir())

@@ -14,7 +14,7 @@ func TestUnique(t *testing.T) {
 		{ID: "com.apple.Siri", Path: "/System/Library/CoreServices/Siri.app", Name: "Siri"},
 		{ID: "com.apple.siri.launcher", Path: "/System/Applications/Siri.app", Name: "Siri"},
 		{ID: "com.apple.campo", Path: "/System/Applications/Siri AI.app", Name: "Siri"},
-		{ID: "com.example.tool", Path: "/Volumes/Work/Tool.app", Name: "Tool"},
+		{ID: "com.example.tool", Path: "/Volumes/External/Tool.app", Name: "Tool"},
 		{ID: "com.example.tool", Path: home + "/Applications/Tool.app", Name: "Tool"},
 		{ID: "com.example.tool", Path: "/Volumes/Old/Tool.app", Name: "Tool"},
 		{ID: "com.apple.Terminal", Path: "/System/Applications/Utilities/Terminal.app", Name: "Terminal"},

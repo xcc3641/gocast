@@ -438,7 +438,7 @@ func (p *termPanel) newTabMenu(c *ui.Context, k tokens) {
 	})
 }
 
-// lastDir is the last folder of a path, as ~/Work/x → x.
+// lastDir is the last folder of a path, as ~/Projects/x → x.
 func lastDir(path string) string {
 	path = strings.TrimRight(path, "/")
 	if i := strings.LastIndex(path, "/"); i >= 0 && i < len(path)-1 {

@@ -3,6 +3,7 @@
   "identifier": "dev.gocast.app",
   "version": "0.1.0",
   "out": "build",
+  "resources": ["THIRD_PARTY_NOTICES.md", "LICENSE", "NOTICE"],
   "macos": {
     "minimumSystemVersion": "13.0",
     "infoPlist": {
