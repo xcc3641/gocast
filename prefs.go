@@ -4,6 +4,8 @@ import (
 	"log"
 
 	"github.com/egoist/mygo"
+
+	"gocast/internal/presets"
 )
 
 // prefsWindow is the Settings window: until it is built, the presets file.
@@ -20,3 +22,15 @@ func (g *gocast) openSettings(page string) {
 
 // editPreset shows Settings with the editor of the preset with the ID.
 func (g *gocast) editPreset(id string) { g.openSettings("presets") }
+
+// addPreset shows Settings with the editor of a new preset.
+func (g *gocast) addPreset() { g.openSettings("presets") }
+
+// defaultPreset returns the default preset, or nil for a plain terminal.
+func (g *gocast) defaultPreset() *presets.Preset {
+	if i := presets.DefaultPreset(g.presets); i >= 0 {
+		p := g.presets[i]
+		return &p
+	}
+	return nil
+}
