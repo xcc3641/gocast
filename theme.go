@@ -33,7 +33,7 @@ func tokensFor(c *ui.Context) tokens {
 		}
 	} else {
 		k = tokens{
-			text: ui.Hex("#1D1D1F"), textSecondary: ui.Hex("#6E6E73"), textOnGlass: ui.Hex("#5E5E63"),
+			text: ui.Hex("#1D1D1F"), textSecondary: ui.Hex("#6E6E73"), textOnGlass: ui.Hex("#505054"),
 			selection: ui.RGBA(0, 0, 0, 0.08), hairline: ui.RGBA(0, 0, 0, 0.10), keycap: ui.RGBA(0, 0, 0, 0.06),
 			surface: ui.Hex("#FFFFFF"), groupFill: ui.Hex("#F5F5F7"),
 			glassTint: ui.RGBA(246, 246, 248, 0.72),
