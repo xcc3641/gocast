@@ -72,6 +72,7 @@ appearance, in English and Simplified Chinese.
 | `assets/` | Icons, with the scripts that draw them |
 | `docs/` | `design.md` (the design spec), `copy.md` (the UI text), `dev-notes.md` |
 | `scripts/` | `gen-third-party-notices.go` and the license texts it uses |
+| `install.sh` | The install script `mygo build` writes, kept here so people can read it; the release carries the same file |
 
 ## UI and text
 
@@ -146,10 +147,18 @@ the GitHub CLI (`gh`), signed in with access to the repository.
    Without the key, `mygo build` still builds the app and the disk image
    but skips the update files (fine for local builds), and `-upload`
    refuses to run.
-5. Check the draft on GitHub (try the disk image), then publish it.
+5. Copy the install script the build wrote over the one in the repository
+   (`cp build/darwin-arm64/install.sh install.sh`) and commit it if it
+   changed: the README points people at it.
+6. Check the draft on GitHub (try the disk image and
+   `curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh | sh`
+   once it is published), then publish it.
    Publishing makes it the latest release: installed apps find it on their
    next automatic check, or when the user chooses Check for Updates.
 
-Developer ID signing and notarization are not set up yet (not decided).
-Until they are, builds are ad-hoc signed and macOS asks users to confirm
-the first time they open Gocast.
+Releases are not signed with a Developer ID yet: builds are ad-hoc
+signed, and macOS asks users to confirm the first time they open a
+disk image they downloaded (System Settings › Privacy & Security › Open
+Anyway). Updates and the install script download with no quarantine flag,
+so they open without that prompt; both check the Ed25519 signature of
+what they install against the public key in mygo.json.

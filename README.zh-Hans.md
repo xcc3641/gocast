@@ -18,7 +18,7 @@ Gocast 待在菜单栏，不占 Dock。深色、浅色跟着系统走，界面�
 
 ## 安装
 
-到 [Releases](https://github.com/xcc3641/gocast/releases/latest) 下载最新的 `.dmg`，打开后把 Gocast 拖进“应用程序”文件夹。
+到 [Releases](https://github.com/xcc3641/gocast/releases/latest) 下载最新的 `.dmg`，打开后把 Gocast 拖进“应用程序”文件夹。第一次打开时，去系统设置 › 隐私与安全性，点「仍要打开」。
 
 **系统要求：** macOS 13 或更高版本，Apple 芯片。之后会支持 Intel。
 
