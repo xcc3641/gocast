@@ -1,0 +1,16 @@
+{
+  "name": "Gocast",
+  "identifier": "dev.gocast.app",
+  "version": "0.1.0",
+  "out": "build",
+  "macos": {
+    "minimumSystemVersion": "13.0",
+    "infoPlist": {
+      "LSUIElement": true
+    }
+  },
+  "i18n": {
+    "dir": "locales",
+    "source": "en"
+  }
+}

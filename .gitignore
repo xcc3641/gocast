@@ -1,0 +1,5 @@
+.airbuild/
+build/
+.mygo/
+.DS_Store
+/gocast

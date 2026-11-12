@@ -1,0 +1,81 @@
+{
+  "@@locale": "en",
+  "traySearch": "Search…",
+  "@traySearch": { "description": "Tray menu: shows the search panel." },
+  "trayTerminal": "Floating Terminal",
+  "@trayTerminal": { "description": "Tray menu: shows or hides the floating terminal." },
+  "traySettings": "Settings…",
+  "@traySettings": { "description": "Tray menu: opens Settings (not built yet, shown disabled)." },
+  "trayCheckUpdates": "Check for Updates…",
+  "@trayCheckUpdates": { "description": "Tray menu: checks for updates (not built yet, shown disabled)." },
+  "trayEditPresets": "Edit Presets File…",
+  "@trayEditPresets": { "description": "Tray menu, until Settings exist: opens presets.json in the default editor. Not in copy.md yet." },
+  "trayQuit": "Quit Gocast",
+  "@trayQuit": { "description": "Tray menu: quits the app." },
+
+  "searchPlaceholder": "Search apps or terminal presets",
+  "@searchPlaceholder": { "description": "The search field's placeholder." },
+  "searchTagApp": "App",
+  "@searchTagApp": { "description": "Tag at the right of an app's result row." },
+  "searchTagPreset": "Preset",
+  "@searchTagPreset": { "description": "Tag at the right of a preset's result row." },
+  "presetSubtitle": "{folder} · {command}",
+  "@presetSubtitle": {
+    "description": "Subtitle of a preset's result row.",
+    "placeholders": { "folder": { "type": "String", "example": "~/Work/my-app" }, "command": { "type": "String", "example": "pi" } }
+  },
+  "presetSubtitleShell": "{folder} · Terminal",
+  "@presetSubtitleShell": {
+    "description": "Subtitle of a preset without a command (a plain terminal).",
+    "placeholders": { "folder": { "type": "String", "example": "~" } }
+  },
+  "searchHintClear": "↩ Open　↑↓ Select　esc Clear",
+  "@searchHintClear": { "description": "Footer hint while the field has text." },
+  "searchHintClose": "↩ Open　↑↓ Select　esc Close",
+  "@searchHintClose": { "description": "Footer hint while the field is empty." },
+  "searchNoResults": "No results for “{query}”",
+  "@searchNoResults": {
+    "description": "Title when nothing matches.",
+    "placeholders": { "query": { "type": "String", "example": "xyz" } }
+  },
+  "searchNoResultsHint": "Try another name for the app, like its English name or pinyin.",
+  "@searchNoResultsHint": { "description": "Under the no-results title." },
+  "searchNoPresetsHint": "Want to run a command in a folder? Add a preset in Settings.",
+  "@searchNoPresetsHint": { "description": "Added under no results when there is no preset at all." },
+  "searchFinding": "Finding apps…",
+  "@searchFinding": { "description": "While the apps are listed for the first time. Not in copy.md yet." },
+  "searchOpenFailed": "Couldn’t open “{name}”. It may have been moved or deleted.",
+  "@searchOpenFailed": {
+    "description": "When an app fails to open.",
+    "placeholders": { "name": { "type": "String", "example": "Safari" } }
+  },
+
+  "termTabDefault": "Terminal",
+  "@termTabDefault": { "description": "Tab title of a preset without a name." },
+  "termHide": "Hide (press {shortcut} to come back)",
+  "@termHide": {
+    "description": "Tooltip of the hide button.",
+    "placeholders": { "shortcut": { "type": "String", "example": "⌃`" } }
+  },
+  "termFinished": "Command finished",
+  "@termFinished": { "description": "Bar under the terminal when its command ended with exit code 0." },
+  "termFinishedCode": "Command finished (exit code {code})",
+  "@termFinishedCode": {
+    "description": "Bar under the terminal when its command ended with another exit code.",
+    "placeholders": { "code": { "type": "int", "example": "1" } }
+  },
+  "termRunAgain": "Run Again",
+  "@termRunAgain": { "description": "Button of the finished bar (Enter presses it)." },
+  "termCloseTab": "Close Tab",
+  "@termCloseTab": { "description": "Secondary button of the finished bar." },
+  "termCommandMissing": "Can’t find the command “{command}”. Check the command in this preset.",
+  "@termCommandMissing": {
+    "description": "When the preset's command is not found (exit code 127).",
+    "placeholders": { "command": { "type": "String", "example": "pi" } }
+  },
+  "termFolderMissing": "Can’t find the folder {folder}. Opened in your home folder instead.",
+  "@termFolderMissing": {
+    "description": "Notice above the terminal when the preset's folder is missing.",
+    "placeholders": { "folder": { "type": "String", "example": "~/Work/my-app" } }
+  }
+}

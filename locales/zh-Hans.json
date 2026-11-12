@@ -1,0 +1,31 @@
+{
+  "@@locale": "zh-Hans",
+  "traySearch": "搜索…",
+  "trayTerminal": "悬浮终端",
+  "traySettings": "设置…",
+  "trayCheckUpdates": "检查更新…",
+  "trayEditPresets": "编辑预设文件…",
+  "trayQuit": "退出 Gocast",
+
+  "searchPlaceholder": "搜索应用或终端预设",
+  "searchTagApp": "应用",
+  "searchTagPreset": "预设",
+  "presetSubtitle": "{folder} · {command}",
+  "presetSubtitleShell": "{folder} · 终端",
+  "searchHintClear": "↩ 打开　↑↓ 选择　esc 清空",
+  "searchHintClose": "↩ 打开　↑↓ 选择　esc 关闭",
+  "searchNoResults": "没有找到“{query}”",
+  "searchNoResultsHint": "试试应用的另一种叫法，比如英文名或拼音。",
+  "searchNoPresetsHint": "想在某个文件夹里直接运行命令？去设置里添加预设。",
+  "searchFinding": "正在查找应用…",
+  "searchOpenFailed": "打不开“{name}”，它可能已被移动或删除。",
+
+  "termTabDefault": "终端",
+  "termHide": "收起（再按 {shortcut} 回来）",
+  "termFinished": "命令已结束",
+  "termFinishedCode": "命令已结束（退出码 {code}）",
+  "termRunAgain": "重新运行",
+  "termCloseTab": "关闭标签",
+  "termCommandMissing": "找不到命令“{command}”。请检查这个预设里的命令是否写对。",
+  "termFolderMissing": "找不到文件夹 {folder}，已改在你的主文件夹里打开。"
+}
