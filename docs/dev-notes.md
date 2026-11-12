@@ -98,9 +98,10 @@ the command ends → 「命令已结束（退出码 {code}）」 + 重新运行.
 - The brief wants a universal (arm64 + Intel) build; `mygo build` produced arm64 only.
 - No Developer ID on this Mac: the bundle is ad-hoc signed, not notarized. Any
   release must ship `libghostty-vt.dylib` inside the bundle (mygo build already does that and signs it).
-- `mygo build` warned "The app does not import gocast/locales". This is a false positive:
-  launcher.go, termpanel.go and tray.go import it. It probably fired because the repo
-  had no commits yet (`go list` failed on VCS stamping). Re-check after the first commit.
+- `mygo build` warns "The app does not import gocast/locales". This is a false positive
+  (launcher.go, termpanel.go and tray.go import it; `go list -deps` lists it). It is a MyGo bug:
+  `compiledDirs` (cmd/mygo/i18n.go) splits `go list` output with `strings.Fields`, which breaks
+  on the spaces in this project path (".../Application Support/..."). Report it upstream; harmless.
 - Copy: the strings come from `docs/copy.md` (v1.1). `docs/design.md` and brief v1.3 have not been applied yet; that is the next run. These are not in it and were written here:
   编辑预设文件…, 正在查找应用…, 打不开“{name}”…. The no-presets hint says “去设置里添加预设”
   but there is no settings window yet (Settings/Check for Updates are shown disabled).
