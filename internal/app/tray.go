@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/egoist/mygo"
-	"github.com/egoist/mygo/plugins/updater"
 
 	"gocast/icon"
 	"gocast/locales"
@@ -32,7 +31,7 @@ func (g *gocast) setUpTray() {
 }
 
 // updateTray builds the tray's menu again, as the shortcuts it shows
-// change, and the language (updater.MenuItem says the one shown).
+// change, the language, and once a new version is ready.
 func (g *gocast) updateTray() {
 	if g.tray != nil {
 		g.tray.SetMenu(g.trayMenu())
@@ -46,8 +45,18 @@ func (g *gocast) trayMenu() *mygo.Menu {
 		{Label: locales.ClipboardHistory(), Accelerator: g.clipKey, Click: func(*mygo.MenuItem, *mygo.Window) { g.launcher.openClip(false) }},
 		mygo.Separator(),
 		{Label: locales.TraySettings(), Accelerator: "Cmd+,", Click: func(*mygo.MenuItem, *mygo.Window) { g.openSettings("") }},
-		updater.MenuItem(), // 检查更新…: the update window
+		g.updateMenuItem(),
 		mygo.Separator(),
 		{Label: locales.TrayQuit(), Accelerator: "CmdOrCtrl+Q", Click: func(*mygo.MenuItem, *mygo.Window) { mygo.App.Quit() }},
 	})
+}
+
+// updateMenuItem is the tray's line of updates (design.md 4.5, 5):
+// 检查更新…, which checks in Settings › About; once a new version is
+// ready, in its place, 重新打开以更新到 {版本}, which relaunches into it.
+func (g *gocast) updateMenuItem() *mygo.MenuItem {
+	if v := g.updates.readyVersion(); v != "" {
+		return &mygo.MenuItem{Label: locales.UpdateRelaunchTo(v), Click: func(*mygo.MenuItem, *mygo.Window) { g.updates.relaunch() }}
+	}
+	return &mygo.MenuItem{Label: locales.TrayCheckUpdates(), Click: func(*mygo.MenuItem, *mygo.Window) { g.checkForUpdates() }}
 }

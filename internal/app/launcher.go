@@ -665,12 +665,16 @@ func (l *launcher) footer(c *ui.Context, k tokens, h float32) {
 	segs = append(segs, segment{label: locales.FooterActions(), color: k.textOnGlass, mods: ui.Cmd, key: ui.KeyK,
 		caps: []string{"⌘", "K"}, dim: !can && !l.compact(), act: l.toggleMenu})
 	bottom := capsuleBottom(h)
+	room := noticeRoom(panelWidth, actionsCapsuleWidth(c, segs...))
+	// A notice covers the new version pill while it shows (design.md 4.5).
 	if l.notice != "" {
 		n := notice{icon: "checkmark.circle", iconColor: k.textOnGlass, color: k.textOnGlass, text: l.notice}
 		if l.noticeDanger {
 			n.icon, n.iconColor, n.color = "exclamationmark.triangle.fill", k.danger, k.danger
 		}
-		noticeCapsule(c, k, capsuleInset, bottom, noticeRoom(panelWidth, actionsCapsuleWidth(c, segs...)), n)
+		noticeCapsule(c, k, capsuleInset, bottom, room, n)
+	} else if v, relaunching := l.g.updates.pill(); v != "" {
+		l.updatePill(c, k, capsuleInset, bottom, room, v, relaunching)
 	}
 	actionsCapsule(c, k, capsuleInset, bottom, segs...)
 }
@@ -689,13 +693,15 @@ func capsuleBottom(h float32) float32 {
 
 // primaryName is the name of the primary action of what the row opens
 // (copy.md 2.2a): Open; Open in Floating Terminal for a preset; Quit for
-// Quit Gocast.
+// Quit Gocast; Relaunch for Relaunch to Update (design.md 4.5).
 func primaryName(e entry) string {
 	switch {
 	case e.calc:
 		return locales.CalcCopyAnswer()
 	case e.own == quitItemID:
 		return locales.FooterQuit()
+	case e.own == updateItemID:
+		return locales.UpdateRelaunch()
 	case e.own == "" && e.app == nil:
 		return locales.FooterOpenInTerminal()
 	}
@@ -1000,6 +1006,8 @@ func (l *launcher) ownItems() []ownItem {
 		addPreset: func() { l.hide(); l.g.addPreset() },
 		settings:  func() { l.hide(); l.g.openSettings("") },
 		quit:      mygo.App.Quit,
+		update:    l.g.updates.readyVersion(),
+		relaunch:  func() { l.g.updates.relaunch() }, // the panel stays, saying so (design.md 4.5)
 	})
 }
 
@@ -1027,7 +1035,7 @@ func (l *launcher) rebuild() {
 	// clipboard history also by the words users say for it (copy.md 2.2a,
 	// 6.1).
 	for _, o := range l.own {
-		it := search.NewItem(o.id, o.label, ownSearchNames(o.id)...)
+		it := search.NewItem(o.id, o.label, ownSearchNames(o.id, l.g.updates.readyVersion())...)
 		it.Score = l.g.usage.Score(o.id, now)
 		l.items = append(l.items, it)
 		l.entries = append(l.entries, entry{own: o.id})

@@ -44,6 +44,7 @@ type gocast struct {
 	tray     *mygo.Tray
 	clip     *clipService
 	calc     *calcService
+	updates  *updateService
 
 	settings settings.Settings
 	// The shortcuts registered, or "": the search panel's, the floating
@@ -72,6 +73,14 @@ type gocast struct {
 func (g *gocast) presetsPath() string  { return filepath.Join(g.dir, "presets.json") }
 func (g *gocast) usagePath() string    { return filepath.Join(g.dir, "usage.json") }
 func (g *gocast) settingsPath() string { return filepath.Join(g.dir, "settings.json") }
+
+// updaterPath is the updater plugin's updater.json, which the Gocasts
+// that used the plugin kept in MyGo's PathUserData, Application Support joined with the
+// app's name: ~/Library/Application Support/Gocast/updater.json. Only
+// read, once (settings.MigrateUpdater).
+func (g *gocast) updaterPath() string {
+	return filepath.Join(filepath.Dir(g.dir), appName, "updater.json")
+}
 
 // loadPresets reads presets.json again when it changed (or the first
 // time). It reports whether the presets changed.
@@ -305,6 +314,9 @@ func (g *gocast) ready() {
 	if g.settings, err = settings.Load(g.settingsPath()); err != nil {
 		log.Printf("settings: %v", err)
 	}
+	if g.settings.MigrateUpdater(g.updaterPath()) {
+		g.saveSettings()
+	}
 	if g.usage, err = usage.Load(g.usagePath(), time.Now()); err != nil {
 		log.Printf("usage: %v", err)
 	}
@@ -316,10 +328,12 @@ func (g *gocast) ready() {
 	g.launcher = newLauncher(g)
 	g.term = newTermPanel(g)
 	g.prefs = newPrefsWindow(g)
+	g.updates = newUpdateService(g, time.Now())
 	g.registerShortcuts()
 	g.setUpTray()
 	g.clip.start()
 	g.calc.start()
+	g.updates.start()
 	mygo.App.OnWillQuit(func(*mygo.QuitEvent) { g.clip.stop() })
 	// Back from System Settings, where the user may have freed ⌘Space.
 	mygo.App.OnDidBecomeActive(func() {
@@ -339,8 +353,10 @@ func (g *gocast) ready() {
 			return
 		}
 	}
-	if !mygo.App.WasOpenedAtLogin() {
-		g.launcher.show() // started by the user: show what it does
+	if !mygo.App.WasOpenedAtLogin() && !relaunched() {
+		// Started by the user: show what it does. Relaunched to update,
+		// it shows nothing, as at login (design.md 4.5).
+		g.launcher.show()
 	}
 }
 
@@ -382,7 +398,6 @@ func Run() {
 	mygo.App.OnSecondInstance(func([]string, string) { g.launcher.show() })
 	mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) { g.quitting = true })
 	mygo.App.OnQuitCanceled(func() { g.quitting = false })
-	useUpdater()
 	mygo.App.WhenReady(g.ready)
 	if err := mygo.App.Run(); err != nil {
 		log.Fatal(err)

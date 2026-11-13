@@ -79,15 +79,15 @@ func (msgs Messages) TraySettings() string {
 // TrayCheckUpdates says "Check for Updates…"
 // in the language the app shows.
 //
-// Tray menu: opens the update window and checks (the updater plugin's
-// MenuItem).
+// Tray menu: opens Settings › About and checks there (copy.md 12.2);
+// replaced by updateRelaunchTo once a new version is ready.
 func TrayCheckUpdates() string { return In(i18n.Locale()).TrayCheckUpdates() }
 
 // TrayCheckUpdates says "Check for Updates…"
 // in the language of msgs.
 //
-// Tray menu: opens the update window and checks (the updater plugin's
-// MenuItem).
+// Tray menu: opens Settings › About and checks there (copy.md 12.2);
+// replaced by updateRelaunchTo once a new version is ready.
 func (msgs Messages) TrayCheckUpdates() string {
 	return Catalog.Format(msgs.locale, "trayCheckUpdates", nil)
 }
@@ -1271,29 +1271,33 @@ func (msgs Messages) GeneralSearchOnlyHint(shortcut string) string {
 // GeneralAutoUpdate says "Check for updates automatically"
 // in the language the app shows.
 //
-// General: switch, in the first group under Open at login. It is the
-// updater's automatic checks.
+// General: switch, in the first group under Open at login: checks for
+// updates in the background and downloads them (copy.md 12.3); kept in
+// settings.json.
 func GeneralAutoUpdate() string { return In(i18n.Locale()).GeneralAutoUpdate() }
 
 // GeneralAutoUpdate says "Check for updates automatically"
 // in the language of msgs.
 //
-// General: switch, in the first group under Open at login. It is the
-// updater's automatic checks.
+// General: switch, in the first group under Open at login: checks for
+// updates in the background and downloads them (copy.md 12.3); kept in
+// settings.json.
 func (msgs Messages) GeneralAutoUpdate() string {
 	return Catalog.Format(msgs.locale, "generalAutoUpdate", nil)
 }
 
-// GeneralAutoUpdateHint says "When on, Gocast asks you when a new version is ready. When off, it only checks if you ask."
+// GeneralAutoUpdateHint says "Gocast downloads new versions in the background and switches to them next time it opens. Turn this off to check only …"
 // in the language the app shows.
 //
-// General: under the switch.
+// Settings › General: note under Check for updates automatically (copy.md
+// 12.3).
 func GeneralAutoUpdateHint() string { return In(i18n.Locale()).GeneralAutoUpdateHint() }
 
-// GeneralAutoUpdateHint says "When on, Gocast asks you when a new version is ready. When off, it only checks if you ask."
+// GeneralAutoUpdateHint says "Gocast downloads new versions in the background and switches to them next time it opens. Turn this off to check only …"
 // in the language of msgs.
 //
-// General: under the switch.
+// Settings › General: note under Check for updates automatically (copy.md
+// 12.3).
 func (msgs Messages) GeneralAutoUpdateHint() string {
 	return Catalog.Format(msgs.locale, "generalAutoUpdateHint", nil)
 }
@@ -1483,13 +1487,15 @@ func (msgs Messages) AboutVersion(version string) string {
 // AboutCheck says "Check for Updates"
 // in the language the app shows.
 //
-// About: button. Opens the update window and checks.
+// About: button. Checks for updates on the page, the status line under it
+// saying what it found (copy.md 12.2).
 func AboutCheck() string { return In(i18n.Locale()).AboutCheck() }
 
 // AboutCheck says "Check for Updates"
 // in the language of msgs.
 //
-// About: button. Opens the update window and checks.
+// About: button. Checks for updates on the page, the status line under it
+// saying what it found (copy.md 12.2).
 func (msgs Messages) AboutCheck() string {
 	return Catalog.Format(msgs.locale, "aboutCheck", nil)
 }
@@ -1594,384 +1600,210 @@ func (msgs Messages) MenuTerminal() string {
 	return Catalog.Format(msgs.locale, "menuTerminal", nil)
 }
 
-// UpdateTitle says "Software Update"
+// UpdateReadyPill says "Version {version} is ready"
 // in the language the app shows.
 //
-// Update window: title.
-func UpdateTitle() string { return In(i18n.Locale()).UpdateTitle() }
+// Search panel: the new version pill at the bottom left, before its
+// Relaunch button (copy.md 12.1). No middle dot: the button's own
+// background sets it apart.
+func UpdateReadyPill(version string) string { return In(i18n.Locale()).UpdateReadyPill(version) }
 
-// UpdateTitle says "Software Update"
+// UpdateReadyPill says "Version {version} is ready"
 // in the language of msgs.
 //
-// Update window: title.
-func (msgs Messages) UpdateTitle() string {
-	return Catalog.Format(msgs.locale, "updateTitle", nil)
-}
-
-// UpdateChecking says "Checking…"
-// in the language the app shows.
-//
-// Update window: while checking.
-func UpdateChecking() string { return In(i18n.Locale()).UpdateChecking() }
-
-// UpdateChecking says "Checking…"
-// in the language of msgs.
-//
-// Update window: while checking.
-func (msgs Messages) UpdateChecking() string {
-	return Catalog.Format(msgs.locale, "updateChecking", nil)
-}
-
-// UpdateCancel says "Cancel"
-// in the language the app shows.
-//
-// Update window: button.
-func UpdateCancel() string { return In(i18n.Locale()).UpdateCancel() }
-
-// UpdateCancel says "Cancel"
-// in the language of msgs.
-//
-// Update window: button.
-func (msgs Messages) UpdateCancel() string {
-	return Catalog.Format(msgs.locale, "updateCancel", nil)
-}
-
-// UpdateOK says "OK"
-// in the language the app shows.
-//
-// Update window: button.
-func UpdateOK() string { return In(i18n.Locale()).UpdateOK() }
-
-// UpdateOK says "OK"
-// in the language of msgs.
-//
-// Update window: button.
-func (msgs Messages) UpdateOK() string {
-	return Catalog.Format(msgs.locale, "updateOK", nil)
-}
-
-// UpdateUpToDate says "You’re Up to Date"
-// in the language the app shows.
-//
-// Update window: title, no newer version.
-func UpdateUpToDate() string { return In(i18n.Locale()).UpdateUpToDate() }
-
-// UpdateUpToDate says "You’re Up to Date"
-// in the language of msgs.
-//
-// Update window: title, no newer version.
-func (msgs Messages) UpdateUpToDate() string {
-	return Catalog.Format(msgs.locale, "updateUpToDate", nil)
-}
-
-// UpdateUpToDateMessage says "%[1]s %[2]s is the latest version."
-// in the language the app shows.
-//
-// Update window: %[1]s the app name, %[2]s its version.
-func UpdateUpToDateMessage() string { return In(i18n.Locale()).UpdateUpToDateMessage() }
-
-// UpdateUpToDateMessage says "%[1]s %[2]s is the latest version."
-// in the language of msgs.
-//
-// Update window: %[1]s the app name, %[2]s its version.
-func (msgs Messages) UpdateUpToDateMessage() string {
-	return Catalog.Format(msgs.locale, "updateUpToDateMessage", nil)
-}
-
-// UpdateDevelopmentBuild says "Development builds don’t update themselves."
-// in the language the app shows.
-//
-// Update window: message in a development build.
-func UpdateDevelopmentBuild() string { return In(i18n.Locale()).UpdateDevelopmentBuild() }
-
-// UpdateDevelopmentBuild says "Development builds don’t update themselves."
-// in the language of msgs.
-//
-// Update window: message in a development build.
-func (msgs Messages) UpdateDevelopmentBuild() string {
-	return Catalog.Format(msgs.locale, "updateDevelopmentBuild", nil)
-}
-
-// UpdateUnavailable says "Updates Unavailable"
-// in the language the app shows.
-//
-// Update window: title when the app cannot update itself.
-func UpdateUnavailable() string { return In(i18n.Locale()).UpdateUnavailable() }
-
-// UpdateUnavailable says "Updates Unavailable"
-// in the language of msgs.
-//
-// Update window: title when the app cannot update itself.
-func (msgs Messages) UpdateUnavailable() string {
-	return Catalog.Format(msgs.locale, "updateUnavailable", nil)
-}
-
-// UpdateUnavailableMessage says "%[1]s can’t update itself here. If you installed it another way, update it there."
-// in the language the app shows.
-//
-// Update window: %[1]s the app name.
-func UpdateUnavailableMessage() string { return In(i18n.Locale()).UpdateUnavailableMessage() }
-
-// UpdateUnavailableMessage says "%[1]s can’t update itself here. If you installed it another way, update it there."
-// in the language of msgs.
-//
-// Update window: %[1]s the app name.
-func (msgs Messages) UpdateUnavailableMessage() string {
-	return Catalog.Format(msgs.locale, "updateUnavailableMessage", nil)
-}
-
-// UpdateError says "Update Error"
-// in the language the app shows.
-//
-// Update window: title of an error.
-func UpdateError() string { return In(i18n.Locale()).UpdateError() }
-
-// UpdateError says "Update Error"
-// in the language of msgs.
-//
-// Update window: title of an error.
-func (msgs Messages) UpdateError() string {
-	return Catalog.Format(msgs.locale, "updateError", nil)
-}
-
-// UpdateCheckError says "Couldn’t check for updates. Try again later."
-// in the language the app shows.
-//
-// Update window: the check failed.
-func UpdateCheckError() string { return In(i18n.Locale()).UpdateCheckError() }
-
-// UpdateCheckError says "Couldn’t check for updates. Try again later."
-// in the language of msgs.
-//
-// Update window: the check failed.
-func (msgs Messages) UpdateCheckError() string {
-	return Catalog.Format(msgs.locale, "updateCheckError", nil)
-}
-
-// UpdateInstallError says "Couldn’t install the update. Try again later."
-// in the language the app shows.
-//
-// Update window: installing failed.
-func UpdateInstallError() string { return In(i18n.Locale()).UpdateInstallError() }
-
-// UpdateInstallError says "Couldn’t install the update. Try again later."
-// in the language of msgs.
-//
-// Update window: installing failed.
-func (msgs Messages) UpdateInstallError() string {
-	return Catalog.Format(msgs.locale, "updateInstallError", nil)
-}
-
-// UpdateAvailable says "%[1]s is ready to update"
-// in the language the app shows.
-//
-// Update window: title, %[1]s the app name.
-func UpdateAvailable() string { return In(i18n.Locale()).UpdateAvailable() }
-
-// UpdateAvailable says "%[1]s is ready to update"
-// in the language of msgs.
-//
-// Update window: title, %[1]s the app name.
-func (msgs Messages) UpdateAvailable() string {
-	return Catalog.Format(msgs.locale, "updateAvailable", nil)
-}
-
-// UpdateAvailableMessage says "%[1]s %[2]s is ready. You’re on %[3]s."
-// in the language the app shows.
-//
-// Update window: %[1]s the app name, %[2]s the new version, %[3]s the
-// running one.
-func UpdateAvailableMessage() string { return In(i18n.Locale()).UpdateAvailableMessage() }
-
-// UpdateAvailableMessage says "%[1]s %[2]s is ready. You’re on %[3]s."
-// in the language of msgs.
-//
-// Update window: %[1]s the app name, %[2]s the new version, %[3]s the
-// running one.
-func (msgs Messages) UpdateAvailableMessage() string {
-	return Catalog.Format(msgs.locale, "updateAvailableMessage", nil)
-}
-
-// UpdateReleaseNotes says "Release Notes"
-// in the language the app shows.
-//
-// Update window: over the release notes.
-func UpdateReleaseNotes() string { return In(i18n.Locale()).UpdateReleaseNotes() }
-
-// UpdateReleaseNotes says "Release Notes"
-// in the language of msgs.
-//
-// Update window: over the release notes.
-func (msgs Messages) UpdateReleaseNotes() string {
-	return Catalog.Format(msgs.locale, "updateReleaseNotes", nil)
-}
-
-// UpdateAutomaticDownloads says "Automatically download and install updates"
-// in the language the app shows.
-//
-// Update window: checkbox (not the General switch).
-func UpdateAutomaticDownloads() string { return In(i18n.Locale()).UpdateAutomaticDownloads() }
-
-// UpdateAutomaticDownloads says "Automatically download and install updates"
-// in the language of msgs.
-//
-// Update window: checkbox (not the General switch).
-func (msgs Messages) UpdateAutomaticDownloads() string {
-	return Catalog.Format(msgs.locale, "updateAutomaticDownloads", nil)
-}
-
-// UpdateSkip says "Skip This Version"
-// in the language the app shows.
-//
-// Update window: button.
-func UpdateSkip() string { return In(i18n.Locale()).UpdateSkip() }
-
-// UpdateSkip says "Skip This Version"
-// in the language of msgs.
-//
-// Update window: button.
-func (msgs Messages) UpdateSkip() string {
-	return Catalog.Format(msgs.locale, "updateSkip", nil)
-}
-
-// UpdateRemindLater says "Remind Later"
-// in the language the app shows.
-//
-// Update window: button.
-func UpdateRemindLater() string { return In(i18n.Locale()).UpdateRemindLater() }
-
-// UpdateRemindLater says "Remind Later"
-// in the language of msgs.
-//
-// Update window: button.
-func (msgs Messages) UpdateRemindLater() string {
-	return Catalog.Format(msgs.locale, "updateRemindLater", nil)
-}
-
-// UpdateInstall says "Install Update"
-// in the language the app shows.
-//
-// Update window: default button.
-func UpdateInstall() string { return In(i18n.Locale()).UpdateInstall() }
-
-// UpdateInstall says "Install Update"
-// in the language of msgs.
-//
-// Update window: default button.
-func (msgs Messages) UpdateInstall() string {
-	return Catalog.Format(msgs.locale, "updateInstall", nil)
-}
-
-// UpdateDownloading says "Downloading…"
-// in the language the app shows.
-//
-// Update window: while downloading.
-func UpdateDownloading() string { return In(i18n.Locale()).UpdateDownloading() }
-
-// UpdateDownloading says "Downloading…"
-// in the language of msgs.
-//
-// Update window: while downloading.
-func (msgs Messages) UpdateDownloading() string {
-	return Catalog.Format(msgs.locale, "updateDownloading", nil)
-}
-
-// UpdateProgress says "%[1]s / %[2]s"
-// in the language the app shows.
-//
-// Update window: %[1]s downloaded of %[2]s, both sizes.
-func UpdateProgress() string { return In(i18n.Locale()).UpdateProgress() }
-
-// UpdateProgress says "%[1]s / %[2]s"
-// in the language of msgs.
-//
-// Update window: %[1]s downloaded of %[2]s, both sizes.
-func (msgs Messages) UpdateProgress() string {
-	return Catalog.Format(msgs.locale, "updateProgress", nil)
-}
-
-// UpdateMegabytes says "%s MB"
-// in the language the app shows.
-//
-// Update window: a size, %s a number such as 12.3.
-func UpdateMegabytes() string { return In(i18n.Locale()).UpdateMegabytes() }
-
-// UpdateMegabytes says "%s MB"
-// in the language of msgs.
-//
-// Update window: a size, %s a number such as 12.3.
-func (msgs Messages) UpdateMegabytes() string {
-	return Catalog.Format(msgs.locale, "updateMegabytes", nil)
-}
-
-// UpdateInstalling says "Installing…"
-// in the language the app shows.
-//
-// Update window: while installing.
-func UpdateInstalling() string { return In(i18n.Locale()).UpdateInstalling() }
-
-// UpdateInstalling says "Installing…"
-// in the language of msgs.
-//
-// Update window: while installing.
-func (msgs Messages) UpdateInstalling() string {
-	return Catalog.Format(msgs.locale, "updateInstalling", nil)
-}
-
-// UpdateReady says "Ready to Relaunch"
-// in the language the app shows.
-//
-// Update window: title once installed.
-func UpdateReady() string { return In(i18n.Locale()).UpdateReady() }
-
-// UpdateReady says "Ready to Relaunch"
-// in the language of msgs.
-//
-// Update window: title once installed.
-func (msgs Messages) UpdateReady() string {
-	return Catalog.Format(msgs.locale, "updateReady", nil)
-}
-
-// UpdateReadyMessage says "%[1]s %[2]s is installed and will open next time. You can relaunch now."
-// in the language the app shows.
-//
-// Update window: %[1]s the app name, %[2]s the new version.
-func UpdateReadyMessage() string { return In(i18n.Locale()).UpdateReadyMessage() }
-
-// UpdateReadyMessage says "%[1]s %[2]s is installed and will open next time. You can relaunch now."
-// in the language of msgs.
-//
-// Update window: %[1]s the app name, %[2]s the new version.
-func (msgs Messages) UpdateReadyMessage() string {
-	return Catalog.Format(msgs.locale, "updateReadyMessage", nil)
-}
-
-// UpdateLater says "Later"
-// in the language the app shows.
-//
-// Update window: button once installed.
-func UpdateLater() string { return In(i18n.Locale()).UpdateLater() }
-
-// UpdateLater says "Later"
-// in the language of msgs.
-//
-// Update window: button once installed.
-func (msgs Messages) UpdateLater() string {
-	return Catalog.Format(msgs.locale, "updateLater", nil)
+// Search panel: the new version pill at the bottom left, before its
+// Relaunch button (copy.md 12.1). No middle dot: the button's own
+// background sets it apart.
+func (msgs Messages) UpdateReadyPill(version string) string {
+	return Catalog.Format(msgs.locale, "updateReadyPill", map[string]any{"version": version})
 }
 
 // UpdateRelaunch says "Relaunch"
 // in the language the app shows.
 //
-// Update window: default button once installed.
+// The new version pill's button, the primary action of the Gocast group's
+// update row, and About's primary button once a new version is ready
+// (copy.md 12.1, 12.2).
 func UpdateRelaunch() string { return In(i18n.Locale()).UpdateRelaunch() }
 
 // UpdateRelaunch says "Relaunch"
 // in the language of msgs.
 //
-// Update window: default button once installed.
+// The new version pill's button, the primary action of the Gocast group's
+// update row, and About's primary button once a new version is ready
+// (copy.md 12.1, 12.2).
 func (msgs Messages) UpdateRelaunch() string {
 	return Catalog.Format(msgs.locale, "updateRelaunch", nil)
+}
+
+// UpdateRelaunchTo says "Relaunch to Update to {version}"
+// in the language the app shows.
+//
+// The Gocast group's first row, and the tray menu's line in place of Check
+// for Updates…, once a new version is ready (copy.md 12.1).
+func UpdateRelaunchTo(version string) string { return In(i18n.Locale()).UpdateRelaunchTo(version) }
+
+// UpdateRelaunchTo says "Relaunch to Update to {version}"
+// in the language of msgs.
+//
+// The Gocast group's first row, and the tray menu's line in place of Check
+// for Updates…, once a new version is ready (copy.md 12.1).
+func (msgs Messages) UpdateRelaunchTo(version string) string {
+	return Catalog.Format(msgs.locale, "updateRelaunchTo", map[string]any{"version": version})
+}
+
+// UpdateRelaunching says "Relaunching…"
+// in the language the app shows.
+//
+// Search panel: the new version pill once Relaunch was chosen, until Gocast
+// quits (copy.md 12.1).
+func UpdateRelaunching() string { return In(i18n.Locale()).UpdateRelaunching() }
+
+// UpdateRelaunching says "Relaunching…"
+// in the language of msgs.
+//
+// Search panel: the new version pill once Relaunch was chosen, until Gocast
+// quits (copy.md 12.1).
+func (msgs Messages) UpdateRelaunching() string {
+	return Catalog.Format(msgs.locale, "updateRelaunching", nil)
+}
+
+// UpdateChecking says "Checking…"
+// in the language the app shows.
+//
+// About: the status line while checking (copy.md 12.2).
+func UpdateChecking() string { return In(i18n.Locale()).UpdateChecking() }
+
+// UpdateChecking says "Checking…"
+// in the language of msgs.
+//
+// About: the status line while checking (copy.md 12.2).
+func (msgs Messages) UpdateChecking() string {
+	return Catalog.Format(msgs.locale, "updateChecking", nil)
+}
+
+// UpdateUpToDate says "You’re up to date"
+// in the language the app shows.
+//
+// About: the status line after a check found no newer version; fades after
+// a few seconds (copy.md 12.2).
+func UpdateUpToDate() string { return In(i18n.Locale()).UpdateUpToDate() }
+
+// UpdateUpToDate says "You’re up to date"
+// in the language of msgs.
+//
+// About: the status line after a check found no newer version; fades after
+// a few seconds (copy.md 12.2).
+func (msgs Messages) UpdateUpToDate() string {
+	return Catalog.Format(msgs.locale, "updateUpToDate", nil)
+}
+
+// UpdateDownloading says "Downloading {version}…"
+// in the language the app shows.
+//
+// About: the status line while the new version downloads (copy.md 12.2).
+func UpdateDownloading(version string) string { return In(i18n.Locale()).UpdateDownloading(version) }
+
+// UpdateDownloading says "Downloading {version}…"
+// in the language of msgs.
+//
+// About: the status line while the new version downloads (copy.md 12.2).
+func (msgs Messages) UpdateDownloading(version string) string {
+	return Catalog.Format(msgs.locale, "updateDownloading", map[string]any{"version": version})
+}
+
+// UpdateReady says "{version} is ready"
+// in the language the app shows.
+//
+// About: the status line once the new version is downloaded, before
+// What’s New (copy.md 12.2).
+func UpdateReady(version string) string { return In(i18n.Locale()).UpdateReady(version) }
+
+// UpdateReady says "{version} is ready"
+// in the language of msgs.
+//
+// About: the status line once the new version is downloaded, before
+// What’s New (copy.md 12.2).
+func (msgs Messages) UpdateReady(version string) string {
+	return Catalog.Format(msgs.locale, "updateReady", map[string]any{"version": version})
+}
+
+// UpdateCheckFailed says "Couldn’t check for updates. Gocast will try again later."
+// in the language the app shows.
+//
+// About: the status line when a check the user asked for failed (copy.md
+// 12.2).
+func UpdateCheckFailed() string { return In(i18n.Locale()).UpdateCheckFailed() }
+
+// UpdateCheckFailed says "Couldn’t check for updates. Gocast will try again later."
+// in the language of msgs.
+//
+// About: the status line when a check the user asked for failed (copy.md
+// 12.2).
+func (msgs Messages) UpdateCheckFailed() string {
+	return Catalog.Format(msgs.locale, "updateCheckFailed", nil)
+}
+
+// UpdateDownloadFailed says "Couldn’t finish downloading. Gocast will try again later."
+// in the language the app shows.
+//
+// About: the status line when downloading the new version failed (copy.md
+// 12.2).
+func UpdateDownloadFailed() string { return In(i18n.Locale()).UpdateDownloadFailed() }
+
+// UpdateDownloadFailed says "Couldn’t finish downloading. Gocast will try again later."
+// in the language of msgs.
+//
+// About: the status line when downloading the new version failed (copy.md
+// 12.2).
+func (msgs Messages) UpdateDownloadFailed() string {
+	return Catalog.Format(msgs.locale, "updateDownloadFailed", nil)
+}
+
+// UpdateDevBuild says "Development builds don’t update themselves."
+// in the language the app shows.
+//
+// About: the status line in a development build (copy.md 12.2).
+func UpdateDevBuild() string { return In(i18n.Locale()).UpdateDevBuild() }
+
+// UpdateDevBuild says "Development builds don’t update themselves."
+// in the language of msgs.
+//
+// About: the status line in a development build (copy.md 12.2).
+func (msgs Messages) UpdateDevBuild() string {
+	return Catalog.Format(msgs.locale, "updateDevBuild", nil)
+}
+
+// UpdateUnavailable says "Gocast can’t update itself here. If you installed it another way, update it there."
+// in the language the app shows.
+//
+// About: the status line when Gocast can't replace itself where it is
+// installed (copy.md 12.2).
+func UpdateUnavailable() string { return In(i18n.Locale()).UpdateUnavailable() }
+
+// UpdateUnavailable says "Gocast can’t update itself here. If you installed it another way, update it there."
+// in the language of msgs.
+//
+// About: the status line when Gocast can't replace itself where it is
+// installed (copy.md 12.2).
+func (msgs Messages) UpdateUnavailable() string {
+	return Catalog.Format(msgs.locale, "updateUnavailable", nil)
+}
+
+// UpdateWhatsNew says "What’s New"
+// in the language the app shows.
+//
+// About: link after the downloading or ready status, to the website's
+// changelog of that version (copy.md 12.2).
+func UpdateWhatsNew() string { return In(i18n.Locale()).UpdateWhatsNew() }
+
+// UpdateWhatsNew says "What’s New"
+// in the language of msgs.
+//
+// About: link after the downloading or ready status, to the website's
+// changelog of that version (copy.md 12.2).
+func (msgs Messages) UpdateWhatsNew() string {
+	return Catalog.Format(msgs.locale, "updateWhatsNew", nil)
 }
 
 // ClipboardHistory says "Clipboard History"

@@ -9,7 +9,6 @@ import (
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/plugins/sfsymbols"
-	"github.com/egoist/mygo/plugins/updater"
 	"github.com/egoist/mygo/ui"
 
 	"gocast/icon"
@@ -61,7 +60,7 @@ type prefsWindow struct {
 
 	// General.
 	login      bool
-	autoUpdate bool // the updater's automatic checks (updater.json)
+	autoUpdate bool // 自动检查更新 (design.md 4.5)
 	searchOnly bool // the search panel opens with its search field alone
 	calculator bool // the search panel calculates (design.md 2.3a)
 	fontSize   float64
@@ -74,6 +73,9 @@ type prefsWindow struct {
 	clipRetention       string // the label chosen
 	clipIgnoredSel      string // the bundle ID of the ignored app chosen
 	clipConfirm         bool   // asking before clearing the history
+
+	// About: the status line read out last (design.md 6).
+	updateSaid string
 }
 
 func newPrefsWindow(g *gocast) *prefsWindow {
@@ -96,12 +98,6 @@ func newPrefsWindow(g *gocast) *prefsWindow {
 		e.PreventDefault()
 		p.hide()
 	})
-	// The update window's answers and checks may change what the updater
-	// keeps; the switch shows it again.
-	updater.OnChange(func() {
-		p.autoUpdate = updater.AutomaticChecks()
-		p.win.Invalidate()
-	})
 	return p
 }
 
@@ -119,7 +115,7 @@ func (p *prefsWindow) show(page string) {
 		p.enterShortcuts()
 	}
 	p.login = mygo.App.OpenAtLogin()
-	p.autoUpdate = updater.AutomaticChecks()
+	p.autoUpdate = p.g.settings.AutoUpdates()
 	p.searchOnly = p.g.settings.SearchOnly
 	p.calculator = p.g.settings.Calculator()
 	p.fontSize = float64(p.g.settings.Font())
@@ -249,7 +245,7 @@ func (p *prefsWindow) goTo(page string) {
 		p.enterShortcuts()
 	}
 	if page == pageGeneral {
-		p.autoUpdate = updater.AutomaticChecks()
+		p.autoUpdate = p.g.settings.AutoUpdates()
 	}
 	if page == pageClipboard {
 		p.loadClipboard()
@@ -629,11 +625,11 @@ func (p *prefsWindow) generalPage(c *ui.Context, k tokens) {
 				}
 			}
 		})
-		// The updater's own preference, not settings.json; not the update
-		// window's "download and install" checkbox (design.md 4.4, 4.5).
+		// Off: checks only as asked; a version downloaded stays ready
+		// (design.md 4.4, 4.5).
 		g.row(c, k, locales.GeneralAutoUpdate(), locales.GeneralAutoUpdateHint(), k.textSecondary, func() {
 			if ui.Switch(c, &p.autoUpdate).Label(locales.GeneralAutoUpdate()).Changed() {
-				updater.SetAutomaticChecks(p.autoUpdate)
+				p.g.setAutoUpdates(p.autoUpdate)
 			}
 		})
 		// Taken as the panel next shows (design.md 4.4).
@@ -723,16 +719,19 @@ func (p *prefsWindow) terminalSizeChanged() {
 
 // --- About ---
 
+// aboutPage is About: the app icon, name, tagline and version, then the
+// button of updates and the status line under it, which says what the
+// check found on the page (design.md 4.4, 4.5).
 func (p *prefsWindow) aboutPage(c *ui.Context, k tokens) {
+	st := p.g.updates.about()
 	ui.Column(c).MinHeight(500 - 52 - 24).Justify(ui.Center).AlignItems(ui.Center).Children(func() {
 		// The app icon, icon.png at 64 (design.md 1.6, 4.2).
 		ui.Image(c, appIcon()).Size(64, 64).Shrink(0)
 		ui.Text(c, appName).FontSize(20).FontWeight(600).TextColor(k.text).Margin(12, 0, 0, 0)
 		ui.Text(c, locales.AboutTagline()).FontSize(13).TextColor(k.textSecondary)
 		ui.Text(c, locales.AboutVersion(appVersion())).FontSize(12).TextColor(k.textSecondary).Margin(4, 0, 16, 0)
-		// The update window says what the check found (design.md 4.4):
-		// the page itself stays as it is.
-		ui.Button(c, locales.AboutCheck()).OnClick(updater.CheckForUpdates)
+		p.aboutButton(c, st)
+		p.aboutStatusLine(c, k, st)
 	})
 }
 

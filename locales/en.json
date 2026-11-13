@@ -14,7 +14,7 @@
   },
   "trayCheckUpdates": "Check for Updates…",
   "@trayCheckUpdates": {
-    "description": "Tray menu: opens the update window and checks (the updater plugin's MenuItem)."
+    "description": "Tray menu: opens Settings › About and checks there (copy.md 12.2); replaced by updateRelaunchTo once a new version is ready."
   },
   "trayQuit": "Quit Gocast",
   "@trayQuit": {
@@ -438,11 +438,11 @@
   },
   "generalAutoUpdate": "Check for updates automatically",
   "@generalAutoUpdate": {
-    "description": "General: switch, in the first group under Open at login. It is the updater's automatic checks."
+    "description": "General: switch, in the first group under Open at login: checks for updates in the background and downloads them (copy.md 12.3); kept in settings.json."
   },
-  "generalAutoUpdateHint": "When on, Gocast asks you when a new version is ready. When off, it only checks if you ask.",
+  "generalAutoUpdateHint": "Gocast downloads new versions in the background and switches to them next time it opens. Turn this off to check only when you click Check for Updates.",
   "@generalAutoUpdateHint": {
-    "description": "General: under the switch."
+    "description": "Settings › General: note under Check for updates automatically (copy.md 12.3)."
   },
   "generalTerminalGroup": "Floating Terminal",
   "@generalTerminalGroup": {
@@ -510,7 +510,7 @@
   },
   "aboutCheck": "Check for Updates",
   "@aboutCheck": {
-    "description": "About: button. Opens the update window and checks."
+    "description": "About: button. Checks for updates on the page, the status line under it saying what it found (copy.md 12.2)."
   },
   "shortcutSpotlightTitle": "Spotlight is using ⌘Space",
   "@shortcutSpotlightTitle": {
@@ -540,113 +540,81 @@
   "@menuTerminal": {
     "description": "Search panel, under an empty query: the Gocast group's row that shows the floating terminal (copy.md 2.2a)."
   },
-  "updateTitle": "Software Update",
-  "@updateTitle": {
-    "description": "Update window: title."
-  },
-  "updateChecking": "Checking…",
-  "@updateChecking": {
-    "description": "Update window: while checking."
-  },
-  "updateCancel": "Cancel",
-  "@updateCancel": {
-    "description": "Update window: button."
-  },
-  "updateOK": "OK",
-  "@updateOK": {
-    "description": "Update window: button."
-  },
-  "updateUpToDate": "You’re Up to Date",
-  "@updateUpToDate": {
-    "description": "Update window: title, no newer version."
-  },
-  "updateUpToDateMessage": "%[1]s %[2]s is the latest version.",
-  "@updateUpToDateMessage": {
-    "description": "Update window: %[1]s the app name, %[2]s its version."
-  },
-  "updateDevelopmentBuild": "Development builds don’t update themselves.",
-  "@updateDevelopmentBuild": {
-    "description": "Update window: message in a development build."
-  },
-  "updateUnavailable": "Updates Unavailable",
-  "@updateUnavailable": {
-    "description": "Update window: title when the app cannot update itself."
-  },
-  "updateUnavailableMessage": "%[1]s can’t update itself here. If you installed it another way, update it there.",
-  "@updateUnavailableMessage": {
-    "description": "Update window: %[1]s the app name."
-  },
-  "updateError": "Update Error",
-  "@updateError": {
-    "description": "Update window: title of an error."
-  },
-  "updateCheckError": "Couldn’t check for updates. Try again later.",
-  "@updateCheckError": {
-    "description": "Update window: the check failed."
-  },
-  "updateInstallError": "Couldn’t install the update. Try again later.",
-  "@updateInstallError": {
-    "description": "Update window: installing failed."
-  },
-  "updateAvailable": "%[1]s is ready to update",
-  "@updateAvailable": {
-    "description": "Update window: title, %[1]s the app name."
-  },
-  "updateAvailableMessage": "%[1]s %[2]s is ready. You’re on %[3]s.",
-  "@updateAvailableMessage": {
-    "description": "Update window: %[1]s the app name, %[2]s the new version, %[3]s the running one."
-  },
-  "updateReleaseNotes": "Release Notes",
-  "@updateReleaseNotes": {
-    "description": "Update window: over the release notes."
-  },
-  "updateAutomaticDownloads": "Automatically download and install updates",
-  "@updateAutomaticDownloads": {
-    "description": "Update window: checkbox (not the General switch)."
-  },
-  "updateSkip": "Skip This Version",
-  "@updateSkip": {
-    "description": "Update window: button."
-  },
-  "updateRemindLater": "Remind Later",
-  "@updateRemindLater": {
-    "description": "Update window: button."
-  },
-  "updateInstall": "Install Update",
-  "@updateInstall": {
-    "description": "Update window: default button."
-  },
-  "updateDownloading": "Downloading…",
-  "@updateDownloading": {
-    "description": "Update window: while downloading."
-  },
-  "updateProgress": "%[1]s / %[2]s",
-  "@updateProgress": {
-    "description": "Update window: %[1]s downloaded of %[2]s, both sizes."
-  },
-  "updateMegabytes": "%s MB",
-  "@updateMegabytes": {
-    "description": "Update window: a size, %s a number such as 12.3."
-  },
-  "updateInstalling": "Installing…",
-  "@updateInstalling": {
-    "description": "Update window: while installing."
-  },
-  "updateReady": "Ready to Relaunch",
-  "@updateReady": {
-    "description": "Update window: title once installed."
-  },
-  "updateReadyMessage": "%[1]s %[2]s is installed and will open next time. You can relaunch now.",
-  "@updateReadyMessage": {
-    "description": "Update window: %[1]s the app name, %[2]s the new version."
-  },
-  "updateLater": "Later",
-  "@updateLater": {
-    "description": "Update window: button once installed."
+  "updateReadyPill": "Version {version} is ready",
+  "@updateReadyPill": {
+    "description": "Search panel: the new version pill at the bottom left, before its Relaunch button (copy.md 12.1). No middle dot: the button's own background sets it apart.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "0.1.3"
+      }
+    }
   },
   "updateRelaunch": "Relaunch",
   "@updateRelaunch": {
-    "description": "Update window: default button once installed."
+    "description": "The new version pill's button, the primary action of the Gocast group's update row, and About's primary button once a new version is ready (copy.md 12.1, 12.2)."
+  },
+  "updateRelaunchTo": "Relaunch to Update to {version}",
+  "@updateRelaunchTo": {
+    "description": "The Gocast group's first row, and the tray menu's line in place of Check for Updates…, once a new version is ready (copy.md 12.1).",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "0.1.3"
+      }
+    }
+  },
+  "updateRelaunching": "Relaunching…",
+  "@updateRelaunching": {
+    "description": "Search panel: the new version pill once Relaunch was chosen, until Gocast quits (copy.md 12.1)."
+  },
+  "updateChecking": "Checking…",
+  "@updateChecking": {
+    "description": "About: the status line while checking (copy.md 12.2)."
+  },
+  "updateUpToDate": "You’re up to date",
+  "@updateUpToDate": {
+    "description": "About: the status line after a check found no newer version; fades after a few seconds (copy.md 12.2)."
+  },
+  "updateDownloading": "Downloading {version}…",
+  "@updateDownloading": {
+    "description": "About: the status line while the new version downloads (copy.md 12.2).",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "0.1.3"
+      }
+    }
+  },
+  "updateReady": "{version} is ready",
+  "@updateReady": {
+    "description": "About: the status line once the new version is downloaded, before What’s New (copy.md 12.2).",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "0.1.3"
+      }
+    }
+  },
+  "updateCheckFailed": "Couldn’t check for updates. Gocast will try again later.",
+  "@updateCheckFailed": {
+    "description": "About: the status line when a check the user asked for failed (copy.md 12.2)."
+  },
+  "updateDownloadFailed": "Couldn’t finish downloading. Gocast will try again later.",
+  "@updateDownloadFailed": {
+    "description": "About: the status line when downloading the new version failed (copy.md 12.2)."
+  },
+  "updateDevBuild": "Development builds don’t update themselves.",
+  "@updateDevBuild": {
+    "description": "About: the status line in a development build (copy.md 12.2)."
+  },
+  "updateUnavailable": "Gocast can’t update itself here. If you installed it another way, update it there.",
+  "@updateUnavailable": {
+    "description": "About: the status line when Gocast can't replace itself where it is installed (copy.md 12.2)."
+  },
+  "updateWhatsNew": "What’s New",
+  "@updateWhatsNew": {
+    "description": "About: link after the downloading or ready status, to the website's changelog of that version (copy.md 12.2)."
   },
   "clipboardHistory": "Clipboard History",
   "@clipboardHistory": {
