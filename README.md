@@ -58,7 +58,7 @@ Requires macOS 13 or later on Apple silicon. Spotlight uses ⌘Space by default,
 
 ## Your data
 
-Gocast only goes online to check for updates and to fetch exchange rates once a day, and both can be turned off. Your presets, settings, clipboard history, and a record of what you open from search and the words you typed to find it (so your usual picks come first; the words are kept for 17 days) all stay in `~/Library/Application Support/com.hugo.gocast/` and are never uploaded. [Privacy policy →](https://gocast.yichenlab.com/privacy/)
+Gocast only goes online to check for updates (and download them when there is one) and to fetch exchange rates once a day, and both can be turned off. Your presets, settings, clipboard history, and a record of what you open from search and the words you typed to find it (so your usual picks come first; the words are kept for 17 days) all stay in `~/Library/Application Support/com.hugo.gocast/` and are never uploaded. [Privacy policy →](https://gocast.yichenlab.com/privacy/)
 
 ## Contributing
 

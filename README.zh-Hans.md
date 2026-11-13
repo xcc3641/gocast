@@ -58,7 +58,7 @@ curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh
 
 ## 你的数据
 
-Gocast 只在检查更新和每天取一次汇率时联网，两样都能关。预设、设置、剪贴板历史，还有你从搜索里打开过什么、用哪个词打开的（用来把常用的排前面，搜索词只留 17 天），都在 `~/Library/Application Support/com.hugo.gocast/`，不会上传。[隐私政策 →](https://gocast.yichenlab.com/zh/privacy/)
+Gocast 只在检查更新（有新版本时会下载）和每天取一次汇率时联网，两样都能关。预设、设置、剪贴板历史，还有你从搜索里打开过什么、用哪个词打开的（用来把常用的排前面，搜索词只留 17 天），都在 `~/Library/Application Support/com.hugo.gocast/`，不会上传。[隐私政策 →](https://gocast.yichenlab.com/zh/privacy/)
 
 ## 参与
 

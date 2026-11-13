@@ -8,6 +8,11 @@ The section of each version is the release notes that the update window
 shows (MyGo reads `## [version]`), so write it for users, in Chinese and
 English.
 
+## [0.1.3] - 2026-11-13
+
+更新不再弹窗口了。Gocast 会在后台把新版本下好，只在搜索面板左下角、⌘K 里和菜单栏轻轻提示一句「重新打开」；点了几秒内换上，不点也没关系，下次退出或重启 Mac 就是新版。关于页的「检查更新」也直接在那里显示结果。
+Updates no longer ask first. Gocast downloads the new version in the background and only mentions it in the search panel, ⌘K and the menu bar: relaunch when you like, or it switches over the next time Gocast quits. Check for Updates in About shows its result right there.
+
 ## [0.1.2] - 2026-11-13
 
 小更新，功能和你的数据都不变。App 里附带的第三方许可说明更新到了现在用的版本。
