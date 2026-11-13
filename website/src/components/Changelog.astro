@@ -1,0 +1,33 @@
+---
+import { readFileSync } from "node:fs";
+import Base from "../layouts/Base.astro";
+import { t, url, type Locale } from "../i18n";
+import { formatDate, parseChangelog } from "../lib/changelog";
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const c = t(locale);
+// __CHANGELOG_PATH__ is the repository's CHANGELOG.md, resolved in astro.config.mjs.
+const releases = parseChangelog(readFileSync(__CHANGELOG_PATH__, "utf8"));
+---
+<Base locale={locale} title={c.c_title} description={c.c_lede} path="changelog/">
+<main class="page">
+<a class="back" href={url(locale)}>{c.back}</a>
+<h1>{c.changelog}</h1>
+<p class="lede">{c.c_lede}</p>
+{releases.map((r) => (
+<section class="release" id={`v${r.version}`}>
+<h2>{r.version}</h2>
+{r.date && <p class="released"><time datetime={r.date}>{formatDate(r.date, locale)}</time></p>}
+{r.intro.map((p) => <p set:html={p[locale]} />)}
+{r.groups.map((g) => (
+<Fragment>
+{g.heading && <h3 set:html={g.heading[locale]} />}
+{g.items.length > 0 && <ul>{g.items.map((i) => <li set:html={i[locale]} />)}</ul>}
+{g.paragraphs.map((p) => <p set:html={p[locale]} />)}
+</Fragment>
+))}
+</section>
+))}
+</main>
+</Base>

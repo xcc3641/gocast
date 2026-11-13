@@ -1,0 +1,19 @@
+---
+import Base from "../layouts/Base.astro";
+import { t, url, type Locale } from "../i18n";
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const c = t(locale);
+---
+<Base locale={locale} title={`Gocast — ${c.p_title}`} description={c.p_lede} path="privacy/">
+<main class="page">
+<a class="back" href={url(locale)}>{c.back}</a>
+<h1>{c.p_title}</h1>
+<p class="lede">{c.p_lede}</p>
+{c.p_sections.map((s) => (
+<Fragment><h2>{s.h}</h2><p set:html={s.text} /></Fragment>
+))}
+<p class="date">{c.p_date}</p>
+</main>
+</Base>

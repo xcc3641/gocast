@@ -1,0 +1,114 @@
+{
+  "lang": "en",
+  "other_label": "简体中文",
+  "title": "Gocast — apps, terminal and clipboard on one key",
+  "desc": "Gocast is a free, open-source launcher for the Mac. Press ⌘Space to open any app, ⌃` for a drop-down terminal, ⌃⌘V for clipboard history.",
+  "headline": "One key. Apps and terminal, right there.",
+  "sub": "Gocast is a small launcher for the Mac. Press ⌘Space to find and open an app. Press ⌃` and a terminal drops down from the top of the screen, already in your folder, running your command.",
+  "download": "Download for Mac",
+  "req": "Free · macOS 13 or later · Apple silicon",
+  "cmd_label": "Or install from Terminal:",
+  "features": [
+    {
+      "keys": [
+        "⌘",
+        "Space"
+      ],
+      "title": "Open any app",
+      "text": "Type a few letters and press ↵. English names, Chinese names and pinyin all work. The ones you open most come first."
+    },
+    {
+      "keys": [
+        "⌃",
+        "`"
+      ],
+      "title": "A terminal that drops down",
+      "text": "It floats above every app. Hiding it stops nothing: your commands keep running. Presets open a folder and run a command, like <code>pi</code> in your project."
+    },
+    {
+      "keys": [
+        "⌃",
+        "⌘",
+        "V"
+      ],
+      "title": "Clipboard history",
+      "text": "Find the text, links, images and files you copied before, and paste into the app you were in. Pin the ones you use often."
+    },
+    {
+      "keys": [
+        "⌘",
+        "Space"
+      ],
+      "title": "Math and currencies",
+      "text": "Type <code>(12+8)*3</code>, <code>10 ft in m</code> or <code>100 usd in jpy</code> in the search panel. The answer shows up on top."
+    }
+  ],
+  "open": "Open source under the Apache 2.0 license. <a href=\"https://github.com/xcc3641/gocast\">Read the code on GitHub</a>.",
+  "support": "Support",
+  "privacy": "Privacy",
+  "changelog": "Changelog",
+  "copyright": "© 2026 The Gocast Authors",
+  "s_title": "Gocast Support",
+  "s_lede": "Gocast is a free launcher for the Mac: apps, a drop-down terminal and clipboard history, each on one key.",
+  "s_contact_h": "Get help",
+  "s_contact": "Report a problem or ask a question in <a href=\"https://github.com/xcc3641/gocast/issues\">GitHub Issues</a>. We usually reply within a few days. For a security problem, don’t open a public issue: use “Report a vulnerability” on the repository’s Security tab.",
+  "faq": [
+    {
+      "q": "macOS says it can’t verify the developer.",
+      "a": "Gocast isn’t signed with an Apple Developer ID yet. The first time, open System Settings › Privacy &amp; Security and click Open Anyway. You only do this once; updates install without asking. If you install from Terminal with the line below, macOS won’t ask at all.<pre>curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh | sh</pre>"
+    },
+    {
+      "q": "⌘Space opens Spotlight, not Gocast.",
+      "a": "Spotlight uses ⌘Space by default, so Gocast starts on ⌥⇧Space. Turn off “Show Spotlight search” in System Settings › Keyboard › Keyboard Shortcuts › Spotlight and Gocast switches to ⌘Space on its own. Or pick any shortcut in Gocast’s Settings › Shortcuts."
+    },
+    {
+      "q": "Return copies but doesn’t paste.",
+      "a": "To paste into another app, Gocast presses ⌘V for you, and macOS asks you to turn on Gocast in System Settings › Privacy &amp; Security › Accessibility first. Until then, Return copies and you press ⌘V yourself."
+    },
+    {
+      "q": "Which Macs does it run on?",
+      "a": "macOS 13 or later on Apple silicon. Intel support is planned."
+    },
+    {
+      "q": "How do I uninstall it?",
+      "a": "Quit Gocast from its menu bar icon and move it to the Trash, or run:<pre>curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh | sh -s -- --uninstall</pre>Your presets, settings and clipboard history stay in <code>~/Library/Application Support/dev.gocast.app/</code>; delete that folder to remove them too."
+    }
+  ],
+  "faq_h": "Common questions",
+  "p_title": "Privacy Policy",
+  "p_lede": "Gocast has no account and collects nothing about you. This page says exactly what it keeps and when it goes online.",
+  "p_sections": [
+    {
+      "h": "What Gocast collects",
+      "text": "Nothing. Gocast has no account, no analytics, no ads and no crash reporting. We never receive anything you type, copy or run."
+    },
+    {
+      "h": "What stays on your Mac",
+      "text": "Your presets, settings and clipboard history are files in <code>~/Library/Application Support/dev.gocast.app/</code>, readable only by your Mac user. They are never uploaded. Clipboard history is kept as plain files, not encrypted. Passwords copied from password managers are never kept, and you can choose apps whose copies are never kept."
+    },
+    {
+      "h": "When Gocast goes online",
+      "text": "Only twice, and neither request carries anything you typed or copied:<ul><li><strong>Checking for updates</strong>, from the Gocast project on GitHub, about once a day. Turn it off with Settings › General › Check for updates automatically.</li><li><strong>Exchange rates</strong> for the calculator, from Frankfurter (frankfurter.dev), once a day. Turn it off with Settings › General › Calculate in search.</li></ul>GitHub and Frankfurter see the request like any website sees a visit, such as your IP address, under their own privacy policies. Gocast sends them nothing else."
+    },
+    {
+      "h": "Third parties",
+      "text": "Gocast shares no data with anyone. The only outside services it contacts are the two above."
+    },
+    {
+      "h": "Keeping and deleting your data",
+      "text": "Clipboard history is kept for one month by default; change it in Settings › Clipboard (1 day to forever). Pinned items don’t expire. Clear History removes it at once. To delete everything, quit Gocast and delete <code>~/Library/Application Support/dev.gocast.app/</code>."
+    },
+    {
+      "h": "Changing your mind",
+      "text": "Turn off clipboard history, update checks or exchange rates in Settings at any time. Nothing has to be sent to us, because nothing ever was."
+    },
+    {
+      "h": "Questions",
+      "text": "Ask in <a href=\"https://github.com/xcc3641/gocast/issues\">GitHub Issues</a>."
+    }
+  ],
+  "p_date": "Effective November 13, 2026.",
+  "back": "← Gocast",
+  "c_title": "Gocast Changelog",
+  "c_lede": "What’s new in each version of Gocast."
+}

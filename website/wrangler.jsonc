@@ -1,5 +1,5 @@
 // Cloudflare deploys this folder on every push to main.
-// Static files only: no Worker code runs.
+// Static files only: no Worker code runs. `npm run build` writes ./dist.
 {
   "name": "gocast-website",
   "compatibility_date": "2026-11-13",

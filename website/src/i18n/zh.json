@@ -1,0 +1,114 @@
+{
+  "lang": "zh-Hans",
+  "other_label": "English",
+  "title": "Gocast — 按一下，应用、终端和剪贴板都到",
+  "desc": "Gocast 是一个免费、开源的 Mac 启动器。按 ⌘Space 打开应用，按 ⌃` 落下终端，按 ⌃⌘V 找回剪贴板历史。",
+  "headline": "按一下，应用和终端都到。",
+  "sub": "Gocast 是一个 Mac 上的小启动器。按 ⌘Space，找到应用就打开。按 ⌃`，终端从屏幕上方落下来，已经在你常用的文件夹里，跑着你常用的命令。",
+  "download": "下载 Mac 版",
+  "req": "免费 · macOS 13 或更高版本 · Apple 芯片",
+  "cmd_label": "也可以在终端里一行装好：",
+  "features": [
+    {
+      "keys": [
+        "⌘",
+        "Space"
+      ],
+      "title": "打开任何应用",
+      "text": "打几个字，按 ↵。中文名、英文名、拼音都能找到（输入 <code>wx</code> 就有微信），常用的排在前面。"
+    },
+    {
+      "keys": [
+        "⌃",
+        "`"
+      ],
+      "title": "从上方落下的终端",
+      "text": "浮在所有应用上面，收起不会结束命令。预设会在指定文件夹里运行指定命令，比如在你的项目里运行 <code>pi</code>。"
+    },
+    {
+      "keys": [
+        "⌃",
+        "⌘",
+        "V"
+      ],
+      "title": "剪贴板历史",
+      "text": "找回之前拷贝过的文字、链接、图片和文件，粘贴到刚才的应用。常用的可以置顶。"
+    },
+    {
+      "keys": [
+        "⌘",
+        "Space"
+      ],
+      "title": "算数和汇率",
+      "text": "在搜索框里直接打 <code>(12+8)*3</code>、<code>10 ft in m</code> 或 <code>100 美元换日元</code>，最上面就是答案。"
+    }
+  ],
+  "open": "开源，使用 Apache 2.0 许可证。<a href=\"https://github.com/xcc3641/gocast\">在 GitHub 上看代码</a>。",
+  "support": "支持",
+  "privacy": "隐私",
+  "changelog": "更新日志",
+  "copyright": "© 2026 The Gocast Authors",
+  "s_title": "Gocast 支持",
+  "s_lede": "Gocast 是一个免费的 Mac 启动器：应用、悬浮终端、剪贴板历史，各自按一下就到。",
+  "s_contact_h": "获取帮助",
+  "s_contact": "遇到问题或有疑问，请到 <a href=\"https://github.com/xcc3641/gocast/issues\">GitHub Issues</a> 提出，我们一般几天内回复。安全问题请不要公开提 issue，在仓库的 Security 页里点「Report a vulnerability」私下报告。",
+  "faq_h": "常见问题",
+  "faq": [
+    {
+      "q": "系统说无法验证开发者。",
+      "a": "Gocast 暂时还没有 Apple 的 Developer ID 签名。第一次打开时，去系统设置 › 隐私与安全性，点「仍要打开」。只需要这一次，之后的更新会自动装。用下面这行命令在终端里安装的话，系统不会拦。<pre>curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh | sh</pre>"
+    },
+    {
+      "q": "按 ⌘Space 出来的是聚焦搜索。",
+      "a": "系统默认把 ⌘Space 给了聚焦搜索，所以 Gocast 会先用 ⌥⇧Space。去系统设置 › 键盘 › 键盘快捷键 › 聚焦，关掉「显示聚焦搜索」，Gocast 会自己换回 ⌘Space。也可以在 Gocast 的设置 › 快捷键里换成任何快捷键。"
+    },
+    {
+      "q": "按回车只拷贝，没有粘贴。",
+      "a": "要粘贴到别的应用，Gocast 会替你按一下 ⌘V，系统要求先在系统设置 › 隐私与安全性 › 辅助功能里打开 Gocast。打开之前，回车只拷贝，再自己按 ⌘V。"
+    },
+    {
+      "q": "哪些 Mac 能用？",
+      "a": "macOS 13 或更高版本，Apple 芯片。之后会支持 Intel。"
+    },
+    {
+      "q": "怎么卸载？",
+      "a": "在菜单栏图标里退出 Gocast，把它拖进废纸篓；或者在终端运行：<pre>curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh | sh -s -- --uninstall</pre>预设、设置和剪贴板历史会留在 <code>~/Library/Application Support/dev.gocast.app/</code>，想一起删掉就删这个文件夹。"
+    }
+  ],
+  "p_title": "隐私政策",
+  "p_lede": "Gocast 没有账号，不收集你的任何信息。这一页如实写明它存了什么、什么时候联网。",
+  "p_sections": [
+    {
+      "h": "收集哪些数据",
+      "text": "不收集。Gocast 没有账号，没有统计、广告或崩溃上报。你输入、拷贝、运行的任何内容，我们都收不到。"
+    },
+    {
+      "h": "存在你 Mac 上的东西",
+      "text": "预设、设置和剪贴板历史都是文件，放在 <code>~/Library/Application Support/dev.gocast.app/</code>，只有你这个 Mac 用户能读，不会上传。剪贴板历史以普通文件保存，没有加密。密码管理器拷贝的密码不会记，你也可以指定哪些应用拷贝的内容不记。"
+    },
+    {
+      "h": "什么时候联网",
+      "text": "只有两种情况，都不带你输入或拷贝的任何内容：<ul><li><strong>检查更新</strong>：大约每天一次，从 GitHub 上的 Gocast 项目获取。在设置 › 通用里关掉「自动检查更新」即可停止。</li><li><strong>取汇率</strong>：计算器用，每天一次，来自 Frankfurter（frankfurter.dev）。在设置 › 通用里关掉「在搜索中计算」即可停止。</li></ul>GitHub 和 Frankfurter 会像任何网站一样看到这次访问（比如你的 IP 地址），按它们各自的隐私政策处理。除此之外 Gocast 不发送任何东西。"
+    },
+    {
+      "h": "第三方",
+      "text": "Gocast 不和任何人分享数据。它只会连上面这两个外部服务。"
+    },
+    {
+      "h": "保存多久、怎么删除",
+      "text": "剪贴板历史默认保留一个月，可以在设置 › 剪贴板里改（1 天到一直保留），置顶的不会过期；「清空历史…」会立刻删掉。想删掉全部数据，退出 Gocast 后删除 <code>~/Library/Application Support/dev.gocast.app/</code>。"
+    },
+    {
+      "h": "撤回同意",
+      "text": "随时可以在设置里关掉剪贴板历史、自动检查更新或取汇率。不需要联系我们，因为我们本来就没有你的数据。"
+    },
+    {
+      "h": "有疑问",
+      "text": "请到 <a href=\"https://github.com/xcc3641/gocast/issues\">GitHub Issues</a> 提出。"
+    }
+  ],
+  "p_date": "生效日期：2026 年 11 月 13 日。",
+  "back": "← Gocast",
+  "c_title": "Gocast 更新日志",
+  "c_lede": "Gocast 每个版本的变化。"
+}

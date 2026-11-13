@@ -97,6 +97,12 @@ pre {
 .page code { font: 0.88em ui-monospace, "SF Mono", Menlo, monospace; background: var(--key); padding: 1px 5px; border-radius: 5px; overflow-wrap: anywhere; }
 .page .date { color: var(--muted); font-size: 15px; margin-top: 36px; }
 
+/* changelog */
+.release { padding-top: 8px; }
+.release + .release { margin-top: 40px; border-top: 1px solid var(--line); }
+.page .release h2 { font-size: 1.4rem; margin: 32px 0 2px; }
+.page .released { color: var(--muted); font-size: 15px; margin: 0 0 16px; }
+
 footer { display: flex; flex-wrap: wrap; gap: 8px 20px; padding: 24px 24px 48px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
 footer a { color: var(--muted); }
 footer .copy { margin-right: auto; }

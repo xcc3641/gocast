@@ -1,0 +1,33 @@
+---
+import Base from "../layouts/Base.astro";
+import { t, type Locale } from "../i18n";
+import { DMG, INSTALL } from "../lib/site";
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const c = t(locale);
+---
+<Base locale={locale} title={c.title} description={c.desc} path="">
+<main>
+<header class="hero">
+<img class="icon" src="/assets/icon-256.png" width="96" height="96" alt="">
+<h1 class="name">Gocast</h1>
+<p class="headline">{c.headline}</p>
+<p class="sub">{c.sub}</p>
+<div class="get">
+<a class="button" href={DMG}>{c.download}</a>
+<span class="req">{c.req}</span>
+</div>
+<div class="cmd">
+<p>{c.cmd_label}</p>
+<pre><code>{INSTALL}</code></pre>
+</div>
+</header>
+<div class="features">
+{c.features.map((f) => (
+<section><div class="keys">{f.keys.map((k) => <kbd>{k}</kbd>)}</div><h2>{f.title}</h2><p set:html={f.text} /></section>
+))}
+</div>
+<div class="open"><p set:html={c.open} /></div>
+</main>
+</Base>

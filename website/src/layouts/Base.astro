@@ -1,0 +1,46 @@
+---
+import { otherLocale, t, url, type Locale } from "../i18n";
+import { ICON_SVG, REPO } from "../lib/site";
+
+interface Props {
+  locale: Locale;
+  title: string;
+  description: string;
+  /** Page path without the language prefix: "" for the landing page, "support/" etc. */
+  path: string;
+}
+
+const { locale, title, description, path } = Astro.props;
+const c = t(locale);
+const other = otherLocale(locale);
+---
+<!doctype html>
+<html lang={c.lang}>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{title}</title>
+<meta name="description" content={description}>
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111113" media="(prefers-color-scheme: dark)">
+<meta property="og:title" content={title}>
+<meta property="og:description" content={description}>
+<meta property="og:image" content="/assets/icon-256.png">
+<link rel="icon" href={ICON_SVG} type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<link rel="alternate" hreflang={t("en").lang} href={url("en", path)}>
+<link rel="alternate" hreflang={t("zh").lang} href={url("zh", path)}>
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+<nav class="lang" aria-label="Language"><a href={url(other, path)} hreflang={t(other).lang}>{c.other_label}</a></nav>
+<slot />
+<footer>
+<span class="copy">{c.copyright}</span>
+<a href={url(locale, "support/")}>{c.support}</a>
+<a href={url(locale, "privacy/")}>{c.privacy}</a>
+<a href={url(locale, "changelog/")}>{c.changelog}</a>
+<a href={REPO}>GitHub</a>
+</footer>
+</body>
+</html>

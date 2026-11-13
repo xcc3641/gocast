@@ -1,0 +1,21 @@
+{
+  "name": "gocast-website",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.23.4"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "node scripts/check-i18n.mjs && astro build",
+    "preview": "astro preview",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "astro": "^7.4.11"
+  },
+  "devDependencies": {
+    "wrangler": "^4.161.0"
+  }
+}
