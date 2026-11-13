@@ -1,0 +1,11 @@
+---
+// A row of keycaps. `fill`: the search panel's filled caps; `ring`: the action capsule's
+// outlined caps; `rec`: the caps inside a Settings shortcut recorder.
+interface Props {
+  keys: string[];
+  kind?: "fill" | "ring" | "rec";
+  class?: string;
+}
+const { keys, kind = "fill", class: cls } = Astro.props;
+---
+<span class:list={["gw-keys", `gw-keys-${kind}`, cls]}>{keys.map((k) => <span class="gw-key">{k}</span>)}</span>

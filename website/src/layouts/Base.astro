@@ -1,6 +1,6 @@
 ---
 import { otherLocale, t, url, type Locale } from "../i18n";
-import { ICON_SVG, REPO } from "../lib/site";
+import { ICON_SVG, LICENSE, REPO } from "../lib/site";
 
 interface Props {
   locale: Locale;
@@ -13,6 +13,8 @@ interface Props {
 const { locale, title, description, path } = Astro.props;
 const c = t(locale);
 const other = otherLocale(locale);
+// The landing page is wider than the text pages.
+const wide = path === "";
 ---
 <!doctype html>
 <html lang={c.lang}>
@@ -33,8 +35,16 @@ const other = otherLocale(locale);
 <link rel="alternate" hreflang={t("zh").lang} href={url("zh", path)}>
 <link rel="stylesheet" href="/assets/site.css">
 </head>
-<body>
-<nav class="lang" aria-label="Language"><a href={url(other, path)} hreflang={t(other).lang}>{c.other_label}</a></nav>
+<body class:list={[wide && "wide"]}>
+<header class="nav">
+<a class="brand" href={url(locale)}><img src="/assets/icon-256.png" width="28" height="28" alt=""><span>Gocast</span></a>
+<nav class="links">
+<a class="nav-changelog" href={url(locale, "changelog/")}>{c.changelog}</a>
+<a class="nav-support" href={url(locale, "support/")}>{c.support}</a>
+<a href={REPO}>GitHub</a>
+<a href={url(other, path)} hreflang={t(other).lang}>{c.other_label}</a>
+</nav>
+</header>
 <slot />
 <footer>
 <span class="copy">{c.copyright}</span>
@@ -42,6 +52,7 @@ const other = otherLocale(locale);
 <a href={url(locale, "privacy/")}>{c.privacy}</a>
 <a href={url(locale, "changelog/")}>{c.changelog}</a>
 <a href={REPO}>GitHub</a>
+<a href={LICENSE}>{c.license}</a>
 </footer>
 </body>
 </html>

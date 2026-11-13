@@ -1,0 +1,78 @@
+---
+// Clipboard history, 760×475: list on the left, the selected picture and its details on
+// the right. Spec 4.4.
+import { Image } from "astro:assets";
+import Window from "./Window.astro";
+import SearchBar from "./SearchBar.astro";
+import Sym from "./Sym.astro";
+import AppIcon from "./AppIcon.astro";
+import Capsule from "./Capsule.astro";
+import { imageFile } from "./assets";
+import type { Locale } from "../../i18n";
+
+interface Props {
+  locale: Locale;
+  alt: string;
+}
+const { locale, alt } = Astro.props;
+const zh = locale === "zh";
+const pic = imageFile("landscape");
+// The file name and the time are written the way macOS writes them: a thin space after
+// 截屏 and a narrow no-break space before PM, as in the real window.
+
+type Item = { title: string; sym?: string; thumb?: boolean; pdf?: boolean; selected?: boolean };
+const groups: [string, Item[]][] = [
+  [zh ? "已置顶" : "Pinned", [{ title: "git switch -c feature/clipboard-pr…", sym: "doc.plaintext" }]],
+  [
+    zh ? "今天" : "Today",
+    [
+      { title: zh ? "截屏\u20092026-11-13 19.44.01.png" : "Screenshot 2026-11-13 at 19.44.01.png", thumb: true, selected: true },
+      { title: "https://develope…rface-guidelines/", sym: "link" },
+      { title: "func (s *Server) Routes() http.Ha…", sym: "doc.plaintext" },
+      { title: zh ? "明天下午三点在 3 号会议室过一下…" : "Sync with design at 3pm in room…", sym: "doc.plaintext" },
+      { title: zh ? "周会议程" : "Weekly agenda", sym: "doc.plaintext" },
+      { title: "https://go.dev/doc/effective_go", sym: "link" },
+    ],
+  ],
+  [zh ? "昨天" : "Yesterday", [{ title: zh ? "产品路线图 2027.pdf" : "Product roadmap 2027.pdf", pdf: true }]],
+];
+const info: [string, string][] = zh
+  ? [["来源", "访达"], ["拷贝时间", "今天 19:44"], ["位置", "~/Desktop"], ["尺寸", "1,536 × 1,024"], ["大小", "2 MB"]]
+  : [["Source", "Finder"], ["Copied", "Today at 7:44\u202FPM"], ["Location", "~/Desktop"], ["Dimensions", "1,536 × 1,024"], ["Size", "2 MB"]];
+---
+<Window w={760} alt={alt}>
+  <SearchBar placeholder={zh ? "搜索剪贴板历史" : "Search clipboard history"} caret cjk={zh}>
+    <span class="gw-filter"><span>{zh ? "全部类型" : "All Types"}</span><Sym name="chevron.down" pt={10} semibold /></span>
+  </SearchBar>
+  <div class="gw-clip">
+    <div class="gw-clist">
+      {groups.map(([h, items]) => (
+        <>
+          <div class="gw-sec"><span class="gw-t">{h}</span></div>
+          {items.map((it) => (
+            <div class:list={["gw-row", { "is-sel": it.selected }]}>
+              <span class="gw-ico">
+                {it.sym && <Sym name={it.sym} pt={16} />}
+                {it.thumb && (pic ? <Image class="gw-thumb" src={pic} alt="" width={52} format="png" loading="lazy" decoding="async" /> : <span class="gw-thumb"></span>)}
+                {it.pdf && <AppIcon icon="pdf" size={26} />}
+              </span>
+              <span class:list={["gw-title", "gw-t", { "gw-t-pre": it.title.includes("…") }]}>{it.title}</span>
+            </div>
+          ))}
+        </>
+      ))}
+    </div>
+    <div class="gw-cpane">
+      <div class="gw-preview">{pic && <Image src={pic} alt="" width={546} format="webp" quality={90} loading="lazy" decoding="async" />}</div>
+      <div class="gw-info">
+        {info.map(([k, v], i) => (
+          <div class="gw-info-row">
+            <span class="gw-info-k gw-t">{k}</span>
+            <span class="gw-info-v gw-t">{i === 0 && <AppIcon icon="finder" size={14} class="gw-src" />}{v}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+  <Capsule action={zh ? "粘贴" : "Paste"} locale={locale} />
+</Window>

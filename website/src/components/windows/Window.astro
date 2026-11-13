@@ -1,0 +1,19 @@
+---
+// A drawn app window: a picture, not an interface. The outer box carries the alt text;
+// everything inside is hidden from screen readers and can't be selected or clicked.
+// Drawn at 1 CSS px = 1 app point and scaled down as a whole when the page is narrower.
+import "./windows.css";
+import "./sym.css";
+
+interface Props {
+  /** Window width in points: 640, 756, 760 or 820. Picks the size class in windows.css. */
+  w: 640 | 756 | 760 | 820;
+  alt: string;
+  /** Extra class on the inner window, e.g. gw-terminal. */
+  kind?: string;
+}
+const { w, alt, kind } = Astro.props;
+---
+<div class:list={["shot", "gw-frame", `gw-w${w}`]} role="img" aria-label={alt}>
+  <div class:list={["gw", kind]} aria-hidden="true"><slot /></div>
+</div>

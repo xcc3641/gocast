@@ -1,0 +1,68 @@
+---
+// Settings › Shortcuts, 820×580. Every shortcut shows its default, so no row has a
+// restore-default arrow. Spec 4.6.
+import Window from "./Window.astro";
+import Sym from "./Sym.astro";
+import AppIcon from "./AppIcon.astro";
+import Keys from "./Keys.astro";
+import type { IconKey } from "./assets";
+import type { Locale } from "../../i18n";
+
+interface Props {
+  locale: Locale;
+  alt: string;
+}
+const { locale, alt } = Astro.props;
+const zh = locale === "zh";
+
+const side: [string, string][] = zh
+  ? [["keyboard", "快捷键"], ["apple.terminal", "悬浮终端"], ["doc.on.clipboard", "剪贴板"], ["gearshape", "通用"], ["info.circle", "关于"]]
+  : [["keyboard", "Shortcuts"], ["apple.terminal", "Floating Terminal"], ["doc.on.clipboard", "Clipboard"], ["gearshape", "General"], ["info.circle", "About"]];
+
+type S = { name: string; type: string; keys: string[]; icon?: IconKey; sym?: string };
+const app = zh ? "应用" : "App";
+const own: S[] = [
+  { name: zh ? "打开搜索面板" : "Open search panel", type: "Gocast", keys: ["⌘", "Space"], sym: "magnifyingglass" },
+  { name: zh ? "显示或收起悬浮终端" : "Show or hide floating terminal", type: "Gocast", keys: ["⌃", "`"], sym: "apple.terminal" },
+  { name: zh ? "打开剪贴板历史" : "Open clipboard history", type: "Gocast", keys: ["⌃", "⌘", "V"], sym: "doc.on.clipboard" },
+];
+const notes: S = { name: zh ? "备忘录" : "Notes", type: app, keys: ["⌃", "⌥", "N"], icon: "notes" };
+const calendar: S = { name: zh ? "日历" : "Calendar", type: app, keys: ["⌃", "⌥", "L"], icon: "calendar" };
+const safari: S = { name: zh ? "Safari浏览器" : "Safari", type: app, keys: ["⌃", "⌥", "S"], icon: "safari" };
+const vscode: S = { name: "Visual Studio Code", type: app, keys: ["⌃", "⌥", "V"], icon: "vscode" };
+const wechat: S = { name: zh ? "微信" : "WeChat", type: app, keys: ["⌃", "⌥", "W"], icon: "wechat" };
+const demo: S = { name: zh ? "演示项目" : "Demo project", type: zh ? "预设" : "Preset", keys: ["⌃", "⌥", "P"], sym: "apple.terminal.fill" };
+// Chinese sorts by pinyin, English alphabetically; Gocast's own three stay on top.
+const rows = [...own, ...(zh ? [notes, calendar, safari, vscode, wechat, demo] : [calendar, demo, notes, safari, vscode, wechat])];
+const segs = zh ? ["全部", "已设快捷键", "应用", "预设"] : ["All", "With Shortcut", "Apps", "Presets"];
+---
+<Window w={820} alt={alt} kind="gw-set">
+  <div class="gw-side">
+    <div class="gw-lights"><span></span><span></span><span></span></div>
+    {side.map(([sym, label], i) => (
+      <div class:list={["gw-side-row", { "is-sel": i === 0 }]}><Sym name={sym} pt={16} /><span class="gw-t">{label}</span></div>
+    ))}
+  </div>
+  <div class="gw-main">
+    <div class:list={["gw-h", "gw-t", { "gw-cjk20": zh }]}>{zh ? "快捷键" : "Shortcuts"}</div>
+    <div class="gw-desc">{zh ? "给应用或预设设一个快捷键，按一下打开，已在最前面时再按一下隐藏。" : "Give an app or preset a shortcut. Press it to open, and again while it’s in front to hide it."}</div>
+    <div class="gw-tools">
+      <div class="gw-search"><Sym name="magnifyingglass" pt={12} /><span class="gw-input-s"><span class="gw-caret"></span><span class="gw-t">{zh ? "搜索应用或预设" : "Search apps and presets"}</span></span></div>
+      <div class="gw-seg">{segs.map((s, i) => <span class:list={[{ "is-sel": i === 1 }]}>{s}</span>)}</div>
+    </div>
+    <div class="gw-group">
+      {rows.map((r, i) => (
+        <div class:list={["gw-srow", { "is-sel": i === 0 }]}>
+          <span class="gw-sico">
+            {r.icon && <AppIcon icon={r.icon} size={20} />}
+            {r.sym && <span class="gw-stile"><Sym name={r.sym} pt={11} /></span>}
+          </span>
+          <span class="gw-sname gw-t">{r.name}</span>
+          <span class="gw-fill"></span>
+          <span class="gw-stype gw-t">{r.type}</span>
+          <span class="gw-rec"><Keys keys={r.keys} kind="rec" /></span>
+        </div>
+      ))}
+    </div>
+  </div>
+</Window>

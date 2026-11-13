@@ -1,33 +1,83 @@
 ---
 import Base from "../layouts/Base.astro";
-import { t, type Locale } from "../i18n";
-import { DMG, INSTALL } from "../lib/site";
+import Search from "./windows/Search.astro";
+import Terminal from "./windows/Terminal.astro";
+import Clipboard from "./windows/Clipboard.astro";
+import Calculator from "./windows/Calculator.astro";
+import Settings from "./windows/Settings.astro";
+import { t, url, type Locale } from "../i18n";
+import { DMG, INSTALL, REPO } from "../lib/site";
 
 interface Props { locale: Locale }
 const { locale } = Astro.props;
 const c = t(locale);
+
 ---
 <Base locale={locale} title={c.title} description={c.desc} path="">
-<main>
-<header class="hero">
-<img class="icon" src="/assets/icon-256.png" width="96" height="96" alt="">
-<h1 class="name">Gocast</h1>
-<p class="headline">{c.headline}</p>
-<p class="sub">{c.sub}</p>
-<div class="get">
+<main class="landing">
+<div class="hero">
+<h1><span>{c.h1a}</span><span class="second">{c.h1b}</span></h1>
+<p class="hero-sub">{c.sub}</p>
+<div class="buttons">
 <a class="button" href={DMG}>{c.download}</a>
-<span class="req">{c.req}</span>
+<a class="button secondary" href={REPO}>{c.gh}</a>
 </div>
+<p class="req">{c.req}</p>
 <div class="cmd">
 <p>{c.cmd_label}</p>
 <pre><code>{INSTALL}</code></pre>
 </div>
-</header>
-<div class="features">
+<div class="hero-shot"><Search variant="hero" locale={locale} alt={c.hero_alt} /></div>
+</div>
+
 {c.features.map((f) => (
-<section><div class="keys">{f.keys.map((k) => <kbd>{k}</kbd>)}</div><h2>{f.title}</h2><p set:html={f.text} /></section>
+<section class="feature">
+{f.keys.length > 0 && <div class="keys">{f.keys.map((k) => <kbd>{k}</kbd>)}</div>}
+<h2>{f.title}</h2>
+<p set:html={f.text} />
+{/* the app window each feature shows, drawn in HTML and CSS (components/windows) */}
+{f.shot === "apps" && <Search variant="apps" locale={locale} alt={f.alt} />}
+{f.shot === "terminal" && <Terminal locale={locale} alt={f.alt} />}
+{f.shot === "clipboard" && <Clipboard locale={locale} alt={f.alt} />}
+{f.shot === "calculator" && <Calculator locale={locale} alt={f.alt} />}
+{f.shot === "shortcuts" && <Settings locale={locale} alt={f.alt} />}
+</section>
+))}
+
+<section class="pv-card">
+<div class="pv-inner">
+<h2>{c.pv.h}</h2>
+<p>{c.pv.p}</p>
+<dl class="pv-list">
+{c.pv.items.map((i) => (
+<div><dt>{i.k}</dt><dd set:html={i.v} /></div>
+))}
+</dl>
+<p class="pv-note">{c.pv.note}</p>
+<a class="pv-link" href={url(locale, "privacy/")}>{c.pv.link}</a>
+</div>
+</section>
+
+<section class="faq">
+<h2>{c.faq_h}</h2>
+<div class="faq-list">
+{c.faq.map((f) => (
+<details>
+<summary>{f.q}</summary>
+<div set:html={f.a} />
+</details>
 ))}
 </div>
-<div class="open"><p set:html={c.open} /></div>
+</section>
+
+<section class="close">
+<img src="/assets/icon-256.png" width="96" height="96" alt="">
+<h2>{c.close_h}</h2>
+<a class="button" href={DMG}>{c.download}</a>
+<div class="cmd">
+<p>{c.cmd_label}</p>
+<pre><code>{INSTALL}</code></pre>
+</div>
+</section>
 </main>
 </Base>

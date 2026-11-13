@@ -1,0 +1,38 @@
+/* SF Symbols for the drawn windows: Pluso's white PNGs in src/assets/ui/sym, named
+   <symbol>-<points>[-semibold]@2x.png, used as masks on a pt×pt box (Sym.astro) so the
+   colour comes from `color`. The glyph is already scaled to 85% and centred in the PNG.
+   Class: s-<symbol with dots as dashes>-<points>[-semibold]. A missing file shows nothing. */
+.gw-sym {
+  display: block; flex: none;
+  background: currentColor;
+  -webkit-mask-position: center; mask-position: center;
+  -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+}
+.gw-p10 { width: calc(var(--u) * 10); height: calc(var(--u) * 10); }
+.gw-p11 { width: calc(var(--u) * 11); height: calc(var(--u) * 11); }
+.gw-p12 { width: calc(var(--u) * 12); height: calc(var(--u) * 12); }
+.gw-p13 { width: calc(var(--u) * 13); height: calc(var(--u) * 13); }
+.gw-p14 { width: calc(var(--u) * 14); height: calc(var(--u) * 14); }
+.gw-p16 { width: calc(var(--u) * 16); height: calc(var(--u) * 16); }
+
+.s-apple-terminal-11 { -webkit-mask-image: url("../../assets/ui/sym/apple.terminal-11@2x.png"); mask-image: url("../../assets/ui/sym/apple.terminal-11@2x.png"); }
+.s-apple-terminal-13 { -webkit-mask-image: url("../../assets/ui/sym/apple.terminal-13@2x.png"); mask-image: url("../../assets/ui/sym/apple.terminal-13@2x.png"); }
+.s-apple-terminal-16 { -webkit-mask-image: url("../../assets/ui/sym/apple.terminal-16@2x.png"); mask-image: url("../../assets/ui/sym/apple.terminal-16@2x.png"); }
+.s-apple-terminal-fill-11 { -webkit-mask-image: url("../../assets/ui/sym/apple.terminal.fill-11@2x.png"); mask-image: url("../../assets/ui/sym/apple.terminal.fill-11@2x.png"); }
+.s-apple-terminal-fill-13 { -webkit-mask-image: url("../../assets/ui/sym/apple.terminal.fill-13@2x.png"); mask-image: url("../../assets/ui/sym/apple.terminal.fill-13@2x.png"); }
+.s-arrow-right-14-semibold { -webkit-mask-image: url("../../assets/ui/sym/arrow.right-14-semibold@2x.png"); mask-image: url("../../assets/ui/sym/arrow.right-14-semibold@2x.png"); }
+.s-chevron-down-10-semibold { -webkit-mask-image: url("../../assets/ui/sym/chevron.down-10-semibold@2x.png"); mask-image: url("../../assets/ui/sym/chevron.down-10-semibold@2x.png"); }
+.s-chevron-up-14 { -webkit-mask-image: url("../../assets/ui/sym/chevron.up-14@2x.png"); mask-image: url("../../assets/ui/sym/chevron.up-14@2x.png"); }
+.s-doc-on-clipboard-11 { -webkit-mask-image: url("../../assets/ui/sym/doc.on.clipboard-11@2x.png"); mask-image: url("../../assets/ui/sym/doc.on.clipboard-11@2x.png"); }
+.s-doc-on-clipboard-13 { -webkit-mask-image: url("../../assets/ui/sym/doc.on.clipboard-13@2x.png"); mask-image: url("../../assets/ui/sym/doc.on.clipboard-13@2x.png"); }
+.s-doc-on-clipboard-16 { -webkit-mask-image: url("../../assets/ui/sym/doc.on.clipboard-16@2x.png"); mask-image: url("../../assets/ui/sym/doc.on.clipboard-16@2x.png"); }
+.s-doc-plaintext-16 { -webkit-mask-image: url("../../assets/ui/sym/doc.plaintext-16@2x.png"); mask-image: url("../../assets/ui/sym/doc.plaintext-16@2x.png"); }
+.s-gearshape-16 { -webkit-mask-image: url("../../assets/ui/sym/gearshape-16@2x.png"); mask-image: url("../../assets/ui/sym/gearshape-16@2x.png"); }
+.s-info-circle-16 { -webkit-mask-image: url("../../assets/ui/sym/info.circle-16@2x.png"); mask-image: url("../../assets/ui/sym/info.circle-16@2x.png"); }
+.s-keyboard-16 { -webkit-mask-image: url("../../assets/ui/sym/keyboard-16@2x.png"); mask-image: url("../../assets/ui/sym/keyboard-16@2x.png"); }
+.s-link-16 { -webkit-mask-image: url("../../assets/ui/sym/link-16@2x.png"); mask-image: url("../../assets/ui/sym/link-16@2x.png"); }
+.s-magnifyingglass-11 { -webkit-mask-image: url("../../assets/ui/sym/magnifyingglass-11@2x.png"); mask-image: url("../../assets/ui/sym/magnifyingglass-11@2x.png"); }
+.s-magnifyingglass-12 { -webkit-mask-image: url("../../assets/ui/sym/magnifyingglass-12@2x.png"); mask-image: url("../../assets/ui/sym/magnifyingglass-12@2x.png"); }
+.s-plus-14 { -webkit-mask-image: url("../../assets/ui/sym/plus-14@2x.png"); mask-image: url("../../assets/ui/sym/plus-14@2x.png"); }
+.s-xmark-10 { -webkit-mask-image: url("../../assets/ui/sym/xmark-10@2x.png"); mask-image: url("../../assets/ui/sym/xmark-10@2x.png"); }

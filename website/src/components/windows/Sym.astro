@@ -1,0 +1,14 @@
+---
+// An SF Symbol, drawn as a pt×pt box masked by Pluso's white PNG (sym.css), so its colour
+// comes from CSS: the class of the box or its parent sets `color`, the mask shows it.
+// A symbol whose PNG is missing simply shows nothing.
+interface Props {
+  name: string;
+  pt: number;
+  semibold?: boolean;
+  class?: string;
+}
+const { name, pt, semibold = false, class: cls } = Astro.props;
+const slug = `${name.replaceAll(".", "-")}-${pt}${semibold ? "-semibold" : ""}`;
+---
+<span class:list={["gw-sym", `gw-p${pt}`, `s-${slug}`, cls]}></span>

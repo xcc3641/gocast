@@ -1,0 +1,17 @@
+---
+// An app or file icon from src/assets/ui/icons; a grey rounded square while it's missing.
+import { Image } from "astro:assets";
+import { iconFile, type IconKey } from "./assets";
+
+interface Props {
+  icon: IconKey;
+  /** Shown size in points; the file is resized to twice that. */
+  size: number;
+  class?: string;
+}
+const { icon, size, class: cls } = Astro.props;
+const src = iconFile(icon);
+---
+{src
+  ? <Image class:list={["gw-img", cls]} src={src} alt="" width={size * 2} height={size * 2} format="png" loading="lazy" decoding="async" />
+  : <span class:list={["gw-img", "gw-ph", cls]}></span>}

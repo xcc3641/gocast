@@ -1,0 +1,19 @@
+---
+// The 66-point search bar: Gocast mark, then the typed text or the placeholder.
+interface Props {
+  text?: string;
+  placeholder?: string;
+  caret?: boolean;
+  /** The shown words are Chinese, which the app draws a little smaller at this size. */
+  cjk?: boolean;
+}
+const { text = "", placeholder = "", caret = false, cjk = false } = Astro.props;
+---
+<div class="gw-bar">
+  <span class="gw-logo"></span>
+  <span class="gw-input">
+    {caret && <span class="gw-caret"></span>}
+    <span class:list={["gw-t", { "gw-ph-text": !text, "gw-cjk20": cjk }]}>{text || placeholder}</span>
+  </span>
+  <slot />
+</div>

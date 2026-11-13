@@ -1,0 +1,65 @@
+---
+// The search panel, 640×475: `hero` is the suggestions list with an empty search field,
+// `apps` is the results for a typed query. Spec: handoff/landing-drawn-windows.md 4.1, 4.2.
+import Window from "./Window.astro";
+import SearchBar from "./SearchBar.astro";
+import Row from "./Row.astro";
+import Capsule from "./Capsule.astro";
+import type { IconKey } from "./assets";
+import type { Locale } from "../../i18n";
+
+interface Props {
+  variant: "hero" | "apps";
+  locale: Locale;
+  alt: string;
+}
+const { variant, locale, alt } = Astro.props;
+const zh = locale === "zh";
+const app = zh ? "应用" : "App";
+const wechatKeys = ["⌃", "⌥", "W"];
+
+type R = { title: string; sub?: string; icon?: IconKey; sym?: string; keys?: string[]; type?: string; selected?: boolean };
+
+const suggestions: R[] = [
+  { title: zh ? "微信" : "WeChat", icon: "wechat", keys: wechatKeys, type: app, selected: true },
+  { title: zh ? "Safari浏览器" : "Safari", icon: "safari", type: app },
+  { title: zh ? "演示项目" : "Demo project", sub: "~/Projects/demo · ./dev.sh", sym: "apple.terminal.fill", type: zh ? "预设" : "Preset" },
+  { title: "Visual Studio Code", icon: "vscode", type: app },
+  { title: zh ? "备忘录" : "Notes", icon: "notes", type: app },
+  { title: zh ? "日历" : "Calendar", icon: "calendar", type: app },
+  { title: zh ? "访达" : "Finder", icon: "finder", type: app },
+];
+const gocast: R[] = [
+  { title: zh ? "剪贴板历史" : "Clipboard History", sym: "doc.on.clipboard", keys: ["⌃", "⌘", "V"] },
+  { title: zh ? "打开悬浮终端" : "Open Floating Terminal", sym: "apple.terminal", keys: ["⌃", "`"] },
+];
+const results: R[] = zh
+  ? [
+      { title: "微信", icon: "wechat", keys: wechatKeys, type: app, selected: true },
+      { title: "微信读书", icon: "weread", type: app },
+      { title: "无线诊断", icon: "wireless", type: app },
+    ]
+  : [
+      { title: "WeChat", icon: "wechat", keys: wechatKeys, type: app, selected: true },
+      { title: "ChatGPT", icon: "chatgpt", type: app },
+    ];
+---
+<Window w={640} alt={alt}>
+  {variant === "hero" ? (
+    <>
+      <SearchBar placeholder={zh ? "搜索应用或终端预设" : "Search apps or terminal presets"} cjk={zh} />
+      <div class="gw-list">
+        <div class="gw-sec"><span class="gw-t">{zh ? "推荐" : "Suggestions"}</span></div>
+        {suggestions.map((r) => <Row {...r} />)}
+        <div class="gw-sec"><span class="gw-t">Gocast</span></div>
+        {gocast.map((r) => <Row {...r} />)}
+      </div>
+    </>
+  ) : (
+    <>
+      <SearchBar text={zh ? "wx" : "chat"} />
+      <div class="gw-list">{results.map((r) => <Row {...r} />)}</div>
+    </>
+  )}
+  <Capsule action={zh ? "打开" : "Open"} locale={locale} />
+</Window>

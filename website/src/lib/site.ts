@@ -3,6 +3,7 @@ export const REPO = "https://github.com/xcc3641/gocast";
 export const DMG = `${REPO}/releases/latest`;
 export const INSTALL =
   "curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh | sh";
+export const LICENSE = `${REPO}/blob/main/LICENSE`;
 
 // The favicon, drawn inline so it costs no request.
 export const ICON_SVG =

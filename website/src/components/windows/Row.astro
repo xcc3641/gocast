@@ -1,0 +1,31 @@
+---
+// A search-panel result row: 26-point icon frame, title, optional subtitle, then keycaps
+// and the type mark on the right. Pass `icon` for an app icon or `sym` for Gocast's
+// own rounded tile with a symbol in it.
+import AppIcon from "./AppIcon.astro";
+import Sym from "./Sym.astro";
+import Keys from "./Keys.astro";
+import type { IconKey } from "./assets";
+
+interface Props {
+  title: string;
+  sub?: string;
+  icon?: IconKey;
+  sym?: string;
+  keys?: string[];
+  type?: string;
+  selected?: boolean;
+}
+const { title, sub, icon, sym, keys = [], type, selected = false } = Astro.props;
+---
+<div class:list={["gw-row", { "is-sel": selected }]}>
+  <span class="gw-ico">
+    {icon && <AppIcon icon={icon} size={26} />}
+    {sym && <span class="gw-tile"><Sym name={sym} pt={13} /></span>}
+  </span>
+  <span class="gw-title gw-t">{title}</span>
+  {sub && <span class="gw-sub gw-t">{sub}</span>}
+  <span class="gw-fill"></span>
+  {keys.length > 0 && <Keys keys={keys} class:list={[{ "has-type": !!type }]} />}
+  {type && <span class="gw-type">{type}</span>}
+</div>

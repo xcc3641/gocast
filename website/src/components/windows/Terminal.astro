@@ -1,0 +1,47 @@
+---
+// The floating terminal, 756×569: tab bar, then a dev server's output (the same in both
+// languages, copied from terminal-zh.png). Spec 4.3.
+import Window from "./Window.astro";
+import Sym from "./Sym.astro";
+import type { Locale } from "../../i18n";
+
+interface Props {
+  locale: Locale;
+  alt: string;
+}
+const { locale, alt } = Astro.props;
+const zh = locale === "zh";
+
+// Request log: time, method, path, status, milliseconds, laid out in fixed columns.
+const log: [string, string, string, string, string][] = [
+  ["10:24:31", "GET", "/", "200", "8"],
+  ["10:24:31", "GET", "/assets/app.js", "200", "3"],
+  ["10:24:32", "GET", "/api/projects", "200", "14"],
+  ["10:24:32", "GET", "/api/projects/42", "200", "11"],
+  ["10:24:35", "HMR", "src/pages/index.tsx updated", "", ""],
+  ["10:24:35", "GET", "/api/projects/42", "200", "9"],
+  ["10:24:36", "POST", "/api/projects/42/run", "202", "23"],
+];
+---
+<Window w={756} alt={alt} kind="gw-term">
+  <div class="gw-tabs">
+    <span class="gw-logo"></span>
+    <span class="gw-tab gw-t">{zh ? "终端" : "Terminal"}</span>
+    <span class="gw-tab is-sel"><span class="gw-t">{zh ? "演示项目" : "Demo project"}</span><Sym name="xmark" pt={10} /></span>
+    <span class="gw-fill"></span>
+    <span class="gw-tbtn"><Sym name="plus" pt={14} /></span>
+    <span class="gw-tbtn"><Sym name="chevron.up" pt={14} /></span>
+  </div>
+<pre class="gw-pre"><span class="d">&gt; demo-app@0.3.0 dev
+&gt; node scripts/serve.js --watch</span>
+
+  <span class="g">✔</span> compiled in <b>412 ms</b>
+
+  <span class="g">➜</span>  <b>Local:</b>   <span class="c">http://localhost:<b>3000</b>/</span>
+  <span class="g">➜</span>  <b>Network:</b> <span class="d">use --host to expose</span>
+
+{log.map(([t, m, p, s, ms]) => (
+<><span class="d">{t}</span> <span class={m === "HMR" ? "c" : "g"}>{m.padEnd(5)}</span>{s ? <>{p.padEnd(23)}<span class="g">{s}</span><span class="d">{`${ms.padStart(4)} ms`}</span></> : p}{"\n"}</>
+))}
+<span class="d">watching for file changes…</span></pre>
+</Window>

@@ -1,0 +1,16 @@
+---
+// The action capsule floating at the bottom right of the search panel.
+import Keys from "./Keys.astro";
+import type { Locale } from "../../i18n";
+interface Props {
+  action: string;
+  locale: Locale;
+}
+const { action, locale } = Astro.props;
+---
+<div class="gw-cap">
+  <span class="gw-cap-main">{action}</span>
+  <Keys keys={["↩"]} kind="ring" />
+  <span class="gw-cap-more">{locale === "zh" ? "操作" : "Actions"}</span>
+  <Keys keys={["⌘", "K"]} kind="ring" />
+</div>

@@ -2,28 +2,35 @@
   "lang": "en",
   "other_label": "简体中文",
   "title": "Gocast — apps, terminal and clipboard on one key",
-  "desc": "Gocast is a free, open-source launcher for the Mac. Press ⌘Space to open any app, ⌃` for a drop-down terminal, ⌃⌘V for clipboard history.",
-  "headline": "One key. Apps and terminal, right there.",
-  "sub": "Gocast is a small launcher for the Mac. Press ⌘Space to find and open an app. Press ⌃` and a terminal drops down from the top of the screen, already in your folder, running your command.",
+  "desc": "Gocast is a free, open-source launcher for the Mac. Press ⌘Space to open any app, ⌃` for a drop-down terminal, ⌃⌘V for clipboard history, and do math right in search.",
+  "h1a": "One key. Apps and terminal, right there.",
+  "h1b": "Your hands stay on the keyboard.",
+  "sub": "Gocast is a free, open-source launcher for the Mac. Opening an app, dropping down a terminal, finding something you copied, doing a quick sum: each is one shortcut away.",
   "download": "Download for Mac",
-  "req": "Free · macOS 13 or later · Apple silicon",
+  "gh": "View on GitHub",
+  "req": "Free · Open source · macOS 13 or later · Apple silicon",
   "cmd_label": "Or install from Terminal:",
+  "hero_alt": "The Gocast search panel, with your usual apps and presets under the search field",
   "features": [
     {
       "keys": [
         "⌘",
         "Space"
       ],
-      "title": "Open any app",
-      "text": "Type a few letters and press ↵. English names, Chinese names and pinyin all work. The ones you open most come first."
+      "title": "Type a few letters. Your app is open.",
+      "text": "English names, Chinese names and pinyin all work. The apps you use most come first and are listed the moment the panel opens, so often you don’t type at all.",
+      "shot": "apps",
+      "alt": "Searching: typing chat puts WeChat first, with ChatGPT below it"
     },
     {
       "keys": [
         "⌃",
         "`"
       ],
-      "title": "A terminal that drops down",
-      "text": "It floats above every app. Hiding it stops nothing: your commands keep running. Presets open a folder and run a command, like <code>pi</code> in your project."
+      "title": "A terminal drops down from the top.",
+      "text": "It floats above every app, and hiding it stops nothing. A preset remembers which command to run in which folder, like <code>pi</code> in my-app. When the command ends, the tab becomes a plain terminal and you keep typing.",
+      "shot": "terminal",
+      "alt": "The floating terminal dropped down from the top, with two tabs, one of them a preset"
     },
     {
       "keys": [
@@ -31,22 +38,50 @@
         "⌘",
         "V"
       ],
-      "title": "Clipboard history",
-      "text": "Find the text, links, images and files you copied before, and paste into the app you were in. Pin the ones you use often."
+      "title": "Everything you copied is still here.",
+      "text": "Text, links, images and files, with thumbnails for screenshots. Press ↵ to paste into the app you were in, and pin the ones you use often. It stays on this Mac, and passwords from password managers are never kept.",
+      "shot": "clipboard",
+      "alt": "Clipboard history with text, links and images in the list and a picture previewed on the right"
     },
     {
       "keys": [
         "⌘",
         "Space"
       ],
-      "title": "Math and currencies",
-      "text": "Type <code>(12+8)*3</code>, <code>10 ft in m</code> or <code>100 usd in jpy</code> in the search panel. The answer shows up on top."
+      "title": "Do the math right in search.",
+      "text": "Type <code>(12+8)*3</code>, <code>10 ft in m</code> or <code>100 usd in jpy</code> and the answer is on top. Press ↵ to copy it. Exchange rates update once a day from central bank reference rates.",
+      "shot": "calculator",
+      "alt": "Typing 100 usd in jpy in search, with the converted answer on top"
+    },
+    {
+      "keys": [],
+      "title": "Give each favorite app its own shortcut.",
+      "text": "Set a shortcut for any app or preset and press it anywhere: it opens the app, brings it forward, or hides it if it’s already in front. Find it in Settings › Shortcuts, or select it in the search panel and press ⌘K.",
+      "shot": "shortcuts",
+      "alt": "Settings › Shortcuts: Gocast’s own three shortcuts on top, then every app and preset, a few already set"
     }
   ],
-  "open": "Open source under the Apache 2.0 license. <a href=\"https://github.com/xcc3641/gocast\">Read the code on GitHub</a>.",
+  "pv": {
+    "h": "It all stays on your Mac.",
+    "p": "Gocast has no account and sends none of your information anywhere. Your presets, settings, clipboard history and what you open all stay on this Mac. It goes online for only two things, and neither carries anything you typed or copied:",
+    "items": [
+      {
+        "k": "Checking for updates",
+        "v": "from GitHub, about once a day; when there’s a newer version, it downloads in the background."
+      },
+      {
+        "k": "Exchange rates",
+        "v": "from Frankfurter (<code>frankfurter.dev</code>), once a day."
+      }
+    ],
+    "note": "Both can be turned off in Settings › General.",
+    "link": "Read the privacy policy →"
+  },
+  "close_h": "Free, open source, and ready once it’s installed.",
   "support": "Support",
   "privacy": "Privacy",
   "changelog": "Changelog",
+  "license": "License",
   "copyright": "© 2026 The Gocast Authors",
   "s_title": "Gocast Support",
   "s_lede": "Gocast is a free launcher for the Mac: apps, a drop-down terminal and clipboard history, each on one key.",

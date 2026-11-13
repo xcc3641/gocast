@@ -1,0 +1,31 @@
+---
+// The search panel with a calculator card, 640×475. Spec 4.5.
+import Window from "./Window.astro";
+import SearchBar from "./SearchBar.astro";
+import Sym from "./Sym.astro";
+import Capsule from "./Capsule.astro";
+import type { Locale } from "../../i18n";
+
+interface Props {
+  locale: Locale;
+  alt: string;
+}
+const { locale, alt } = Astro.props;
+const zh = locale === "zh";
+const q = "100 usd in jpy";
+---
+<Window w={640} alt={alt}>
+  <SearchBar text={q} />
+  <div class="gw-calc">
+    <div class="gw-calc-half">
+      <span class="gw-calc-main gw-t">{q}</span>
+      <span class="gw-chip gw-t">{zh ? "美元" : "US dollars"}</span>
+    </div>
+    <div class="gw-calc-mid"><Sym name="arrow.right" pt={14} semibold /></div>
+    <div class="gw-calc-half">
+      <span class="gw-calc-main is-answer gw-t">15,970 JPY</span>
+      <span class="gw-chip gw-t">{zh ? "日元 · 汇率更新于 今天" : "Japanese yen · Rates from Today"}</span>
+    </div>
+  </div>
+  <Capsule action={zh ? "拷贝答案" : "Copy Answer"} locale={locale} />
+</Window>
