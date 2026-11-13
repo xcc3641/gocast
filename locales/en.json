@@ -256,6 +256,42 @@
   "@termPlainTip": {
     "description": "Tip over the first plain terminal when there is no preset."
   },
+  "termHintNewTab": "New Tab",
+  "@termHintNewTab": {
+    "description": "Shortcut hints while ⌘ is held in the floating terminal (copy.md 14): the row of ⌘T."
+  },
+  "termHintCloseTab": "Close Tab",
+  "@termHintCloseTab": {
+    "description": "Shortcut hints while ⌘ is held in the floating terminal (copy.md 14): the row of ⌘W."
+  },
+  "termHintPrevTab": "Previous Tab",
+  "@termHintPrevTab": {
+    "description": "Shortcut hints while ⌘ is held in the floating terminal (copy.md 14): the row of ⌘⇧[."
+  },
+  "termHintNextTab": "Next Tab",
+  "@termHintNextTab": {
+    "description": "Shortcut hints while ⌘ is held in the floating terminal (copy.md 14): the row of ⌘⇧]."
+  },
+  "termHintGoToTab": "Go to Tab",
+  "@termHintGoToTab": {
+    "description": "Shortcut hints while ⌘ is held in the floating terminal (copy.md 14): the row of ⌘1–9."
+  },
+  "termHintCopy": "Copy",
+  "@termHintCopy": {
+    "description": "Shortcut hints while ⌘ is held in the floating terminal (copy.md 14): the row of ⌘C."
+  },
+  "termHintPaste": "Paste",
+  "@termHintPaste": {
+    "description": "Shortcut hints while ⌘ is held in the floating terminal (copy.md 14): the row of ⌘V."
+  },
+  "termHintTextSize": "Bigger / Smaller Text",
+  "@termHintTextSize": {
+    "description": "Shortcut hints while ⌘ is held in the floating terminal (copy.md 14): the row of ⌘+ / ⌘-."
+  },
+  "termHintActualSize": "Actual Size",
+  "@termHintActualSize": {
+    "description": "Shortcut hints while ⌘ is held in the floating terminal (copy.md 14): the row of ⌘0."
+  },
   "dismiss": "Dismiss",
   "@dismiss": {
     "description": "Accessibility label of the × of a notice capsule (copy.md 3)."

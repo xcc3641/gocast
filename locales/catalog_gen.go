@@ -718,6 +718,150 @@ func (msgs Messages) TermPlainTip() string {
 	return Catalog.Format(msgs.locale, "termPlainTip", nil)
 }
 
+// TermHintNewTab says "New Tab"
+// in the language the app shows.
+//
+// Shortcut hints while ⌘ is held in the floating terminal (copy.md 14):
+// the row of ⌘T.
+func TermHintNewTab() string { return In(i18n.Locale()).TermHintNewTab() }
+
+// TermHintNewTab says "New Tab"
+// in the language of msgs.
+//
+// Shortcut hints while ⌘ is held in the floating terminal (copy.md 14):
+// the row of ⌘T.
+func (msgs Messages) TermHintNewTab() string {
+	return Catalog.Format(msgs.locale, "termHintNewTab", nil)
+}
+
+// TermHintCloseTab says "Close Tab"
+// in the language the app shows.
+//
+// Shortcut hints while ⌘ is held in the floating terminal (copy.md 14):
+// the row of ⌘W.
+func TermHintCloseTab() string { return In(i18n.Locale()).TermHintCloseTab() }
+
+// TermHintCloseTab says "Close Tab"
+// in the language of msgs.
+//
+// Shortcut hints while ⌘ is held in the floating terminal (copy.md 14):
+// the row of ⌘W.
+func (msgs Messages) TermHintCloseTab() string {
+	return Catalog.Format(msgs.locale, "termHintCloseTab", nil)
+}
+
+// TermHintPrevTab says "Previous Tab"
+// in the language the app shows.
+//
+// Shortcut hints while ⌘ is held in the floating terminal (copy.md 14):
+// the row of ⌘⇧[.
+func TermHintPrevTab() string { return In(i18n.Locale()).TermHintPrevTab() }
+
+// TermHintPrevTab says "Previous Tab"
+// in the language of msgs.
+//
+// Shortcut hints while ⌘ is held in the floating terminal (copy.md 14):
+// the row of ⌘⇧[.
+func (msgs Messages) TermHintPrevTab() string {
+	return Catalog.Format(msgs.locale, "termHintPrevTab", nil)
+}
+
+// TermHintNextTab says "Next Tab"
+// in the language the app shows.
+//
+// Shortcut hints while ⌘ is held in the floating terminal (copy.md 14):
+// the row of ⌘⇧].
+func TermHintNextTab() string { return In(i18n.Locale()).TermHintNextTab() }
+
+// TermHintNextTab says "Next Tab"
+// in the language of msgs.
+//
+// Shortcut hints while ⌘ is held in the floating terminal (copy.md 14):
+// the row of ⌘⇧].
+func (msgs Messages) TermHintNextTab() string {
+	return Catalog.Format(msgs.locale, "termHintNextTab", nil)
+}
+
+// TermHintGoToTab says "Go to Tab"
+// in the language the app shows.
+//
+// Shortcut hints while ⌘ is held in the floating terminal (copy.md 14):
+// the row of ⌘1–9.
+func TermHintGoToTab() string { return In(i18n.Locale()).TermHintGoToTab() }
+
+// TermHintGoToTab says "Go to Tab"
+// in the language of msgs.
+//
+// Shortcut hints while ⌘ is held in the floating terminal (copy.md 14):
+// the row of ⌘1–9.
+func (msgs Messages) TermHintGoToTab() string {
+	return Catalog.Format(msgs.locale, "termHintGoToTab", nil)
+}
+
+// TermHintCopy says "Copy"
+// in the language the app shows.
+//
+// Shortcut hints while ⌘ is held in the floating terminal (copy.md 14):
+// the row of ⌘C.
+func TermHintCopy() string { return In(i18n.Locale()).TermHintCopy() }
+
+// TermHintCopy says "Copy"
+// in the language of msgs.
+//
+// Shortcut hints while ⌘ is held in the floating terminal (copy.md 14):
+// the row of ⌘C.
+func (msgs Messages) TermHintCopy() string {
+	return Catalog.Format(msgs.locale, "termHintCopy", nil)
+}
+
+// TermHintPaste says "Paste"
+// in the language the app shows.
+//
+// Shortcut hints while ⌘ is held in the floating terminal (copy.md 14):
+// the row of ⌘V.
+func TermHintPaste() string { return In(i18n.Locale()).TermHintPaste() }
+
+// TermHintPaste says "Paste"
+// in the language of msgs.
+//
+// Shortcut hints while ⌘ is held in the floating terminal (copy.md 14):
+// the row of ⌘V.
+func (msgs Messages) TermHintPaste() string {
+	return Catalog.Format(msgs.locale, "termHintPaste", nil)
+}
+
+// TermHintTextSize says "Bigger / Smaller Text"
+// in the language the app shows.
+//
+// Shortcut hints while ⌘ is held in the floating terminal (copy.md 14):
+// the row of ⌘+ / ⌘-.
+func TermHintTextSize() string { return In(i18n.Locale()).TermHintTextSize() }
+
+// TermHintTextSize says "Bigger / Smaller Text"
+// in the language of msgs.
+//
+// Shortcut hints while ⌘ is held in the floating terminal (copy.md 14):
+// the row of ⌘+ / ⌘-.
+func (msgs Messages) TermHintTextSize() string {
+	return Catalog.Format(msgs.locale, "termHintTextSize", nil)
+}
+
+// TermHintActualSize says "Actual Size"
+// in the language the app shows.
+//
+// Shortcut hints while ⌘ is held in the floating terminal (copy.md 14):
+// the row of ⌘0.
+func TermHintActualSize() string { return In(i18n.Locale()).TermHintActualSize() }
+
+// TermHintActualSize says "Actual Size"
+// in the language of msgs.
+//
+// Shortcut hints while ⌘ is held in the floating terminal (copy.md 14):
+// the row of ⌘0.
+func (msgs Messages) TermHintActualSize() string {
+	return Catalog.Format(msgs.locale, "termHintActualSize", nil)
+}
+
 // Dismiss says "Dismiss"
 // in the language the app shows.
 //

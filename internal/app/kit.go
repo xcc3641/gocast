@@ -167,7 +167,7 @@ func keycapColored(c *ui.Context, k tokens, label string, size float32, color ui
 }
 
 // capLabel is the label of a keycap, moved by capNudge to look centered.
-func capLabel(c *ui.Context, label string, size float32, color ui.Color) {
+func capLabel(c *ui.Context, label string, size float32, color ui.Color) ui.Element {
 	t := ui.Text(c, label).FontSize(size).TextColor(color).SingleLine()
 	// A margin on one side moves the centered text by half of it.
 	if n := capNudge(label); n > 0 {
@@ -175,6 +175,7 @@ func capLabel(c *ui.Context, label string, size float32, color ui.Color) {
 	} else if n < 0 {
 		t.Margin(0, 0, -2*n, 0)
 	}
+	return t
 }
 
 // capNudge is how far a keycap's label moves down (up if negative) for

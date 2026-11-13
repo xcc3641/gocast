@@ -107,6 +107,7 @@ type termPanel struct {
 	saveGen int            // the size dragged to last, to save
 	accents [2]ui.Color    // the light and dark accents of the themes
 	themes  [2]*terminal.Theme
+	hints   cmdHints // the shortcut hints while Command is held (cmdhints.go)
 }
 
 func newTermPanel(g *gocast) *termPanel {
@@ -136,6 +137,7 @@ func newTermPanel(g *gocast) *termPanel {
 	})
 	p.win.OnResize(p.resized)
 	p.win.OnBlur(func() {
+		p.hints.cancel()
 		if !g.settings.KeepTerminalOnBlur {
 			p.hide()
 		}
@@ -165,13 +167,14 @@ func (p *termPanel) view(c *ui.Context) {
 	c.Root().Background(ui.Transparent)
 	p.followAccent(c)
 	p.shortcuts(c)
+	hints := p.hintsShown(c)
 	s := p.current()
 	// One surface, the tinted glass, under the tab bar and the terminal,
 	// with no line between them, outlined as the search panel (design.md
-	// 3.2, 3.3).
-	root := ui.Column(c).Fill().Background(glassFill(c, k, terminalTint))
+	// 3.2, 3.3). It sees each key and click, which end the hints.
+	root := ui.Column(c).Fill().Background(glassFill(c, k, terminalTint)).ObserveInput(p.hints.input)
 	panelOutline(root, k).Children(func() {
-		p.tabBar(c, k)
+		p.tabBar(c, k, hints)
 		bottom := float32(termPadBottom)
 		if s != nil && p.hasCapsules(s) {
 			bottom = termPadCapsules // the last line and the cursor above the capsules
@@ -195,8 +198,15 @@ func (p *termPanel) view(c *ui.Context) {
 			c.Key(strconv.Itoa(s.key) + "#" + strconv.Itoa(s.gen))
 			terminal.View(c, s.term).Grow(1).Bind(&s.focus).AutoFocus()
 		})
+		var card hintSize
+		if hints {
+			card = p.hintCardSize(c)
+		}
 		if s != nil {
-			p.capsules(c, k, s)
+			p.capsules(c, k, s, card.w)
+		}
+		if hints {
+			p.hintCard(c, k, card)
 		}
 		if p.menu {
 			p.newTabMenu(c, k)
@@ -282,14 +292,15 @@ func (p *termPanel) shortcuts(c *ui.Context) {
 }
 
 // tabBar shows Gocast's mark, the tabs, and the new tab and hide buttons,
-// on the glass, as the search bar (design.md 3.4).
-func (p *termPanel) tabBar(c *ui.Context, k tokens) {
+// on the glass, as the search bar (design.md 3.4); the tabs' numbers with
+// the hints.
+func (p *termPanel) tabBar(c *ui.Context, k tokens, hints bool) {
 	ui.Row(c).Height(tabBarH).Shrink(0).Padding(0, 12, 0, 20).Gap(12).AlignItems(ui.Center).Children(func() {
 		gocastMark(c, k)
 		ui.ScrollHorizontal(c).Grow(1).Shrink(1).Children(func() {
 			ui.Row(c).Gap(4).AlignItems(ui.Center).Children(func() {
 				for i, s := range p.tabs {
-					p.tab(c, k, i, s)
+					p.tab(c, k, i, s, hints)
 				}
 			})
 		})
@@ -304,8 +315,11 @@ func (p *termPanel) tabBar(c *ui.Context, k tokens) {
 
 // tab is a tab of the tab bar, a capsule as a search result: its title, a
 // dot once its program ended, and its close button, on the tab showing
-// and the one under the pointer.
-func (p *termPanel) tab(c *ui.Context, k tokens, i int, s *session) {
+// and the one under the pointer. With the hints, the first nine show
+// their number in its place, and none its close button; the tab keeps its
+// width (design.md 3.5a), which its title sets, and the title is cut
+// where the number's key, wider than the button, needs the room.
+func (p *termPanel) tab(c *ui.Context, k tokens, i int, s *session, hints bool) {
 	on := i == p.active
 	bg, fg := ui.Transparent, k.textOnGlass
 	if on {
@@ -319,13 +333,22 @@ func (p *termPanel) tab(c *ui.Context, k tokens, i int, s *session) {
 		tip += "  ⌘" + strconv.Itoa(i+1)
 	}
 	c.Key(s.key)
-	tab := ui.Row(c).Height(tabH).MinWidth(96).MaxWidth(220).Padding(0, 8, 0, 14).Radius(tabH / 2).Background(bg).
-		Gap(6).AlignItems(ui.Center).Tooltip(tip).Label(s.title())
+	title := s.title()
+	tab := ui.Row(c).Height(tabH).Width(tabWidth(c, title)).Padding(0, tabPadR, 0, tabPadL).Radius(tabH / 2).Background(bg).
+		Gap(tabGap).AlignItems(ui.Center).Tooltip(tip).Label(title)
 	hovered := tab.Hovered()
 	idx := i
 	tab.OnClick(func() { p.activate(idx) }).Children(func() {
-		ui.Text(c, s.title()).FontSize(13).TextColor(fg).SingleLine().Grow(1).Shrink(1)
-		closeBox := ui.Box(c).Size(16, 16).Radius(8).Center().Shrink(0)
+		ui.Text(c, title).FontSize(13).TextColor(fg).SingleLine().Grow(1).Shrink(1)
+		if hints {
+			if i < 9 {
+				tabNumber(c, k, i+1)
+			} else {
+				ui.Box(c).Size(tabClose, tabClose).Shrink(0)
+			}
+			return
+		}
+		closeBox := ui.Box(c).Size(tabClose, tabClose).Radius(8).Center().Shrink(0)
 		if on || hovered {
 			closeBox.Label(locales.TermCloseTabTip()).Tooltip(locales.TermCloseTabTip()).
 				OnClick(func() { p.closeTab(s) }).Children(func() {
@@ -337,6 +360,20 @@ func (p *termPanel) tab(c *ui.Context, k tokens, i int, s *session) {
 		p.reveal = false
 		tab.ScrollIntoView()
 	}
+}
+
+// A tab's measures: its padding, left and right, the gap between its
+// title and close button, the button, and its least and most width.
+const (
+	tabPadL, tabPadR, tabGap, tabClose = 14, 8, 6, 16
+	tabMinW, tabMaxW                   = 96, 220
+)
+
+// tabWidth is the width of a tab of title: its title whole, with its close
+// button, within tabMinW and tabMaxW, as its row would lay it out.
+func tabWidth(c *ui.Context, title string) float32 {
+	w, _ := c.MeasureText(0, ui.Span{Text: title, Size: 13})
+	return min(max(w+tabPadL+tabGap+tabClose+tabPadR, tabMinW), tabMaxW)
 }
 
 // --- The new tab menu ---
@@ -460,8 +497,9 @@ func (p *termPanel) plainTip(s *session) bool {
 // capsules float over the bottom of the terminal, as the search panel's
 // (design.md 3.6): why the terminal could not start, that the preset's
 // folder is gone, or the plain terminal's tip. A preset's command that
-// ended says so in the terminal itself (presets.After).
-func (p *termPanel) capsules(c *ui.Context, k tokens, s *session) {
+// ended says so in the terminal itself (presets.After). Beside the hint
+// card, card wide, the capsule takes the room the card leaves.
+func (p *termPanel) capsules(c *ui.Context, k tokens, s *session, card float32) {
 	var n notice
 	switch {
 	case s.failure != "":
@@ -491,7 +529,11 @@ func (p *termPanel) capsules(c *ui.Context, k tokens, s *session) {
 		s.announced = true
 		c.Announce(n.text)
 	}
-	room := float32(p.win.Bounds().Width) - 2*termInset
+	w, _ := c.Size()
+	room := w - 2*termInset
+	if card > 0 {
+		room -= card + termInset
+	}
 	noticeCapsule(c, k, termInset, termInset, max(room, 160), n)
 }
 
@@ -523,7 +565,9 @@ func (p *termPanel) activate(i int) {
 		}
 	}
 	p.syncVisible()
-	p.win.Invalidate()
+	if p.win != nil { // nil: drawn in a test
+		p.win.Invalidate()
+	}
 }
 
 // syncVisible tells the host which terminal shows: the active tab's, while
@@ -999,6 +1043,7 @@ func (p *termPanel) show() {
 		return
 	}
 	p.shown = true
+	p.hints.reset()
 	p.syncVisible()
 	wa := mygo.Screen.DisplayNearestPoint(mygo.Screen.CursorScreenPoint()).WorkArea
 	w, h := termSize(wa.Width, wa.Height, p.g.settings)
@@ -1157,6 +1202,7 @@ func (p *termPanel) hide() {
 	}
 	p.shown = false
 	p.menu = false
+	p.hints.cancel()
 	p.syncVisible()
 	gen := p.anim.Add(1)
 	done := func() {
