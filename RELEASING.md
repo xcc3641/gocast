@@ -99,6 +99,8 @@ builds made before it never update themselves.
 
 ## Signing
 
-Releases are signed with the maintainers' Developer ID certificate and
-notarized by Apple. Its private key, like the update key, never leaves the
-maintainers' Mac. Builds from source can use `mygo build -sign -` instead.
+Releases are signed with a Developer ID certificate and notarized by
+Apple, so they open with a double-click. Builds from source
+(`mygo build -sign -`) work the same, but macOS asks for permissions again
+after each build. Updates and the install script check the Ed25519
+signature against the public key in mygo.json.
