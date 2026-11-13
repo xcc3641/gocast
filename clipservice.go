@@ -514,11 +514,11 @@ func (c *seedClock) at(t time.Time) {
 // last week, some pinned; files made in dir, one of them gone; the apps
 // named in the language locale.
 func seedHistory(store *clipboard.Store, clock *seedClock, dir, locale string) {
-	_ = os.MkdirAll(dir, 0o755)
+	_ = os.MkdirAll(dir, 0o700)
 	file := func(name string, data []byte) string {
 		p := filepath.Join(dir, name)
 		if data != nil {
-			_ = os.WriteFile(p, data, 0o644)
+			_ = os.WriteFile(p, data, 0o600)
 		}
 		return p
 	}

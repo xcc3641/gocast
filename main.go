@@ -350,9 +350,10 @@ func main() {
 		log.Printf("copied %s to %s", legacyIdentifier, identifier)
 	}
 	g := &gocast{dir: filepath.Join(base, identifier)}
-	if err := os.MkdirAll(g.dir, 0o755); err != nil {
+	if err := os.MkdirAll(g.dir, 0o700); err != nil {
 		log.Fatal(err)
 	}
+	restrictDataDir(g.dir)
 	mygo.App.SetName(appName)
 	// GOCAST_APPEARANCE=dark or light forces Gocast's appearance, whatever
 	// the system's: for screenshots and checking both, the Mac left as is.
