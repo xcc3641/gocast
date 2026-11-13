@@ -1,4 +1,6 @@
-# Gocast 界面文案 v1.25（搜索面板 · 悬浮终端 · 设置）
+# Gocast 界面文案 v1.26（搜索面板 · 悬浮终端 · 设置）
+
+v1.26 改动：设置侧边栏「终端预设」改名「悬浮终端」；终端的五行设置从通用搬到这一页上半，下面是「预设」一组。通用里只剩 Gocast 自己的开关和外观。
 
 v1.25 改动：通用里新增「默认文件夹」（4.3），新开的终端从这里开始。
 
@@ -180,7 +182,7 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 
 ## 4. 设置
 
-窗口标题：设置 / Settings。四个分组，顺序如下。侧边栏四项就用下面 4.1–4.4 的小标题：快捷键 / 终端预设 / 通用 / 关于（Shortcuts / Terminal Presets / General / About）。侧边栏写「终端预设」是为了在设置里一眼看出是哪块；其他地方都只说「预设」。
+窗口标题：设置 / Settings。四个分组，顺序如下。侧边栏四项就用下面 4.1–4.4 的小标题：快捷键 / 终端预设 / 通用 / 关于（Shortcuts / Terminal Presets / General / About）。（v1.26 起侧边栏第二项叫「悬浮终端 / Floating Terminal」，见 4.2。）其他地方都只说「预设」。
 
 ### 4.1 快捷键 / Shortcuts
 
@@ -203,7 +205,16 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 | 占用已解除 | 已改用 ⌘Space | Now using ⌘Space |
 | 录制框说明（被聚焦搜索占用） | ⌘Space 被聚焦搜索占用 | Spotlight is using ⌘Space |
 
-### 4.2 终端预设 / Terminal Presets
+### 4.2 悬浮终端 / Floating Terminal（v1.26，原「终端预设」）
+
+侧边栏和页标题都叫「悬浮终端」，跟菜单栏、快捷键里的叫法一样，用户在哪儿都只见到这一个名字。页面上半是原来通用里那组（默认文件夹、字号、宽度、高度、失焦时收起悬浮终端，字照 4.3 原样），不放组标题，「也可以直接拖终端边缘来改大小，这里会跟着变。」放在这组下面。下半是预设：
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 分组标题 | 预设 | Presets |
+
+下面这张表（说明、空状态、编辑框）原样不变，「小标题说明」就是「预设」组标题下面那句。
+
 
 | 位置 | 中文 | English |
 |---|---|---|
@@ -239,7 +250,7 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 | 开关说明 | 打开后，开机就能用快捷键，不用先手动打开。 | Then your shortcuts work right after you log in. |
 | 开关 | 打开时只显示搜索框 | Show only the search field |
 | 开关说明 | 打开后，按 {搜索快捷键} 只出现搜索框，不列推荐，打字才出结果。 | When on, {shortcut} shows just the search field. Results appear as you type. |
-| 分组标题 | 悬浮终端 | Floating Terminal |
+| 分组标题（v1.26 起这一组整个搬到 4.2「悬浮终端」页，通用里不再有） | 悬浮终端 | Floating Terminal |
 | 分组说明 | 也可以直接拖终端边缘来改大小，这里会跟着变。 | You can also drag the terminal's edges. These values update as you do. |
 | 终端字号 | 字号 | Font size |
 | 宽度 | 宽度 | Width |
@@ -421,7 +432,7 @@ English: No clipboard history yet / Copy something and it shows up here. · Clip
 
 ### 6.8 设置 › 剪贴板 / Clipboard
 
-侧边栏加一项「剪贴板」，建议顺序：快捷键 / 终端预设 / 剪贴板 / 通用 / 关于。位置以 design.md 为准。
+侧边栏加一项「剪贴板」，建议顺序：快捷键 / 悬浮终端（原终端预设）/ 剪贴板 / 通用 / 关于。位置以 design.md 为准。
 
 | 位置 | 中文 | English |
 |---|---|---|
