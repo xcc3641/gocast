@@ -567,6 +567,8 @@ English: Gocast has no account and sends nothing about you anywhere. It only goe
 
 English: Exchange rates come from [Frankfurter](https://frankfurter.dev), which publishes central bank reference rates.
 
+更新日志（CHANGELOG.md）也是给人看的字，而且现在网站的 /changelog/ 两页直接从它生成，改一句网页就跟着变。0.1.0 那条已补：计算器一行、搜索面板打开时先列推荐、设置里「打开时只显示搜索框」。设置分页名照 locales 写：快捷键、终端预设、剪贴板、通用、关于。
+
 ## 5. 系统弹窗里会出现的文字（系统要求写明用途）
 
 | 场景 | 中文 | English |
@@ -583,3 +585,17 @@ English: Exchange rates come from [Frankfurter](https://frankfurter.dev), which 
 - 文案放进一个语言表（zh-Hans / en），跟系统语言走，不要写死在界面代码里。
 - “已改在你的主文件夹里打开”这条说明做兜底：预设文件夹丢了不要让终端打不开。
 - ⌘Space 被聚焦搜索占用的提示只在第一次打开时出现；从系统设置切回来再查一次，空出来就换成 ⌘Space 并显示「已改用 ⌘Space」。点「就用 ⌥⇧Space」后默认改成它，不再提示。别的应用占着检测不到，不要用这组文案。
+
+## 8. 签名和公证之后的安装说明（待 Developer ID + 公证验过再改）
+
+装好的版本双击直接能开以后，README 两份照下面改；网站支持页由网站那边对齐同样的意思。
+
+磁盘映像一段，删掉「第一次打开时……仍要打开」，改成：
+
+中文：**磁盘映像。** 到 [Releases](…) 下载最新的 `.dmg`，打开后把 Gocast 拖进“应用程序”文件夹，双击就能打开。安装包经过 Apple 公证。
+
+English: **Disk image.** Download the latest `.dmg` from [Releases](…), open it, and drag Gocast to Applications. Double-click to open it; the app is notarized by Apple.
+
+终端一段，删掉最后的「这样装的不用点「仍要打开」。」/ "macOS will not ask you to click Open Anyway."，其余不变。
+
+不写「Developer ID」「签名」这些词：读的人只关心能不能直接打开。「经过 Apple 公证」留着，是给会去查的人一个可以核对的说法。
