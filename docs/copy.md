@@ -1,4 +1,6 @@
-# Gocast 界面文案 v1.15（搜索面板 · 悬浮终端 · 设置）
+# Gocast 界面文案 v1.16（搜索面板 · 悬浮终端 · 设置）
+
+v1.16 改动：新增第 7 节「计算器」（卡片、小字、汇率日期、没汇率时的提示、⌘K、设置开关、读屏、README 草稿）。统一用词加「计算器」「答案」「汇率」。
 
 v1.15 改动：搜索面板打开就带推荐（2.2a）。两组叫「推荐」和「Gocast」，不叫「命令」。原来空输入 ⌘K 的「Gocast 操作」列表并进 Gocast 组，读屏跟着改。设置 › 通用加开关「打开时只显示搜索框」（不叫紧凑模式）。
 
@@ -35,6 +37,9 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 | 以前拷贝过、Gocast 记下来的内容 | 剪贴板历史 | Clipboard history | 粘贴板、剪切板、剪贴簿、复制历史 |
 | 让一条留在最上面、不过期 | 置顶 | Pin | 钉住、固定、收藏 |
 | 放进剪贴板 | 拷贝 | Copy | 复制（Mac 菜单里是「拷贝」） |
+| 搜索框里直接算 | 计算器 | Calculator | 计算、换算器 |
+| 算出来的那个数 | 答案 | Answer | 结果（结果指搜索结果） |
+| 货币之间换算用的比率 | 汇率 | Exchange rate | 牌价、汇价 |
 
 原则：用户说得出口的词。不出现"会话""进程""PTY""Kitty"这类词。
 
@@ -459,6 +464,80 @@ English: Press ⌃⌘V to find the text, links, images and files you copied befo
 English: Clipboard history stays on this Mac too, in the same folder, and is never uploaded. Passwords from password managers are never kept. Turn it off, clear it, or exclude apps in Settings › Clipboard.
 
 卸载说明改成：预设、设置和剪贴板历史会留着。 / Your presets, settings and clipboard history stay.
+
+## 7. 计算器
+
+范围以计算器需求 v1 为准，卡片的样子和位置以 design.md 为准。用词：算出来的叫「答案」，不叫「结果」：「结果」在 Gocast 里指搜索结果，卡片下面就是一列搜索结果，两个词放一起会混。搜索框占位「搜索应用或终端预设」不改，会算这件事靠 README 和用的人自己发现，跟 Raycast 一样。
+
+### 7.1 卡片
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 卡片右侧标记 | 计算器 | Calculator |
+| 左边 | 算式，照用户打的显示，全角符号换成半角 | The expression as typed, full-width symbols normalized |
+| 右边 | 答案。单位用符号：`3.048 m`、`86 °F`、`50 kg`、`32 px`；货币用代码：`15,432 JPY` | Answer with unit symbols or currency codes |
+| 时间答案 | {h} 小时 {m} 分（如「2 小时 25 分」）；不满 1 小时写「{m} 分」，有天写「{d} 天 {h} 小时」 | {h} h {m} min; {d} d {h} h |
+| 左边小字（有单位或货币时） | 单位或币种的中文全名，如「美元」「英尺」「人民币」 | Full name, e.g. “US dollars”, “feet”, “Chinese yuan” |
+| 右边小字（换算） | 目标单位全名，如「米」「日元」 | Target full name, e.g. “meters”, “Japanese yen” |
+| 右边小字（汇率） | {币种全名} · 汇率更新于 {日期} | {currency} · Rates from {date} |
+| 没有汇率又没联网（右边） | 需要联网获取一次汇率 | Go online once to get exchange rates |
+
+纯四则、百分比没有小字。小字写全名是为了让人看清 Gocast 是怎么理解的：打 `¥5000` 时，左边小字写「人民币」或「日元」，看一眼就知道对不对；不对就改写成 `5000 jpy`。不另加提示。
+日期跟剪贴板 6.3 一样用系统的相对写法：今天 / 昨天 / 11月10日。断网时继续用旧汇率，日期本身就说明了新旧，不另写「离线」。
+
+### 7.2 操作胶囊和 ⌘K
+
+| 位置 | 中文 | English | 键 |
+|---|---|---|---|
+| 主操作 | 拷贝答案 | Copy Answer | ↵ |
+| ⌘K · 1 | 拷贝答案 | Copy Answer | ↵ |
+| ⌘K · 2 | 粘贴到“{应用名}” | Paste to {app} | ⌘↵ |
+| ⌘K · 2（不知道刚才是哪个应用时） | 粘贴 | Paste | ⌘↵ |
+| ⌘K · 3 | 拷贝算式和答案 | Copy Expression and Answer | |
+| ⌘K · 4 | 拷贝纯数字 | Copy Number Only | |
+
+「粘贴到“{应用名}”」和剪贴板 6.5 同一句，去向是悬浮终端时写「粘贴到悬浮终端」。没有辅助功能权限时 ⌘↵ 只拷贝，提示用剪贴板 6.6 那句「已拷贝，按 ⌘V 粘贴。」。拷贝成功面板直接收起，不出提示。
+「拷贝算式和答案」拷出来是 `100 USD = 15,432 JPY`；「拷贝纯数字」拷出来是 `15432.12`，没有分组、没有单位。
+
+### 7.3 设置 › 通用
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 开关 | 在搜索中计算 | Calculate in search |
+| 开关说明 | 在搜索框里打算式、单位或货币，最上面直接出答案。汇率每天联网取一次。 | Type math, units or currencies in the search panel to get the answer on top. Exchange rates are fetched once a day. |
+
+放在通用哪一行以 design.md 为准。
+
+### 7.4 读屏（VoiceOver）
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 卡片 | {算式} 等于 {答案}，计算器 | {expression} equals {answer}, Calculator |
+| 带单位或货币时 | 用全名读：「100 美元 等于 15,432 日元，计算器」 | Read full names: “100 US dollars equals 15,432 Japanese yen, Calculator” |
+| 汇率日期 | 接在后面：「，汇率更新于 11月13日」 | Append: “, rates from November 13” |
+| 没有汇率 | {算式}，需要联网获取一次汇率，计算器 | {expression}, go online once to get exchange rates, Calculator |
+
+符号读成字：× 读「乘」，÷ 读「除以」，^ 读「的…次方」，% 读「百分之」。
+
+### 7.5 README（功能合进来时再加，现在不改）
+
+能做什么，接在「预设」后面：
+
+中文：**计算器。** 在搜索框里直接打算式、单位或汇率，比如 `(12+8)*3`、`10 ft in m`、`100 美元换日元`，最上面就是答案，按 ↵ 拷走。
+
+English: **Calculator.** Type math, units or currencies right in the search panel, like `(12+8)*3`, `10 ft in m` or `100 usd in jpy`. The answer shows up on top; press ↵ to copy it.
+
+你的数据，第一段改成：
+
+中文：Gocast 没有账号，不会把你的任何信息发到别处。它只在检查更新和每天取一次汇率时联网，取汇率时不带你输入的任何内容。两样都能在设置 › 通用里关掉（“自动检查更新”“在搜索中计算”）。
+
+English: Gocast has no account and sends nothing about you anywhere. It only goes online to check for updates and to fetch exchange rates once a day, and that request carries nothing you typed. Turn either off in Settings › General (Check for updates automatically, Calculate in search).
+
+致谢加一句：
+
+中文：汇率来自 [Frankfurter](https://frankfurter.dev)，用的是各国央行公布的参考汇率。
+
+English: Exchange rates come from [Frankfurter](https://frankfurter.dev), which publishes central bank reference rates.
 
 ## 5. 系统弹窗里会出现的文字（系统要求写明用途）
 
