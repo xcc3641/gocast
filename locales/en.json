@@ -1170,7 +1170,7 @@
       }
     }
   },
-  "calcLabelIncomplete": "{expression}, unfinished, last answer {answer}, Calculator",
+  "calcLabelIncomplete": "{expression}, not finished, previous answer {answer}, Calculator",
   "@calcLabelIncomplete": {
     "description": "Screen reader: the calculator card while the expression is half typed, the last answer kept greyed (design.md 2.3a). Not in copy.md: to check.",
     "placeholders": {

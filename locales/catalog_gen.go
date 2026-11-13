@@ -3400,7 +3400,7 @@ func (msgs Messages) CalcLabelCantCalculate(expression string) string {
 	return Catalog.Format(msgs.locale, "calcLabelCantCalculate", map[string]any{"expression": expression})
 }
 
-// CalcLabelIncomplete says "{expression}, unfinished, last answer {answer}, Calculator"
+// CalcLabelIncomplete says "{expression}, not finished, previous answer {answer}, Calculator"
 // in the language the app shows.
 //
 // Screen reader: the calculator card while the expression is half typed,
@@ -3409,7 +3409,7 @@ func CalcLabelIncomplete(expression string, answer string) string {
 	return In(i18n.Locale()).CalcLabelIncomplete(expression, answer)
 }
 
-// CalcLabelIncomplete says "{expression}, unfinished, last answer {answer}, Calculator"
+// CalcLabelIncomplete says "{expression}, not finished, previous answer {answer}, Calculator"
 // in the language of msgs.
 //
 // Screen reader: the calculator card while the expression is half typed,

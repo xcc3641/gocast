@@ -91,7 +91,7 @@ func TestCalcCard(t *testing.T) {
 	if c.state != cardStale || c.answer != "5" || c.expr != "2+3×" || c.ok() {
 		t.Errorf("being typed: %+v", c)
 	}
-	if c.label != "2+3 times, unfinished, last answer 5, Calculator" {
+	if c.label != "2+3 times, not finished, previous answer 5, Calculator" {
 		t.Errorf("being typed's label: %q", c.label)
 	}
 
