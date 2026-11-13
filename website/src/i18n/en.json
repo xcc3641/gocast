@@ -71,7 +71,7 @@
     },
     {
       "q": "How do I uninstall it?",
-      "a": "Quit Gocast from its menu bar icon and move it to the Trash, or run:<pre>curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh | sh -s -- --uninstall</pre>Your presets, settings and clipboard history stay in <code>~/Library/Application Support/dev.gocast.app/</code>; delete that folder to remove them too."
+      "a": "Quit Gocast from its menu bar icon and move it to the Trash, or run:<pre>curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh | sh -s -- --uninstall</pre>Your presets, settings and clipboard history stay in <code>~/Library/Application Support/com.hugo.gocast/</code>; delete that folder to remove them too."
     }
   ],
   "faq_h": "Common questions",
@@ -84,7 +84,7 @@
     },
     {
       "h": "What stays on your Mac",
-      "text": "Your presets, settings and clipboard history are files in <code>~/Library/Application Support/dev.gocast.app/</code>, readable only by your Mac user. They are never uploaded. Clipboard history is kept as plain files, not encrypted. Passwords copied from password managers are never kept, and you can choose apps whose copies are never kept."
+      "text": "Your presets, settings and clipboard history are files in <code>~/Library/Application Support/com.hugo.gocast/</code>, readable only by your Mac user. They are never uploaded. Clipboard history is kept as plain files, not encrypted. Passwords copied from password managers are never kept, and you can choose apps whose copies are never kept."
     },
     {
       "h": "When Gocast goes online",
@@ -96,7 +96,7 @@
     },
     {
       "h": "Keeping and deleting your data",
-      "text": "Clipboard history is kept for one month by default; change it in Settings › Clipboard (1 day to forever). Pinned items don’t expire. Clear History removes it at once. To delete everything, quit Gocast and delete <code>~/Library/Application Support/dev.gocast.app/</code>."
+      "text": "Clipboard history is kept for one month by default; change it in Settings › Clipboard (1 day to forever). Pinned items don’t expire. Clear History removes it at once. To delete everything, quit Gocast and delete <code>~/Library/Application Support/com.hugo.gocast/</code>."
     },
     {
       "h": "Changing your mind",

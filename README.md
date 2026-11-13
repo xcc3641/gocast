@@ -8,7 +8,7 @@ Gocast is a small launcher for the Mac. Press ⌘Space to find and open an app. 
 
 ## What it does
 
-**Search panel.** Type a few letters and press ↵. Apps are found by their English name, their Chinese name, or pinyin (`wx` finds 微信). The ones you open most come first. ⌘K shows more actions, such as Show in Finder or Copy Path.
+**Search panel.** Type a few letters and press ↵. Apps are found by their English name, their Chinese name, or pinyin (`wx` finds 微信). The ones you open most come first. With nothing typed, it lists the apps and presets you use most; turn on Show only the search field in Settings › General to keep it to just the field. ⌘K shows more actions, such as Show in Finder or Copy Path.
 
 **Floating terminal.** It floats above every app, on the screen your mouse is on, and slides away when you click somewhere else. Hiding it doesn't stop anything: your commands keep running and come back as you left them. Open more tabs with ⌘T.
 
@@ -62,7 +62,7 @@ All three shortcuts can be changed in Settings › Shortcuts.
 
 ## Your data
 
-Gocast has no account and sends nothing about you anywhere. It only goes online to check for updates and to fetch exchange rates once a day, and that request carries nothing you typed. Turn either off in Settings › General (Check for updates automatically, Calculate in search). Your presets and settings are plain files in `~/Library/Application Support/dev.gocast.app/`.
+Gocast has no account and sends nothing about you anywhere. It only goes online to check for updates and to fetch exchange rates once a day, and that request carries nothing you typed. Turn either off in Settings › General (Check for updates automatically, Calculate in search). Your presets and settings are plain files in `~/Library/Application Support/com.hugo.gocast/`.
 
 Clipboard history stays on this Mac too, in the same folder, and is never uploaded. Passwords from password managers are never kept. Turn it off, clear it, or exclude apps in Settings › Clipboard.
 

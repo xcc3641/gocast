@@ -72,7 +72,7 @@
     },
     {
       "q": "怎么卸载？",
-      "a": "在菜单栏图标里退出 Gocast，把它拖进废纸篓；或者在终端运行：<pre>curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh | sh -s -- --uninstall</pre>预设、设置和剪贴板历史会留在 <code>~/Library/Application Support/dev.gocast.app/</code>，想一起删掉就删这个文件夹。"
+      "a": "在菜单栏图标里退出 Gocast，把它拖进废纸篓；或者在终端运行：<pre>curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh | sh -s -- --uninstall</pre>预设、设置和剪贴板历史会留在 <code>~/Library/Application Support/com.hugo.gocast/</code>，想一起删掉就删这个文件夹。"
     }
   ],
   "p_title": "隐私政策",
@@ -84,7 +84,7 @@
     },
     {
       "h": "存在你 Mac 上的东西",
-      "text": "预设、设置和剪贴板历史都是文件，放在 <code>~/Library/Application Support/dev.gocast.app/</code>，只有你这个 Mac 用户能读，不会上传。剪贴板历史以普通文件保存，没有加密。密码管理器拷贝的密码不会记，你也可以指定哪些应用拷贝的内容不记。"
+      "text": "预设、设置和剪贴板历史都是文件，放在 <code>~/Library/Application Support/com.hugo.gocast/</code>，只有你这个 Mac 用户能读，不会上传。剪贴板历史以普通文件保存，没有加密。密码管理器拷贝的密码不会记，你也可以指定哪些应用拷贝的内容不记。"
     },
     {
       "h": "什么时候联网",
@@ -96,7 +96,7 @@
     },
     {
       "h": "保存多久、怎么删除",
-      "text": "剪贴板历史默认保留一个月，可以在设置 › 剪贴板里改（1 天到一直保留），置顶的不会过期；「清空历史…」会立刻删掉。想删掉全部数据，退出 Gocast 后删除 <code>~/Library/Application Support/dev.gocast.app/</code>。"
+      "text": "剪贴板历史默认保留一个月，可以在设置 › 剪贴板里改（1 天到一直保留），置顶的不会过期；「清空历史…」会立刻删掉。想删掉全部数据，退出 Gocast 后删除 <code>~/Library/Application Support/com.hugo.gocast/</code>。"
     },
     {
       "h": "撤回同意",
