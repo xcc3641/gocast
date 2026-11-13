@@ -16,7 +16,6 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"gocast/internal/clipboard"
-	"gocast/internal/running"
 	"gocast/internal/search"
 	"gocast/internal/sysfmt"
 	"gocast/locales"
@@ -617,7 +616,7 @@ func appPathOf(l *launcher, bundleID string) string {
 			return a.Path
 		}
 	}
-	return running.AppPath(bundleID)
+	return sysAppPath(bundleID)
 }
 
 // --- The preview and its info (design.md 2.8.5) ---

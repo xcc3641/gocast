@@ -190,7 +190,7 @@ func (g *gocast) appName(id string) string {
 	if i := slices.IndexFunc(g.launcher.apps, func(a mygo.InstalledApp) bool { return a.ID == id }); i >= 0 {
 		return g.launcher.apps[i].Name
 	}
-	if path := running.AppPath(id); path != "" {
+	if path := sysAppPath(id); path != "" {
 		return strings.TrimSuffix(filepath.Base(path), ".app")
 	}
 	return ""
@@ -277,7 +277,7 @@ func (g *gocast) registerHotkey(h settings.Hotkey) hotkeyState {
 		log.Printf("hotkey %v: %q is not a shortcut", h, g.settings.Hotkey(h))
 		return hotkeyInvalid
 	}
-	if h.App != "" && running.AppPath(h.App) == "" {
+	if h.App != "" && sysAppPath(h.App) == "" {
 		return hotkeyMissing
 	}
 	if _, ok := shortcutOwner(n, g.ownShortcuts(), settings.Settings{}, h); ok || g.registeredOwner(n, h) {
@@ -368,7 +368,7 @@ func (g *gocast) setHotkey(h settings.Hotkey, accel string) error {
 		}
 		return nil
 	}
-	installed := h.App == "" || running.AppPath(h.App) != ""
+	installed := h.App == "" || sysAppPath(h.App) != ""
 	g.unregisterHotkey(h)
 	state := hotkeyMissing
 	if installed {
@@ -407,7 +407,7 @@ func (g *gocast) moveHotkey(from, to settings.Hotkey) error {
 	g.unregisterHotkey(from)
 	g.unregisterHotkey(to)
 	state := hotkeyMissing
-	if to.App == "" || running.AppPath(to.App) != "" {
+	if to.App == "" || sysAppPath(to.App) != "" {
 		if err := globalShortcuts.Register(accel, g.hotkeyFunc(to)); err != nil {
 			log.Printf("hotkey %v: %s: %v", to, accel, err)
 			g.reregister(from, fromKey, fromOn)
@@ -500,10 +500,10 @@ func (g *gocast) refreshAppHotkeys(all bool) {
 	}
 	for h, st := range g.hotkeyStates {
 		switch {
-		case st == hotkeyMissing && running.AppPath(h.App) != "",
+		case st == hotkeyMissing && sysAppPath(h.App) != "",
 			all && st == hotkeyTaken:
 			g.hotkeyStates[h] = g.registerHotkey(h)
-		case all && st == hotkeyOn && h.App != "" && running.AppPath(h.App) == "":
+		case all && st == hotkeyOn && h.App != "" && sysAppPath(h.App) == "":
 			g.unregisterHotkey(h)
 			g.hotkeyStates[h] = hotkeyMissing
 		}
@@ -539,12 +539,12 @@ func (g *gocast) appHotkeyPressed(bundleID string) {
 	if panel {
 		g.launcher.hide()
 	}
-	front, hidden := running.Frontmost()
+	front, hidden := sysFrontmost()
 	if appHotkeyAction(bundleID, front, hidden, panel) == appHide {
-		running.Hide(bundleID)
+		sysHide(bundleID)
 		return
 	}
-	if err := running.Open(bundleID); err != nil {
+	if err := sysOpen(bundleID); err != nil {
 		log.Printf("hotkey: opening %s: %v", bundleID, err)
 		if errors.Is(err, running.ErrNotInstalled) { // uninstalled meanwhile
 			h := settings.Hotkey{App: bundleID}

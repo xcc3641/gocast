@@ -16,7 +16,6 @@ import (
 	"github.com/egoist/mygo/plugins/sfsymbols"
 	"github.com/egoist/mygo/ui"
 
-	"gocast/internal/running"
 	"gocast/internal/search"
 	"gocast/internal/settings"
 	"gocast/internal/shortcut"
@@ -183,7 +182,7 @@ func (p *prefsWindow) makeHotkeyRows() []hkRow {
 		}
 		// Not among the apps the search panel found: installed elsewhere,
 		// or gone (design.md 4.4: greyed, kept for its hotkey).
-		r := hkRow{id: "app:" + h.App, item: h, kind: hkApp, path: running.AppPath(h.App)}
+		r := hkRow{id: "app:" + h.App, item: h, kind: hkApp, path: sysAppPath(h.App)}
 		r.missing = r.path == ""
 		if r.missing {
 			r.name = g.hotkeyLabel(h)

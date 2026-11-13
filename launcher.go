@@ -12,7 +12,6 @@ import (
 	"gocast/internal/apps"
 	"gocast/internal/calc"
 	"gocast/internal/presets"
-	"gocast/internal/running"
 	"gocast/internal/search"
 	"gocast/internal/settings"
 	"gocast/locales"
@@ -708,7 +707,7 @@ func primaryName(e entry) string {
 func (l *launcher) isRunning(id string) bool {
 	on, ok := l.running[id]
 	if !ok {
-		on = running.IsRunning(id)
+		on = sysIsRunning(id)
 		l.running[id] = on
 	}
 	return on
@@ -808,9 +807,9 @@ func (l *launcher) actions() []action {
 		}
 		h, _ := entryHotkey(e)
 		as = append(as, l.hotkeyActions(h, app.Name, e)...)
-		if running.IsRunning(app.ID) {
+		if sysIsRunning(app.ID) {
 			as = append(as, action{"xmark.circle", locales.ActionQuitApp(app.Name), nil, func() {
-				running.Quit(app.ID)
+				sysQuit(app.ID)
 				l.hide()
 			}})
 		}

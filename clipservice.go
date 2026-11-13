@@ -40,7 +40,6 @@ import (
 
 	"gocast/internal/apps"
 	"gocast/internal/clipboard"
-	"gocast/internal/running"
 )
 
 // clipService is the clipboard history of the app.
@@ -526,7 +525,7 @@ func seedHistory(store *clipboard.Store, clock *seedClock, dir, locale string) {
 	// the system would give them.
 	app := func(id string) clipboard.App {
 		name := id
-		if path := running.AppPath(id); path != "" {
+		if path := sysAppPath(id); path != "" {
 			name = strings.TrimSuffix(filepath.Base(path), ".app")
 			if n := apps.Names(path).Localized(locale); n != "" {
 				name = n
