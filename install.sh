@@ -15,7 +15,7 @@ name='gocast'
 # The commands in ~/.local/bin that run the app (linux.command), if any,
 # separated by spaces.
 command_names=''
-version='0.1.3'
+version='0.1.4'
 # Where the manifests of the latest version are, with updates: in the
 # release of the newest tag with the prefix when the repository's releases
 # (api) hold others too.
