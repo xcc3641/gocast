@@ -668,3 +668,25 @@ func TestNewRates(t *testing.T) {
 		t.Errorf("rates = %+v", r)
 	}
 }
+
+func TestDisplay(t *testing.T) {
+	for _, c := range []struct{ in, want string }{
+		{"（12+8）*3", "(12+8)×3"},
+		{"10/4", "10÷4"},
+		{"2 ** 3", "2 ** 3"},
+		{"100 km/h in mph", "100 km/h in mph"},
+		{"10 km / 2 h", "10 km ÷ 2 h"},
+		{"6 ft/2", "6 ft÷2"},
+		{"2×3÷4", "2×3÷4"},
+		{"100 美元换日元", "100 美元换日元"},
+	} {
+		res, _ := Eval(c.in, Env{Region: "US"})
+		in := res.Input
+		if in == "" {
+			in = c.in
+		}
+		if got := Display(in); got != c.want {
+			t.Errorf("Display(%q) = %q, want %q", in, got, c.want)
+		}
+	}
+}

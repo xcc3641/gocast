@@ -157,8 +157,13 @@ func gocastMark(c *ui.Context, k tokens) ui.Element {
 // keycap draws a key of a shortcut, as ⌘ or K, in menus and Settings;
 // assistive technology skips it (the control says its shortcut).
 func keycap(c *ui.Context, k tokens, label string, size float32) {
+	keycapColored(c, k, label, size, k.textOnGlass)
+}
+
+// keycapColored is keycap, its label in color: faded in a dimmed row.
+func keycapColored(c *ui.Context, k tokens, label string, size float32, color ui.Color) {
 	ui.Box(c).Height(20).MinWidth(20).Padding(0, 5).Radius(5).Background(k.keycap).Center().AccessHidden(true).Children(func() {
-		capLabel(c, label, size, k.textOnGlass)
+		capLabel(c, label, size, color)
 	})
 }
 
@@ -191,9 +196,14 @@ func capNudge(label string) float32 {
 
 // keycaps draws the keys of a shortcut, 4 apart.
 func keycaps(c *ui.Context, k tokens, caps []string, size float32) {
+	keycapsColored(c, k, caps, size, k.textOnGlass)
+}
+
+// keycapsColored is keycaps, their labels in color.
+func keycapsColored(c *ui.Context, k tokens, caps []string, size float32, color ui.Color) {
 	ui.Row(c).Gap(4).AlignItems(ui.Center).Shrink(0).AccessHidden(true).Children(func() {
 		for _, cp := range caps {
-			keycap(c, k, cp, size)
+			keycapColored(c, k, cp, size, color)
 		}
 	})
 }
@@ -415,24 +425,41 @@ func menuItems(c *ui.Context, rows func()) {
 // menuRow is a row of a popup menu: an icon, its name, then at the right
 // a note (a folder) or keys, in the selection gray when chosen.
 func menuRow(c *ui.Context, k tokens, icon, label, note string, caps []string, chosen bool, act func()) {
+	menuRowDim(c, k, icon, label, note, caps, chosen, false, act)
+}
+
+// menuRowDim is menuRow, dimmed for an action that can't be taken (the
+// calculator's with no answer, design.md 2.3a): its colors faded, as an
+// actions capsule's segment, and not clickable.
+func menuRowDim(c *ui.Context, k tokens, icon, label, note string, caps []string, chosen, dim bool, act func()) {
 	bg := ui.Transparent
 	if chosen {
 		bg = k.selection
 	}
+	text, secondary := k.text, k.textOnGlass
+	if dim {
+		text, secondary = text.Alpha(0.4), secondary.Alpha(0.4)
+	}
 	c.Key(label)
-	ui.Row(c).Height(menuRowHeight).Padding(0, menuRowPadR, 0, menuRowPad).Radius(8).Gap(8).AlignItems(ui.Center).Background(bg).
-		Role(ui.RoleMenuItem).Label(label).OnClick(act).Children(func() {
+	r := ui.Row(c).Height(menuRowHeight).Padding(0, menuRowPadR, 0, menuRowPad).Radius(8).Gap(8).AlignItems(ui.Center).Background(bg).
+		Role(ui.RoleMenuItem).Label(label)
+	if dim {
+		r.AccessDisabled(true)
+	} else {
+		r.OnClick(act)
+	}
+	r.Children(func() {
 		if icon != "" {
-			sfsymbols.Symbol(c, icon).Size(16).Color(k.text)
+			sfsymbols.Symbol(c, icon).Size(16).Color(text)
 		}
 		// The name cut at its end, the keys whole, 12 apart at least
 		// (design.md 2.5): the row's 8 and 4.
-		ui.Text(c, label).FontSize(13).TextColor(k.text).SingleLine().Shrink(1).Grow(1).Margin(0, menuNameGap-8, 0, 0)
+		ui.Text(c, label).FontSize(13).TextColor(text).SingleLine().Shrink(1).Grow(1).Margin(0, menuNameGap-8, 0, 0)
 		if note != "" {
-			ui.Text(c, note).FontSize(12).TextColor(k.textOnGlass).SingleLine().Shrink(1)
+			ui.Text(c, note).FontSize(12).TextColor(secondary).SingleLine().Shrink(1)
 		}
 		if len(caps) > 0 {
-			keycaps(c, k, caps, 12)
+			keycapsColored(c, k, caps, 12, secondary)
 		}
 	})
 }

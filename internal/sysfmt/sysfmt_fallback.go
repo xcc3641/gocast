@@ -13,6 +13,14 @@ func fallbackDate(t, now time.Time) string {
 	return t.Format("01-02 15:04")
 }
 
+// fallbackDay is Day where the system can't say it.
+func fallbackDay(t, now time.Time) string {
+	if t.In(now.Location()).Year() != now.Year() {
+		return t.Format("2006-01-02")
+	}
+	return t.Format("01-02")
+}
+
 // fallbackBytes is Bytes where the system can't say it, in decimal units
 // as Finder's.
 func fallbackBytes(n int64) string {

@@ -171,3 +171,25 @@ func TestClipboardSettings(t *testing.T) {
 		t.Errorf("ignored apps = %v", got)
 	}
 }
+
+func TestCalculatorSetting(t *testing.T) {
+	var s Settings
+	if !s.Calculator() { // design.md 4.4: on by default
+		t.Fatal("the calculator is off by default")
+	}
+	path := filepath.Join(t.TempDir(), "settings.json")
+	if err := s.Save(path); err != nil {
+		t.Fatal(err)
+	}
+	if data, _ := os.ReadFile(path); strings.Contains(string(data), "calculator") {
+		t.Errorf("the default is written: %s", data)
+	}
+	s.CalculatorOff = true
+	if err := s.Save(path); err != nil {
+		t.Fatal(err)
+	}
+	got, err := Load(path)
+	if err != nil || got.Calculator() {
+		t.Errorf("off, read back on: %v", err)
+	}
+}

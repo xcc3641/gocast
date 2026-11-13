@@ -1,7 +1,7 @@
 // Package settings keeps Gocast's preferences in settings.json: the two
 // global shortcuts, the terminal's font size, whether the floating
-// terminal hides as the user clicks away, its size, and the tips
-// dismissed.
+// terminal hides as the user clicks away, its size, the tips dismissed,
+// the clipboard history's and the calculator's switches.
 package settings
 
 import (
@@ -62,6 +62,10 @@ type Settings struct {
 	// opens, without the suggestions (the switch "Show only the search
 	// field", off by default; design.md 2.5a).
 	SearchOnly bool `json:"searchFieldOnly,omitempty"`
+	// CalculatorOff: the search panel calculates nothing and Gocast
+	// fetches no exchange rates (the switch "Calculate in search", on by
+	// default; design.md 2.3a, 4.4).
+	CalculatorOff bool `json:"calculatorOff,omitempty"`
 
 	// The clipboard history (design.md 4.4 剪贴板). ClipboardShortcut
 	// opens it, "" for the default ⌃⌘V.
@@ -81,6 +85,9 @@ type Settings struct {
 	// and an empty list once the user removed them all.
 	ClipboardIgnoredApps *[]string `json:"clipboardIgnoredApps,omitempty"`
 }
+
+// Calculator reports whether the search panel calculates.
+func (s Settings) Calculator() bool { return !s.CalculatorOff }
 
 // Clipboard is the clipboard history's shortcut.
 func (s Settings) Clipboard() string {

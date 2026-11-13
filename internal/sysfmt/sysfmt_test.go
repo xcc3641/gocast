@@ -52,3 +52,32 @@ func TestBytes(t *testing.T) {
 		t.Errorf("fallbackBytes = %q", got)
 	}
 }
+
+func TestDay(t *testing.T) {
+	y, m, d := time.Now().Date()
+	now := time.Date(y, m, d, 15, 0, 0, 0, time.Local)
+	if got := Day(now.Add(-time.Hour), now, "zh-Hans", false); got != "今天" {
+		t.Errorf("today in Chinese: %q", got)
+	}
+	if got := Day(now.AddDate(0, 0, -1), now, "en", false); got != "Yesterday" {
+		t.Errorf("yesterday in English: %q", got)
+	}
+	now = time.Date(2026, 11, 13, 15, 0, 0, 0, time.Local)
+	earlier := time.Date(2026, 11, 10, 0, 0, 0, 0, time.Local)
+	if got := Day(earlier, now, "zh-Hans", false); got != "11月10日" {
+		t.Errorf("earlier this year in Chinese: %q", got)
+	}
+	if got := Day(earlier, now, "en", true); !strings.Contains(got, "November") || strings.Contains(got, "2026") {
+		t.Errorf("earlier this year in English, long: %q", got)
+	}
+	if got := Day(earlier.AddDate(-1, 0, 0), now, "en", false); !strings.Contains(got, "2025") {
+		t.Errorf("last year in English: %q", got)
+	}
+}
+
+func TestSeparators(t *testing.T) {
+	group, decimal := Separators()
+	if decimal == "" || decimal == group {
+		t.Errorf("Separators() = %q, %q", group, decimal)
+	}
+}

@@ -2,7 +2,9 @@
 // clipboard history's info (design.md 2.8.5, copy.md 6.3): when an item
 // was last copied in the system's relative words and its 12- or 24-hour
 // clock ("今天 14:05", "昨天 09:12", "11月10日 18:30"), and a size in its
-// byte units ("84 KB").
+// byte units ("84 KB"); and for the calculator's card (design.md 2.3a,
+// copy.md 7.1), the day exchange rates are from ("今天", "11月10日") and
+// the system's grouping separator and decimal point.
 package sysfmt
 
 import "time"

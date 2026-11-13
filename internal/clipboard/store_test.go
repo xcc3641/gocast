@@ -563,3 +563,31 @@ func TestMain(m *testing.M) {
 	trusted = func() bool { return false }
 	os.Exit(m.Run())
 }
+
+// Gocast's own copies with the history off: on the pasteboard, not kept,
+// and not recorded by the watcher.
+func TestCopyText(t *testing.T) {
+	s, b, _ := memStore(t)
+	defer func(t func() bool, k func() error) { trusted, keystroke = t, k }(trusted, keystroke)
+	pressed := 0
+	trusted = func() bool { return true }
+	keystroke = func() error { pressed++; return nil }
+
+	w := NewWatcher(s, WatcherOptions{Frontmost: func() App { return safari }})
+	w.last = b.ChangeCount()
+	if err := s.CopyText("15,432 JPY"); err != nil {
+		t.Fatal(err)
+	}
+	if got := b.writes[len(b.writes)-1]; got.Text != "15,432 JPY" {
+		t.Errorf("wrote %+v", got)
+	}
+	if w.Poll() || s.Len() != 0 {
+		t.Error("recorded Gocast's own copy")
+	}
+	if err := s.PasteText("42"); err != nil || pressed != 1 {
+		t.Errorf("paste: %v, %d", err, pressed)
+	}
+	if err := s.CopyText(""); !errors.Is(err, ErrEmpty) {
+		t.Errorf("empty: %v", err)
+	}
+}

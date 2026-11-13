@@ -48,6 +48,7 @@ type gocast struct {
 	prefs    *prefsWindow
 	tray     *mygo.Tray
 	clip     *clipService
+	calc     *calcService
 
 	settings settings.Settings
 	// The shortcuts registered, or "": the search panel's, the floating
@@ -301,12 +302,14 @@ func (g *gocast) ready() {
 	// The clipboard history, read on a goroutine from now: the view shows
 	// it at once later (design.md 2.8.8).
 	g.clip = newClipService(g)
+	g.calc = newCalcService(g)
 	g.launcher = newLauncher(g)
 	g.term = newTermPanel(g)
 	g.prefs = newPrefsWindow(g)
 	g.registerShortcuts()
 	g.setUpTray()
 	g.clip.start()
+	g.calc.start()
 	mygo.App.OnWillQuit(func(*mygo.QuitEvent) { g.clip.stop() })
 	// Back from System Settings, where the user may have freed ⌘Space.
 	mygo.App.OnDidBecomeActive(func() {

@@ -64,6 +64,7 @@ type prefsWindow struct {
 	login      bool
 	autoUpdate bool // the updater's automatic checks (updater.json)
 	searchOnly bool // the search panel opens with its search field alone
+	calculator bool // the search panel calculates (design.md 2.3a)
 	fontSize   float64
 	termWidth  float64 // percent of the work area
 	termHeight float64
@@ -117,6 +118,7 @@ func (p *prefsWindow) show(page string) {
 	p.login = mygo.App.OpenAtLogin()
 	p.autoUpdate = updater.AutomaticChecks()
 	p.searchOnly = p.g.settings.SearchOnly
+	p.calculator = p.g.settings.Calculator()
 	p.fontSize = float64(p.g.settings.Font())
 	p.termWidth = float64(p.g.settings.TermWidth())
 	p.termHeight = float64(p.g.settings.TermHeight())
@@ -775,6 +777,12 @@ func (p *prefsWindow) generalPage(c *ui.Context, k tokens) {
 			if ui.Switch(c, &p.searchOnly).Label(locales.GeneralSearchOnly()).Changed() {
 				p.g.settings.SearchOnly = p.searchOnly
 				p.g.saveSettings()
+			}
+		})
+		// Off: no card, no fetching; the rates kept stay (design.md 4.4).
+		g.row(c, k, locales.GeneralCalculator(), locales.GeneralCalculatorHint(), k.textSecondary, func() {
+			if ui.Switch(c, &p.calculator).Label(locales.GeneralCalculator()).Changed() {
+				p.g.calc.setOn(p.calculator)
 			}
 		})
 	})

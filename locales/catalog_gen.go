@@ -3199,3 +3199,4175 @@ func ClipInfoLabel(label string, value string) string {
 func (msgs Messages) ClipInfoLabel(label string, value string) string {
 	return Catalog.Format(msgs.locale, "clipInfoLabel", map[string]any{"label": label, "value": value})
 }
+
+// CalcCopyAnswer says "Copy Answer"
+// in the language the app shows.
+//
+// Calculator card (copy.md 7.2): the primary action (↵) in the actions
+// capsule, and the first row of ⌘K.
+func CalcCopyAnswer() string { return In(i18n.Locale()).CalcCopyAnswer() }
+
+// CalcCopyAnswer says "Copy Answer"
+// in the language of msgs.
+//
+// Calculator card (copy.md 7.2): the primary action (↵) in the actions
+// capsule, and the first row of ⌘K.
+func (msgs Messages) CalcCopyAnswer() string {
+	return Catalog.Format(msgs.locale, "calcCopyAnswer", nil)
+}
+
+// CalcCopyEquation says "Copy Expression and Answer"
+// in the language the app shows.
+//
+// Calculator ⌘K, third row: copies “100 USD = 15,432 JPY”.
+func CalcCopyEquation() string { return In(i18n.Locale()).CalcCopyEquation() }
+
+// CalcCopyEquation says "Copy Expression and Answer"
+// in the language of msgs.
+//
+// Calculator ⌘K, third row: copies “100 USD = 15,432 JPY”.
+func (msgs Messages) CalcCopyEquation() string {
+	return Catalog.Format(msgs.locale, "calcCopyEquation", nil)
+}
+
+// CalcCopyNumber says "Copy Number Only"
+// in the language the app shows.
+//
+// Calculator ⌘K, fourth row: copies the bare number, “15432.12”, no
+// grouping, no unit.
+func CalcCopyNumber() string { return In(i18n.Locale()).CalcCopyNumber() }
+
+// CalcCopyNumber says "Copy Number Only"
+// in the language of msgs.
+//
+// Calculator ⌘K, fourth row: copies the bare number, “15432.12”, no
+// grouping, no unit.
+func (msgs Messages) CalcCopyNumber() string {
+	return Catalog.Format(msgs.locale, "calcCopyNumber", nil)
+}
+
+// CalcRatesFrom says "{currency} · Rates from {date}"
+// in the language the app shows.
+//
+// Calculator card, the right side's note when exchange rates were used
+// (copy.md 7.1). date is the system's relative day: Today, Yesterday, Nov
+// 10.
+func CalcRatesFrom(currency string, date string) string {
+	return In(i18n.Locale()).CalcRatesFrom(currency, date)
+}
+
+// CalcRatesFrom says "{currency} · Rates from {date}"
+// in the language of msgs.
+//
+// Calculator card, the right side's note when exchange rates were used
+// (copy.md 7.1). date is the system's relative day: Today, Yesterday, Nov
+// 10.
+func (msgs Messages) CalcRatesFrom(currency string, date string) string {
+	return Catalog.Format(msgs.locale, "calcRatesFrom", map[string]any{"currency": currency, "date": date})
+}
+
+// CalcNeedsRates says "Go online once to get exchange rates"
+// in the language the app shows.
+//
+// Calculator card, right side: a currency conversion with no rates yet,
+// offline (copy.md 7.1).
+func CalcNeedsRates() string { return In(i18n.Locale()).CalcNeedsRates() }
+
+// CalcNeedsRates says "Go online once to get exchange rates"
+// in the language of msgs.
+//
+// Calculator card, right side: a currency conversion with no rates yet,
+// offline (copy.md 7.1).
+func (msgs Messages) CalcNeedsRates() string {
+	return Catalog.Format(msgs.locale, "calcNeedsRates", nil)
+}
+
+// CalcGettingRates says "Getting exchange rates…"
+// in the language the app shows.
+//
+// Calculator card, right side: the first fetch of the rates under way
+// (copy.md 7.1).
+func CalcGettingRates() string { return In(i18n.Locale()).CalcGettingRates() }
+
+// CalcGettingRates says "Getting exchange rates…"
+// in the language of msgs.
+//
+// Calculator card, right side: the first fetch of the rates under way
+// (copy.md 7.1).
+func (msgs Messages) CalcGettingRates() string {
+	return Catalog.Format(msgs.locale, "calcGettingRates", nil)
+}
+
+// CalcCantCalculate says "Can’t calculate this"
+// in the language the app shows.
+//
+// Calculator card, right side: division by zero, units that don't convert
+// (copy.md 7.1).
+func CalcCantCalculate() string { return In(i18n.Locale()).CalcCantCalculate() }
+
+// CalcCantCalculate says "Can’t calculate this"
+// in the language of msgs.
+//
+// Calculator card, right side: division by zero, units that don't convert
+// (copy.md 7.1).
+func (msgs Messages) CalcCantCalculate() string {
+	return Catalog.Format(msgs.locale, "calcCantCalculate", nil)
+}
+
+// CalcLabel says "{expression} equals {answer}, Calculator"
+// in the language the app shows.
+//
+// Screen reader: the calculator card (copy.md 7.4), units and currencies by
+// their full names.
+func CalcLabel(expression string, answer string) string {
+	return In(i18n.Locale()).CalcLabel(expression, answer)
+}
+
+// CalcLabel says "{expression} equals {answer}, Calculator"
+// in the language of msgs.
+//
+// Screen reader: the calculator card (copy.md 7.4), units and currencies by
+// their full names.
+func (msgs Messages) CalcLabel(expression string, answer string) string {
+	return Catalog.Format(msgs.locale, "calcLabel", map[string]any{"expression": expression, "answer": answer})
+}
+
+// CalcLabelRates says "{label}, rates from {date}"
+// in the language the app shows.
+//
+// Screen reader: the calculator card's label with the date of the exchange
+// rates appended (copy.md 7.4).
+func CalcLabelRates(label string, date string) string {
+	return In(i18n.Locale()).CalcLabelRates(label, date)
+}
+
+// CalcLabelRates says "{label}, rates from {date}"
+// in the language of msgs.
+//
+// Screen reader: the calculator card's label with the date of the exchange
+// rates appended (copy.md 7.4).
+func (msgs Messages) CalcLabelRates(label string, date string) string {
+	return Catalog.Format(msgs.locale, "calcLabelRates", map[string]any{"label": label, "date": date})
+}
+
+// CalcLabelNeedsRates says "{expression}, go online once to get exchange rates, Calculator"
+// in the language the app shows.
+//
+// Screen reader: the calculator card without rates, offline (copy.md 7.4).
+func CalcLabelNeedsRates(expression string) string {
+	return In(i18n.Locale()).CalcLabelNeedsRates(expression)
+}
+
+// CalcLabelNeedsRates says "{expression}, go online once to get exchange rates, Calculator"
+// in the language of msgs.
+//
+// Screen reader: the calculator card without rates, offline (copy.md 7.4).
+func (msgs Messages) CalcLabelNeedsRates(expression string) string {
+	return Catalog.Format(msgs.locale, "calcLabelNeedsRates", map[string]any{"expression": expression})
+}
+
+// CalcLabelGettingRates says "{expression}, getting exchange rates, Calculator"
+// in the language the app shows.
+//
+// Screen reader: the calculator card while the rates are first fetched
+// (copy.md 7.4).
+func CalcLabelGettingRates(expression string) string {
+	return In(i18n.Locale()).CalcLabelGettingRates(expression)
+}
+
+// CalcLabelGettingRates says "{expression}, getting exchange rates, Calculator"
+// in the language of msgs.
+//
+// Screen reader: the calculator card while the rates are first fetched
+// (copy.md 7.4).
+func (msgs Messages) CalcLabelGettingRates(expression string) string {
+	return Catalog.Format(msgs.locale, "calcLabelGettingRates", map[string]any{"expression": expression})
+}
+
+// CalcLabelCantCalculate says "{expression}, can’t calculate this, Calculator"
+// in the language the app shows.
+//
+// Screen reader: the calculator card when it can't calculate (copy.md 7.4).
+func CalcLabelCantCalculate(expression string) string {
+	return In(i18n.Locale()).CalcLabelCantCalculate(expression)
+}
+
+// CalcLabelCantCalculate says "{expression}, can’t calculate this, Calculator"
+// in the language of msgs.
+//
+// Screen reader: the calculator card when it can't calculate (copy.md 7.4).
+func (msgs Messages) CalcLabelCantCalculate(expression string) string {
+	return Catalog.Format(msgs.locale, "calcLabelCantCalculate", map[string]any{"expression": expression})
+}
+
+// CalcLabelIncomplete says "{expression}, unfinished, last answer {answer}, Calculator"
+// in the language the app shows.
+//
+// Screen reader: the calculator card while the expression is half typed,
+// the last answer kept greyed (design.md 2.3a). Not in copy.md: to check.
+func CalcLabelIncomplete(expression string, answer string) string {
+	return In(i18n.Locale()).CalcLabelIncomplete(expression, answer)
+}
+
+// CalcLabelIncomplete says "{expression}, unfinished, last answer {answer}, Calculator"
+// in the language of msgs.
+//
+// Screen reader: the calculator card while the expression is half typed,
+// the last answer kept greyed (design.md 2.3a). Not in copy.md: to check.
+func (msgs Messages) CalcLabelIncomplete(expression string, answer string) string {
+	return Catalog.Format(msgs.locale, "calcLabelIncomplete", map[string]any{"expression": expression, "answer": answer})
+}
+
+// CalcSpokenTimes says "times"
+// in the language the app shows.
+//
+// Screen reader: × in an expression (copy.md 7.4).
+func CalcSpokenTimes() string { return In(i18n.Locale()).CalcSpokenTimes() }
+
+// CalcSpokenTimes says "times"
+// in the language of msgs.
+//
+// Screen reader: × in an expression (copy.md 7.4).
+func (msgs Messages) CalcSpokenTimes() string {
+	return Catalog.Format(msgs.locale, "calcSpokenTimes", nil)
+}
+
+// CalcSpokenDividedBy says "divided by"
+// in the language the app shows.
+//
+// Screen reader: ÷ in an expression (copy.md 7.4).
+func CalcSpokenDividedBy() string { return In(i18n.Locale()).CalcSpokenDividedBy() }
+
+// CalcSpokenDividedBy says "divided by"
+// in the language of msgs.
+//
+// Screen reader: ÷ in an expression (copy.md 7.4).
+func (msgs Messages) CalcSpokenDividedBy() string {
+	return Catalog.Format(msgs.locale, "calcSpokenDividedBy", nil)
+}
+
+// CalcSpokenPower says "{base} to the power of {exponent}"
+// in the language the app shows.
+//
+// Screen reader: ^ in an expression (copy.md 7.4).
+func CalcSpokenPower(base string, exponent string) string {
+	return In(i18n.Locale()).CalcSpokenPower(base, exponent)
+}
+
+// CalcSpokenPower says "{base} to the power of {exponent}"
+// in the language of msgs.
+//
+// Screen reader: ^ in an expression (copy.md 7.4).
+func (msgs Messages) CalcSpokenPower(base string, exponent string) string {
+	return Catalog.Format(msgs.locale, "calcSpokenPower", map[string]any{"base": base, "exponent": exponent})
+}
+
+// CalcSpokenPercent says "{number} percent"
+// in the language the app shows.
+//
+// Screen reader: % in an expression (copy.md 7.4).
+func CalcSpokenPercent(number string) string { return In(i18n.Locale()).CalcSpokenPercent(number) }
+
+// CalcSpokenPercent says "{number} percent"
+// in the language of msgs.
+//
+// Screen reader: % in an expression (copy.md 7.4).
+func (msgs Messages) CalcSpokenPercent(number string) string {
+	return Catalog.Format(msgs.locale, "calcSpokenPercent", map[string]any{"number": number})
+}
+
+// CalcSymbolDay says "d"
+// in the language the app shows.
+//
+// Calculator answer: the unit of days in a time, “1 d 4 h” (copy.md
+// 7.1).
+func CalcSymbolDay() string { return In(i18n.Locale()).CalcSymbolDay() }
+
+// CalcSymbolDay says "d"
+// in the language of msgs.
+//
+// Calculator answer: the unit of days in a time, “1 d 4 h” (copy.md
+// 7.1).
+func (msgs Messages) CalcSymbolDay() string {
+	return Catalog.Format(msgs.locale, "calcSymbolDay", nil)
+}
+
+// CalcSymbolHour says "h"
+// in the language the app shows.
+//
+// Calculator answer: the unit of hours in a time, “2 h 25 min” (copy.md
+// 7.1).
+func CalcSymbolHour() string { return In(i18n.Locale()).CalcSymbolHour() }
+
+// CalcSymbolHour says "h"
+// in the language of msgs.
+//
+// Calculator answer: the unit of hours in a time, “2 h 25 min” (copy.md
+// 7.1).
+func (msgs Messages) CalcSymbolHour() string {
+	return Catalog.Format(msgs.locale, "calcSymbolHour", nil)
+}
+
+// CalcSymbolMinute says "min"
+// in the language the app shows.
+//
+// Calculator answer: the unit of minutes in a time, “2 h 25 min”
+// (copy.md 7.1).
+func CalcSymbolMinute() string { return In(i18n.Locale()).CalcSymbolMinute() }
+
+// CalcSymbolMinute says "min"
+// in the language of msgs.
+//
+// Calculator answer: the unit of minutes in a time, “2 h 25 min”
+// (copy.md 7.1).
+func (msgs Messages) CalcSymbolMinute() string {
+	return Catalog.Format(msgs.locale, "calcSymbolMinute", nil)
+}
+
+// CalcSymbolSecond says "s"
+// in the language the app shows.
+//
+// Calculator answer: the unit of seconds in a time, “45 s”.
+func CalcSymbolSecond() string { return In(i18n.Locale()).CalcSymbolSecond() }
+
+// CalcSymbolSecond says "s"
+// in the language of msgs.
+//
+// Calculator answer: the unit of seconds in a time, “45 s”.
+func (msgs Messages) CalcSymbolSecond() string {
+	return Catalog.Format(msgs.locale, "calcSymbolSecond", nil)
+}
+
+// CalcSymbolWeek says "wk"
+// in the language the app shows.
+//
+// Calculator answer: the unit of weeks.
+func CalcSymbolWeek() string { return In(i18n.Locale()).CalcSymbolWeek() }
+
+// CalcSymbolWeek says "wk"
+// in the language of msgs.
+//
+// Calculator answer: the unit of weeks.
+func (msgs Messages) CalcSymbolWeek() string {
+	return Catalog.Format(msgs.locale, "calcSymbolWeek", nil)
+}
+
+// CalcSymbolMillisecond says "ms"
+// in the language the app shows.
+//
+// Calculator answer: the unit of milliseconds.
+func CalcSymbolMillisecond() string { return In(i18n.Locale()).CalcSymbolMillisecond() }
+
+// CalcSymbolMillisecond says "ms"
+// in the language of msgs.
+//
+// Calculator answer: the unit of milliseconds.
+func (msgs Messages) CalcSymbolMillisecond() string {
+	return Catalog.Format(msgs.locale, "calcSymbolMillisecond", nil)
+}
+
+// GeneralCalculator says "Calculate in search"
+// in the language the app shows.
+//
+// General: switch, the first group's fourth row; on by default (copy.md
+// 7.3).
+func GeneralCalculator() string { return In(i18n.Locale()).GeneralCalculator() }
+
+// GeneralCalculator says "Calculate in search"
+// in the language of msgs.
+//
+// General: switch, the first group's fourth row; on by default (copy.md
+// 7.3).
+func (msgs Messages) GeneralCalculator() string {
+	return Catalog.Format(msgs.locale, "generalCalculator", nil)
+}
+
+// GeneralCalculatorHint says "Type math, units or currencies in the search panel to get the answer on top. Exchange rates are fetched once a day."
+// in the language the app shows.
+//
+// General: under Calculate in search (copy.md 7.3).
+func GeneralCalculatorHint() string { return In(i18n.Locale()).GeneralCalculatorHint() }
+
+// GeneralCalculatorHint says "Type math, units or currencies in the search panel to get the answer on top. Exchange rates are fetched once a day."
+// in the language of msgs.
+//
+// General: under Calculate in search (copy.md 7.3).
+func (msgs Messages) GeneralCalculatorHint() string {
+	return Catalog.Format(msgs.locale, "generalCalculatorHint", nil)
+}
+
+// CalcUnitNm says "nanometers"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit nm, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitNm() string { return In(i18n.Locale()).CalcUnitNm() }
+
+// CalcUnitNm says "nanometers"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit nm, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitNm() string {
+	return Catalog.Format(msgs.locale, "calcUnitNm", nil)
+}
+
+// CalcUnitUm says "micrometers"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit um, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitUm() string { return In(i18n.Locale()).CalcUnitUm() }
+
+// CalcUnitUm says "micrometers"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit um, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitUm() string {
+	return Catalog.Format(msgs.locale, "calcUnitUm", nil)
+}
+
+// CalcUnitMm says "millimeters"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit mm, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitMm() string { return In(i18n.Locale()).CalcUnitMm() }
+
+// CalcUnitMm says "millimeters"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit mm, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitMm() string {
+	return Catalog.Format(msgs.locale, "calcUnitMm", nil)
+}
+
+// CalcUnitCm says "centimeters"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit cm, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitCm() string { return In(i18n.Locale()).CalcUnitCm() }
+
+// CalcUnitCm says "centimeters"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit cm, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitCm() string {
+	return Catalog.Format(msgs.locale, "calcUnitCm", nil)
+}
+
+// CalcUnitDm says "decimeters"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit dm, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitDm() string { return In(i18n.Locale()).CalcUnitDm() }
+
+// CalcUnitDm says "decimeters"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit dm, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitDm() string {
+	return Catalog.Format(msgs.locale, "calcUnitDm", nil)
+}
+
+// CalcUnitM says "meters"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit m, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitM() string { return In(i18n.Locale()).CalcUnitM() }
+
+// CalcUnitM says "meters"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit m, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitM() string {
+	return Catalog.Format(msgs.locale, "calcUnitM", nil)
+}
+
+// CalcUnitKm says "kilometers"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit km, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitKm() string { return In(i18n.Locale()).CalcUnitKm() }
+
+// CalcUnitKm says "kilometers"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit km, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitKm() string {
+	return Catalog.Format(msgs.locale, "calcUnitKm", nil)
+}
+
+// CalcUnitIn says "inches"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit in, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitIn() string { return In(i18n.Locale()).CalcUnitIn() }
+
+// CalcUnitIn says "inches"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit in, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitIn() string {
+	return Catalog.Format(msgs.locale, "calcUnitIn", nil)
+}
+
+// CalcUnitFt says "feet"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit ft, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitFt() string { return In(i18n.Locale()).CalcUnitFt() }
+
+// CalcUnitFt says "feet"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit ft, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitFt() string {
+	return Catalog.Format(msgs.locale, "calcUnitFt", nil)
+}
+
+// CalcUnitYd says "yards"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit yd, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitYd() string { return In(i18n.Locale()).CalcUnitYd() }
+
+// CalcUnitYd says "yards"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit yd, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitYd() string {
+	return Catalog.Format(msgs.locale, "calcUnitYd", nil)
+}
+
+// CalcUnitMi says "miles"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit mi, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitMi() string { return In(i18n.Locale()).CalcUnitMi() }
+
+// CalcUnitMi says "miles"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit mi, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitMi() string {
+	return Catalog.Format(msgs.locale, "calcUnitMi", nil)
+}
+
+// CalcUnitNmi says "nautical miles"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit nmi, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitNmi() string { return In(i18n.Locale()).CalcUnitNmi() }
+
+// CalcUnitNmi says "nautical miles"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit nmi, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitNmi() string {
+	return Catalog.Format(msgs.locale, "calcUnitNmi", nil)
+}
+
+// CalcUnitChi says "chi"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit chi, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitChi() string { return In(i18n.Locale()).CalcUnitChi() }
+
+// CalcUnitChi says "chi"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit chi, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitChi() string {
+	return Catalog.Format(msgs.locale, "calcUnitChi", nil)
+}
+
+// CalcUnitCun says "cun"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit cun, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitCun() string { return In(i18n.Locale()).CalcUnitCun() }
+
+// CalcUnitCun says "cun"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit cun, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitCun() string {
+	return Catalog.Format(msgs.locale, "calcUnitCun", nil)
+}
+
+// CalcUnitMg says "milligrams"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit mg, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitMg() string { return In(i18n.Locale()).CalcUnitMg() }
+
+// CalcUnitMg says "milligrams"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit mg, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitMg() string {
+	return Catalog.Format(msgs.locale, "calcUnitMg", nil)
+}
+
+// CalcUnitG says "grams"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit g, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitG() string { return In(i18n.Locale()).CalcUnitG() }
+
+// CalcUnitG says "grams"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit g, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitG() string {
+	return Catalog.Format(msgs.locale, "calcUnitG", nil)
+}
+
+// CalcUnitKg says "kilograms"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit kg, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitKg() string { return In(i18n.Locale()).CalcUnitKg() }
+
+// CalcUnitKg says "kilograms"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit kg, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitKg() string {
+	return Catalog.Format(msgs.locale, "calcUnitKg", nil)
+}
+
+// CalcUnitT says "metric tons"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit t, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitT() string { return In(i18n.Locale()).CalcUnitT() }
+
+// CalcUnitT says "metric tons"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit t, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitT() string {
+	return Catalog.Format(msgs.locale, "calcUnitT", nil)
+}
+
+// CalcUnitOz says "ounces"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit oz, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitOz() string { return In(i18n.Locale()).CalcUnitOz() }
+
+// CalcUnitOz says "ounces"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit oz, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitOz() string {
+	return Catalog.Format(msgs.locale, "calcUnitOz", nil)
+}
+
+// CalcUnitLb says "pounds"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit lb, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitLb() string { return In(i18n.Locale()).CalcUnitLb() }
+
+// CalcUnitLb says "pounds"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit lb, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitLb() string {
+	return Catalog.Format(msgs.locale, "calcUnitLb", nil)
+}
+
+// CalcUnitSt says "stone"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit st, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitSt() string { return In(i18n.Locale()).CalcUnitSt() }
+
+// CalcUnitSt says "stone"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit st, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitSt() string {
+	return Catalog.Format(msgs.locale, "calcUnitSt", nil)
+}
+
+// CalcUnitCt says "carats"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit ct, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitCt() string { return In(i18n.Locale()).CalcUnitCt() }
+
+// CalcUnitCt says "carats"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit ct, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitCt() string {
+	return Catalog.Format(msgs.locale, "calcUnitCt", nil)
+}
+
+// CalcUnitJin says "jin"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit jin, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitJin() string { return In(i18n.Locale()).CalcUnitJin() }
+
+// CalcUnitJin says "jin"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit jin, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitJin() string {
+	return Catalog.Format(msgs.locale, "calcUnitJin", nil)
+}
+
+// CalcUnitLiang says "liang"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit liang, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcUnitLiang() string { return In(i18n.Locale()).CalcUnitLiang() }
+
+// CalcUnitLiang says "liang"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit liang, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitLiang() string {
+	return Catalog.Format(msgs.locale, "calcUnitLiang", nil)
+}
+
+// CalcUnitDegC says "degrees Celsius"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit degC, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitDegC() string { return In(i18n.Locale()).CalcUnitDegC() }
+
+// CalcUnitDegC says "degrees Celsius"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit degC, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitDegC() string {
+	return Catalog.Format(msgs.locale, "calcUnitDegC", nil)
+}
+
+// CalcUnitDegF says "degrees Fahrenheit"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit degF, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitDegF() string { return In(i18n.Locale()).CalcUnitDegF() }
+
+// CalcUnitDegF says "degrees Fahrenheit"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit degF, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitDegF() string {
+	return Catalog.Format(msgs.locale, "calcUnitDegF", nil)
+}
+
+// CalcUnitK says "kelvins"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit K, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitK() string { return In(i18n.Locale()).CalcUnitK() }
+
+// CalcUnitK says "kelvins"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit K, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitK() string {
+	return Catalog.Format(msgs.locale, "calcUnitK", nil)
+}
+
+// CalcUnitMm2 says "square millimeters"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit mm2, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitMm2() string { return In(i18n.Locale()).CalcUnitMm2() }
+
+// CalcUnitMm2 says "square millimeters"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit mm2, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitMm2() string {
+	return Catalog.Format(msgs.locale, "calcUnitMm2", nil)
+}
+
+// CalcUnitCm2 says "square centimeters"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit cm2, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitCm2() string { return In(i18n.Locale()).CalcUnitCm2() }
+
+// CalcUnitCm2 says "square centimeters"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit cm2, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitCm2() string {
+	return Catalog.Format(msgs.locale, "calcUnitCm2", nil)
+}
+
+// CalcUnitM2 says "square meters"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit m2, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitM2() string { return In(i18n.Locale()).CalcUnitM2() }
+
+// CalcUnitM2 says "square meters"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit m2, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitM2() string {
+	return Catalog.Format(msgs.locale, "calcUnitM2", nil)
+}
+
+// CalcUnitKm2 says "square kilometers"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit km2, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitKm2() string { return In(i18n.Locale()).CalcUnitKm2() }
+
+// CalcUnitKm2 says "square kilometers"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit km2, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitKm2() string {
+	return Catalog.Format(msgs.locale, "calcUnitKm2", nil)
+}
+
+// CalcUnitIn2 says "square inches"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit in2, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitIn2() string { return In(i18n.Locale()).CalcUnitIn2() }
+
+// CalcUnitIn2 says "square inches"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit in2, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitIn2() string {
+	return Catalog.Format(msgs.locale, "calcUnitIn2", nil)
+}
+
+// CalcUnitFt2 says "square feet"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit ft2, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitFt2() string { return In(i18n.Locale()).CalcUnitFt2() }
+
+// CalcUnitFt2 says "square feet"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit ft2, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitFt2() string {
+	return Catalog.Format(msgs.locale, "calcUnitFt2", nil)
+}
+
+// CalcUnitYd2 says "square yards"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit yd2, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitYd2() string { return In(i18n.Locale()).CalcUnitYd2() }
+
+// CalcUnitYd2 says "square yards"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit yd2, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitYd2() string {
+	return Catalog.Format(msgs.locale, "calcUnitYd2", nil)
+}
+
+// CalcUnitMi2 says "square miles"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit mi2, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitMi2() string { return In(i18n.Locale()).CalcUnitMi2() }
+
+// CalcUnitMi2 says "square miles"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit mi2, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitMi2() string {
+	return Catalog.Format(msgs.locale, "calcUnitMi2", nil)
+}
+
+// CalcUnitHa says "hectares"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit ha, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitHa() string { return In(i18n.Locale()).CalcUnitHa() }
+
+// CalcUnitHa says "hectares"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit ha, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitHa() string {
+	return Catalog.Format(msgs.locale, "calcUnitHa", nil)
+}
+
+// CalcUnitAcre says "acres"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit acre, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitAcre() string { return In(i18n.Locale()).CalcUnitAcre() }
+
+// CalcUnitAcre says "acres"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit acre, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitAcre() string {
+	return Catalog.Format(msgs.locale, "calcUnitAcre", nil)
+}
+
+// CalcUnitMu says "mu"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit mu, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitMu() string { return In(i18n.Locale()).CalcUnitMu() }
+
+// CalcUnitMu says "mu"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit mu, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitMu() string {
+	return Catalog.Format(msgs.locale, "calcUnitMu", nil)
+}
+
+// CalcUnitMl says "milliliters"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit ml, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitMl() string { return In(i18n.Locale()).CalcUnitMl() }
+
+// CalcUnitMl says "milliliters"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit ml, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitMl() string {
+	return Catalog.Format(msgs.locale, "calcUnitMl", nil)
+}
+
+// CalcUnitCm3 says "cubic centimeters"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit cm3, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitCm3() string { return In(i18n.Locale()).CalcUnitCm3() }
+
+// CalcUnitCm3 says "cubic centimeters"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit cm3, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitCm3() string {
+	return Catalog.Format(msgs.locale, "calcUnitCm3", nil)
+}
+
+// CalcUnitCl says "centiliters"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit cl, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitCl() string { return In(i18n.Locale()).CalcUnitCl() }
+
+// CalcUnitCl says "centiliters"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit cl, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitCl() string {
+	return Catalog.Format(msgs.locale, "calcUnitCl", nil)
+}
+
+// CalcUnitDl says "deciliters"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit dl, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitDl() string { return In(i18n.Locale()).CalcUnitDl() }
+
+// CalcUnitDl says "deciliters"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit dl, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitDl() string {
+	return Catalog.Format(msgs.locale, "calcUnitDl", nil)
+}
+
+// CalcUnitL says "liters"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit l, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitL() string { return In(i18n.Locale()).CalcUnitL() }
+
+// CalcUnitL says "liters"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit l, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitL() string {
+	return Catalog.Format(msgs.locale, "calcUnitL", nil)
+}
+
+// CalcUnitM3 says "cubic meters"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit m3, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitM3() string { return In(i18n.Locale()).CalcUnitM3() }
+
+// CalcUnitM3 says "cubic meters"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit m3, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitM3() string {
+	return Catalog.Format(msgs.locale, "calcUnitM3", nil)
+}
+
+// CalcUnitGal says "US gallons"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit gal, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitGal() string { return In(i18n.Locale()).CalcUnitGal() }
+
+// CalcUnitGal says "US gallons"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit gal, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitGal() string {
+	return Catalog.Format(msgs.locale, "calcUnitGal", nil)
+}
+
+// CalcUnitQt says "US quarts"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit qt, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitQt() string { return In(i18n.Locale()).CalcUnitQt() }
+
+// CalcUnitQt says "US quarts"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit qt, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitQt() string {
+	return Catalog.Format(msgs.locale, "calcUnitQt", nil)
+}
+
+// CalcUnitPt says "US pints"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit pt, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitPt() string { return In(i18n.Locale()).CalcUnitPt() }
+
+// CalcUnitPt says "US pints"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit pt, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitPt() string {
+	return Catalog.Format(msgs.locale, "calcUnitPt", nil)
+}
+
+// CalcUnitCup says "US cups"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit cup, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitCup() string { return In(i18n.Locale()).CalcUnitCup() }
+
+// CalcUnitCup says "US cups"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit cup, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitCup() string {
+	return Catalog.Format(msgs.locale, "calcUnitCup", nil)
+}
+
+// CalcUnitFloz says "US fluid ounces"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit floz, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitFloz() string { return In(i18n.Locale()).CalcUnitFloz() }
+
+// CalcUnitFloz says "US fluid ounces"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit floz, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitFloz() string {
+	return Catalog.Format(msgs.locale, "calcUnitFloz", nil)
+}
+
+// CalcUnitTbsp says "tablespoons"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit tbsp, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitTbsp() string { return In(i18n.Locale()).CalcUnitTbsp() }
+
+// CalcUnitTbsp says "tablespoons"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit tbsp, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitTbsp() string {
+	return Catalog.Format(msgs.locale, "calcUnitTbsp", nil)
+}
+
+// CalcUnitTsp says "teaspoons"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit tsp, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitTsp() string { return In(i18n.Locale()).CalcUnitTsp() }
+
+// CalcUnitTsp says "teaspoons"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit tsp, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitTsp() string {
+	return Catalog.Format(msgs.locale, "calcUnitTsp", nil)
+}
+
+// CalcUnitIn3 says "cubic inches"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit in3, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitIn3() string { return In(i18n.Locale()).CalcUnitIn3() }
+
+// CalcUnitIn3 says "cubic inches"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit in3, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitIn3() string {
+	return Catalog.Format(msgs.locale, "calcUnitIn3", nil)
+}
+
+// CalcUnitFt3 says "cubic feet"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit ft3, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitFt3() string { return In(i18n.Locale()).CalcUnitFt3() }
+
+// CalcUnitFt3 says "cubic feet"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit ft3, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitFt3() string {
+	return Catalog.Format(msgs.locale, "calcUnitFt3", nil)
+}
+
+// CalcUnitKmPerH says "kilometers per hour"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit km/h, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitKmPerH() string { return In(i18n.Locale()).CalcUnitKmPerH() }
+
+// CalcUnitKmPerH says "kilometers per hour"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit km/h, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitKmPerH() string {
+	return Catalog.Format(msgs.locale, "calcUnitKmPerH", nil)
+}
+
+// CalcUnitMph says "miles per hour"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit mph, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitMph() string { return In(i18n.Locale()).CalcUnitMph() }
+
+// CalcUnitMph says "miles per hour"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit mph, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitMph() string {
+	return Catalog.Format(msgs.locale, "calcUnitMph", nil)
+}
+
+// CalcUnitMPerS says "meters per second"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit m/s, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitMPerS() string { return In(i18n.Locale()).CalcUnitMPerS() }
+
+// CalcUnitMPerS says "meters per second"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit m/s, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitMPerS() string {
+	return Catalog.Format(msgs.locale, "calcUnitMPerS", nil)
+}
+
+// CalcUnitFtPerS says "feet per second"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit ft/s, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitFtPerS() string { return In(i18n.Locale()).CalcUnitFtPerS() }
+
+// CalcUnitFtPerS says "feet per second"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit ft/s, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitFtPerS() string {
+	return Catalog.Format(msgs.locale, "calcUnitFtPerS", nil)
+}
+
+// CalcUnitKn says "knots"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit kn, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitKn() string { return In(i18n.Locale()).CalcUnitKn() }
+
+// CalcUnitKn says "knots"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit kn, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitKn() string {
+	return Catalog.Format(msgs.locale, "calcUnitKn", nil)
+}
+
+// CalcUnitBit says "bits"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit bit, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitBit() string { return In(i18n.Locale()).CalcUnitBit() }
+
+// CalcUnitBit says "bits"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit bit, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitBit() string {
+	return Catalog.Format(msgs.locale, "calcUnitBit", nil)
+}
+
+// CalcUnitB says "bytes"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit B, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitB() string { return In(i18n.Locale()).CalcUnitB() }
+
+// CalcUnitB says "bytes"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit B, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitB() string {
+	return Catalog.Format(msgs.locale, "calcUnitB", nil)
+}
+
+// CalcUnitKB says "kilobytes"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit kB, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitKB() string { return In(i18n.Locale()).CalcUnitKB() }
+
+// CalcUnitKB says "kilobytes"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit kB, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitKB() string {
+	return Catalog.Format(msgs.locale, "calcUnitKB", nil)
+}
+
+// CalcUnitMB says "megabytes"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit MB, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitMB() string { return In(i18n.Locale()).CalcUnitMB() }
+
+// CalcUnitMB says "megabytes"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit MB, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitMB() string {
+	return Catalog.Format(msgs.locale, "calcUnitMB", nil)
+}
+
+// CalcUnitGB says "gigabytes"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit GB, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitGB() string { return In(i18n.Locale()).CalcUnitGB() }
+
+// CalcUnitGB says "gigabytes"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit GB, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitGB() string {
+	return Catalog.Format(msgs.locale, "calcUnitGB", nil)
+}
+
+// CalcUnitTB says "terabytes"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit TB, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitTB() string { return In(i18n.Locale()).CalcUnitTB() }
+
+// CalcUnitTB says "terabytes"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit TB, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitTB() string {
+	return Catalog.Format(msgs.locale, "calcUnitTB", nil)
+}
+
+// CalcUnitPB says "petabytes"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit PB, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitPB() string { return In(i18n.Locale()).CalcUnitPB() }
+
+// CalcUnitPB says "petabytes"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit PB, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitPB() string {
+	return Catalog.Format(msgs.locale, "calcUnitPB", nil)
+}
+
+// CalcUnitKiB says "kibibytes"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit KiB, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitKiB() string { return In(i18n.Locale()).CalcUnitKiB() }
+
+// CalcUnitKiB says "kibibytes"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit KiB, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitKiB() string {
+	return Catalog.Format(msgs.locale, "calcUnitKiB", nil)
+}
+
+// CalcUnitMiB says "mebibytes"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit MiB, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitMiB() string { return In(i18n.Locale()).CalcUnitMiB() }
+
+// CalcUnitMiB says "mebibytes"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit MiB, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitMiB() string {
+	return Catalog.Format(msgs.locale, "calcUnitMiB", nil)
+}
+
+// CalcUnitGiB says "gibibytes"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit GiB, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitGiB() string { return In(i18n.Locale()).CalcUnitGiB() }
+
+// CalcUnitGiB says "gibibytes"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit GiB, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitGiB() string {
+	return Catalog.Format(msgs.locale, "calcUnitGiB", nil)
+}
+
+// CalcUnitTiB says "tebibytes"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit TiB, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitTiB() string { return In(i18n.Locale()).CalcUnitTiB() }
+
+// CalcUnitTiB says "tebibytes"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit TiB, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitTiB() string {
+	return Catalog.Format(msgs.locale, "calcUnitTiB", nil)
+}
+
+// CalcUnitPiB says "pebibytes"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit PiB, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitPiB() string { return In(i18n.Locale()).CalcUnitPiB() }
+
+// CalcUnitPiB says "pebibytes"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit PiB, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitPiB() string {
+	return Catalog.Format(msgs.locale, "calcUnitPiB", nil)
+}
+
+// CalcUnitMs says "milliseconds"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit ms, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitMs() string { return In(i18n.Locale()).CalcUnitMs() }
+
+// CalcUnitMs says "milliseconds"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit ms, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitMs() string {
+	return Catalog.Format(msgs.locale, "calcUnitMs", nil)
+}
+
+// CalcUnitS says "seconds"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit s, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitS() string { return In(i18n.Locale()).CalcUnitS() }
+
+// CalcUnitS says "seconds"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit s, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitS() string {
+	return Catalog.Format(msgs.locale, "calcUnitS", nil)
+}
+
+// CalcUnitMin says "minutes"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit min, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitMin() string { return In(i18n.Locale()).CalcUnitMin() }
+
+// CalcUnitMin says "minutes"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit min, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitMin() string {
+	return Catalog.Format(msgs.locale, "calcUnitMin", nil)
+}
+
+// CalcUnitH says "hours"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit h, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitH() string { return In(i18n.Locale()).CalcUnitH() }
+
+// CalcUnitH says "hours"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit h, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitH() string {
+	return Catalog.Format(msgs.locale, "calcUnitH", nil)
+}
+
+// CalcUnitDay says "days"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit day, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitDay() string { return In(i18n.Locale()).CalcUnitDay() }
+
+// CalcUnitDay says "days"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit day, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitDay() string {
+	return Catalog.Format(msgs.locale, "calcUnitDay", nil)
+}
+
+// CalcUnitWeek says "weeks"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit week, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitWeek() string { return In(i18n.Locale()).CalcUnitWeek() }
+
+// CalcUnitWeek says "weeks"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit week, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitWeek() string {
+	return Catalog.Format(msgs.locale, "calcUnitWeek", nil)
+}
+
+// CalcUnitPx says "pixels"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit px, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitPx() string { return In(i18n.Locale()).CalcUnitPx() }
+
+// CalcUnitPx says "pixels"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit px, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitPx() string {
+	return Catalog.Format(msgs.locale, "calcUnitPx", nil)
+}
+
+// CalcUnitRem says "rem"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit rem, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitRem() string { return In(i18n.Locale()).CalcUnitRem() }
+
+// CalcUnitRem says "rem"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit rem, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitRem() string {
+	return Catalog.Format(msgs.locale, "calcUnitRem", nil)
+}
+
+// CalcUnitEm says "em"
+// in the language the app shows.
+//
+// Calculator card: the full name of the unit em, in its notes and for the
+// screen reader (copy.md 7.1).
+func CalcUnitEm() string { return In(i18n.Locale()).CalcUnitEm() }
+
+// CalcUnitEm says "em"
+// in the language of msgs.
+//
+// Calculator card: the full name of the unit em, in its notes and for the
+// screen reader (copy.md 7.1).
+func (msgs Messages) CalcUnitEm() string {
+	return Catalog.Format(msgs.locale, "calcUnitEm", nil)
+}
+
+// CalcCurrencyAED says "UAE dirhams"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency AED, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyAED() string { return In(i18n.Locale()).CalcCurrencyAED() }
+
+// CalcCurrencyAED says "UAE dirhams"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency AED, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyAED() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyAED", nil)
+}
+
+// CalcCurrencyAFN says "Afghan afghanis"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency AFN, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyAFN() string { return In(i18n.Locale()).CalcCurrencyAFN() }
+
+// CalcCurrencyAFN says "Afghan afghanis"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency AFN, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyAFN() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyAFN", nil)
+}
+
+// CalcCurrencyALL says "Albanian lekë"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency ALL, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyALL() string { return In(i18n.Locale()).CalcCurrencyALL() }
+
+// CalcCurrencyALL says "Albanian lekë"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency ALL, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyALL() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyALL", nil)
+}
+
+// CalcCurrencyAMD says "Armenian drams"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency AMD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyAMD() string { return In(i18n.Locale()).CalcCurrencyAMD() }
+
+// CalcCurrencyAMD says "Armenian drams"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency AMD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyAMD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyAMD", nil)
+}
+
+// CalcCurrencyANG says "Netherlands Antillean guilders"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency ANG, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyANG() string { return In(i18n.Locale()).CalcCurrencyANG() }
+
+// CalcCurrencyANG says "Netherlands Antillean guilders"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency ANG, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyANG() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyANG", nil)
+}
+
+// CalcCurrencyAOA says "Angolan kwanzas"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency AOA, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyAOA() string { return In(i18n.Locale()).CalcCurrencyAOA() }
+
+// CalcCurrencyAOA says "Angolan kwanzas"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency AOA, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyAOA() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyAOA", nil)
+}
+
+// CalcCurrencyARS says "Argentine pesos"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency ARS, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyARS() string { return In(i18n.Locale()).CalcCurrencyARS() }
+
+// CalcCurrencyARS says "Argentine pesos"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency ARS, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyARS() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyARS", nil)
+}
+
+// CalcCurrencyAUD says "Australian dollars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency AUD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyAUD() string { return In(i18n.Locale()).CalcCurrencyAUD() }
+
+// CalcCurrencyAUD says "Australian dollars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency AUD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyAUD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyAUD", nil)
+}
+
+// CalcCurrencyAWG says "Aruban florin"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency AWG, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyAWG() string { return In(i18n.Locale()).CalcCurrencyAWG() }
+
+// CalcCurrencyAWG says "Aruban florin"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency AWG, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyAWG() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyAWG", nil)
+}
+
+// CalcCurrencyAZN says "Azerbaijani manats"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency AZN, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyAZN() string { return In(i18n.Locale()).CalcCurrencyAZN() }
+
+// CalcCurrencyAZN says "Azerbaijani manats"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency AZN, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyAZN() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyAZN", nil)
+}
+
+// CalcCurrencyBAM says "Bosnia-Herzegovina convertible marks"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency BAM, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyBAM() string { return In(i18n.Locale()).CalcCurrencyBAM() }
+
+// CalcCurrencyBAM says "Bosnia-Herzegovina convertible marks"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency BAM, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyBAM() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyBAM", nil)
+}
+
+// CalcCurrencyBBD says "Barbadian dollars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency BBD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyBBD() string { return In(i18n.Locale()).CalcCurrencyBBD() }
+
+// CalcCurrencyBBD says "Barbadian dollars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency BBD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyBBD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyBBD", nil)
+}
+
+// CalcCurrencyBDT says "Bangladeshi takas"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency BDT, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyBDT() string { return In(i18n.Locale()).CalcCurrencyBDT() }
+
+// CalcCurrencyBDT says "Bangladeshi takas"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency BDT, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyBDT() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyBDT", nil)
+}
+
+// CalcCurrencyBGN says "Bulgarian leva"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency BGN, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyBGN() string { return In(i18n.Locale()).CalcCurrencyBGN() }
+
+// CalcCurrencyBGN says "Bulgarian leva"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency BGN, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyBGN() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyBGN", nil)
+}
+
+// CalcCurrencyBHD says "Bahraini dinars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency BHD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyBHD() string { return In(i18n.Locale()).CalcCurrencyBHD() }
+
+// CalcCurrencyBHD says "Bahraini dinars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency BHD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyBHD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyBHD", nil)
+}
+
+// CalcCurrencyBIF says "Burundian francs"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency BIF, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyBIF() string { return In(i18n.Locale()).CalcCurrencyBIF() }
+
+// CalcCurrencyBIF says "Burundian francs"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency BIF, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyBIF() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyBIF", nil)
+}
+
+// CalcCurrencyBMD says "Bermudan dollars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency BMD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyBMD() string { return In(i18n.Locale()).CalcCurrencyBMD() }
+
+// CalcCurrencyBMD says "Bermudan dollars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency BMD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyBMD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyBMD", nil)
+}
+
+// CalcCurrencyBND says "Brunei dollars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency BND, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyBND() string { return In(i18n.Locale()).CalcCurrencyBND() }
+
+// CalcCurrencyBND says "Brunei dollars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency BND, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyBND() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyBND", nil)
+}
+
+// CalcCurrencyBOB says "Bolivian bolivianos"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency BOB, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyBOB() string { return In(i18n.Locale()).CalcCurrencyBOB() }
+
+// CalcCurrencyBOB says "Bolivian bolivianos"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency BOB, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyBOB() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyBOB", nil)
+}
+
+// CalcCurrencyBRL says "Brazilian reals"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency BRL, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyBRL() string { return In(i18n.Locale()).CalcCurrencyBRL() }
+
+// CalcCurrencyBRL says "Brazilian reals"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency BRL, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyBRL() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyBRL", nil)
+}
+
+// CalcCurrencyBSD says "Bahamian dollars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency BSD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyBSD() string { return In(i18n.Locale()).CalcCurrencyBSD() }
+
+// CalcCurrencyBSD says "Bahamian dollars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency BSD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyBSD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyBSD", nil)
+}
+
+// CalcCurrencyBTN says "Bhutanese ngultrums"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency BTN, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyBTN() string { return In(i18n.Locale()).CalcCurrencyBTN() }
+
+// CalcCurrencyBTN says "Bhutanese ngultrums"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency BTN, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyBTN() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyBTN", nil)
+}
+
+// CalcCurrencyBWP says "Botswanan pulas"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency BWP, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyBWP() string { return In(i18n.Locale()).CalcCurrencyBWP() }
+
+// CalcCurrencyBWP says "Botswanan pulas"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency BWP, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyBWP() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyBWP", nil)
+}
+
+// CalcCurrencyBYN says "Belarusian rubles"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency BYN, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyBYN() string { return In(i18n.Locale()).CalcCurrencyBYN() }
+
+// CalcCurrencyBYN says "Belarusian rubles"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency BYN, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyBYN() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyBYN", nil)
+}
+
+// CalcCurrencyBZD says "Belize dollars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency BZD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyBZD() string { return In(i18n.Locale()).CalcCurrencyBZD() }
+
+// CalcCurrencyBZD says "Belize dollars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency BZD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyBZD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyBZD", nil)
+}
+
+// CalcCurrencyCAD says "Canadian dollars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency CAD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyCAD() string { return In(i18n.Locale()).CalcCurrencyCAD() }
+
+// CalcCurrencyCAD says "Canadian dollars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency CAD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyCAD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyCAD", nil)
+}
+
+// CalcCurrencyCDF says "Congolese francs"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency CDF, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyCDF() string { return In(i18n.Locale()).CalcCurrencyCDF() }
+
+// CalcCurrencyCDF says "Congolese francs"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency CDF, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyCDF() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyCDF", nil)
+}
+
+// CalcCurrencyCHF says "Swiss francs"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency CHF, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyCHF() string { return In(i18n.Locale()).CalcCurrencyCHF() }
+
+// CalcCurrencyCHF says "Swiss francs"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency CHF, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyCHF() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyCHF", nil)
+}
+
+// CalcCurrencyCLP says "Chilean pesos"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency CLP, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyCLP() string { return In(i18n.Locale()).CalcCurrencyCLP() }
+
+// CalcCurrencyCLP says "Chilean pesos"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency CLP, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyCLP() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyCLP", nil)
+}
+
+// CalcCurrencyCNY says "Chinese yuan"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency CNY, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyCNY() string { return In(i18n.Locale()).CalcCurrencyCNY() }
+
+// CalcCurrencyCNY says "Chinese yuan"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency CNY, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyCNY() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyCNY", nil)
+}
+
+// CalcCurrencyCOP says "Colombian pesos"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency COP, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyCOP() string { return In(i18n.Locale()).CalcCurrencyCOP() }
+
+// CalcCurrencyCOP says "Colombian pesos"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency COP, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyCOP() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyCOP", nil)
+}
+
+// CalcCurrencyCRC says "Costa Rican colóns"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency CRC, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyCRC() string { return In(i18n.Locale()).CalcCurrencyCRC() }
+
+// CalcCurrencyCRC says "Costa Rican colóns"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency CRC, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyCRC() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyCRC", nil)
+}
+
+// CalcCurrencyCUP says "Cuban pesos"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency CUP, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyCUP() string { return In(i18n.Locale()).CalcCurrencyCUP() }
+
+// CalcCurrencyCUP says "Cuban pesos"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency CUP, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyCUP() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyCUP", nil)
+}
+
+// CalcCurrencyCVE says "Cape Verdean escudos"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency CVE, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyCVE() string { return In(i18n.Locale()).CalcCurrencyCVE() }
+
+// CalcCurrencyCVE says "Cape Verdean escudos"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency CVE, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyCVE() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyCVE", nil)
+}
+
+// CalcCurrencyCZK says "Czech korunas"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency CZK, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyCZK() string { return In(i18n.Locale()).CalcCurrencyCZK() }
+
+// CalcCurrencyCZK says "Czech korunas"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency CZK, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyCZK() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyCZK", nil)
+}
+
+// CalcCurrencyDJF says "Djiboutian francs"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency DJF, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyDJF() string { return In(i18n.Locale()).CalcCurrencyDJF() }
+
+// CalcCurrencyDJF says "Djiboutian francs"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency DJF, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyDJF() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyDJF", nil)
+}
+
+// CalcCurrencyDKK says "Danish kroner"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency DKK, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyDKK() string { return In(i18n.Locale()).CalcCurrencyDKK() }
+
+// CalcCurrencyDKK says "Danish kroner"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency DKK, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyDKK() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyDKK", nil)
+}
+
+// CalcCurrencyDOP says "Dominican pesos"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency DOP, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyDOP() string { return In(i18n.Locale()).CalcCurrencyDOP() }
+
+// CalcCurrencyDOP says "Dominican pesos"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency DOP, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyDOP() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyDOP", nil)
+}
+
+// CalcCurrencyDZD says "Algerian dinars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency DZD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyDZD() string { return In(i18n.Locale()).CalcCurrencyDZD() }
+
+// CalcCurrencyDZD says "Algerian dinars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency DZD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyDZD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyDZD", nil)
+}
+
+// CalcCurrencyEGP says "Egyptian pounds"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency EGP, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyEGP() string { return In(i18n.Locale()).CalcCurrencyEGP() }
+
+// CalcCurrencyEGP says "Egyptian pounds"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency EGP, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyEGP() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyEGP", nil)
+}
+
+// CalcCurrencyERN says "Eritrean nakfas"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency ERN, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyERN() string { return In(i18n.Locale()).CalcCurrencyERN() }
+
+// CalcCurrencyERN says "Eritrean nakfas"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency ERN, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyERN() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyERN", nil)
+}
+
+// CalcCurrencyETB says "Ethiopian birrs"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency ETB, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyETB() string { return In(i18n.Locale()).CalcCurrencyETB() }
+
+// CalcCurrencyETB says "Ethiopian birrs"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency ETB, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyETB() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyETB", nil)
+}
+
+// CalcCurrencyEUR says "euros"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency EUR, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyEUR() string { return In(i18n.Locale()).CalcCurrencyEUR() }
+
+// CalcCurrencyEUR says "euros"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency EUR, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyEUR() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyEUR", nil)
+}
+
+// CalcCurrencyFJD says "Fijian dollars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency FJD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyFJD() string { return In(i18n.Locale()).CalcCurrencyFJD() }
+
+// CalcCurrencyFJD says "Fijian dollars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency FJD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyFJD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyFJD", nil)
+}
+
+// CalcCurrencyFKP says "Falkland Islands pounds"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency FKP, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyFKP() string { return In(i18n.Locale()).CalcCurrencyFKP() }
+
+// CalcCurrencyFKP says "Falkland Islands pounds"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency FKP, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyFKP() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyFKP", nil)
+}
+
+// CalcCurrencyGBP says "British pounds"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency GBP, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyGBP() string { return In(i18n.Locale()).CalcCurrencyGBP() }
+
+// CalcCurrencyGBP says "British pounds"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency GBP, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyGBP() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyGBP", nil)
+}
+
+// CalcCurrencyGEL says "Georgian laris"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency GEL, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyGEL() string { return In(i18n.Locale()).CalcCurrencyGEL() }
+
+// CalcCurrencyGEL says "Georgian laris"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency GEL, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyGEL() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyGEL", nil)
+}
+
+// CalcCurrencyGHS says "Ghanaian cedis"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency GHS, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyGHS() string { return In(i18n.Locale()).CalcCurrencyGHS() }
+
+// CalcCurrencyGHS says "Ghanaian cedis"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency GHS, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyGHS() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyGHS", nil)
+}
+
+// CalcCurrencyGIP says "Gibraltar pounds"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency GIP, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyGIP() string { return In(i18n.Locale()).CalcCurrencyGIP() }
+
+// CalcCurrencyGIP says "Gibraltar pounds"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency GIP, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyGIP() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyGIP", nil)
+}
+
+// CalcCurrencyGMD says "Gambian dalasis"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency GMD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyGMD() string { return In(i18n.Locale()).CalcCurrencyGMD() }
+
+// CalcCurrencyGMD says "Gambian dalasis"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency GMD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyGMD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyGMD", nil)
+}
+
+// CalcCurrencyGNF says "Guinean francs"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency GNF, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyGNF() string { return In(i18n.Locale()).CalcCurrencyGNF() }
+
+// CalcCurrencyGNF says "Guinean francs"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency GNF, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyGNF() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyGNF", nil)
+}
+
+// CalcCurrencyGTQ says "Guatemalan quetzals"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency GTQ, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyGTQ() string { return In(i18n.Locale()).CalcCurrencyGTQ() }
+
+// CalcCurrencyGTQ says "Guatemalan quetzals"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency GTQ, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyGTQ() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyGTQ", nil)
+}
+
+// CalcCurrencyGYD says "Guyanaese dollars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency GYD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyGYD() string { return In(i18n.Locale()).CalcCurrencyGYD() }
+
+// CalcCurrencyGYD says "Guyanaese dollars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency GYD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyGYD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyGYD", nil)
+}
+
+// CalcCurrencyHKD says "Hong Kong dollars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency HKD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyHKD() string { return In(i18n.Locale()).CalcCurrencyHKD() }
+
+// CalcCurrencyHKD says "Hong Kong dollars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency HKD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyHKD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyHKD", nil)
+}
+
+// CalcCurrencyHNL says "Honduran lempiras"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency HNL, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyHNL() string { return In(i18n.Locale()).CalcCurrencyHNL() }
+
+// CalcCurrencyHNL says "Honduran lempiras"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency HNL, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyHNL() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyHNL", nil)
+}
+
+// CalcCurrencyHTG says "Haitian gourdes"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency HTG, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyHTG() string { return In(i18n.Locale()).CalcCurrencyHTG() }
+
+// CalcCurrencyHTG says "Haitian gourdes"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency HTG, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyHTG() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyHTG", nil)
+}
+
+// CalcCurrencyHUF says "Hungarian forints"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency HUF, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyHUF() string { return In(i18n.Locale()).CalcCurrencyHUF() }
+
+// CalcCurrencyHUF says "Hungarian forints"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency HUF, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyHUF() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyHUF", nil)
+}
+
+// CalcCurrencyIDR says "Indonesian rupiahs"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency IDR, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyIDR() string { return In(i18n.Locale()).CalcCurrencyIDR() }
+
+// CalcCurrencyIDR says "Indonesian rupiahs"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency IDR, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyIDR() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyIDR", nil)
+}
+
+// CalcCurrencyILS says "Israeli new shekels"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency ILS, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyILS() string { return In(i18n.Locale()).CalcCurrencyILS() }
+
+// CalcCurrencyILS says "Israeli new shekels"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency ILS, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyILS() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyILS", nil)
+}
+
+// CalcCurrencyINR says "Indian rupees"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency INR, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyINR() string { return In(i18n.Locale()).CalcCurrencyINR() }
+
+// CalcCurrencyINR says "Indian rupees"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency INR, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyINR() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyINR", nil)
+}
+
+// CalcCurrencyIQD says "Iraqi dinars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency IQD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyIQD() string { return In(i18n.Locale()).CalcCurrencyIQD() }
+
+// CalcCurrencyIQD says "Iraqi dinars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency IQD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyIQD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyIQD", nil)
+}
+
+// CalcCurrencyIRR says "Iranian rials"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency IRR, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyIRR() string { return In(i18n.Locale()).CalcCurrencyIRR() }
+
+// CalcCurrencyIRR says "Iranian rials"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency IRR, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyIRR() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyIRR", nil)
+}
+
+// CalcCurrencyISK says "Icelandic krónur"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency ISK, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyISK() string { return In(i18n.Locale()).CalcCurrencyISK() }
+
+// CalcCurrencyISK says "Icelandic krónur"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency ISK, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyISK() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyISK", nil)
+}
+
+// CalcCurrencyJMD says "Jamaican dollars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency JMD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyJMD() string { return In(i18n.Locale()).CalcCurrencyJMD() }
+
+// CalcCurrencyJMD says "Jamaican dollars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency JMD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyJMD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyJMD", nil)
+}
+
+// CalcCurrencyJOD says "Jordanian dinars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency JOD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyJOD() string { return In(i18n.Locale()).CalcCurrencyJOD() }
+
+// CalcCurrencyJOD says "Jordanian dinars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency JOD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyJOD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyJOD", nil)
+}
+
+// CalcCurrencyJPY says "Japanese yen"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency JPY, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyJPY() string { return In(i18n.Locale()).CalcCurrencyJPY() }
+
+// CalcCurrencyJPY says "Japanese yen"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency JPY, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyJPY() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyJPY", nil)
+}
+
+// CalcCurrencyKES says "Kenyan shillings"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency KES, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyKES() string { return In(i18n.Locale()).CalcCurrencyKES() }
+
+// CalcCurrencyKES says "Kenyan shillings"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency KES, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyKES() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyKES", nil)
+}
+
+// CalcCurrencyKGS says "Kyrgystani soms"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency KGS, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyKGS() string { return In(i18n.Locale()).CalcCurrencyKGS() }
+
+// CalcCurrencyKGS says "Kyrgystani soms"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency KGS, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyKGS() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyKGS", nil)
+}
+
+// CalcCurrencyKHR says "Cambodian riels"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency KHR, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyKHR() string { return In(i18n.Locale()).CalcCurrencyKHR() }
+
+// CalcCurrencyKHR says "Cambodian riels"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency KHR, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyKHR() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyKHR", nil)
+}
+
+// CalcCurrencyKMF says "Comorian francs"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency KMF, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyKMF() string { return In(i18n.Locale()).CalcCurrencyKMF() }
+
+// CalcCurrencyKMF says "Comorian francs"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency KMF, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyKMF() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyKMF", nil)
+}
+
+// CalcCurrencyKPW says "North Korean won"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency KPW, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyKPW() string { return In(i18n.Locale()).CalcCurrencyKPW() }
+
+// CalcCurrencyKPW says "North Korean won"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency KPW, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyKPW() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyKPW", nil)
+}
+
+// CalcCurrencyKRW says "South Korean won"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency KRW, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyKRW() string { return In(i18n.Locale()).CalcCurrencyKRW() }
+
+// CalcCurrencyKRW says "South Korean won"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency KRW, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyKRW() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyKRW", nil)
+}
+
+// CalcCurrencyKWD says "Kuwaiti dinars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency KWD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyKWD() string { return In(i18n.Locale()).CalcCurrencyKWD() }
+
+// CalcCurrencyKWD says "Kuwaiti dinars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency KWD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyKWD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyKWD", nil)
+}
+
+// CalcCurrencyKYD says "Cayman Islands dollars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency KYD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyKYD() string { return In(i18n.Locale()).CalcCurrencyKYD() }
+
+// CalcCurrencyKYD says "Cayman Islands dollars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency KYD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyKYD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyKYD", nil)
+}
+
+// CalcCurrencyKZT says "Kazakhstani tenges"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency KZT, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyKZT() string { return In(i18n.Locale()).CalcCurrencyKZT() }
+
+// CalcCurrencyKZT says "Kazakhstani tenges"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency KZT, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyKZT() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyKZT", nil)
+}
+
+// CalcCurrencyLAK says "Laotian kips"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency LAK, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyLAK() string { return In(i18n.Locale()).CalcCurrencyLAK() }
+
+// CalcCurrencyLAK says "Laotian kips"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency LAK, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyLAK() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyLAK", nil)
+}
+
+// CalcCurrencyLBP says "Lebanese pounds"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency LBP, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyLBP() string { return In(i18n.Locale()).CalcCurrencyLBP() }
+
+// CalcCurrencyLBP says "Lebanese pounds"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency LBP, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyLBP() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyLBP", nil)
+}
+
+// CalcCurrencyLKR says "Sri Lankan rupees"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency LKR, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyLKR() string { return In(i18n.Locale()).CalcCurrencyLKR() }
+
+// CalcCurrencyLKR says "Sri Lankan rupees"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency LKR, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyLKR() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyLKR", nil)
+}
+
+// CalcCurrencyLRD says "Liberian dollars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency LRD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyLRD() string { return In(i18n.Locale()).CalcCurrencyLRD() }
+
+// CalcCurrencyLRD says "Liberian dollars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency LRD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyLRD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyLRD", nil)
+}
+
+// CalcCurrencyLSL says "Lesotho lotis"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency LSL, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyLSL() string { return In(i18n.Locale()).CalcCurrencyLSL() }
+
+// CalcCurrencyLSL says "Lesotho lotis"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency LSL, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyLSL() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyLSL", nil)
+}
+
+// CalcCurrencyLYD says "Libyan dinars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency LYD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyLYD() string { return In(i18n.Locale()).CalcCurrencyLYD() }
+
+// CalcCurrencyLYD says "Libyan dinars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency LYD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyLYD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyLYD", nil)
+}
+
+// CalcCurrencyMAD says "Moroccan dirhams"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency MAD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyMAD() string { return In(i18n.Locale()).CalcCurrencyMAD() }
+
+// CalcCurrencyMAD says "Moroccan dirhams"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency MAD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyMAD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyMAD", nil)
+}
+
+// CalcCurrencyMDL says "Moldovan lei"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency MDL, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyMDL() string { return In(i18n.Locale()).CalcCurrencyMDL() }
+
+// CalcCurrencyMDL says "Moldovan lei"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency MDL, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyMDL() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyMDL", nil)
+}
+
+// CalcCurrencyMGA says "Malagasy ariaries"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency MGA, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyMGA() string { return In(i18n.Locale()).CalcCurrencyMGA() }
+
+// CalcCurrencyMGA says "Malagasy ariaries"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency MGA, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyMGA() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyMGA", nil)
+}
+
+// CalcCurrencyMKD says "Macedonian denari"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency MKD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyMKD() string { return In(i18n.Locale()).CalcCurrencyMKD() }
+
+// CalcCurrencyMKD says "Macedonian denari"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency MKD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyMKD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyMKD", nil)
+}
+
+// CalcCurrencyMMK says "Myanmar kyats"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency MMK, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyMMK() string { return In(i18n.Locale()).CalcCurrencyMMK() }
+
+// CalcCurrencyMMK says "Myanmar kyats"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency MMK, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyMMK() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyMMK", nil)
+}
+
+// CalcCurrencyMNT says "Mongolian tugriks"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency MNT, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyMNT() string { return In(i18n.Locale()).CalcCurrencyMNT() }
+
+// CalcCurrencyMNT says "Mongolian tugriks"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency MNT, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyMNT() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyMNT", nil)
+}
+
+// CalcCurrencyMOP says "Macanese patacas"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency MOP, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyMOP() string { return In(i18n.Locale()).CalcCurrencyMOP() }
+
+// CalcCurrencyMOP says "Macanese patacas"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency MOP, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyMOP() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyMOP", nil)
+}
+
+// CalcCurrencyMRU says "Mauritanian ouguiyas"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency MRU, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyMRU() string { return In(i18n.Locale()).CalcCurrencyMRU() }
+
+// CalcCurrencyMRU says "Mauritanian ouguiyas"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency MRU, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyMRU() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyMRU", nil)
+}
+
+// CalcCurrencyMUR says "Mauritian rupees"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency MUR, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyMUR() string { return In(i18n.Locale()).CalcCurrencyMUR() }
+
+// CalcCurrencyMUR says "Mauritian rupees"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency MUR, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyMUR() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyMUR", nil)
+}
+
+// CalcCurrencyMVR says "Maldivian rufiyaas"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency MVR, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyMVR() string { return In(i18n.Locale()).CalcCurrencyMVR() }
+
+// CalcCurrencyMVR says "Maldivian rufiyaas"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency MVR, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyMVR() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyMVR", nil)
+}
+
+// CalcCurrencyMWK says "Malawian kwachas"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency MWK, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyMWK() string { return In(i18n.Locale()).CalcCurrencyMWK() }
+
+// CalcCurrencyMWK says "Malawian kwachas"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency MWK, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyMWK() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyMWK", nil)
+}
+
+// CalcCurrencyMXN says "Mexican pesos"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency MXN, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyMXN() string { return In(i18n.Locale()).CalcCurrencyMXN() }
+
+// CalcCurrencyMXN says "Mexican pesos"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency MXN, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyMXN() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyMXN", nil)
+}
+
+// CalcCurrencyMYR says "Malaysian ringgits"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency MYR, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyMYR() string { return In(i18n.Locale()).CalcCurrencyMYR() }
+
+// CalcCurrencyMYR says "Malaysian ringgits"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency MYR, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyMYR() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyMYR", nil)
+}
+
+// CalcCurrencyMZN says "Mozambican meticals"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency MZN, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyMZN() string { return In(i18n.Locale()).CalcCurrencyMZN() }
+
+// CalcCurrencyMZN says "Mozambican meticals"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency MZN, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyMZN() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyMZN", nil)
+}
+
+// CalcCurrencyNAD says "Namibian dollars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency NAD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyNAD() string { return In(i18n.Locale()).CalcCurrencyNAD() }
+
+// CalcCurrencyNAD says "Namibian dollars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency NAD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyNAD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyNAD", nil)
+}
+
+// CalcCurrencyNGN says "Nigerian nairas"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency NGN, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyNGN() string { return In(i18n.Locale()).CalcCurrencyNGN() }
+
+// CalcCurrencyNGN says "Nigerian nairas"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency NGN, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyNGN() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyNGN", nil)
+}
+
+// CalcCurrencyNIO says "Nicaraguan córdobas"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency NIO, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyNIO() string { return In(i18n.Locale()).CalcCurrencyNIO() }
+
+// CalcCurrencyNIO says "Nicaraguan córdobas"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency NIO, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyNIO() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyNIO", nil)
+}
+
+// CalcCurrencyNOK says "Norwegian kroner"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency NOK, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyNOK() string { return In(i18n.Locale()).CalcCurrencyNOK() }
+
+// CalcCurrencyNOK says "Norwegian kroner"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency NOK, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyNOK() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyNOK", nil)
+}
+
+// CalcCurrencyNPR says "Nepalese rupees"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency NPR, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyNPR() string { return In(i18n.Locale()).CalcCurrencyNPR() }
+
+// CalcCurrencyNPR says "Nepalese rupees"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency NPR, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyNPR() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyNPR", nil)
+}
+
+// CalcCurrencyNZD says "New Zealand dollars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency NZD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyNZD() string { return In(i18n.Locale()).CalcCurrencyNZD() }
+
+// CalcCurrencyNZD says "New Zealand dollars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency NZD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyNZD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyNZD", nil)
+}
+
+// CalcCurrencyOMR says "Omani rials"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency OMR, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyOMR() string { return In(i18n.Locale()).CalcCurrencyOMR() }
+
+// CalcCurrencyOMR says "Omani rials"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency OMR, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyOMR() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyOMR", nil)
+}
+
+// CalcCurrencyPAB says "Panamanian balboas"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency PAB, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyPAB() string { return In(i18n.Locale()).CalcCurrencyPAB() }
+
+// CalcCurrencyPAB says "Panamanian balboas"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency PAB, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyPAB() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyPAB", nil)
+}
+
+// CalcCurrencyPEN says "Peruvian soles"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency PEN, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyPEN() string { return In(i18n.Locale()).CalcCurrencyPEN() }
+
+// CalcCurrencyPEN says "Peruvian soles"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency PEN, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyPEN() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyPEN", nil)
+}
+
+// CalcCurrencyPGK says "Papua New Guinean kina"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency PGK, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyPGK() string { return In(i18n.Locale()).CalcCurrencyPGK() }
+
+// CalcCurrencyPGK says "Papua New Guinean kina"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency PGK, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyPGK() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyPGK", nil)
+}
+
+// CalcCurrencyPHP says "Philippine pesos"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency PHP, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyPHP() string { return In(i18n.Locale()).CalcCurrencyPHP() }
+
+// CalcCurrencyPHP says "Philippine pesos"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency PHP, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyPHP() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyPHP", nil)
+}
+
+// CalcCurrencyPKR says "Pakistani rupees"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency PKR, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyPKR() string { return In(i18n.Locale()).CalcCurrencyPKR() }
+
+// CalcCurrencyPKR says "Pakistani rupees"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency PKR, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyPKR() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyPKR", nil)
+}
+
+// CalcCurrencyPLN says "Polish zlotys"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency PLN, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyPLN() string { return In(i18n.Locale()).CalcCurrencyPLN() }
+
+// CalcCurrencyPLN says "Polish zlotys"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency PLN, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyPLN() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyPLN", nil)
+}
+
+// CalcCurrencyPYG says "Paraguayan guaranis"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency PYG, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyPYG() string { return In(i18n.Locale()).CalcCurrencyPYG() }
+
+// CalcCurrencyPYG says "Paraguayan guaranis"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency PYG, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyPYG() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyPYG", nil)
+}
+
+// CalcCurrencyQAR says "Qatari riyals"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency QAR, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyQAR() string { return In(i18n.Locale()).CalcCurrencyQAR() }
+
+// CalcCurrencyQAR says "Qatari riyals"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency QAR, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyQAR() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyQAR", nil)
+}
+
+// CalcCurrencyRON says "Romanian lei"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency RON, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyRON() string { return In(i18n.Locale()).CalcCurrencyRON() }
+
+// CalcCurrencyRON says "Romanian lei"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency RON, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyRON() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyRON", nil)
+}
+
+// CalcCurrencyRSD says "Serbian dinars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency RSD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyRSD() string { return In(i18n.Locale()).CalcCurrencyRSD() }
+
+// CalcCurrencyRSD says "Serbian dinars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency RSD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyRSD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyRSD", nil)
+}
+
+// CalcCurrencyRUB says "Russian rubles"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency RUB, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyRUB() string { return In(i18n.Locale()).CalcCurrencyRUB() }
+
+// CalcCurrencyRUB says "Russian rubles"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency RUB, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyRUB() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyRUB", nil)
+}
+
+// CalcCurrencyRWF says "Rwandan francs"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency RWF, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyRWF() string { return In(i18n.Locale()).CalcCurrencyRWF() }
+
+// CalcCurrencyRWF says "Rwandan francs"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency RWF, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyRWF() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyRWF", nil)
+}
+
+// CalcCurrencySAR says "Saudi riyals"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency SAR, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencySAR() string { return In(i18n.Locale()).CalcCurrencySAR() }
+
+// CalcCurrencySAR says "Saudi riyals"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency SAR, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencySAR() string {
+	return Catalog.Format(msgs.locale, "calcCurrencySAR", nil)
+}
+
+// CalcCurrencySBD says "Solomon Islands dollars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency SBD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencySBD() string { return In(i18n.Locale()).CalcCurrencySBD() }
+
+// CalcCurrencySBD says "Solomon Islands dollars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency SBD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencySBD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencySBD", nil)
+}
+
+// CalcCurrencySCR says "Seychellois rupees"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency SCR, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencySCR() string { return In(i18n.Locale()).CalcCurrencySCR() }
+
+// CalcCurrencySCR says "Seychellois rupees"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency SCR, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencySCR() string {
+	return Catalog.Format(msgs.locale, "calcCurrencySCR", nil)
+}
+
+// CalcCurrencySDG says "Sudanese pounds"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency SDG, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencySDG() string { return In(i18n.Locale()).CalcCurrencySDG() }
+
+// CalcCurrencySDG says "Sudanese pounds"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency SDG, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencySDG() string {
+	return Catalog.Format(msgs.locale, "calcCurrencySDG", nil)
+}
+
+// CalcCurrencySEK says "Swedish kronor"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency SEK, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencySEK() string { return In(i18n.Locale()).CalcCurrencySEK() }
+
+// CalcCurrencySEK says "Swedish kronor"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency SEK, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencySEK() string {
+	return Catalog.Format(msgs.locale, "calcCurrencySEK", nil)
+}
+
+// CalcCurrencySGD says "Singapore dollars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency SGD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencySGD() string { return In(i18n.Locale()).CalcCurrencySGD() }
+
+// CalcCurrencySGD says "Singapore dollars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency SGD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencySGD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencySGD", nil)
+}
+
+// CalcCurrencySHP says "St. Helena pounds"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency SHP, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencySHP() string { return In(i18n.Locale()).CalcCurrencySHP() }
+
+// CalcCurrencySHP says "St. Helena pounds"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency SHP, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencySHP() string {
+	return Catalog.Format(msgs.locale, "calcCurrencySHP", nil)
+}
+
+// CalcCurrencySLE says "Sierra Leonean leones"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency SLE, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencySLE() string { return In(i18n.Locale()).CalcCurrencySLE() }
+
+// CalcCurrencySLE says "Sierra Leonean leones"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency SLE, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencySLE() string {
+	return Catalog.Format(msgs.locale, "calcCurrencySLE", nil)
+}
+
+// CalcCurrencySLL says "Sierra Leonean leones (1964–2022)"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency SLL, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencySLL() string { return In(i18n.Locale()).CalcCurrencySLL() }
+
+// CalcCurrencySLL says "Sierra Leonean leones (1964–2022)"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency SLL, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencySLL() string {
+	return Catalog.Format(msgs.locale, "calcCurrencySLL", nil)
+}
+
+// CalcCurrencySOS says "Somali shillings"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency SOS, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencySOS() string { return In(i18n.Locale()).CalcCurrencySOS() }
+
+// CalcCurrencySOS says "Somali shillings"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency SOS, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencySOS() string {
+	return Catalog.Format(msgs.locale, "calcCurrencySOS", nil)
+}
+
+// CalcCurrencySRD says "Surinamese dollars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency SRD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencySRD() string { return In(i18n.Locale()).CalcCurrencySRD() }
+
+// CalcCurrencySRD says "Surinamese dollars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency SRD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencySRD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencySRD", nil)
+}
+
+// CalcCurrencySSP says "South Sudanese pounds"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency SSP, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencySSP() string { return In(i18n.Locale()).CalcCurrencySSP() }
+
+// CalcCurrencySSP says "South Sudanese pounds"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency SSP, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencySSP() string {
+	return Catalog.Format(msgs.locale, "calcCurrencySSP", nil)
+}
+
+// CalcCurrencySTN says "São Tomé & Príncipe dobras"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency STN, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencySTN() string { return In(i18n.Locale()).CalcCurrencySTN() }
+
+// CalcCurrencySTN says "São Tomé & Príncipe dobras"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency STN, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencySTN() string {
+	return Catalog.Format(msgs.locale, "calcCurrencySTN", nil)
+}
+
+// CalcCurrencySVC says "Salvadoran colones"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency SVC, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencySVC() string { return In(i18n.Locale()).CalcCurrencySVC() }
+
+// CalcCurrencySVC says "Salvadoran colones"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency SVC, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencySVC() string {
+	return Catalog.Format(msgs.locale, "calcCurrencySVC", nil)
+}
+
+// CalcCurrencySYP says "Syrian pounds"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency SYP, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencySYP() string { return In(i18n.Locale()).CalcCurrencySYP() }
+
+// CalcCurrencySYP says "Syrian pounds"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency SYP, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencySYP() string {
+	return Catalog.Format(msgs.locale, "calcCurrencySYP", nil)
+}
+
+// CalcCurrencySZL says "Swazi emalangeni"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency SZL, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencySZL() string { return In(i18n.Locale()).CalcCurrencySZL() }
+
+// CalcCurrencySZL says "Swazi emalangeni"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency SZL, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencySZL() string {
+	return Catalog.Format(msgs.locale, "calcCurrencySZL", nil)
+}
+
+// CalcCurrencyTHB says "Thai baht"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency THB, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyTHB() string { return In(i18n.Locale()).CalcCurrencyTHB() }
+
+// CalcCurrencyTHB says "Thai baht"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency THB, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyTHB() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyTHB", nil)
+}
+
+// CalcCurrencyTJS says "Tajikistani somonis"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency TJS, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyTJS() string { return In(i18n.Locale()).CalcCurrencyTJS() }
+
+// CalcCurrencyTJS says "Tajikistani somonis"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency TJS, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyTJS() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyTJS", nil)
+}
+
+// CalcCurrencyTMT says "Turkmenistani manat"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency TMT, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyTMT() string { return In(i18n.Locale()).CalcCurrencyTMT() }
+
+// CalcCurrencyTMT says "Turkmenistani manat"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency TMT, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyTMT() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyTMT", nil)
+}
+
+// CalcCurrencyTND says "Tunisian dinars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency TND, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyTND() string { return In(i18n.Locale()).CalcCurrencyTND() }
+
+// CalcCurrencyTND says "Tunisian dinars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency TND, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyTND() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyTND", nil)
+}
+
+// CalcCurrencyTOP says "Tongan paʻanga"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency TOP, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyTOP() string { return In(i18n.Locale()).CalcCurrencyTOP() }
+
+// CalcCurrencyTOP says "Tongan paʻanga"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency TOP, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyTOP() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyTOP", nil)
+}
+
+// CalcCurrencyTRY says "Turkish lira"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency TRY, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyTRY() string { return In(i18n.Locale()).CalcCurrencyTRY() }
+
+// CalcCurrencyTRY says "Turkish lira"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency TRY, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyTRY() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyTRY", nil)
+}
+
+// CalcCurrencyTTD says "Trinidad & Tobago dollars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency TTD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyTTD() string { return In(i18n.Locale()).CalcCurrencyTTD() }
+
+// CalcCurrencyTTD says "Trinidad & Tobago dollars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency TTD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyTTD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyTTD", nil)
+}
+
+// CalcCurrencyTWD says "New Taiwan dollars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency TWD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyTWD() string { return In(i18n.Locale()).CalcCurrencyTWD() }
+
+// CalcCurrencyTWD says "New Taiwan dollars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency TWD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyTWD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyTWD", nil)
+}
+
+// CalcCurrencyTZS says "Tanzanian shillings"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency TZS, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyTZS() string { return In(i18n.Locale()).CalcCurrencyTZS() }
+
+// CalcCurrencyTZS says "Tanzanian shillings"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency TZS, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyTZS() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyTZS", nil)
+}
+
+// CalcCurrencyUAH says "Ukrainian hryvnias"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency UAH, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyUAH() string { return In(i18n.Locale()).CalcCurrencyUAH() }
+
+// CalcCurrencyUAH says "Ukrainian hryvnias"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency UAH, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyUAH() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyUAH", nil)
+}
+
+// CalcCurrencyUGX says "Ugandan shillings"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency UGX, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyUGX() string { return In(i18n.Locale()).CalcCurrencyUGX() }
+
+// CalcCurrencyUGX says "Ugandan shillings"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency UGX, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyUGX() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyUGX", nil)
+}
+
+// CalcCurrencyUSD says "US dollars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency USD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyUSD() string { return In(i18n.Locale()).CalcCurrencyUSD() }
+
+// CalcCurrencyUSD says "US dollars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency USD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyUSD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyUSD", nil)
+}
+
+// CalcCurrencyUYU says "Uruguayan pesos"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency UYU, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyUYU() string { return In(i18n.Locale()).CalcCurrencyUYU() }
+
+// CalcCurrencyUYU says "Uruguayan pesos"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency UYU, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyUYU() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyUYU", nil)
+}
+
+// CalcCurrencyUZS says "Uzbekistani som"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency UZS, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyUZS() string { return In(i18n.Locale()).CalcCurrencyUZS() }
+
+// CalcCurrencyUZS says "Uzbekistani som"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency UZS, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyUZS() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyUZS", nil)
+}
+
+// CalcCurrencyVES says "Venezuelan bolívars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency VES, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyVES() string { return In(i18n.Locale()).CalcCurrencyVES() }
+
+// CalcCurrencyVES says "Venezuelan bolívars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency VES, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyVES() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyVES", nil)
+}
+
+// CalcCurrencyVND says "Vietnamese dong"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency VND, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyVND() string { return In(i18n.Locale()).CalcCurrencyVND() }
+
+// CalcCurrencyVND says "Vietnamese dong"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency VND, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyVND() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyVND", nil)
+}
+
+// CalcCurrencyVUV says "Vanuatu vatus"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency VUV, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyVUV() string { return In(i18n.Locale()).CalcCurrencyVUV() }
+
+// CalcCurrencyVUV says "Vanuatu vatus"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency VUV, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyVUV() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyVUV", nil)
+}
+
+// CalcCurrencyWST says "Samoan tala"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency WST, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyWST() string { return In(i18n.Locale()).CalcCurrencyWST() }
+
+// CalcCurrencyWST says "Samoan tala"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency WST, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyWST() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyWST", nil)
+}
+
+// CalcCurrencyXAF says "Central African CFA francs"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency XAF, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyXAF() string { return In(i18n.Locale()).CalcCurrencyXAF() }
+
+// CalcCurrencyXAF says "Central African CFA francs"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency XAF, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyXAF() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyXAF", nil)
+}
+
+// CalcCurrencyXCD says "East Caribbean dollars"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency XCD, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyXCD() string { return In(i18n.Locale()).CalcCurrencyXCD() }
+
+// CalcCurrencyXCD says "East Caribbean dollars"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency XCD, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyXCD() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyXCD", nil)
+}
+
+// CalcCurrencyXOF says "West African CFA francs"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency XOF, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyXOF() string { return In(i18n.Locale()).CalcCurrencyXOF() }
+
+// CalcCurrencyXOF says "West African CFA francs"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency XOF, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyXOF() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyXOF", nil)
+}
+
+// CalcCurrencyXPF says "CFP francs"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency XPF, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyXPF() string { return In(i18n.Locale()).CalcCurrencyXPF() }
+
+// CalcCurrencyXPF says "CFP francs"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency XPF, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyXPF() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyXPF", nil)
+}
+
+// CalcCurrencyYER says "Yemeni rials"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency YER, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyYER() string { return In(i18n.Locale()).CalcCurrencyYER() }
+
+// CalcCurrencyYER says "Yemeni rials"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency YER, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyYER() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyYER", nil)
+}
+
+// CalcCurrencyZAR says "South African rand"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency ZAR, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyZAR() string { return In(i18n.Locale()).CalcCurrencyZAR() }
+
+// CalcCurrencyZAR says "South African rand"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency ZAR, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyZAR() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyZAR", nil)
+}
+
+// CalcCurrencyZMW says "Zambian kwachas"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency ZMW, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyZMW() string { return In(i18n.Locale()).CalcCurrencyZMW() }
+
+// CalcCurrencyZMW says "Zambian kwachas"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency ZMW, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyZMW() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyZMW", nil)
+}
+
+// CalcCurrencyZWG says "Zimbabwean gold"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency ZWG, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyZWG() string { return In(i18n.Locale()).CalcCurrencyZWG() }
+
+// CalcCurrencyZWG says "Zimbabwean gold"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency ZWG, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyZWG() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyZWG", nil)
+}
+
+// CalcCurrencyZWL says "Zimbabwean dollars (2009)"
+// in the language the app shows.
+//
+// Calculator card: the full name of the currency ZWL, in its notes and for
+// the screen reader (copy.md 7.1).
+func CalcCurrencyZWL() string { return In(i18n.Locale()).CalcCurrencyZWL() }
+
+// CalcCurrencyZWL says "Zimbabwean dollars (2009)"
+// in the language of msgs.
+//
+// Calculator card: the full name of the currency ZWL, in its notes and for
+// the screen reader (copy.md 7.1).
+func (msgs Messages) CalcCurrencyZWL() string {
+	return Catalog.Format(msgs.locale, "calcCurrencyZWL", nil)
+}

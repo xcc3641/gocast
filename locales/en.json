@@ -1073,5 +1073,1123 @@
         "example": "Safari"
       }
     }
+  },
+  "calcCopyAnswer": "Copy Answer",
+  "@calcCopyAnswer": {
+    "description": "Calculator card (copy.md 7.2): the primary action (↵) in the actions capsule, and the first row of ⌘K."
+  },
+  "calcCopyEquation": "Copy Expression and Answer",
+  "@calcCopyEquation": {
+    "description": "Calculator ⌘K, third row: copies “100 USD = 15,432 JPY”."
+  },
+  "calcCopyNumber": "Copy Number Only",
+  "@calcCopyNumber": {
+    "description": "Calculator ⌘K, fourth row: copies the bare number, “15432.12”, no grouping, no unit."
+  },
+  "calcRatesFrom": "{currency} · Rates from {date}",
+  "@calcRatesFrom": {
+    "description": "Calculator card, the right side's note when exchange rates were used (copy.md 7.1). date is the system's relative day: Today, Yesterday, Nov 10.",
+    "placeholders": {
+      "currency": {
+        "type": "String",
+        "example": "Japanese yen"
+      },
+      "date": {
+        "type": "String",
+        "example": "Today"
+      }
+    }
+  },
+  "calcNeedsRates": "Go online once to get exchange rates",
+  "@calcNeedsRates": {
+    "description": "Calculator card, right side: a currency conversion with no rates yet, offline (copy.md 7.1)."
+  },
+  "calcGettingRates": "Getting exchange rates…",
+  "@calcGettingRates": {
+    "description": "Calculator card, right side: the first fetch of the rates under way (copy.md 7.1)."
+  },
+  "calcCantCalculate": "Can’t calculate this",
+  "@calcCantCalculate": {
+    "description": "Calculator card, right side: division by zero, units that don't convert (copy.md 7.1)."
+  },
+  "calcLabel": "{expression} equals {answer}, Calculator",
+  "@calcLabel": {
+    "description": "Screen reader: the calculator card (copy.md 7.4), units and currencies by their full names.",
+    "placeholders": {
+      "expression": {
+        "type": "String",
+        "example": "100 US dollars"
+      },
+      "answer": {
+        "type": "String",
+        "example": "15,432 Japanese yen"
+      }
+    }
+  },
+  "calcLabelRates": "{label}, rates from {date}",
+  "@calcLabelRates": {
+    "description": "Screen reader: the calculator card's label with the date of the exchange rates appended (copy.md 7.4).",
+    "placeholders": {
+      "label": {
+        "type": "String",
+        "example": "100 US dollars equals 15,432 Japanese yen, Calculator"
+      },
+      "date": {
+        "type": "String",
+        "example": "November 13"
+      }
+    }
+  },
+  "calcLabelNeedsRates": "{expression}, go online once to get exchange rates, Calculator",
+  "@calcLabelNeedsRates": {
+    "description": "Screen reader: the calculator card without rates, offline (copy.md 7.4).",
+    "placeholders": {
+      "expression": {
+        "type": "String",
+        "example": "100 US dollars"
+      }
+    }
+  },
+  "calcLabelGettingRates": "{expression}, getting exchange rates, Calculator",
+  "@calcLabelGettingRates": {
+    "description": "Screen reader: the calculator card while the rates are first fetched (copy.md 7.4).",
+    "placeholders": {
+      "expression": {
+        "type": "String",
+        "example": "100 US dollars"
+      }
+    }
+  },
+  "calcLabelCantCalculate": "{expression}, can’t calculate this, Calculator",
+  "@calcLabelCantCalculate": {
+    "description": "Screen reader: the calculator card when it can't calculate (copy.md 7.4).",
+    "placeholders": {
+      "expression": {
+        "type": "String",
+        "example": "1 divided by 0"
+      }
+    }
+  },
+  "calcLabelIncomplete": "{expression}, unfinished, last answer {answer}, Calculator",
+  "@calcLabelIncomplete": {
+    "description": "Screen reader: the calculator card while the expression is half typed, the last answer kept greyed (design.md 2.3a). Not in copy.md: to check.",
+    "placeholders": {
+      "expression": {
+        "type": "String",
+        "example": "12 times (3 +"
+      },
+      "answer": {
+        "type": "String",
+        "example": "36"
+      }
+    }
+  },
+  "calcSpokenTimes": "times",
+  "@calcSpokenTimes": {
+    "description": "Screen reader: × in an expression (copy.md 7.4)."
+  },
+  "calcSpokenDividedBy": "divided by",
+  "@calcSpokenDividedBy": {
+    "description": "Screen reader: ÷ in an expression (copy.md 7.4)."
+  },
+  "calcSpokenPower": "{base} to the power of {exponent}",
+  "@calcSpokenPower": {
+    "description": "Screen reader: ^ in an expression (copy.md 7.4).",
+    "placeholders": {
+      "base": {
+        "type": "String",
+        "example": "2"
+      },
+      "exponent": {
+        "type": "String",
+        "example": "10"
+      }
+    }
+  },
+  "calcSpokenPercent": "{number} percent",
+  "@calcSpokenPercent": {
+    "description": "Screen reader: % in an expression (copy.md 7.4).",
+    "placeholders": {
+      "number": {
+        "type": "String",
+        "example": "15"
+      }
+    }
+  },
+  "calcSymbolDay": "d",
+  "@calcSymbolDay": {
+    "description": "Calculator answer: the unit of days in a time, “1 d 4 h” (copy.md 7.1)."
+  },
+  "calcSymbolHour": "h",
+  "@calcSymbolHour": {
+    "description": "Calculator answer: the unit of hours in a time, “2 h 25 min” (copy.md 7.1)."
+  },
+  "calcSymbolMinute": "min",
+  "@calcSymbolMinute": {
+    "description": "Calculator answer: the unit of minutes in a time, “2 h 25 min” (copy.md 7.1)."
+  },
+  "calcSymbolSecond": "s",
+  "@calcSymbolSecond": {
+    "description": "Calculator answer: the unit of seconds in a time, “45 s”."
+  },
+  "calcSymbolWeek": "wk",
+  "@calcSymbolWeek": {
+    "description": "Calculator answer: the unit of weeks."
+  },
+  "calcSymbolMillisecond": "ms",
+  "@calcSymbolMillisecond": {
+    "description": "Calculator answer: the unit of milliseconds."
+  },
+  "generalCalculator": "Calculate in search",
+  "@generalCalculator": {
+    "description": "General: switch, the first group's fourth row; on by default (copy.md 7.3)."
+  },
+  "generalCalculatorHint": "Type math, units or currencies in the search panel to get the answer on top. Exchange rates are fetched once a day.",
+  "@generalCalculatorHint": {
+    "description": "General: under Calculate in search (copy.md 7.3)."
+  },
+  "calcUnitNm": "nanometers",
+  "@calcUnitNm": {
+    "description": "Calculator card: the full name of the unit nm, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitUm": "micrometers",
+  "@calcUnitUm": {
+    "description": "Calculator card: the full name of the unit um, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitMm": "millimeters",
+  "@calcUnitMm": {
+    "description": "Calculator card: the full name of the unit mm, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitCm": "centimeters",
+  "@calcUnitCm": {
+    "description": "Calculator card: the full name of the unit cm, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitDm": "decimeters",
+  "@calcUnitDm": {
+    "description": "Calculator card: the full name of the unit dm, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitM": "meters",
+  "@calcUnitM": {
+    "description": "Calculator card: the full name of the unit m, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitKm": "kilometers",
+  "@calcUnitKm": {
+    "description": "Calculator card: the full name of the unit km, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitIn": "inches",
+  "@calcUnitIn": {
+    "description": "Calculator card: the full name of the unit in, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitFt": "feet",
+  "@calcUnitFt": {
+    "description": "Calculator card: the full name of the unit ft, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitYd": "yards",
+  "@calcUnitYd": {
+    "description": "Calculator card: the full name of the unit yd, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitMi": "miles",
+  "@calcUnitMi": {
+    "description": "Calculator card: the full name of the unit mi, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitNmi": "nautical miles",
+  "@calcUnitNmi": {
+    "description": "Calculator card: the full name of the unit nmi, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitChi": "chi",
+  "@calcUnitChi": {
+    "description": "Calculator card: the full name of the unit chi, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitCun": "cun",
+  "@calcUnitCun": {
+    "description": "Calculator card: the full name of the unit cun, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitMg": "milligrams",
+  "@calcUnitMg": {
+    "description": "Calculator card: the full name of the unit mg, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitG": "grams",
+  "@calcUnitG": {
+    "description": "Calculator card: the full name of the unit g, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitKg": "kilograms",
+  "@calcUnitKg": {
+    "description": "Calculator card: the full name of the unit kg, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitT": "metric tons",
+  "@calcUnitT": {
+    "description": "Calculator card: the full name of the unit t, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitOz": "ounces",
+  "@calcUnitOz": {
+    "description": "Calculator card: the full name of the unit oz, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitLb": "pounds",
+  "@calcUnitLb": {
+    "description": "Calculator card: the full name of the unit lb, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitSt": "stone",
+  "@calcUnitSt": {
+    "description": "Calculator card: the full name of the unit st, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitCt": "carats",
+  "@calcUnitCt": {
+    "description": "Calculator card: the full name of the unit ct, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitJin": "jin",
+  "@calcUnitJin": {
+    "description": "Calculator card: the full name of the unit jin, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitLiang": "liang",
+  "@calcUnitLiang": {
+    "description": "Calculator card: the full name of the unit liang, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitDegC": "degrees Celsius",
+  "@calcUnitDegC": {
+    "description": "Calculator card: the full name of the unit degC, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitDegF": "degrees Fahrenheit",
+  "@calcUnitDegF": {
+    "description": "Calculator card: the full name of the unit degF, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitK": "kelvins",
+  "@calcUnitK": {
+    "description": "Calculator card: the full name of the unit K, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitMm2": "square millimeters",
+  "@calcUnitMm2": {
+    "description": "Calculator card: the full name of the unit mm2, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitCm2": "square centimeters",
+  "@calcUnitCm2": {
+    "description": "Calculator card: the full name of the unit cm2, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitM2": "square meters",
+  "@calcUnitM2": {
+    "description": "Calculator card: the full name of the unit m2, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitKm2": "square kilometers",
+  "@calcUnitKm2": {
+    "description": "Calculator card: the full name of the unit km2, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitIn2": "square inches",
+  "@calcUnitIn2": {
+    "description": "Calculator card: the full name of the unit in2, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitFt2": "square feet",
+  "@calcUnitFt2": {
+    "description": "Calculator card: the full name of the unit ft2, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitYd2": "square yards",
+  "@calcUnitYd2": {
+    "description": "Calculator card: the full name of the unit yd2, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitMi2": "square miles",
+  "@calcUnitMi2": {
+    "description": "Calculator card: the full name of the unit mi2, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitHa": "hectares",
+  "@calcUnitHa": {
+    "description": "Calculator card: the full name of the unit ha, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitAcre": "acres",
+  "@calcUnitAcre": {
+    "description": "Calculator card: the full name of the unit acre, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitMu": "mu",
+  "@calcUnitMu": {
+    "description": "Calculator card: the full name of the unit mu, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitMl": "milliliters",
+  "@calcUnitMl": {
+    "description": "Calculator card: the full name of the unit ml, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitCm3": "cubic centimeters",
+  "@calcUnitCm3": {
+    "description": "Calculator card: the full name of the unit cm3, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitCl": "centiliters",
+  "@calcUnitCl": {
+    "description": "Calculator card: the full name of the unit cl, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitDl": "deciliters",
+  "@calcUnitDl": {
+    "description": "Calculator card: the full name of the unit dl, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitL": "liters",
+  "@calcUnitL": {
+    "description": "Calculator card: the full name of the unit l, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitM3": "cubic meters",
+  "@calcUnitM3": {
+    "description": "Calculator card: the full name of the unit m3, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitGal": "US gallons",
+  "@calcUnitGal": {
+    "description": "Calculator card: the full name of the unit gal, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitQt": "US quarts",
+  "@calcUnitQt": {
+    "description": "Calculator card: the full name of the unit qt, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitPt": "US pints",
+  "@calcUnitPt": {
+    "description": "Calculator card: the full name of the unit pt, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitCup": "US cups",
+  "@calcUnitCup": {
+    "description": "Calculator card: the full name of the unit cup, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitFloz": "US fluid ounces",
+  "@calcUnitFloz": {
+    "description": "Calculator card: the full name of the unit floz, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitTbsp": "tablespoons",
+  "@calcUnitTbsp": {
+    "description": "Calculator card: the full name of the unit tbsp, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitTsp": "teaspoons",
+  "@calcUnitTsp": {
+    "description": "Calculator card: the full name of the unit tsp, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitIn3": "cubic inches",
+  "@calcUnitIn3": {
+    "description": "Calculator card: the full name of the unit in3, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitFt3": "cubic feet",
+  "@calcUnitFt3": {
+    "description": "Calculator card: the full name of the unit ft3, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitKmPerH": "kilometers per hour",
+  "@calcUnitKmPerH": {
+    "description": "Calculator card: the full name of the unit km/h, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitMph": "miles per hour",
+  "@calcUnitMph": {
+    "description": "Calculator card: the full name of the unit mph, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitMPerS": "meters per second",
+  "@calcUnitMPerS": {
+    "description": "Calculator card: the full name of the unit m/s, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitFtPerS": "feet per second",
+  "@calcUnitFtPerS": {
+    "description": "Calculator card: the full name of the unit ft/s, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitKn": "knots",
+  "@calcUnitKn": {
+    "description": "Calculator card: the full name of the unit kn, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitBit": "bits",
+  "@calcUnitBit": {
+    "description": "Calculator card: the full name of the unit bit, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitB": "bytes",
+  "@calcUnitB": {
+    "description": "Calculator card: the full name of the unit B, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitKB": "kilobytes",
+  "@calcUnitKB": {
+    "description": "Calculator card: the full name of the unit kB, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitMB": "megabytes",
+  "@calcUnitMB": {
+    "description": "Calculator card: the full name of the unit MB, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitGB": "gigabytes",
+  "@calcUnitGB": {
+    "description": "Calculator card: the full name of the unit GB, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitTB": "terabytes",
+  "@calcUnitTB": {
+    "description": "Calculator card: the full name of the unit TB, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitPB": "petabytes",
+  "@calcUnitPB": {
+    "description": "Calculator card: the full name of the unit PB, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitKiB": "kibibytes",
+  "@calcUnitKiB": {
+    "description": "Calculator card: the full name of the unit KiB, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitMiB": "mebibytes",
+  "@calcUnitMiB": {
+    "description": "Calculator card: the full name of the unit MiB, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitGiB": "gibibytes",
+  "@calcUnitGiB": {
+    "description": "Calculator card: the full name of the unit GiB, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitTiB": "tebibytes",
+  "@calcUnitTiB": {
+    "description": "Calculator card: the full name of the unit TiB, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitPiB": "pebibytes",
+  "@calcUnitPiB": {
+    "description": "Calculator card: the full name of the unit PiB, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitMs": "milliseconds",
+  "@calcUnitMs": {
+    "description": "Calculator card: the full name of the unit ms, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitS": "seconds",
+  "@calcUnitS": {
+    "description": "Calculator card: the full name of the unit s, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitMin": "minutes",
+  "@calcUnitMin": {
+    "description": "Calculator card: the full name of the unit min, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitH": "hours",
+  "@calcUnitH": {
+    "description": "Calculator card: the full name of the unit h, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitDay": "days",
+  "@calcUnitDay": {
+    "description": "Calculator card: the full name of the unit day, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitWeek": "weeks",
+  "@calcUnitWeek": {
+    "description": "Calculator card: the full name of the unit week, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitPx": "pixels",
+  "@calcUnitPx": {
+    "description": "Calculator card: the full name of the unit px, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitRem": "rem",
+  "@calcUnitRem": {
+    "description": "Calculator card: the full name of the unit rem, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcUnitEm": "em",
+  "@calcUnitEm": {
+    "description": "Calculator card: the full name of the unit em, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyAED": "UAE dirhams",
+  "@calcCurrencyAED": {
+    "description": "Calculator card: the full name of the currency AED, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyAFN": "Afghan afghanis",
+  "@calcCurrencyAFN": {
+    "description": "Calculator card: the full name of the currency AFN, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyALL": "Albanian lekë",
+  "@calcCurrencyALL": {
+    "description": "Calculator card: the full name of the currency ALL, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyAMD": "Armenian drams",
+  "@calcCurrencyAMD": {
+    "description": "Calculator card: the full name of the currency AMD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyANG": "Netherlands Antillean guilders",
+  "@calcCurrencyANG": {
+    "description": "Calculator card: the full name of the currency ANG, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyAOA": "Angolan kwanzas",
+  "@calcCurrencyAOA": {
+    "description": "Calculator card: the full name of the currency AOA, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyARS": "Argentine pesos",
+  "@calcCurrencyARS": {
+    "description": "Calculator card: the full name of the currency ARS, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyAUD": "Australian dollars",
+  "@calcCurrencyAUD": {
+    "description": "Calculator card: the full name of the currency AUD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyAWG": "Aruban florin",
+  "@calcCurrencyAWG": {
+    "description": "Calculator card: the full name of the currency AWG, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyAZN": "Azerbaijani manats",
+  "@calcCurrencyAZN": {
+    "description": "Calculator card: the full name of the currency AZN, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyBAM": "Bosnia-Herzegovina convertible marks",
+  "@calcCurrencyBAM": {
+    "description": "Calculator card: the full name of the currency BAM, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyBBD": "Barbadian dollars",
+  "@calcCurrencyBBD": {
+    "description": "Calculator card: the full name of the currency BBD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyBDT": "Bangladeshi takas",
+  "@calcCurrencyBDT": {
+    "description": "Calculator card: the full name of the currency BDT, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyBGN": "Bulgarian leva",
+  "@calcCurrencyBGN": {
+    "description": "Calculator card: the full name of the currency BGN, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyBHD": "Bahraini dinars",
+  "@calcCurrencyBHD": {
+    "description": "Calculator card: the full name of the currency BHD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyBIF": "Burundian francs",
+  "@calcCurrencyBIF": {
+    "description": "Calculator card: the full name of the currency BIF, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyBMD": "Bermudan dollars",
+  "@calcCurrencyBMD": {
+    "description": "Calculator card: the full name of the currency BMD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyBND": "Brunei dollars",
+  "@calcCurrencyBND": {
+    "description": "Calculator card: the full name of the currency BND, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyBOB": "Bolivian bolivianos",
+  "@calcCurrencyBOB": {
+    "description": "Calculator card: the full name of the currency BOB, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyBRL": "Brazilian reals",
+  "@calcCurrencyBRL": {
+    "description": "Calculator card: the full name of the currency BRL, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyBSD": "Bahamian dollars",
+  "@calcCurrencyBSD": {
+    "description": "Calculator card: the full name of the currency BSD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyBTN": "Bhutanese ngultrums",
+  "@calcCurrencyBTN": {
+    "description": "Calculator card: the full name of the currency BTN, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyBWP": "Botswanan pulas",
+  "@calcCurrencyBWP": {
+    "description": "Calculator card: the full name of the currency BWP, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyBYN": "Belarusian rubles",
+  "@calcCurrencyBYN": {
+    "description": "Calculator card: the full name of the currency BYN, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyBZD": "Belize dollars",
+  "@calcCurrencyBZD": {
+    "description": "Calculator card: the full name of the currency BZD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyCAD": "Canadian dollars",
+  "@calcCurrencyCAD": {
+    "description": "Calculator card: the full name of the currency CAD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyCDF": "Congolese francs",
+  "@calcCurrencyCDF": {
+    "description": "Calculator card: the full name of the currency CDF, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyCHF": "Swiss francs",
+  "@calcCurrencyCHF": {
+    "description": "Calculator card: the full name of the currency CHF, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyCLP": "Chilean pesos",
+  "@calcCurrencyCLP": {
+    "description": "Calculator card: the full name of the currency CLP, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyCNY": "Chinese yuan",
+  "@calcCurrencyCNY": {
+    "description": "Calculator card: the full name of the currency CNY, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyCOP": "Colombian pesos",
+  "@calcCurrencyCOP": {
+    "description": "Calculator card: the full name of the currency COP, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyCRC": "Costa Rican colóns",
+  "@calcCurrencyCRC": {
+    "description": "Calculator card: the full name of the currency CRC, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyCUP": "Cuban pesos",
+  "@calcCurrencyCUP": {
+    "description": "Calculator card: the full name of the currency CUP, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyCVE": "Cape Verdean escudos",
+  "@calcCurrencyCVE": {
+    "description": "Calculator card: the full name of the currency CVE, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyCZK": "Czech korunas",
+  "@calcCurrencyCZK": {
+    "description": "Calculator card: the full name of the currency CZK, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyDJF": "Djiboutian francs",
+  "@calcCurrencyDJF": {
+    "description": "Calculator card: the full name of the currency DJF, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyDKK": "Danish kroner",
+  "@calcCurrencyDKK": {
+    "description": "Calculator card: the full name of the currency DKK, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyDOP": "Dominican pesos",
+  "@calcCurrencyDOP": {
+    "description": "Calculator card: the full name of the currency DOP, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyDZD": "Algerian dinars",
+  "@calcCurrencyDZD": {
+    "description": "Calculator card: the full name of the currency DZD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyEGP": "Egyptian pounds",
+  "@calcCurrencyEGP": {
+    "description": "Calculator card: the full name of the currency EGP, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyERN": "Eritrean nakfas",
+  "@calcCurrencyERN": {
+    "description": "Calculator card: the full name of the currency ERN, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyETB": "Ethiopian birrs",
+  "@calcCurrencyETB": {
+    "description": "Calculator card: the full name of the currency ETB, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyEUR": "euros",
+  "@calcCurrencyEUR": {
+    "description": "Calculator card: the full name of the currency EUR, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyFJD": "Fijian dollars",
+  "@calcCurrencyFJD": {
+    "description": "Calculator card: the full name of the currency FJD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyFKP": "Falkland Islands pounds",
+  "@calcCurrencyFKP": {
+    "description": "Calculator card: the full name of the currency FKP, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyGBP": "British pounds",
+  "@calcCurrencyGBP": {
+    "description": "Calculator card: the full name of the currency GBP, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyGEL": "Georgian laris",
+  "@calcCurrencyGEL": {
+    "description": "Calculator card: the full name of the currency GEL, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyGHS": "Ghanaian cedis",
+  "@calcCurrencyGHS": {
+    "description": "Calculator card: the full name of the currency GHS, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyGIP": "Gibraltar pounds",
+  "@calcCurrencyGIP": {
+    "description": "Calculator card: the full name of the currency GIP, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyGMD": "Gambian dalasis",
+  "@calcCurrencyGMD": {
+    "description": "Calculator card: the full name of the currency GMD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyGNF": "Guinean francs",
+  "@calcCurrencyGNF": {
+    "description": "Calculator card: the full name of the currency GNF, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyGTQ": "Guatemalan quetzals",
+  "@calcCurrencyGTQ": {
+    "description": "Calculator card: the full name of the currency GTQ, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyGYD": "Guyanaese dollars",
+  "@calcCurrencyGYD": {
+    "description": "Calculator card: the full name of the currency GYD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyHKD": "Hong Kong dollars",
+  "@calcCurrencyHKD": {
+    "description": "Calculator card: the full name of the currency HKD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyHNL": "Honduran lempiras",
+  "@calcCurrencyHNL": {
+    "description": "Calculator card: the full name of the currency HNL, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyHTG": "Haitian gourdes",
+  "@calcCurrencyHTG": {
+    "description": "Calculator card: the full name of the currency HTG, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyHUF": "Hungarian forints",
+  "@calcCurrencyHUF": {
+    "description": "Calculator card: the full name of the currency HUF, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyIDR": "Indonesian rupiahs",
+  "@calcCurrencyIDR": {
+    "description": "Calculator card: the full name of the currency IDR, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyILS": "Israeli new shekels",
+  "@calcCurrencyILS": {
+    "description": "Calculator card: the full name of the currency ILS, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyINR": "Indian rupees",
+  "@calcCurrencyINR": {
+    "description": "Calculator card: the full name of the currency INR, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyIQD": "Iraqi dinars",
+  "@calcCurrencyIQD": {
+    "description": "Calculator card: the full name of the currency IQD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyIRR": "Iranian rials",
+  "@calcCurrencyIRR": {
+    "description": "Calculator card: the full name of the currency IRR, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyISK": "Icelandic krónur",
+  "@calcCurrencyISK": {
+    "description": "Calculator card: the full name of the currency ISK, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyJMD": "Jamaican dollars",
+  "@calcCurrencyJMD": {
+    "description": "Calculator card: the full name of the currency JMD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyJOD": "Jordanian dinars",
+  "@calcCurrencyJOD": {
+    "description": "Calculator card: the full name of the currency JOD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyJPY": "Japanese yen",
+  "@calcCurrencyJPY": {
+    "description": "Calculator card: the full name of the currency JPY, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyKES": "Kenyan shillings",
+  "@calcCurrencyKES": {
+    "description": "Calculator card: the full name of the currency KES, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyKGS": "Kyrgystani soms",
+  "@calcCurrencyKGS": {
+    "description": "Calculator card: the full name of the currency KGS, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyKHR": "Cambodian riels",
+  "@calcCurrencyKHR": {
+    "description": "Calculator card: the full name of the currency KHR, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyKMF": "Comorian francs",
+  "@calcCurrencyKMF": {
+    "description": "Calculator card: the full name of the currency KMF, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyKPW": "North Korean won",
+  "@calcCurrencyKPW": {
+    "description": "Calculator card: the full name of the currency KPW, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyKRW": "South Korean won",
+  "@calcCurrencyKRW": {
+    "description": "Calculator card: the full name of the currency KRW, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyKWD": "Kuwaiti dinars",
+  "@calcCurrencyKWD": {
+    "description": "Calculator card: the full name of the currency KWD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyKYD": "Cayman Islands dollars",
+  "@calcCurrencyKYD": {
+    "description": "Calculator card: the full name of the currency KYD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyKZT": "Kazakhstani tenges",
+  "@calcCurrencyKZT": {
+    "description": "Calculator card: the full name of the currency KZT, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyLAK": "Laotian kips",
+  "@calcCurrencyLAK": {
+    "description": "Calculator card: the full name of the currency LAK, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyLBP": "Lebanese pounds",
+  "@calcCurrencyLBP": {
+    "description": "Calculator card: the full name of the currency LBP, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyLKR": "Sri Lankan rupees",
+  "@calcCurrencyLKR": {
+    "description": "Calculator card: the full name of the currency LKR, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyLRD": "Liberian dollars",
+  "@calcCurrencyLRD": {
+    "description": "Calculator card: the full name of the currency LRD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyLSL": "Lesotho lotis",
+  "@calcCurrencyLSL": {
+    "description": "Calculator card: the full name of the currency LSL, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyLYD": "Libyan dinars",
+  "@calcCurrencyLYD": {
+    "description": "Calculator card: the full name of the currency LYD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyMAD": "Moroccan dirhams",
+  "@calcCurrencyMAD": {
+    "description": "Calculator card: the full name of the currency MAD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyMDL": "Moldovan lei",
+  "@calcCurrencyMDL": {
+    "description": "Calculator card: the full name of the currency MDL, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyMGA": "Malagasy ariaries",
+  "@calcCurrencyMGA": {
+    "description": "Calculator card: the full name of the currency MGA, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyMKD": "Macedonian denari",
+  "@calcCurrencyMKD": {
+    "description": "Calculator card: the full name of the currency MKD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyMMK": "Myanmar kyats",
+  "@calcCurrencyMMK": {
+    "description": "Calculator card: the full name of the currency MMK, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyMNT": "Mongolian tugriks",
+  "@calcCurrencyMNT": {
+    "description": "Calculator card: the full name of the currency MNT, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyMOP": "Macanese patacas",
+  "@calcCurrencyMOP": {
+    "description": "Calculator card: the full name of the currency MOP, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyMRU": "Mauritanian ouguiyas",
+  "@calcCurrencyMRU": {
+    "description": "Calculator card: the full name of the currency MRU, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyMUR": "Mauritian rupees",
+  "@calcCurrencyMUR": {
+    "description": "Calculator card: the full name of the currency MUR, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyMVR": "Maldivian rufiyaas",
+  "@calcCurrencyMVR": {
+    "description": "Calculator card: the full name of the currency MVR, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyMWK": "Malawian kwachas",
+  "@calcCurrencyMWK": {
+    "description": "Calculator card: the full name of the currency MWK, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyMXN": "Mexican pesos",
+  "@calcCurrencyMXN": {
+    "description": "Calculator card: the full name of the currency MXN, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyMYR": "Malaysian ringgits",
+  "@calcCurrencyMYR": {
+    "description": "Calculator card: the full name of the currency MYR, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyMZN": "Mozambican meticals",
+  "@calcCurrencyMZN": {
+    "description": "Calculator card: the full name of the currency MZN, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyNAD": "Namibian dollars",
+  "@calcCurrencyNAD": {
+    "description": "Calculator card: the full name of the currency NAD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyNGN": "Nigerian nairas",
+  "@calcCurrencyNGN": {
+    "description": "Calculator card: the full name of the currency NGN, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyNIO": "Nicaraguan córdobas",
+  "@calcCurrencyNIO": {
+    "description": "Calculator card: the full name of the currency NIO, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyNOK": "Norwegian kroner",
+  "@calcCurrencyNOK": {
+    "description": "Calculator card: the full name of the currency NOK, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyNPR": "Nepalese rupees",
+  "@calcCurrencyNPR": {
+    "description": "Calculator card: the full name of the currency NPR, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyNZD": "New Zealand dollars",
+  "@calcCurrencyNZD": {
+    "description": "Calculator card: the full name of the currency NZD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyOMR": "Omani rials",
+  "@calcCurrencyOMR": {
+    "description": "Calculator card: the full name of the currency OMR, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyPAB": "Panamanian balboas",
+  "@calcCurrencyPAB": {
+    "description": "Calculator card: the full name of the currency PAB, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyPEN": "Peruvian soles",
+  "@calcCurrencyPEN": {
+    "description": "Calculator card: the full name of the currency PEN, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyPGK": "Papua New Guinean kina",
+  "@calcCurrencyPGK": {
+    "description": "Calculator card: the full name of the currency PGK, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyPHP": "Philippine pesos",
+  "@calcCurrencyPHP": {
+    "description": "Calculator card: the full name of the currency PHP, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyPKR": "Pakistani rupees",
+  "@calcCurrencyPKR": {
+    "description": "Calculator card: the full name of the currency PKR, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyPLN": "Polish zlotys",
+  "@calcCurrencyPLN": {
+    "description": "Calculator card: the full name of the currency PLN, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyPYG": "Paraguayan guaranis",
+  "@calcCurrencyPYG": {
+    "description": "Calculator card: the full name of the currency PYG, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyQAR": "Qatari riyals",
+  "@calcCurrencyQAR": {
+    "description": "Calculator card: the full name of the currency QAR, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyRON": "Romanian lei",
+  "@calcCurrencyRON": {
+    "description": "Calculator card: the full name of the currency RON, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyRSD": "Serbian dinars",
+  "@calcCurrencyRSD": {
+    "description": "Calculator card: the full name of the currency RSD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyRUB": "Russian rubles",
+  "@calcCurrencyRUB": {
+    "description": "Calculator card: the full name of the currency RUB, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyRWF": "Rwandan francs",
+  "@calcCurrencyRWF": {
+    "description": "Calculator card: the full name of the currency RWF, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencySAR": "Saudi riyals",
+  "@calcCurrencySAR": {
+    "description": "Calculator card: the full name of the currency SAR, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencySBD": "Solomon Islands dollars",
+  "@calcCurrencySBD": {
+    "description": "Calculator card: the full name of the currency SBD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencySCR": "Seychellois rupees",
+  "@calcCurrencySCR": {
+    "description": "Calculator card: the full name of the currency SCR, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencySDG": "Sudanese pounds",
+  "@calcCurrencySDG": {
+    "description": "Calculator card: the full name of the currency SDG, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencySEK": "Swedish kronor",
+  "@calcCurrencySEK": {
+    "description": "Calculator card: the full name of the currency SEK, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencySGD": "Singapore dollars",
+  "@calcCurrencySGD": {
+    "description": "Calculator card: the full name of the currency SGD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencySHP": "St. Helena pounds",
+  "@calcCurrencySHP": {
+    "description": "Calculator card: the full name of the currency SHP, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencySLE": "Sierra Leonean leones",
+  "@calcCurrencySLE": {
+    "description": "Calculator card: the full name of the currency SLE, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencySLL": "Sierra Leonean leones (1964–2022)",
+  "@calcCurrencySLL": {
+    "description": "Calculator card: the full name of the currency SLL, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencySOS": "Somali shillings",
+  "@calcCurrencySOS": {
+    "description": "Calculator card: the full name of the currency SOS, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencySRD": "Surinamese dollars",
+  "@calcCurrencySRD": {
+    "description": "Calculator card: the full name of the currency SRD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencySSP": "South Sudanese pounds",
+  "@calcCurrencySSP": {
+    "description": "Calculator card: the full name of the currency SSP, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencySTN": "São Tomé & Príncipe dobras",
+  "@calcCurrencySTN": {
+    "description": "Calculator card: the full name of the currency STN, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencySVC": "Salvadoran colones",
+  "@calcCurrencySVC": {
+    "description": "Calculator card: the full name of the currency SVC, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencySYP": "Syrian pounds",
+  "@calcCurrencySYP": {
+    "description": "Calculator card: the full name of the currency SYP, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencySZL": "Swazi emalangeni",
+  "@calcCurrencySZL": {
+    "description": "Calculator card: the full name of the currency SZL, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyTHB": "Thai baht",
+  "@calcCurrencyTHB": {
+    "description": "Calculator card: the full name of the currency THB, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyTJS": "Tajikistani somonis",
+  "@calcCurrencyTJS": {
+    "description": "Calculator card: the full name of the currency TJS, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyTMT": "Turkmenistani manat",
+  "@calcCurrencyTMT": {
+    "description": "Calculator card: the full name of the currency TMT, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyTND": "Tunisian dinars",
+  "@calcCurrencyTND": {
+    "description": "Calculator card: the full name of the currency TND, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyTOP": "Tongan paʻanga",
+  "@calcCurrencyTOP": {
+    "description": "Calculator card: the full name of the currency TOP, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyTRY": "Turkish lira",
+  "@calcCurrencyTRY": {
+    "description": "Calculator card: the full name of the currency TRY, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyTTD": "Trinidad & Tobago dollars",
+  "@calcCurrencyTTD": {
+    "description": "Calculator card: the full name of the currency TTD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyTWD": "New Taiwan dollars",
+  "@calcCurrencyTWD": {
+    "description": "Calculator card: the full name of the currency TWD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyTZS": "Tanzanian shillings",
+  "@calcCurrencyTZS": {
+    "description": "Calculator card: the full name of the currency TZS, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyUAH": "Ukrainian hryvnias",
+  "@calcCurrencyUAH": {
+    "description": "Calculator card: the full name of the currency UAH, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyUGX": "Ugandan shillings",
+  "@calcCurrencyUGX": {
+    "description": "Calculator card: the full name of the currency UGX, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyUSD": "US dollars",
+  "@calcCurrencyUSD": {
+    "description": "Calculator card: the full name of the currency USD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyUYU": "Uruguayan pesos",
+  "@calcCurrencyUYU": {
+    "description": "Calculator card: the full name of the currency UYU, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyUZS": "Uzbekistani som",
+  "@calcCurrencyUZS": {
+    "description": "Calculator card: the full name of the currency UZS, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyVES": "Venezuelan bolívars",
+  "@calcCurrencyVES": {
+    "description": "Calculator card: the full name of the currency VES, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyVND": "Vietnamese dong",
+  "@calcCurrencyVND": {
+    "description": "Calculator card: the full name of the currency VND, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyVUV": "Vanuatu vatus",
+  "@calcCurrencyVUV": {
+    "description": "Calculator card: the full name of the currency VUV, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyWST": "Samoan tala",
+  "@calcCurrencyWST": {
+    "description": "Calculator card: the full name of the currency WST, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyXAF": "Central African CFA francs",
+  "@calcCurrencyXAF": {
+    "description": "Calculator card: the full name of the currency XAF, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyXCD": "East Caribbean dollars",
+  "@calcCurrencyXCD": {
+    "description": "Calculator card: the full name of the currency XCD, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyXOF": "West African CFA francs",
+  "@calcCurrencyXOF": {
+    "description": "Calculator card: the full name of the currency XOF, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyXPF": "CFP francs",
+  "@calcCurrencyXPF": {
+    "description": "Calculator card: the full name of the currency XPF, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyYER": "Yemeni rials",
+  "@calcCurrencyYER": {
+    "description": "Calculator card: the full name of the currency YER, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyZAR": "South African rand",
+  "@calcCurrencyZAR": {
+    "description": "Calculator card: the full name of the currency ZAR, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyZMW": "Zambian kwachas",
+  "@calcCurrencyZMW": {
+    "description": "Calculator card: the full name of the currency ZMW, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyZWG": "Zimbabwean gold",
+  "@calcCurrencyZWG": {
+    "description": "Calculator card: the full name of the currency ZWG, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "calcCurrencyZWL": "Zimbabwean dollars (2009)",
+  "@calcCurrencyZWL": {
+    "description": "Calculator card: the full name of the currency ZWL, in its notes and for the screen reader (copy.md 7.1)."
   }
 }

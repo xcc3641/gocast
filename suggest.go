@@ -145,9 +145,10 @@ func suggested(ranked, pad []string, exists func(id string) bool) []string {
 }
 
 // panelRow is a row of the search panel's list: a group's title, a search
-// item (an app, a preset, the clipboard history), or one of Gocast's own
-// items.
+// item (an app, a preset, the clipboard history), one of Gocast's own
+// items, or the calculator's card (design.md 2.3a).
 type panelRow struct {
+	calc  bool   // the calculator's card, the first row
 	title string // the group's title, for a title's row
 	item  int    // the index of the search item, or -1
 	own   int    // the index of Gocast's own item, or -1

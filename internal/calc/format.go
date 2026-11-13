@@ -242,3 +242,34 @@ func DefaultSymbol(code string) string {
 	}
 	return code
 }
+
+// Display is the input as the card's left side shows it (design.md
+// 2.3a): s is Result.Input (trimmed, half-width), with * and / written
+// × and ÷, but the / of a unit (km/h) kept; units and currencies as
+// typed.
+func Display(s string) string {
+	toks, err := lex(s)
+	if err != nil {
+		return s
+	}
+	var b strings.Builder
+	at := 0
+	for k, t := range toks {
+		if t.kind != tOp || t.end-t.pos != 1 || (t.text != "*" && t.text != "/") {
+			continue
+		}
+		if t.text == "/" && k > 0 && k+1 < len(toks) && toks[k-1].kind == tWord && toks[k+1].kind == tWord &&
+			!t.space && !toks[k+1].space {
+			continue // km/h
+		}
+		b.WriteString(s[at:t.pos])
+		if t.text == "*" {
+			b.WriteString("×")
+		} else {
+			b.WriteString("÷")
+		}
+		at = t.end
+	}
+	b.WriteString(s[at:])
+	return b.String()
+}

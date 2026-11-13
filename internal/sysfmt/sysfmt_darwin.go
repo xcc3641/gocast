@@ -28,6 +28,8 @@ var (
 	selDateSince  = objc.RegisterName("dateWithTimeIntervalSince1970:")
 	selByteString = objc.RegisterName("stringFromByteCount:countStyle:")
 	selRelease    = objc.RegisterName("release")
+	selGroupSep   = objc.RegisterName("groupingSeparator")
+	selDecimalSep = objc.RegisterName("decimalSeparator")
 )
 
 var (
@@ -116,4 +118,57 @@ func Bytes(n int64) string {
 	defer pool.Send(selDrain)
 	const countStyleFile = 0
 	return goString(classByteFmt.Send(selByteString, n, countStyleFile))
+}
+
+// Day says the day of t, as of now, in the language of locale, without
+// the time: today and yesterday in words ("今天", "Yesterday"), else the
+// date without its year (with it before this year): "11月10日", "Nov 10";
+// long spells the month ("November 10"), for VoiceOver.
+func Day(t, now time.Time, locale string, long bool) string {
+	if !classes() {
+		return fallbackDay(t, now)
+	}
+	pool := classPool.Send(selNew)
+	defer pool.Send(selDrain)
+	f := classDateFmt.Send(selNew)
+	defer f.Send(selRelease)
+	f.Send(selSetLocale, nsLocale(locale))
+	if relativeDay(t, now) {
+		f.Send(selRelative, true)
+		f.Send(selSetDate, styleMedium)
+		f.Send(selSetTime, styleNone)
+	} else {
+		tmpl := "MMMd"
+		if long {
+			tmpl = "MMMMd"
+		}
+		if t.In(now.Location()).Year() != now.Year() {
+			tmpl = "y" + tmpl
+		}
+		f.Send(selTemplate, classStr.Send(selString, tmpl))
+	}
+	date := classDate.Send(selDateSince, float64(t.UnixNano())/1e9)
+	if s := goString(f.Send(selFromDate, date)); s != "" {
+		return s
+	}
+	return fallbackDay(t, now)
+}
+
+// Separators are the grouping separator and the decimal point of the
+// system's number format (System Settings › General › Language & Region):
+// "," and "." in the US, "." and "," in Germany, a space and "," in
+// France.
+func Separators() (group, decimal string) {
+	if !classes() {
+		return ",", "."
+	}
+	pool := classPool.Send(selNew)
+	defer pool.Send(selDrain)
+	cur := classLocale.Send(selCurrent)
+	group = goString(cur.Send(selGroupSep))
+	decimal = goString(cur.Send(selDecimalSep))
+	if decimal == "" {
+		return ",", "."
+	}
+	return group, decimal
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"gocast/internal/apps"
+	"gocast/internal/calc"
 	"gocast/internal/presets"
 	"gocast/internal/running"
 	"gocast/internal/search"
@@ -52,9 +53,10 @@ const (
 	noticeFor  = 4 * time.Second
 )
 
-// entry is what a row opens: an app, a terminal preset, or one of
-// Gocast's own items (the clipboard history, ...).
+// entry is what a row opens: an app, a terminal preset, one of Gocast's
+// own items (the clipboard history, ...), or the calculator's card.
 type entry struct {
+	calc   bool
 	app    *mygo.InstalledApp
 	place  string // what tells the app from another of its name: its file name or folder (apps.Places)
 	preset string // its ID, for a preset
@@ -135,6 +137,16 @@ type launcher struct {
 	clip *clipView
 	// regionW is the width of the panel the input region is for.
 	regionW float32
+
+	// The calculator's card (design.md 2.3a), the first row while calcOn:
+	// the evaluation of the query, and the last one not being typed,
+	// whose answer shows greyed while the next is typed.
+	calcRes  calc.Result
+	calcLast *calc.Result
+	calcOn   bool
+	// target is where Cmd-Return pastes the answer: the app the panel
+	// showed over, or the floating terminal.
+	target pasteTarget
 }
 
 func newLauncher(g *gocast) *launcher {
@@ -409,10 +421,12 @@ func (l *launcher) resultList(c *ui.Context, k tokens) {
 	l.list.Key = l.rowKey
 	l.list.Label = l.rowLabel
 	var list ui.Element
-	ui.Themed(c, listTheme(c, k)).Background(ui.Transparent).Grow(1).Children(func() { // the glass shows through
+	ui.Themed(c, searchListTheme(c, k)).Background(ui.Transparent).Grow(1).Children(func() { // the glass shows through
 		// Room at the end for the last row to scroll above the actions
-		// capsule, which floats over the list.
-		list = ui.List(c, &l.list, len(l.rows), func(i int) { l.row(c, k, i) }).Grow(1).Padding(0, listInset, capsuleInset+capsuleHeight+capsuleInset, listInset)
+		// capsule, which floats over the list. The rows draw their
+		// selection themselves, the calculator's card its own way.
+		list = ui.List(c, &l.list, len(l.rows)).Grow(1).Padding(0, listInset, capsuleInset+capsuleHeight+capsuleInset, listInset).
+			Rows(func(r ui.ListRow) { l.row(c, k, r.Index, r.Selected()) })
 	})
 	if l.scroll && l.chosen >= 0 && l.chosen < len(l.rows) {
 		l.scroll = false
@@ -432,24 +446,27 @@ func (l *launcher) resultList(c *ui.Context, k tokens) {
 	}
 }
 
-// row shows a row: a group's title, Gocast's own item, or a search item.
-func (l *launcher) row(c *ui.Context, k tokens, i int) {
+// row shows a row, in the selection gray when chosen: the calculator's
+// card, a group's title, Gocast's own item, or a search item.
+func (l *launcher) row(c *ui.Context, k tokens, i int, chosen bool) {
 	r := l.rows[i]
 	switch {
+	case r.calc:
+		l.calcRow(c, k, chosen)
 	case r.title != "":
 		listSection(c, k, r.title, locales.SearchHeading(r.title))
 	case r.own >= 0:
-		l.ownRow(c, k, l.own[r.own], r.group)
+		l.ownRow(c, k, l.own[r.own], r.group, chosen)
 	default:
-		l.itemRow(c, k, r.item)
+		l.itemRow(c, k, r.item, chosen)
 	}
 }
 
 // ownRow shows Gocast's own item as a search result shows (design.md
 // 2.5a): its symbol on a square, its name, and "Gocast" at the right; in
 // the Gocast group, its shortcut instead.
-func (l *launcher) ownRow(c *ui.Context, k tokens, o ownItem, group bool) {
-	listRow(c, k, false, func() {
+func (l *launcher) ownRow(c *ui.Context, k tokens, o ownItem, group, chosen bool) {
+	listRow(c, k, chosen, func() {
 		symbolSquare(c, k, o.symbol)
 		listTitle(c, k, o.label)
 		ui.Spacer(c)
@@ -463,7 +480,7 @@ func (l *launcher) ownRow(c *ui.Context, k tokens, o ownItem, group bool) {
 
 // itemRow shows a search item: its icon, its name, a preset's folder and
 // command, and what it is.
-func (l *launcher) itemRow(c *ui.Context, k tokens, item int) {
+func (l *launcher) itemRow(c *ui.Context, k tokens, item int, chosen bool) {
 	it := l.items[item]
 	e := l.entries[item]
 	subtitle := e.place // what tells an app from another of its name (design.md 2.3)
@@ -477,7 +494,7 @@ func (l *launcher) itemRow(c *ui.Context, k tokens, item int) {
 			subtitle = presetSubtitle(l.g.presets[j])
 		}
 	}
-	listRow(c, k, false, func() {
+	listRow(c, k, chosen, func() {
 		switch {
 		case e.own != "":
 			symbolSquare(c, k, ownSymbol(l.own, e.own))
@@ -518,6 +535,8 @@ func (l *launcher) itemRow(c *ui.Context, k tokens, item int) {
 func (l *launcher) rowKey(i int) any {
 	r := l.rows[i]
 	switch {
+	case r.calc:
+		return "calc"
 	case r.title != "":
 		return "title:" + r.title
 	case r.own >= 0 && r.group:
@@ -534,6 +553,8 @@ func (l *launcher) rowKey(i int) any {
 func (l *launcher) rowLabel(i int) string {
 	r := l.rows[i]
 	switch {
+	case r.calc:
+		return l.card(time.Now()).label
 	case r.title != "":
 		return locales.SearchHeading(r.title)
 	case r.own >= 0 && r.group:
@@ -619,14 +640,17 @@ func around(s, mark string) (before, after string) {
 // alone the capsule is centred in it (capsuleBottom).
 func (l *launcher) footer(c *ui.Context, k tokens, h float32) {
 	e, ok := l.current()
+	// The calculator's card with no answer: Actions alone, dimmed, though
+	// Cmd-K opens them (design.md 2.3a).
+	can := ok && (!e.calc || l.card(time.Now()).ok())
 	var segs []segment
-	if ok {
+	if can {
 		segs = append(segs, segment{label: primaryName(e), color: k.text, key: ui.KeyEnter, caps: []string{"↩"}, act: l.primary})
 	}
 	// No results: nothing to act on. The search bar alone: the
 	// suggestions (design.md 2.5a).
 	segs = append(segs, segment{label: locales.FooterActions(), color: k.textOnGlass, mods: ui.Cmd, key: ui.KeyK,
-		caps: []string{"⌘", "K"}, dim: !ok && !l.compact(), act: l.toggleMenu})
+		caps: []string{"⌘", "K"}, dim: !can && !l.compact(), act: l.toggleMenu})
 	bottom := capsuleBottom(h)
 	if l.notice != "" {
 		n := notice{icon: "checkmark.circle", iconColor: k.textOnGlass, color: k.textOnGlass, text: l.notice}
@@ -655,6 +679,8 @@ func capsuleBottom(h float32) float32 {
 // Quit Gocast.
 func primaryName(e entry) string {
 	switch {
+	case e.calc:
+		return locales.CalcCopyAnswer()
 	case e.own == quitItemID:
 		return locales.FooterQuit()
 	case e.own == "" && e.app == nil:
@@ -688,6 +714,8 @@ func (l *launcher) current() (entry, bool) {
 	switch {
 	case !ok:
 		return entry{}, false
+	case r.calc:
+		return entry{calc: true}, true
 	case r.own >= 0:
 		return entry{own: l.own[r.own].id}, true
 	}
@@ -699,7 +727,7 @@ func (l *launcher) current() (entry, bool) {
 func (l *launcher) currentID() string {
 	r, ok := l.chosenRow()
 	switch {
-	case !ok:
+	case !ok, r.calc:
 		return ""
 	case r.own >= 0:
 		return l.own[r.own].id
@@ -743,6 +771,9 @@ func (l *launcher) actions() []action {
 	if !ok {
 		return nil
 	}
+	if e.calc {
+		return l.calcActions()
+	}
 	if e.own != "" { // its primary action alone (design.md 2.5a)
 		return []action{{ownSymbol(l.own, e.own), primaryName(e), []string{"↩"}, l.primary}}
 	}
@@ -775,6 +806,14 @@ func (l *launcher) actions() []action {
 	}
 }
 
+// menuDim reports whether the menu's actions can't be taken: the
+// calculator's with no answer, all dimmed, as the card is now (the rates
+// may come while the menu shows; design.md 2.3a).
+func (l *launcher) menuDim() bool {
+	e, ok := l.current()
+	return ok && e.calc && !l.card(time.Now()).ok()
+}
+
 func (l *launcher) filterMenu() {
 	l.menuShown = l.menuShown[:0]
 	for i, a := range l.menuItems {
@@ -790,6 +829,9 @@ func (l *launcher) runMenu(i int) {
 		return
 	}
 	a := l.menuItems[l.menuShown[i]]
+	if l.menuDim() {
+		return
+	}
 	l.menuOpen = false
 	l.input.Focus()
 	a.run()
@@ -825,6 +867,7 @@ func (l *launcher) menuKey(key ui.TextKey) bool {
 
 func (l *launcher) actionsMenu(c *ui.Context, k tokens) {
 	c.Key("actionsMenu")
+	dim := l.menuDim()
 	popupMenu(c, k, 1, 1).Right(capsuleInset).Bottom(capsuleInset + capsuleHeight + 8).Children(func() {
 		menuField(c, k, func() {
 			f := ui.TextInputBase(c, &l.menuQuery).Bind(&l.menuInput).Grow(1).FontSize(13).
@@ -842,7 +885,7 @@ func (l *launcher) actionsMenu(c *ui.Context, k tokens) {
 			for i, ai := range l.menuShown {
 				a := l.menuItems[ai]
 				idx := i
-				menuRow(c, k, a.icon, a.label, "", a.caps, i == l.menuChosen, func() { l.runMenu(idx) })
+				menuRowDim(c, k, a.icon, a.label, "", a.caps, i == l.menuChosen, dim, func() { l.runMenu(idx) })
 			}
 		})
 	})
@@ -860,6 +903,10 @@ func (l *launcher) secondary() { l.act(true) }
 func (l *launcher) act(second bool) {
 	e, ok := l.current()
 	if !ok {
+		return
+	}
+	if e.calc {
+		l.calcAct(second)
 		return
 	}
 	if e.own != "" { // its primary action alone
@@ -1024,10 +1071,15 @@ const noQuery = "\x00"
 // find returns the rows of the query: its results, or the suggestions and
 // Gocast's own items for an empty one.
 func (l *launcher) find() []panelRow {
+	l.evalCalc()
 	if l.empty() {
 		return suggestionRows(suggested(l.ranked, padIDs(l.g.presets), l.exists), l.itemIndex, l.own)
 	}
-	return itemRows(search.Filter(l.items, l.query, l.g.usage.Choice(l.query, time.Now())))
+	rows := itemRows(search.Filter(l.items, l.query, l.g.usage.Choice(l.query, time.Now())))
+	if l.calcOn { // the calculator's card first (design.md 2.3a)
+		rows = append([]panelRow{{calc: true, item: -1, own: -1}}, rows...)
+	}
+	return rows
 }
 
 // exists reports whether the item with the ID is there to open: an app
@@ -1119,7 +1171,12 @@ func (l *launcher) show() {
 		l.input.Focus()
 		return
 	}
+	// Where Cmd-Return pastes the calculator's answer, as the clipboard
+	// view's (design.md 2.3a, 2.8.6): known before Gocast comes forward.
+	l.target = pasteTarget{app: frontmostOther(), floating: l.g.term.focused()}
+	l.g.calc.shown() // the region and number format, and the rates if due
 	l.enterSearch(time.Now())
+	l.calcChanged() // a query kept, in the region and with the rates as they are now
 	d := mygo.Screen.DisplayNearestPoint(mygo.Screen.CursorScreenPoint())
 	wa := d.WorkArea
 	l.win.SetPosition(wa.X+(wa.Width-windowWidth)/2, wa.Y+wa.Height/5-marginTop)

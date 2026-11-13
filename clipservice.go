@@ -332,6 +332,87 @@ func (s *clipService) paste(id string, plain bool, target pasteTarget) error {
 	return nil
 }
 
+// copyText puts text on the pasteboard as Gocast's own copy (the
+// calculator's answer, design.md 2.3a): kept in the history as a copy is
+// while it records, written by the store so that the watcher does not
+// record it again; else on the pasteboard alone. A development run writes
+// the pasteboard in memory.
+func (s *clipService) copyText(text string) error {
+	_, err := s.putText(text)
+	return err
+}
+
+// putText is copyText, returning the history's entry of the text, "" when
+// it is not kept.
+func (s *clipService) putText(text string) (string, error) {
+	if text == "" {
+		return "", clipboard.ErrEmpty
+	}
+	st := s.store
+	if st == nil {
+		if s.dry {
+			log.Printf("clipboard: a development run: %q not put on the pasteboard (history not read yet)", text)
+			return "", nil
+		}
+		mygo.Clipboard.WriteText(text)
+		return "", nil
+	}
+	if s.recording() && !st.Unreadable() {
+		if e, err := st.Add(clipboard.Content{Text: text}, clipboard.App{}); err == nil {
+			return e.ID, st.CopyToPasteboard(e.ID)
+		}
+	}
+	return "", st.CopyText(text)
+}
+
+// pasteText puts text on the pasteboard as copyText does, then pastes it
+// where target is, as paste does an item: into the floating terminal
+// directly, else into the app, brought to the front, with ⌘V on a
+// goroutine. The caller hides the panel, and checks that Gocast may
+// paste (target.allowed). A development run pastes nowhere.
+func (s *clipService) pasteText(text string, target pasteTarget) error {
+	id, err := s.putText(text)
+	if err != nil {
+		return err
+	}
+	if s.dry {
+		log.Printf("clipboard: a development run: %q not pasted into %q (floating terminal %v)", text, target.app.Name, target.floating)
+		return nil
+	}
+	if target.floating {
+		term := s.g.term
+		term.win.Update(func() {
+			if !term.paste(text) {
+				log.Printf("clipboard: the floating terminal has no tab to paste into")
+			}
+		})
+		return nil
+	}
+	store := s.store
+	if store == nil {
+		return nil // copied: no store to paste with
+	}
+	app := target.app
+	if app.PID > 0 {
+		clipActivate(app.PID)
+	}
+	go func() {
+		if app.PID > 0 && !clipWaitFront(app.PID, time.Second) {
+			log.Printf("clipboard: %s did not come to the front", app.Name)
+		}
+		var err error
+		if id != "" {
+			err = store.Paste(id)
+		} else {
+			err = store.PasteText(text)
+		}
+		if err != nil {
+			log.Printf("clipboard: pasting: %v", err)
+		}
+	}()
+	return nil
+}
+
 // copyFor puts the entry e on the pasteboard as way pastes it, and
 // returns the text a terminal is given: the image file's path, else the
 // entry's plain text.

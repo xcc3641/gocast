@@ -158,6 +158,24 @@ func (s *Store) PasteAsPlainText(id string) error {
 	return pasteNow()
 }
 
+// CopyText puts text on the pasteboard as the store's own write, without
+// recording it: Gocast's own copies while the history is off (the
+// calculator's answer). The watcher leaves it alone.
+func (s *Store) CopyText(text string) error {
+	if text == "" {
+		return ErrEmpty
+	}
+	return s.write(Content{Text: text})
+}
+
+// PasteText is CopyText, then ⌘V, as Paste.
+func (s *Store) PasteText(text string) error {
+	if err := s.CopyText(text); err != nil {
+		return err
+	}
+	return pasteNow()
+}
+
 func pasteNow() error {
 	if !trusted() {
 		return ErrNoAccessibility
