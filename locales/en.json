@@ -202,20 +202,6 @@
       }
     }
   },
-  "termFinished": "Command finished",
-  "@termFinished": {
-    "description": "Bar under the terminal when its command ended with exit code 0."
-  },
-  "termFinishedCode": "Command finished (exit code {code})",
-  "@termFinishedCode": {
-    "description": "Bar under the terminal when its command ended with another exit code.",
-    "placeholders": {
-      "code": {
-        "type": "int",
-        "example": "1"
-      }
-    }
-  },
   "termEndedCode": "{name} finished (exit code {code})",
   "@termEndedCode": {
     "description": "A dim line in the terminal when a preset's command ended with an exit code other than 0, 130 or 143; the tab goes on as a plain terminal (design.md 3.6).",
@@ -229,14 +215,6 @@
         "example": "1"
       }
     }
-  },
-  "termRunAgain": "Run Again",
-  "@termRunAgain": {
-    "description": "Button of the finished bar (Enter presses it)."
-  },
-  "termCloseTab": "Close Tab",
-  "@termCloseTab": {
-    "description": "Secondary button of the finished bar."
   },
   "termCommandMissing": "Can’t find the command “{command}”. Check it in this preset, or just keep typing here.",
   "@termCommandMissing": {

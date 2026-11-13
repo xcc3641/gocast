@@ -77,7 +77,7 @@ func TestArgv(t *testing.T) {
 		t.Errorf("empty command: %q", got)
 	}
 	got := Preset{Command: "pi --continue # x"}.Argv("/bin/zsh", After{})
-	if len(got) != 3 || got[0] != "/bin/zsh" || got[1] != "-lic" || !strings.HasPrefix(got[2], "pi --continue # x\n") || !strings.HasSuffix(got[2], "\nexec /bin/zsh -li") {
+	if len(got) != 3 || got[0] != "/bin/zsh" || got[1] != "-lic" || !strings.HasSuffix(got[2], "\npi --continue # x") || !strings.Contains(got[2], "\nexec /bin/zsh -li\n") {
 		t.Errorf("argv: %q", got)
 	}
 	env := Preset{Env: map[string]string{"B": "2", "A": "1"}}.Environ()

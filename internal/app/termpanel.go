@@ -58,14 +58,11 @@ type session struct {
 	key      int // the tab's key, for its whole life
 	focus    ui.Handle
 
-	pending    bool // to start in the next frame, which sizes it
-	exited     bool
-	exitCode   int
-	ranCommand string // the command of this run, for "can't find the command"
+	pending    bool   // to start in the next frame, which sizes it
 	missingDir string // the folder of the preset, gone: opened in the home folder
 	failure    string // the terminal could not start
 	fontSize   float32
-	announced  bool // the banner or end bar was read out
+	announced  bool // the banner was read out
 	done       bool // its command ended: a plain terminal now (design.md 3.6)
 }
 
@@ -76,12 +73,6 @@ func (s *session) title() string {
 		return locales.TermTabDefault()
 	}
 	return presetTitle(s.preset)
-}
-
-// commandMissing reports that the preset's command was not found: its
-// shell ended with 127.
-func (s *session) commandMissing() bool {
-	return s.exited && s.exitCode == 127 && s.ranCommand != ""
 }
 
 // termPanel is the floating terminal: a borderless panel that drops from
@@ -259,12 +250,6 @@ func (p *termPanel) shortcuts(c *ui.Context) {
 	if s == nil {
 		return
 	}
-	// While the command runs Enter is the program's; once it ended, Enter
-	// runs it again, or edits the preset whose command was not found (the
-	// window's shortcut comes before the terminal).
-	if s.exited && !p.menu && c.Shortcut(0, ui.KeyEnter) {
-		p.primary(s)
-	}
 	size := s.fontSize
 	if c.Shortcut(ui.Cmd, ui.KeyEqual) || c.Shortcut(ui.Cmd|ui.Shift, ui.KeyEqual) {
 		size = min(size+1, maxFontSize)
@@ -326,9 +311,6 @@ func (p *termPanel) tab(c *ui.Context, k tokens, i int, s *session) {
 	hovered := tab.Hovered()
 	idx := i
 	tab.OnClick(func() { p.activate(idx) }).Children(func() {
-		if s.exited {
-			ui.Box(c).Size(6, 6).Radius(3).Background(k.textOnGlass).Shrink(0)
-		}
 		ui.Text(c, s.title()).FontSize(13).TextColor(fg).SingleLine().Grow(1).Shrink(1)
 		closeBox := ui.Box(c).Size(16, 16).Radius(8).Center().Shrink(0)
 		if on || hovered {
@@ -453,7 +435,7 @@ func lastDir(path string) string {
 // hasCapsules reports whether capsules float over the bottom of the
 // session's terminal.
 func (p *termPanel) hasCapsules(s *session) bool {
-	return s.failure != "" || s.exited || s.missingDir != "" || p.plainTip(s)
+	return s.failure != "" || s.missingDir != "" || p.plainTip(s)
 }
 
 // plainTip reports whether the tip over a plain terminal shows: while
@@ -463,21 +445,14 @@ func (p *termPanel) plainTip(s *session) bool {
 }
 
 // capsules float over the bottom of the terminal, as the search panel's
-// (design.md 3.6): at the left why the terminal could not start, that its
-// command ended, that the preset's folder is gone, or the plain
-// terminal's tip; at the right, once the command ended, Run Again (Edit
-// Preset when the command was not found) and Close Tab.
+// (design.md 3.6): why the terminal could not start, that the preset's
+// folder is gone, or the plain terminal's tip. A preset's command that
+// ended says so in the terminal itself (presets.After).
 func (p *termPanel) capsules(c *ui.Context, k tokens, s *session) {
 	var n notice
 	switch {
 	case s.failure != "":
 		n = notice{icon: "exclamationmark.triangle", iconColor: k.danger, color: k.danger, text: s.failure}
-	case s.commandMissing():
-		n = notice{icon: "exclamationmark.triangle", iconColor: k.danger, text: locales.TermCommandMissing(s.ranCommand)}
-	case s.exited && s.exitCode != 0:
-		n = notice{icon: "exclamationmark.triangle", iconColor: k.warning, text: locales.TermFinishedCode(s.exitCode)}
-	case s.exited:
-		n = notice{icon: "checkmark.circle", iconColor: k.textOnGlass, text: locales.TermFinished()}
 	case s.missingDir != "":
 		n = notice{icon: "exclamationmark.triangle", iconColor: k.warning, text: locales.TermFolderMissing(s.missingDir)}
 		n.extra = func() { dismissButton(c, k, locales.Dismiss(), func() { s.missingDir = "" }) }
@@ -503,35 +478,8 @@ func (p *termPanel) capsules(c *ui.Context, k tokens, s *session) {
 		s.announced = true
 		c.Announce(n.text)
 	}
-	width := float32(p.win.Bounds().Width)
-	room := width - 2*termInset
-	var segs []segment
-	if s.exited {
-		name := locales.TermRunAgain()
-		if s.commandMissing() {
-			name = locales.ActionEditPreset()
-		}
-		segs = []segment{
-			{label: name, color: k.text, key: ui.KeyEnter, caps: []string{"↩"}, act: func() { p.primary(s) }},
-			{label: locales.TermCloseTab(), color: k.textOnGlass, mods: ui.Cmd, key: ui.KeyW, caps: []string{"⌘", "W"}, act: func() { p.closeTab(s) }},
-		}
-		room = width - actionsCapsuleWidth(c, segs...) - 3*termInset
-	}
+	room := float32(p.win.Bounds().Width) - 2*termInset
 	noticeCapsule(c, k, termInset, termInset, max(room, 160), n)
-	if s.exited {
-		actionsCapsule(c, k, termInset, termInset, segs...)
-	}
-}
-
-// primary is the end capsule's first action: run the preset again, or
-// edit it when its command was not found.
-func (p *termPanel) primary(s *session) {
-	if s.commandMissing() {
-		p.hide()
-		p.g.editPreset(s.presetID)
-		return
-	}
-	p.restart(s)
 }
 
 // --- Tabs ---
@@ -595,8 +543,7 @@ func (p *termPanel) start(s *session) {
 		s.missingDir = pr.ShortDir()
 		dir = presets.ExpandHome("~")
 	}
-	s.exited, s.exitCode, s.done = false, 0, false
-	s.ranCommand = strings.TrimSpace(pr.Command)
+	s.done = false
 	s.gen++
 	var term *terminal.Terminal
 	opts := terminal.Options{
@@ -612,17 +559,17 @@ func (p *termPanel) start(s *session) {
 		DarkTheme:       p.themes[1],
 		MinimumContrast: terminalContrast,
 		Padding:         terminal.Padding{X: -1, Y: -1},
-		// Gocast says a preset's program ended in its own capsule
-		// (design.md 3.6 「命令结束」), so the terminal's dim [Process exited] line
-		// would say it twice.
+		// A tab whose shell exited closes, as in every terminal app, so
+		// the terminal's dim [Process exited] line would never be seen.
 		NoExitMessage: true,
 		// Programs that read the clipboard themselves, as coding agents
 		// taking pasted images, are offered every format of a paste (the
 		// Kitty clipboard protocol, mode 5522); an image alone pastes an
 		// empty bracketed paste, which Claude Code takes as its cue. Both
 		// are the plugin's defaults: reads outside a paste stay refused.
+
 		// The preset's command ended and its shell goes on as a plain
-		// terminal (presets.After).
+		// terminal (presets.After, design.md 3.6 「命令结束」).
 		OnTitle: func(title string) {
 			if title != presets.AfterTitle {
 				return
@@ -633,19 +580,12 @@ func (p *termPanel) start(s *session) {
 				}
 			})
 		},
-		OnExit: func(code int) {
+		OnExit: func(int) {
 			p.win.Update(func() {
 				if s.term != term {
 					return
 				}
-				// A shell exited, as in every terminal app; a preset's
-				// before its command was through (as with exit in it)
-				// still says so.
-				if s.plain() || s.ranCommand == "" || s.done {
-					p.closeTab(s) // the shell exited, as in every terminal app
-					return
-				}
-				s.exited, s.exitCode, s.announced = true, code, false
+				p.closeTab(s) // the shell exited, as in every terminal app
 			})
 		},
 	}
@@ -661,18 +601,6 @@ func (p *termPanel) start(s *session) {
 	s.term = t
 }
 
-// restart runs the tab's preset again, as it is now.
-func (p *termPanel) restart(s *session) {
-	if s.term != nil {
-		s.term.Close()
-	}
-	if i := presets.Find(p.g.presets, s.presetID); i >= 0 {
-		s.preset = p.g.presets[i]
-	}
-	p.start(s)
-	s.focus.Focus()
-}
-
 // openPreset shows the panel on the tab of the preset with the ID, opening
 // one the first time, or always with newTab.
 func (p *termPanel) openPreset(id string, newTab bool) {
@@ -680,7 +608,7 @@ func (p *termPanel) openPreset(id string, newTab bool) {
 	if i < 0 {
 		return
 	}
-	j := slices.IndexFunc(p.tabs, func(s *session) bool { return s.presetID == id })
+	j := slices.IndexFunc(p.tabs, func(s *session) bool { return s.presetID == id && !s.done })
 	if newTab || j < 0 {
 		pr := p.g.presets[i]
 		p.newTab(&pr)
@@ -997,7 +925,16 @@ func afterCommand(pr presets.Preset) presets.After {
 	before, after, _ := strings.Cut(locales.TermEndedCode(presetTitle(pr), "\x00"), "\x00")
 	return presets.After{
 		Failed:  [2]string{before, after},
-		Missing: locales.TermCommandMissing(strings.TrimSpace(pr.Command)),
+		Missing: locales.TermCommandMissing(commandName(pr.Command)),
 		Ended:   presets.AfterTitle,
 	}
+}
+
+// commandName is the first word of command, the one the shell did not
+// find, as it says it: "pi" of "pi --continue".
+func commandName(command string) string {
+	if f := strings.Fields(command); len(f) > 0 {
+		return f[0]
+	}
+	return ""
 }

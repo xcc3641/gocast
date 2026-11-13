@@ -169,7 +169,7 @@ func (p Preset) Argv(shell string, after After) []string {
 	if cmd == "" {
 		return nil
 	}
-	return []string{shell, "-lic", cmd + "\n" + after.script(shell)}
+	return []string{shell, "-lic", after.wrap(shell, cmd)}
 }
 
 // After is what the shell does once a preset's command ends, by itself or
@@ -188,10 +188,10 @@ type After struct {
 // says so through the terminal's title (OSC 2), the one channel there is.
 const AfterTitle = "gocast:command-ended"
 
-// script is After in the language of shell: fish, or a POSIX shell. It
-// starts on a line of its own, so a comment at the end of the command
-// does not swallow it.
-func (a After) script(shell string) string {
+// wrap is the command cmd followed by After, in the language of shell:
+// fish, or a POSIX shell. Each part is on lines of its own, so a comment
+// at the end of the command does not swallow the rest.
+func (a After) wrap(shell, cmd string) string {
 	q := shellQuote
 	// A line of its own: at the start of the line, a line's width less one
 	// of spaces stays on it and is wiped; past it, they wrap to a new one.
@@ -200,6 +200,8 @@ func (a After) script(shell string) string {
 	}
 	if filepath.Base(shell) == "fish" {
 		return strings.Join([]string{
+			`set -l __gocast_d $PWD`,
+			cmd,
 			`set -l __gocast_s $status`,
 			`set -l __gocast_w (math (tput cols 2>/dev/null; or echo 80) - 1)`,
 			`switch $__gocast_s`,
@@ -210,11 +212,18 @@ func (a After) script(shell string) string {
 			"\t" + strings.ReplaceAll(line(`(printf '%s%s%s' `+q(a.Failed[0])+` $__gocast_s `+q(a.Failed[1])+`)`), `"$__gocast_w"`, `$__gocast_w`),
 			`end`,
 			`printf '\033]2;%s\007' ` + q(a.Ended),
+			`cd $__gocast_d`,
 			`exec ` + q(shell) + ` -li`,
 		}, "\n")
 	}
+	// The command goes last, on lines of its own, and the rest runs as the
+	// shell exits: when it ends, with exit in it, or with ⌃C, which an
+	// interactive zsh takes to drop what is left of the command line (its
+	// INT trap, not an empty one, leaves ⌃C to the command).
 	return strings.Join([]string{
+		`__gocast_after() {`,
 		`__gocast_s=$?`,
+		`trap - INT EXIT`,
 		`__gocast_w=$(( ${COLUMNS:-$(tput cols 2>/dev/null || echo 80)} - 1 ))`,
 		`case $__gocast_s in`,
 		`0|130|143) ;;`,
@@ -222,7 +231,13 @@ func (a After) script(shell string) string {
 		`*) ` + line(`"$(printf '%s%s%s' `+q(a.Failed[0])+` "$__gocast_s" `+q(a.Failed[1])+`)"`) + ` ;;`,
 		`esac`,
 		`printf '\033]2;%s\007' ` + q(a.Ended),
+		`cd "$__gocast_d"`,
 		`exec ` + q(shell) + ` -li`,
+		`}`,
+		`__gocast_d=$PWD`,
+		`trap : INT`,
+		`trap __gocast_after EXIT`,
+		cmd,
 	}, "\n")
 }
 

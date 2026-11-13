@@ -594,34 +594,6 @@ func (msgs Messages) TermHide(shortcut string) string {
 	return Catalog.Format(msgs.locale, "termHide", map[string]any{"shortcut": shortcut})
 }
 
-// TermFinished says "Command finished"
-// in the language the app shows.
-//
-// Bar under the terminal when its command ended with exit code 0.
-func TermFinished() string { return In(i18n.Locale()).TermFinished() }
-
-// TermFinished says "Command finished"
-// in the language of msgs.
-//
-// Bar under the terminal when its command ended with exit code 0.
-func (msgs Messages) TermFinished() string {
-	return Catalog.Format(msgs.locale, "termFinished", nil)
-}
-
-// TermFinishedCode says "Command finished (exit code {code})"
-// in the language the app shows.
-//
-// Bar under the terminal when its command ended with another exit code.
-func TermFinishedCode(code int) string { return In(i18n.Locale()).TermFinishedCode(code) }
-
-// TermFinishedCode says "Command finished (exit code {code})"
-// in the language of msgs.
-//
-// Bar under the terminal when its command ended with another exit code.
-func (msgs Messages) TermFinishedCode(code int) string {
-	return Catalog.Format(msgs.locale, "termFinishedCode", map[string]any{"code": code})
-}
-
 // TermEndedCode says "{name} finished (exit code {code})"
 // in the language the app shows.
 //
@@ -640,34 +612,6 @@ func TermEndedCode(name string, code string) string {
 // (design.md 3.6).
 func (msgs Messages) TermEndedCode(name string, code string) string {
 	return Catalog.Format(msgs.locale, "termEndedCode", map[string]any{"name": name, "code": code})
-}
-
-// TermRunAgain says "Run Again"
-// in the language the app shows.
-//
-// Button of the finished bar (Enter presses it).
-func TermRunAgain() string { return In(i18n.Locale()).TermRunAgain() }
-
-// TermRunAgain says "Run Again"
-// in the language of msgs.
-//
-// Button of the finished bar (Enter presses it).
-func (msgs Messages) TermRunAgain() string {
-	return Catalog.Format(msgs.locale, "termRunAgain", nil)
-}
-
-// TermCloseTab says "Close Tab"
-// in the language the app shows.
-//
-// Secondary button of the finished bar.
-func TermCloseTab() string { return In(i18n.Locale()).TermCloseTab() }
-
-// TermCloseTab says "Close Tab"
-// in the language of msgs.
-//
-// Secondary button of the finished bar.
-func (msgs Messages) TermCloseTab() string {
-	return Catalog.Format(msgs.locale, "termCloseTab", nil)
 }
 
 // TermCommandMissing says "Can’t find the command “{command}”. Check it in this preset, or just keep typing here."
