@@ -547,7 +547,7 @@ English: Clipboard history stays on this Mac too, in the same folder, and is nev
 
 数据单位的小字要让人看出按 1000 还是 1024 算，这是大家真会搞错的地方；「吉字节」「二进制千字节」没人这么说。其余单位和币种用现在 locales 里的写法。时长答案里用「天 / 小时 / 分 / 秒」（「2 小时 25 分」），单位全名里写「分钟」，两处不冲突。
 
-### 7.5 README（功能合进来时再加，现在不改）
+### 7.5 README（已写入 README.md / README.zh-Hans.md）
 
 能做什么，接在「预设」后面：
 
