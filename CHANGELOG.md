@@ -8,6 +8,11 @@ The section of each version is the release notes that the update window
 shows (MyGo reads `## [version]`), so write it for users, in Chinese and
 English.
 
+## [0.1.1] - 2026-11-13
+
+小更新，没有新功能。这一版主要用来确认自动更新顺利：更新后你的设置、预设、快捷键和剪贴板历史都会原样保留。
+A small update with no new features. It makes sure updating goes smoothly: your settings, presets, shortcuts and clipboard history stay as they were.
+
 ## [0.1.0] - 2026-11-13
 
 第一个版本。First release.
