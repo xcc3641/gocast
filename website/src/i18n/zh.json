@@ -55,10 +55,6 @@
   "faq_h": "常见问题",
   "faq": [
     {
-      "q": "系统说无法验证开发者。",
-      "a": "Gocast 暂时还没有 Apple 的 Developer ID 签名。第一次打开时，去系统设置 › 隐私与安全性，点「仍要打开」。只需要这一次，之后的更新会自动装。用下面这行命令在终端里安装的话，系统不会拦。<pre>curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh | sh</pre>"
-    },
-    {
       "q": "按 ⌘Space 出来的是聚焦搜索。",
       "a": "系统默认把 ⌘Space 给了聚焦搜索，所以 Gocast 会先用 ⌥⇧Space。去系统设置 › 键盘 › 键盘快捷键 › 聚焦，关掉「显示聚焦搜索」，Gocast 会自己换回 ⌘Space。也可以在 Gocast 的设置 › 快捷键里换成任何快捷键。"
     },
