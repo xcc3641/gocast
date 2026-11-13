@@ -44,7 +44,7 @@ const results: R[] = zh
       { title: "ChatGPT", icon: "chatgpt", type: app },
     ];
 ---
-<Window w={640} alt={alt}>
+<Window w={640} alt={alt} h={variant === "apps" ? 260 : undefined}>
   {variant === "hero" ? (
     <>
       <SearchBar placeholder={zh ? "搜索应用或终端预设" : "Search apps or terminal presets"} cjk={zh} />

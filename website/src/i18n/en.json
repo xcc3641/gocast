@@ -13,48 +13,30 @@
   "hero_alt": "The Gocast search panel, with your usual apps and presets under the search field",
   "features": [
     {
-      "keys": [
-        "⌘",
-        "Space"
-      ],
       "title": "Type a few letters. Your app is open.",
       "text": "English names, Chinese names and pinyin all work. The apps you use most come first and are listed the moment the panel opens, so often you don’t type at all.",
       "shot": "apps",
       "alt": "Searching: typing chat puts WeChat first, with ChatGPT below it"
     },
     {
-      "keys": [
-        "⌃",
-        "`"
-      ],
       "title": "A terminal drops down from the top.",
       "text": "It floats above every app, and hiding it stops nothing. A preset remembers which command to run in which folder, like <code>pi</code> in my-app. When the command ends, the tab becomes a plain terminal and you keep typing.",
       "shot": "terminal",
       "alt": "The floating terminal dropped down from the top, with two tabs, one of them a preset"
     },
     {
-      "keys": [
-        "⌃",
-        "⌘",
-        "V"
-      ],
       "title": "Everything you copied is still here.",
       "text": "Text, links, images and files, with thumbnails for screenshots. Press ↵ to paste into the app you were in, and pin the ones you use often. It stays on this Mac, and passwords from password managers are never kept.",
       "shot": "clipboard",
       "alt": "Clipboard history with text, links and images in the list and a picture previewed on the right"
     },
     {
-      "keys": [
-        "⌘",
-        "Space"
-      ],
       "title": "Do the math right in search.",
       "text": "Type <code>(12+8)*3</code>, <code>10 ft in m</code> or <code>100 usd in jpy</code> and the answer is on top. Press ↵ to copy it. Exchange rates update once a day from central bank reference rates.",
       "shot": "calculator",
       "alt": "Typing 100 usd in jpy in search, with the converted answer on top"
     },
     {
-      "keys": [],
       "title": "Give each favorite app its own shortcut.",
       "text": "Set a shortcut for any app or preset and press it anywhere: it opens the app, brings it forward, or hides it if it’s already in front. Find it in Settings › Shortcuts, or select it in the search panel and press ⌘K.",
       "shot": "shortcuts",

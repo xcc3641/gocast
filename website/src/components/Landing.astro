@@ -32,7 +32,6 @@ const c = t(locale);
 
 {c.features.map((f) => (
 <section class="feature">
-{f.keys.length > 0 && <div class="keys">{f.keys.map((k) => <kbd>{k}</kbd>)}</div>}
 <h2>{f.title}</h2>
 <p set:html={f.text} />
 {/* the app window each feature shows, drawn in HTML and CSS (components/windows) */}

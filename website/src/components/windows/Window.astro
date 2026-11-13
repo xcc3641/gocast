@@ -11,9 +11,11 @@ interface Props {
   alt: string;
   /** Extra class on the inner window, e.g. gw-terminal. */
   kind?: string;
+  /** The app's short panel height (apps search, calculator); otherwise the full height for w. */
+  h?: 260;
 }
-const { w, alt, kind } = Astro.props;
+const { w, alt, kind, h } = Astro.props;
 ---
-<div class:list={["shot", "gw-frame", `gw-w${w}`]} role="img" aria-label={alt}>
+<div class:list={["shot", "gw-frame", `gw-w${w}`, h && `gw-h${h}`]} role="img" aria-label={alt}>
   <div class:list={["gw", kind]} aria-hidden="true"><slot /></div>
 </div>

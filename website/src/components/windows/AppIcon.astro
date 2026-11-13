@@ -13,5 +13,5 @@ const { icon, size, class: cls } = Astro.props;
 const src = iconFile(icon);
 ---
 {src
-  ? <Image class:list={["gw-img", cls]} src={src} alt="" width={size * 2} height={size * 2} format="png" loading="lazy" decoding="async" />
+  ? <Image class:list={["gw-img", cls]} src={src} alt="" width={size * 2} height={size * 2} format="png" loading="eager" decoding="async" />
   : <span class:list={["gw-img", "gw-ph", cls]}></span>}

@@ -31,6 +31,8 @@
 .gw-w756 > .gw { --u: min(1px, 100cqw / 756); width: calc(var(--u) * 756); height: calc(var(--u) * 569); }
 .gw-w760 > .gw { --u: min(1px, 100cqw / 760); width: calc(var(--u) * 760); height: calc(var(--u) * 475); }
 .gw-w820 > .gw { --u: min(1px, 100cqw / 820); width: calc(var(--u) * 820); height: calc(var(--u) * 580); }
+/* the app's short panel (apps search, calculator): 260 tall, action capsule still 8/8 */
+.gw-frame.gw-h260 > .gw { height: calc(var(--u) * 260); }
 
 .gw {
   --panel: #202022;
@@ -76,8 +78,10 @@
   display: block; flex: none;
   width: calc(var(--u) * 20); height: calc(var(--u) * 20);
   background: var(--t2g);
-  -webkit-mask: url("../../assets/ui/logo-template.png") center / 100% 100% no-repeat;
-  mask: url("../../assets/ui/logo-template.png") center / 100% 100% no-repeat;
+  -webkit-mask-image: url("../../assets/ui/logo-template.png"); mask-image: url("../../assets/ui/logo-template.png");
+  -webkit-mask-position: center; mask-position: center;
+  -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
 }
 
 /* search bar */
