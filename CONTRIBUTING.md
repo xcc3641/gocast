@@ -140,11 +140,12 @@ the GitHub CLI (`gh`), signed in with access to the repository.
 
    ```sh
    MYGO_UPDATER_PRIVATE_KEY="$(cat path/to/mygo-update.key)" \
-     mygo build -sign "Gocast Code Signing" -upload
+     mygo build -upload
    ```
 
-   `-sign` names the release code-signing identity (see below), which
-   must be in a keychain codesign searches. This builds the app, the disk image and the signed update files and
+   The build signs with the Developer ID in `macos.signingIdentity` in
+   mygo.json (see below), which must be in a keychain codesign searches.
+   It builds the app, the disk image and the signed update files and
    uploads them to a draft release for the version on xcc3641/gocast.
    Without the key, `mygo build` still builds the app and the disk image
    but skips the update files (fine for local builds), and `-upload`
@@ -152,29 +153,36 @@ the GitHub CLI (`gh`), signed in with access to the repository.
 5. Copy the install script the build wrote over the one in the repository
    (`cp build/darwin-arm64/install.sh install.sh`) and commit it if it
    changed: the README points people at it.
-6. Check the draft on GitHub (try the disk image and
+6. Notarize the disk image and staple the ticket to it, then put it and
+   a fresh `SHA256SUMS` back on the draft:
+
+   ```sh
+   xcrun notarytool submit build/darwin-arm64/gocast-x.y.z-arm64.dmg --wait <credentials>
+   xcrun stapler staple build/darwin-arm64/gocast-x.y.z-arm64.dmg
+   gh release upload vx.y.z build/darwin-arm64/gocast-x.y.z-arm64.dmg build/SHA256SUMS --clobber
+   ```
+
+   (regenerate `SHA256SUMS` for the stapled image first). Check it with
+   `spctl -a -vv -t open --context context:primary-signature <dmg>`, which
+   should say "source=Notarized Developer ID".
+7. Check the draft on GitHub (try the disk image and
    `curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh | sh`
    once it is published), then publish it.
    Publishing makes it the latest release: installed apps find it on their
    next automatic check, or when the user chooses Check for Updates.
 
-Releases are not signed with a Developer ID yet. They are signed with
-a self-signed certificate, "Gocast Code Signing", that every release
-keeps. macOS identifies an app signed this way by that certificate and
-its bundle identifier rather than by a hash of each build, so what users
-allowed Gocast (Accessibility, to paste from clipboard history, and its
-keychain item) carries over to the next version. The private key of that
-certificate stays with the maintainers, like the update key: anyone who
-has it can sign an app that macOS treats as Gocast. CI never gets it.
-Signing with it turns on the hardened runtime; `entitlements.plist`
-lets the app load the terminal library, which library validation would
-refuse without a Team ID. Builds without `-sign` (anyone building from
-source) are ad-hoc signed and work the same, but macOS asks for their
-permissions again after each build.
+Releases are signed with the maintainers' Developer ID Application
+certificate under the hardened runtime, and the disk
+image is notarized by Apple, so it opens with a double-click. macOS
+identifies the app by its Team ID and bundle identifier, so what users
+allowed Gocast (Accessibility, to paste from clipboard history) carries
+over to the next version. The terminal library in Resources is signed with
+the same Team ID, so library validation stays on and `entitlements.plist`
+grants nothing. The certificate's private key stays with the maintainers,
+like the update key; CI never gets it. Builds from source without the
+certificate (`mygo build -sign -`) are ad-hoc signed and work the same,
+but macOS asks for their permissions again after each build.
 
-Because the certificate is not from Apple, macOS still asks users to
-confirm the first time they open a disk image they downloaded (System
-Settings › Privacy & Security › Open Anyway). Updates and the install
-script download with no quarantine flag, so they open without that
-prompt; both check the Ed25519 signature of what they install against
-the public key in mygo.json.
+Updates and the install script download with no quarantine flag; both
+check the Ed25519 signature of what they install against the public key
+in mygo.json.

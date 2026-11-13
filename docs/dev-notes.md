@@ -43,7 +43,7 @@ For real window captures, `screencapture -x -o -l <CGWindowID>` works. Get the I
 - `<dir>/darwin-arm64/Gocast.app`
 - `gocast-0.1.0-arm64.dmg`
 
-The bundle is ad-hoc signed. Contents/Resources holds `libghostty-vt.dylib` and, through `resources` in mygo.json, `THIRD_PARTY_NOTICES.md`, `LICENSE` and `NOTICE`. The default `<dir>` is `build/`. With `updates` in mygo.json the output also has `install.sh` and `SHA256SUMS`; without `MYGO_UPDATER_PRIVATE_KEY` it skips the update files ("Not signing an update"), which local builds don't need.
+Release builds are signed with the Developer ID in `macos.signingIdentity` (mygo.json) under the hardened runtime; `-sign -` builds ad-hoc. Contents/Resources holds `libghostty-vt.dylib` and, through `resources` in mygo.json, `THIRD_PARTY_NOTICES.md`, `LICENSE` and `NOTICE`. The default `<dir>` is `build/`. With `updates` in mygo.json the output also has `install.sh` and `SHA256SUMS`; without `MYGO_UPDATER_PRIVATE_KEY` it skips the update files ("Not signing an update"), which local builds don't need.
 
 **App icon (design.md 1.6).** mygo.json's `icon` is `assets/icon/icon.png` (1024) and `macos.icon` is `assets/icon/AppIcon.icon` (Icon Composer). With Xcode 26's `actool`, `mygo build` compiles the `.icon` into `Assets.car` (`CFBundleIconName` AppIcon, which macOS 26 draws with its glass, dark and tinted looks) and uses the `AppIcon.icns` that `actool` renders from it; without it (or if it fails) the `.icon` is skipped and the `.icns` is made from `icon.png`. `go run` / `go build` have no icon (no bundle). All the icon files come from `assets/icon/make-icon.py` (the designer's; change the shapes there, never the PNGs by hand).
 
@@ -282,7 +282,7 @@ Automation can't cover these:
 - **Platform:**
   - `minimumSystemVersion` is 13.0, MyGo's floor.
   - `mygo build` makes arm64 only. A universal (Intel too) build is planned for a later release.
-- **Signing.** Developer ID signing and notarization are not set up (not decided yet), so the bundle is ad-hoc signed and not notarized.
+- **Signing.** Developer ID Application, hardened runtime, library validation on. The disk image is notarized and stapled after `mygo build` (CONTRIBUTING.md, Releasing); `macos.notarize` is not used because it needs a notarytool keychain profile.
 - **`mygo build` locales warning.** It warns "The app does not import gocast/locales". This is a false positive and harmless: MyGo's `compiledDirs` splits `go list` output with `strings.Fields`, which breaks when the project's path has a space in it. It should be reported upstream.
 - **Unbundled app names.** An unbundled binary gets app names in English from Launch Services; `Localized(App.Locale())` corrects them.
 
