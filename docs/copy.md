@@ -724,7 +724,7 @@ English: Gocast only goes online to check for updates and to fetch exchange rate
 | 菜单栏菜单（替换「检查更新…」那一行） | 重新打开以更新到 {版本} | Relaunch to Update to {version} |
 | 点了之后（胶囊里，一两秒） | 正在重新打开… | Relaunching… |
 
-胶囊里「重新打开」是可点的那半，前半句是说明。胶囊一次会话只出现一次，点掉 × 就不再出，菜单栏那一行一直在，直到换上新版。
+胶囊里「重新打开」是一枚带底色的按钮，前半句是说明；画面上不画「·」（按钮底色已经分开了，见 design.md 4.5），读屏照下面读整句。胶囊一次会话只出现一次，点掉 × 就不再出，菜单栏那一行一直在，直到换上新版。
 读屏：胶囊读「新版本 {版本} 已就绪，重新打开，按钮」/ "Version {version} is ready, Relaunch, button"。
 
 ### 12.2 关于页（「检查更新」按钮下面一行，就地变）
