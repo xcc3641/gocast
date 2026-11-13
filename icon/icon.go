@@ -10,11 +10,6 @@ import _ "embed"
 //go:embed icon.png
 var App []byte
 
-// Update is the update window's icon, the app icon at 256 px.
-//
-//go:embed update-icon.png
-var Update []byte
-
 // Tray is the menu-bar icon: Gocast's mark, 18 DIP (36 px), black on
 // transparent, a template image.
 //

@@ -7,7 +7,6 @@ Writes, next to this script:
   AppIcon.icon/     Icon Composer icon (macOS 26+): solid fill + one glyph layer
   tray.png          36 px (18 pt @2x) menu bar template, black on transparent
   logo-template.png 40 px (20 pt @2x) search bar logo, black on transparent
-  update-icon.png   256 px app icon for the update window
 """
 import json, math, os
 from PIL import Image, ImageDraw, ImageFilter
@@ -73,7 +72,6 @@ def template(pt):
 
 big = app_icon(1024)
 big.save(os.path.join(HERE, "icon.png"))
-big.resize((256, 256), Image.LANCZOS).save(os.path.join(HERE, "update-icon.png"))
 template(18).save(os.path.join(HERE, "tray.png"))
 template(20).save(os.path.join(HERE, "logo-template.png"))
 
