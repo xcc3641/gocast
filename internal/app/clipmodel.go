@@ -199,7 +199,18 @@ func listSep() string {
 
 // clipLabel is what assistive technology reads of an item's row (copy.md
 // 6.10): "{first line}, Text, {time}[, Pinned]", "Image, 756 by 133, …".
-func clipLabel(e clipboard.Entry, when string) string {
+// imageDims is how large the image of an item of one image file is, once
+// known: a screenshot a tool copied as a file (design.md 2.8.4).
+type imageDims func(e clipboard.Entry) (w, h int, ok bool)
+
+func (d imageDims) of(e clipboard.Entry) (w, h int, ok bool) {
+	if d == nil || e.Kind != clipboard.KindFiles || len(e.Files) != 1 {
+		return 0, 0, false
+	}
+	return d(e)
+}
+
+func clipLabel(e clipboard.Entry, when string, dims imageDims) string {
 	sep := listSep()
 	var s string
 	switch e.Kind {
@@ -210,6 +221,8 @@ func clipLabel(e clipboard.Entry, when string) string {
 	case clipboard.KindFiles:
 		if len(e.Files) > 1 {
 			s = locales.ClipLabelFiles(filepath.Base(e.Files[0]), len(e.Files))
+		} else if w, h, ok := dims.of(e); ok {
+			s = locales.ClipLabelImageFile(clipTitle(e), w, h)
 		} else {
 			s = clipTitle(e) + sep + locales.ClipLabelFile()
 		}
@@ -300,7 +313,7 @@ type clipInfo struct {
 // 6.3): where it was copied from and when, then what fits its kind.
 // totalSize says how large files are together, false when it can't
 // (a folder among them).
-func clipInfos(e clipboard.Entry, now time.Time, locale string, totalSize func([]string) (int64, bool)) []clipInfo {
+func clipInfos(e clipboard.Entry, now time.Time, locale string, totalSize func([]string) (int64, bool), dims imageDims) []clipInfo {
 	app := e.App.Name
 	if app == "" {
 		app = locales.ClipUnknownApp()
@@ -319,6 +332,9 @@ func clipInfos(e clipboard.Entry, now time.Time, locale string, totalSize func([
 	case clipboard.KindFiles:
 		if len(e.Files) > 0 {
 			infos = append(infos, clipInfo{label: locales.ClipInfoLocation(), value: presets.ShortPath(filepath.Dir(e.Files[0]))})
+		}
+		if w, h, ok := dims.of(e); ok {
+			infos = append(infos, clipInfo{label: locales.ClipInfoDimensions(), value: locales.ClipDimensions(w, h)})
 		}
 		if n, ok := totalSize(e.Files); ok {
 			infos = append(infos, clipInfo{label: locales.ClipInfoSize(), value: sysfmt.Bytes(n)})

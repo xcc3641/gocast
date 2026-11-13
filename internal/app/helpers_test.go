@@ -44,6 +44,11 @@ func TestMain(m *testing.M) {
 	sysDevBuild = func() bool { return true }
 	sysCheckUpdate = func(context.Context) (*foundUpdate, error) { return nil, errors.New("no checks in tests") }
 	sysRelaunch = func() { panic("relaunched in a test") }
+	// Nor of the system's displays and icons, which need the main loop.
+	sysLocale = func() string { return "en" }
+	sysMaxScale = func() float64 { return 2 }
+	sysFileIcon = func(string, int) ([]byte, error) { return nil, errors.New("no icons in tests") }
+	sysTypeIcon = sysFileIcon
 	os.Exit(m.Run())
 }
 

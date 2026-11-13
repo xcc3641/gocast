@@ -1,4 +1,6 @@
-# Gocast 界面文案 v1.21（搜索面板 · 悬浮终端 · 设置）
+# Gocast 界面文案 v1.22（搜索面板 · 悬浮终端 · 设置）
+
+v1.22 改动：剪贴板里「只有一个文件、而且是图片」这种（CleanShot 截图后拷贝就是这种）补上 6.2 / 6.3 / 6.10 三处用词。它仍算文件，不算图片：粘贴出去的是文件，按文件类型筛才找得到。行和预览显示缩略图。
 
 v1.21 改动：新增第 12 节「更新（不弹窗口）」，取代 4.5 更新窗口和 4.4 里「点检查更新打开窗口」的说法。后台查、后台下好，只在提示胶囊、⌘K、菜单栏轻轻提示；关于页就地显示状态。去掉跳过 / 稍后提醒 / 勾选框。
 
@@ -340,6 +342,7 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 | 文件 | 位置 / 大小 | Location / Size |
 | 链接 | 链接 | Link |
 | 文件已不在 | 这个文件已被移动或删除。 | This file has been moved or deleted. |
+| 图片文件（单个文件，图片） | 行标题还是文件名；行里和预览里显示缩略图；预览下面是「位置 / 尺寸 / 大小」，文件不在了仍用上面那条 | The row title stays the file name; the row and the preview show the picture; under it, Location / Dimensions / Size. If the file is gone, use the line above |
 
 时间用系统的相对写法：「今天 14:05」「昨天 09:12」「11月10日 18:30」，跟系统语言和 12/24 小时制走，不要自己拼。字数按字符算，中文一个字算一个。
 
@@ -450,6 +453,7 @@ English: No clipboard history yet / Copy something and it shows up here. · Clip
 | 链接行 | {地址}，链接，{时间}[，已置顶] | {address}, Link, {time}[, Pinned] |
 | 图片行 | 图片，{宽}乘{高}，{时间}[，已置顶] | Image, {w} by {h}, {time}[, Pinned] |
 | 文件行 | {文件名}，文件，{时间}[，已置顶] | {file name}, File, {time}[, Pinned] |
+| 图片文件行 | {文件名}，图片文件，{宽}乘{高}，{时间}[，已置顶] | {file name}, Image file, {w} by {h}, {time}[, Pinned] |
 | 多个文件行 | {第一个文件名}等 {n} 个文件，{时间}[，已置顶] | {first file} and {n−1} more, Files, {time}[, Pinned] |
 | 分组标题 | 今天，标题 | Today, heading |
 | 预览区 | 预览 | Preview |

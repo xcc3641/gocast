@@ -23,6 +23,11 @@ func thumbnail(b []byte) []byte {
 	if err != nil {
 		return nil
 	}
+	return thumbnailOf(src)
+}
+
+// thumbnailOf is thumbnail of a decoded image.
+func thumbnailOf(src image.Image) []byte {
 	sb := src.Bounds()
 	sw, sh := sb.Dx(), sb.Dy()
 	if sw <= 0 || sh <= 0 {

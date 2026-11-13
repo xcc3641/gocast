@@ -204,6 +204,7 @@
   "clipLabelLink": "链接",
   "clipLabelImage": "图片，{w}乘{h}",
   "clipLabelFile": "文件",
+  "clipLabelImageFile": "{name}，图片文件，{w}乘{h}",
   "clipLabelFiles": "{n, plural, other {{first}等 # 个文件}}",
   "clipLabelPinned": "已置顶",
   "clipHeading": "{name}，标题",

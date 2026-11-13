@@ -89,10 +89,11 @@ type clipView struct {
 	noticeGen    int
 	announce     string
 
-	thumbs map[string]*ui.Bitmap // by entry ID; nil where it can't be read
-	icons  map[string]*ui.Bitmap // by path and size
-	image  clipImage
-	pane   ui.Rect // the preview's content box, as last laid out
+	thumbs     map[string]*ui.Bitmap // by entry ID; nil where it can't be read
+	fileThumbs map[string]*fileThumb // of image files, by path
+	icons      map[string]*ui.Bitmap // by path and size
+	image      clipImage
+	pane       ui.Rect // the preview's content box, as last laid out
 }
 
 // clipImage is the image the preview shows, read on a goroutine.
@@ -103,8 +104,32 @@ type clipImage struct {
 	done    bool
 }
 
+// fileThumb is the thumbnail of an image file and its size in pixels,
+// read on a goroutine; bitmap stays nil if the file can't be read.
+type fileThumb struct {
+	bitmap *ui.Bitmap
+	w, h   int
+	done   bool
+}
+
+// The system's, which tests replace (a test has no main loop): the
+// language Gocast shows, the largest scale of the displays, and the icons
+// of a file and of a type of file.
+var (
+	sysLocale   = func() string { return mygo.App.Locale() }
+	sysMaxScale = func() float64 {
+		scale := 1.0
+		for _, d := range mygo.Screen.Displays() {
+			scale = max(scale, d.ScaleFactor)
+		}
+		return scale
+	}
+	sysFileIcon = func(path string, size int) ([]byte, error) { return mygo.Shell.FileIcon(path, size) }
+	sysTypeIcon = func(ext string, size int) ([]byte, error) { return mygo.Shell.TypeIcon(ext, size) }
+)
+
 func newClipView(l *launcher) *clipView {
-	return &clipView{l: l, chosen: -1, thumbs: map[string]*ui.Bitmap{}, icons: map[string]*ui.Bitmap{}}
+	return &clipView{l: l, chosen: -1, thumbs: map[string]*ui.Bitmap{}, fileThumbs: map[string]*fileThumb{}, icons: map[string]*ui.Bitmap{}}
 }
 
 func (v *clipView) svc() *clipService { return v.l.g.clip }
@@ -495,7 +520,7 @@ func (v *clipView) listPane(c *ui.Context, k tokens) {
 
 // rowLabel is what assistive technology reads of an item's row.
 func (v *clipView) rowLabel(e clipboard.Entry) string {
-	return clipLabel(e, sysfmt.Date(e.Time, time.Now(), mygo.App.Locale()))
+	return clipLabel(e, sysfmt.Date(e.Time, time.Now(), sysLocale()), v.imageDims)
 }
 
 func (v *clipView) row(c *ui.Context, k tokens, i int) {
@@ -527,6 +552,26 @@ func (v *clipView) rowIcon(c *ui.Context, k tokens, e clipboard.Entry) {
 			return
 		}
 	case clipboard.KindFiles:
+		path, there := imageFileOf(e)
+		t := v.fileThumbs[path]
+		if there {
+			t = v.fileThumb(path)
+		} else if len(e.Files) == 1 {
+			// Moved or deleted since it was read: its thumbnail, faded
+			// (design.md 2.8.4); the file's icon if it was never read.
+			t = v.fileThumbs[e.Files[0]]
+		}
+		if t != nil && t.bitmap != nil {
+			w, h := fitSize(float32(t.w), float32(t.h), iconCell, iconCell)
+			opacity := float32(1)
+			if !there {
+				opacity = 0.4
+			}
+			listIcon(c, func() {
+				ui.Image(c, t.bitmap).Size(w, h).Fit(ui.Contain).Radius(4).Border(1, k.hairline).AccessHidden(true).Opacity(opacity)
+			})
+			return
+		}
 		if len(e.Files) > 0 {
 			if b := v.fileIcon(e.Files[0], iconCell); b != nil {
 				listIcon(c, func() { ui.Image(c, b).Size(iconCell, iconCell).AccessHidden(true) })
@@ -559,6 +604,67 @@ func (v *clipView) thumb(e clipboard.Entry) *ui.Bitmap {
 	return b
 }
 
+// imageFileOf is the image file of an item of one file that is an image
+// still there, such as a screenshot a screenshot tool copied as a file,
+// which shows as an image.
+func imageFileOf(e clipboard.Entry) (string, bool) {
+	if e.Kind != clipboard.KindFiles || len(e.Files) != 1 || !clipboard.IsImageFile(e.Files[0]) || !fileExists(e.Files[0]) {
+		return "", false
+	}
+	return e.Files[0], true
+}
+
+// imageDims is how large an item's image file is, once its thumbnail is
+// read; not while the file is gone.
+func (v *clipView) imageDims(e clipboard.Entry) (w, h int, ok bool) {
+	path, ok := imageFileOf(e)
+	if !ok {
+		return 0, 0, false
+	}
+	t := v.fileThumbs[path]
+	if t == nil || !t.done || t.bitmap == nil {
+		return 0, 0, false
+	}
+	return t.w, t.h, true
+}
+
+// fileThumb is the thumbnail of the image file at path, read once on a
+// goroutine; not done meanwhile.
+func (v *clipView) fileThumb(path string) *fileThumb {
+	if t, ok := v.fileThumbs[path]; ok {
+		return t
+	}
+	t := &fileThumb{}
+	v.fileThumbs[path] = t
+	var b *ui.Bitmap
+	var w, h int
+	v.background(func() {
+		thumb, tw, th, err := clipboard.ImageFileThumbnail(path)
+		if err == nil {
+			b, _ = ui.DecodeBitmap(thumb)
+			w, h = tw, th
+		}
+	}, func() { t.bitmap, t.w, t.h, t.done = b, w, h, true })
+	return t
+}
+
+// background runs work on a goroutine, then done on the window's thread
+// and draws again; in a test, which has no window, both at once.
+func (v *clipView) background(work, done func()) {
+	if v.l.win == nil {
+		work()
+		done()
+		return
+	}
+	go func() {
+		work()
+		v.l.win.Update(func() {
+			done()
+			v.l.win.Invalidate()
+		})
+	}()
+}
+
 // fileIcon is the icon of the file or app at path, size DIPs, drawn for
 // the sharpest display, and kept.
 func (v *clipView) fileIcon(path string, size int) *ui.Bitmap {
@@ -566,12 +672,9 @@ func (v *clipView) fileIcon(path string, size int) *ui.Bitmap {
 	if b, ok := v.icons[key]; ok {
 		return b
 	}
-	scale := 1.0
-	for _, d := range mygo.Screen.Displays() {
-		scale = max(scale, d.ScaleFactor)
-	}
+	scale := sysMaxScale()
 	var b *ui.Bitmap
-	if data, err := mygo.Shell.FileIcon(path, int(float64(size)*scale)); err == nil {
+	if data, err := sysFileIcon(path, int(float64(size)*scale)); err == nil {
 		b, _ = ui.DecodeBitmap(data)
 	}
 	v.icons[key] = b
@@ -585,12 +688,9 @@ func (v *clipView) genericAppIcon(size int) *ui.Bitmap {
 	if b, ok := v.icons[key]; ok {
 		return b
 	}
-	scale := 1.0
-	for _, d := range mygo.Screen.Displays() {
-		scale = max(scale, d.ScaleFactor)
-	}
+	scale := sysMaxScale()
 	var b *ui.Bitmap
-	if data, err := mygo.Shell.TypeIcon("app", int(float64(size)*scale)); err == nil {
+	if data, err := sysTypeIcon("app", int(float64(size)*scale)); err == nil {
 		b, _ = ui.DecodeBitmap(data)
 	}
 	v.icons[key] = b
@@ -626,7 +726,7 @@ func (v *clipView) previewPane(c *ui.Context, k tokens) {
 	if !ok {
 		return
 	}
-	infos := clipInfos(e, time.Now(), mygo.App.Locale(), filesSize)
+	infos := clipInfos(e, time.Now(), sysLocale(), filesSize, v.imageDims)
 	ui.Column(c).Grow(1).Padding(0, clipPanePad, clipBottom, clipPanePad).Children(func() {
 		c.Key(e.ID) // a new item's preview starts at its top
 		box := ui.Column(c).Grow(1).Shrink(1).Padding(16, 0).Role(ui.RoleGroup).Label(locales.ClipPreview())
@@ -673,6 +773,10 @@ func (v *clipView) preview(c *ui.Context, k tokens, e clipboard.Entry) {
 	case clipboard.KindImage:
 		v.imagePreview(c, k, e)
 	case clipboard.KindFiles:
+		if path, ok := imageFileOf(e); ok {
+			v.imageFilePreview(c, k, e, path)
+			return
+		}
 		v.filesPreview(c, k, e)
 	default:
 		text, cut := previewText(e.Text)
@@ -690,27 +794,47 @@ func (v *clipView) preview(c *ui.Context, k tokens, e clipboard.Entry) {
 // takes long.
 func (v *clipView) imagePreview(c *ui.Context, k tokens, e clipboard.Entry) {
 	if v.image.id != e.ID {
-		v.loadImage(e.ID)
+		v.loadImage(e.ID, v.storedImage(e.ID))
 	}
+	v.showImage(c, k, e.Width, e.Height, v.thumb(e), clipTitle(e))
+}
+
+// imageFilePreview is imagePreview of an image file (imageFileOf).
+func (v *clipView) imageFilePreview(c *ui.Context, k tokens, e clipboard.Entry, path string) {
+	if v.image.id != e.ID {
+		v.loadImage(e.ID, imageFile(path))
+	}
+	t := v.fileThumb(path)
+	w, h := t.w, t.h
+	if b := v.image.bitmap; b != nil {
+		w, h = b.Size()
+	}
+	if w <= 0 || h <= 0 { // neither read yet: a spinner where it will be
+		w, h = 64, 64
+	}
+	v.showImage(c, k, w, h, t.bitmap, clipTitle(e))
+}
+
+// showImage shows the image the preview read, or thumb till then, of
+// pxW×pxH pixels, scaled down to fit and never up; a spinner once it
+// takes long.
+func (v *clipView) showImage(c *ui.Context, k tokens, pxW, pxH int, thumb *ui.Bitmap, label string) {
 	b := v.image.bitmap
 	if b == nil {
-		b = v.thumb(e)
+		b = thumb
 	}
-	scale := float32(1)
-	for _, d := range mygo.Screen.Displays() {
-		scale = max(scale, float32(d.ScaleFactor))
-	}
+	scale := float32(sysMaxScale())
 	boxW, boxH := v.pane.W, v.pane.H-32
 	if boxW <= 0 {
 		// Not laid out yet: the pane under no banner, four lines of info.
 		boxW, boxH = clipPaneWidth-2*clipPanePad, listHeight-clipBottom-4*clipInfoRow-1-32
 	}
-	w0, h0 := float32(e.Width)/scale, float32(e.Height)/scale
+	w0, h0 := float32(pxW)/scale, float32(pxH)/scale
 	w, h := fitSize(w0, h0, min(boxW, w0), min(boxH, h0))
 	ui.Column(c).Grow(1).Justify(ui.Center).AlignItems(ui.Center).Children(func() {
 		ui.Box(c).Size(w, h).Shrink(0).Children(func() {
 			if b != nil {
-				ui.Image(c, b).Size(w, h).Fit(ui.Contain).Radius(6).Border(1, k.hairline).Label(clipTitle(e))
+				ui.Image(c, b).Size(w, h).Fit(ui.Contain).Radius(6).Border(1, k.hairline).Label(label)
 			}
 			if !v.image.done && time.Since(v.image.started) >= imageSpinAfter {
 				ui.Box(c).Absolute().Left(0).Top(0).Size(w, h).Center().Children(func() {
@@ -723,28 +847,60 @@ func (v *clipView) imagePreview(c *ui.Context, k tokens, e clipboard.Entry) {
 	})
 }
 
-// loadImage reads the image of the item id on a goroutine.
-func (v *clipView) loadImage(id string) {
+// loadImage reads the preview's image of the item id on a goroutine,
+// with read; none without.
+func (v *clipView) loadImage(id string, read func() *ui.Bitmap) {
 	v.image = clipImage{id: id, started: time.Now()}
-	st := v.svc().store
-	if st == nil {
+	if read == nil {
 		v.image.done = true
 		return
 	}
-	go func() {
-		var b *ui.Bitmap
-		if content, err := st.Content(id); err == nil && len(content.PNG) > 0 {
-			b, err = ui.DecodeBitmap(content.PNG)
-			if err != nil {
-				log.Printf("clipboard: image: %v", err)
-			}
+	var b *ui.Bitmap
+	v.background(func() { b = read() }, func() {
+		if v.image.id == id {
+			v.image.bitmap, v.image.done = b, true
 		}
-		v.l.win.Update(func() {
-			if v.image.id == id {
-				v.image.bitmap, v.image.done = b, true
-			}
-		})
-	}()
+	})
+}
+
+// storedImage reads the image of the item id from the history; nil
+// without one.
+func (v *clipView) storedImage(id string) func() *ui.Bitmap {
+	st := v.svc().store
+	if st == nil {
+		return nil
+	}
+	return func() *ui.Bitmap {
+		content, err := st.Content(id)
+		if err != nil || len(content.PNG) == 0 {
+			return nil
+		}
+		b, err := ui.DecodeBitmap(content.PNG)
+		if err != nil {
+			log.Printf("clipboard: image: %v", err)
+		}
+		return b
+	}
+}
+
+// imageFile reads the image file at path: ui decodes what it can, upright
+// as a photo's EXIF says, and the rest (TIFF) is decoded here.
+func imageFile(path string) func() *ui.Bitmap {
+	return func() *ui.Bitmap {
+		data, err := clipboard.ReadImageFile(path)
+		if err != nil {
+			return nil
+		}
+		if b, err := ui.DecodeBitmap(data); err == nil {
+			return b
+		}
+		img, err := clipboard.DecodeImage(data)
+		if err != nil {
+			log.Printf("clipboard: image file: %v", err)
+			return nil
+		}
+		return ui.NewBitmap(img)
+	}
 }
 
 func (v *clipView) filesPreview(c *ui.Context, k tokens, e clipboard.Entry) {

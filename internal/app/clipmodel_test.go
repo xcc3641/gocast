@@ -18,7 +18,12 @@ import (
 func inLocale(t *testing.T, locale string) {
 	t.Helper()
 	i18n.SetLocaleFunc(func() string { return locale })
-	t.Cleanup(func() { i18n.SetLocaleFunc(nil) })
+	old := sysLocale
+	sysLocale = func() string { return locale }
+	t.Cleanup(func() {
+		i18n.SetLocaleFunc(nil)
+		sysLocale = old
+	})
 }
 
 var clipNow = time.Date(2026, 11, 12, 15, 0, 0, 0, time.Local)
@@ -160,7 +165,7 @@ func TestClipTitlesAndLabels(t *testing.T) {
 			if got := clipTitle(e); got != c.want[i][0] {
 				t.Errorf("%s: title of %s = %q, want %q", c.locale, e.ID, got, c.want[i][0])
 			}
-			if got := clipLabel(e, when); got != c.want[i][1] {
+			if got := clipLabel(e, when, nil); got != c.want[i][1] {
 				t.Errorf("%s: label of %s = %q, want %q", c.locale, e.ID, got, c.want[i][1])
 			}
 		}
@@ -381,27 +386,27 @@ func TestClipInfos(t *testing.T) {
 	size := func(files []string) (int64, bool) { return 84_000, len(files) == 1 }
 	at := clipNow.Add(-55 * time.Minute)
 	text := clipboard.Entry{Kind: clipboard.KindText, Text: "发布清单 ok", App: clipboard.App{Name: "备忘录"}, Time: at}
-	got := spell(clipInfos(text, clipNow, "zh-Hans", size))
+	got := spell(clipInfos(text, clipNow, "zh-Hans", size, nil))
 	// The system writes the day relative to the real today, not clipNow.
 	if len(got) != 3 || got[0] != "来源=备忘录" || got[1] != "拷贝时间="+sysfmt.Date(at, clipNow, "zh-Hans") || got[2] != "字数=7" {
 		t.Errorf("text: %q", got)
 	}
 	link := clipboard.Entry{Kind: clipboard.KindLink, Text: "https://www.github.com/x", Time: at}
-	got = spell(clipInfos(link, clipNow, "zh-Hans", size))
+	got = spell(clipInfos(link, clipNow, "zh-Hans", size, nil))
 	if got[0] != "来源=未知应用" || got[2] != "链接=github.com" {
 		t.Errorf("link: %q", got)
 	}
 	img := clipboard.Entry{Kind: clipboard.KindImage, Width: 756, Height: 133, Size: 84_000, Time: at}
-	got = spell(clipInfos(img, clipNow, "zh-Hans", size))
+	got = spell(clipInfos(img, clipNow, "zh-Hans", size, nil))
 	if len(got) != 4 || got[2] != "尺寸=756 × 133" || !strings.HasPrefix(got[3], "大小=84") {
 		t.Errorf("image: %q", got)
 	}
 	files := clipboard.Entry{Kind: clipboard.KindFiles, Files: []string{"/tmp/a", "/tmp/b"}, Time: at}
-	got = spell(clipInfos(files, clipNow, "zh-Hans", size))
+	got = spell(clipInfos(files, clipNow, "zh-Hans", size, nil))
 	if len(got) != 3 || got[2] != "位置=/tmp" {
 		t.Errorf("files with a folder among them: %q", got)
 	}
-	if infos := clipInfos(text, clipNow, "zh-Hans", size); !infos[0].source || infos[1].source {
+	if infos := clipInfos(text, clipNow, "zh-Hans", size, nil); !infos[0].source || infos[1].source {
 		t.Error("the source line is not marked")
 	}
 }

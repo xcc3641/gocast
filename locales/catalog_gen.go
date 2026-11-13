@@ -2946,6 +2946,24 @@ func (msgs Messages) ClipLabelFile() string {
 	return Catalog.Format(msgs.locale, "clipLabelFile", nil)
 }
 
+// ClipLabelImageFile says "{name}, Image file, {w} by {h}"
+// in the language the app shows.
+//
+// Screen reader: a row of one image file, such as a screenshot a tool
+// copied as a file (copy.md 13).
+func ClipLabelImageFile(name string, w int, h int) string {
+	return In(i18n.Locale()).ClipLabelImageFile(name, w, h)
+}
+
+// ClipLabelImageFile says "{name}, Image file, {w} by {h}"
+// in the language of msgs.
+//
+// Screen reader: a row of one image file, such as a screenshot a tool
+// copied as a file (copy.md 13).
+func (msgs Messages) ClipLabelImageFile(name string, w int, h int) string {
+	return Catalog.Format(msgs.locale, "clipLabelImageFile", map[string]any{"name": name, "w": w, "h": h})
+}
+
 // ClipLabelFiles says "{n, plural, offset:1 one {{first} and # more, Files} other {{first} and # more, Files}}"
 // in the language the app shows.
 //
