@@ -603,3 +603,13 @@ English: **Disk image.** Download the latest `.dmg` from [Releases](…), open i
 ## 9. README 改版（2026-11-13，参考 Tinycast 的结构）
 
 README 只留门面、安装和链接，细节交给网站：居中图标 + 标语、一排链接（网站 / 安装 / 更新日志 / 支持）、一排徽章、一张主图（docs/images/search-panel-en.png 和 search-panel-zh-Hans.png，深色，空白示例数据）、两三句介绍 + 「看看它能做的全部 →」、安装（已公证，双击就能打开；终端一行；卸载）、你的数据（一小段 + 隐私政策链接）、参与、致谢、许可证。功能长段落、快捷键表、第一次打开、从源码构建都已移走（网站和 CONTRIBUTING.md 里有）。上面 6.11、7.5 等节里写给 README 的段落从此只作网站文案的参考。
+
+## 10. 「你的数据」现在的说法（2026-11-13，隐私检查后）
+
+README 里那一段（网站隐私页同样意思）：
+
+中文：Gocast 只在检查更新和每天取一次汇率时联网，两样都能关。预设、设置、剪贴板历史，还有你从搜索里打开过什么、用哪个词打开的（用来把常用的排前面，搜索词只留 17 天），都在 ~/Library/Application Support/com.hugo.gocast/，不会上传。
+
+English: Gocast only goes online to check for updates and to fetch exchange rates once a day, and both can be turned off. Your presets, settings, clipboard history, and a record of what you open from search and the words you typed to find it (so your usual picks come first; the words are kept for 17 days) all stay in ~/Library/Application Support/com.hugo.gocast/ and are never uploaded.
+
+另外记一句：签名里带公司名和团队编号、Bundle ID 里有 hugo，这些是公开信息，公开后谁都能看到，不用在文案里解释。
