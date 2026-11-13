@@ -586,7 +586,7 @@ English: Exchange rates come from [Frankfurter](https://frankfurter.dev), which 
 - “已改在你的主文件夹里打开”这条说明做兜底：预设文件夹丢了不要让终端打不开。
 - ⌘Space 被聚焦搜索占用的提示只在第一次打开时出现；从系统设置切回来再查一次，空出来就换成 ⌘Space 并显示「已改用 ⌘Space」。点「就用 ⌥⇧Space」后默认改成它，不再提示。别的应用占着检测不到，不要用这组文案。
 
-## 8. 签名和公证之后的安装说明（待 Developer ID + 公证验过再改）
+## 8. 签名和公证之后的安装说明（已验过，已写入新版 README）
 
 装好的版本双击直接能开以后，README 两份照下面改；网站支持页由网站那边对齐同样的意思。
 
@@ -599,3 +599,7 @@ English: **Disk image.** Download the latest `.dmg` from [Releases](…), open i
 终端一段，删掉最后的「这样装的不用点「仍要打开」。」/ "macOS will not ask you to click Open Anyway."，其余不变。
 
 不写「Developer ID」「签名」这些词：读的人只关心能不能直接打开。「经过 Apple 公证」留着，是给会去查的人一个可以核对的说法。
+
+## 9. README 改版（2026-11-13，参考 Tinycast 的结构）
+
+README 只留门面、安装和链接，细节交给网站：居中图标 + 标语、一排链接（网站 / 安装 / 更新日志 / 支持）、一排徽章、一张主图（docs/images/search-panel-en.png 和 search-panel-zh-Hans.png，深色，空白示例数据）、两三句介绍 + 「看看它能做的全部 →」、安装（已公证，双击就能打开；终端一行；卸载）、你的数据（一小段 + 隐私政策链接）、参与、致谢、许可证。功能长段落、快捷键表、第一次打开、从源码构建都已移走（网站和 CONTRIBUTING.md 里有）。上面 6.11、7.5 等节里写给 README 的段落从此只作网站文案的参考。

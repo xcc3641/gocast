@@ -1,30 +1,46 @@
-# Gocast
+<h1 align="center">
+  <a href="https://gocast.yichenlab.com/zh/"><img src="assets/icon/icon.png" alt="Gocast 应用图标" width="128" height="128"></a><br>
+  Gocast
+</h1>
 
-**按一下，应用和终端都到。**
+<p align="center">
+  按一下，应用和终端都到。
+</p>
 
-[English](README.md) · 简体中文
+<p align="center">
+  <a href="https://gocast.yichenlab.com/zh/"><strong>网站</strong></a> ·
+  <a href="#安装"><strong>安装</strong></a> ·
+  <a href="https://gocast.yichenlab.com/zh/changelog/"><strong>更新日志</strong></a> ·
+  <a href="https://gocast.yichenlab.com/zh/support/"><strong>支持</strong></a>
+</p>
 
-Gocast 是一个 Mac 上的小启动器。按 ⌘Space，找到应用就打开。按 ⌃\`，终端从屏幕上方落下来，已经在你常用的文件夹里，跑着你常用的命令。
+<p align="center">
+  <a href="https://github.com/xcc3641/gocast/releases/latest"><img alt="最新版本" src="https://img.shields.io/github/v/release/xcc3641/gocast?style=flat-square&label=release"></a>
+  <a href="https://github.com/xcc3641/gocast/actions/workflows/ci.yml"><img alt="构建状态" src="https://img.shields.io/github/actions/workflow/status/xcc3641/gocast/ci.yml?branch=main&style=flat-square&label=build"></a>
+  <img alt="macOS 13 或更高版本，Apple 芯片" src="https://img.shields.io/badge/macOS-13%2B%20%C2%B7%20Apple%20silicon-black?style=flat-square&logo=apple">
+  <img alt="Go" src="https://img.shields.io/badge/Go-1.27-00ADD8?style=flat-square&logo=go&logoColor=white">
+  <a href="LICENSE"><img alt="许可证：Apache 2.0" src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square"></a>
+</p>
 
-## 能做什么
+<p align="center">
+  <a href="README.md">English</a> · 简体中文
+</p>
 
-**搜索面板。** 打几个字，按 ↵。中文名、英文名、拼音都能找到应用（输入 `wx` 就有微信），常用的排在前面。不打算的时候，它先列出你常用的应用和预设；想只留一个搜索框，在设置 › 通用里打开「打开时只显示搜索框」。按 ⌘K 有更多操作，比如在访达中显示、拷贝路径。
+<p align="center">
+  <img src="docs/images/search-panel-zh-Hans.png" alt="Gocast 的搜索面板，列出最常用的应用和预设" width="720">
+</p>
 
-**悬浮终端。** 浮在所有应用上面，出现在鼠标所在的那块屏幕上，点别处就收起。收起不会结束命令，再叫出来还是原样。⌘T 开新标签。
+Gocast 是一个 Mac 上的原生小启动器。按 ⌘Space 打开任何应用，按 ⌃\` 让终端从屏幕上方落下来，按 ⌃⌘V 找回拷贝过的东西。在同一个搜索框里打算式、单位或汇率，答案直接就在。
 
-**预设。** 预设会记住在哪个文件夹运行什么命令，比如在 `~/Projects/my-app` 里运行 `pi`。在设置里添加预设，之后在搜索面板里输入预设名，就会在悬浮终端里打开。
+没有账号，不收集数据，免费开源。
 
-**剪贴板历史。** 按 ⌃⌘V，找回之前拷贝过的文字、链接、图片和文件，按 ↵ 粘贴到刚才的应用。常用的可以置顶。往终端里粘贴图片时，贴进去的是图片在本机的文件路径。
-
-**计算器。** 在搜索框里直接打算式、单位或汇率，比如 `(12+8)*3`、`10 ft in m`、`100 美元换日元`，最上面就是答案，按 ↵ 拷走。汇率每天取一次，断网也能用上次的。
-
-Gocast 待在菜单栏，不占 Dock。深色、浅色跟着系统走，界面有简体中文和英文。会自动更新。
+[看看它能做的全部 →](https://gocast.yichenlab.com/zh/)
 
 ## 安装
 
-**磁盘映像。** 到 [Releases](https://github.com/xcc3641/gocast/releases/latest) 下载最新的 `.dmg`，打开后把 Gocast 拖进“应用程序”文件夹。第一次打开时，去系统设置 › 隐私与安全性，点「仍要打开」。
+**磁盘映像。** 到 [Releases](https://github.com/xcc3641/gocast/releases/latest) 下载最新的 `.dmg`，打开后把 Gocast 拖进“应用程序”文件夹。安装包经过 Apple 公证，双击就能打开。
 
-**终端。** 贴一行就装好。它从本项目的发布页下载最新版，核对是官方发布的（被改过就拒装），放进「应用程序」（没有权限就放进 `~/Applications`），不用管理员密码，然后打开 Gocast。这样装的不用点「仍要打开」。[安装脚本](install.sh) 在仓库里，可以先看内容再跑。
+**终端。** 贴一行就装好。它下载最新版，核对是官方发布的，放进“应用程序”（或 `~/Applications`），然后打开 Gocast，不用管理员密码。可以先看看[安装脚本](install.sh)。
 
 ```sh
 curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh | sh
@@ -38,55 +54,20 @@ curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh
 
 预设、设置和剪贴板历史会留着。
 
-**系统要求：** macOS 13 或更高版本，Apple 芯片。之后会支持 Intel。
-
-## 第一次打开
-
-Gocast 想用 ⌘Space，而系统默认把它给了聚焦搜索。如果聚焦搜索还占着，Gocast 会先用 ⌥⇧Space，并打开设置 › 快捷键告诉你。去系统设置 › 键盘 › 键盘快捷键 › 聚焦，关掉“显示聚焦搜索”，Gocast 会自己换回 ⌘Space。也可以就用 ⌥⇧Space，或者换成你喜欢的任何快捷键。
-
-## 快捷键
-
-| 按键 | 在哪里 | 做什么 |
-| --- | --- | --- |
-| ⌘Space | 任何地方 | 打开搜索面板 |
-| ⌃\` | 任何地方 | 显示或收起悬浮终端 |
-| ⌃⌘V | 任何地方 | 打开剪贴板历史 |
-| ↵ | 搜索面板 | 打开选中的应用或预设 |
-| ⌘K | 搜索面板 | 更多操作 |
-| ⌘, | 搜索面板 | 设置 |
-| Esc | 搜索面板 | 清空输入，再按一次收起 |
-| ⌘T | 悬浮终端 | 新标签 |
-| ⌘W | 悬浮终端 | 关闭标签 |
-
-这三个全局快捷键都可以在设置 › 快捷键里改。
+需要 macOS 13 或更高版本，Apple 芯片。系统默认把 ⌘Space 给了聚焦搜索，所以在你关掉聚焦的快捷键之前，Gocast 先用 ⌥⇧Space；[怎么关](https://gocast.yichenlab.com/zh/support/)。
 
 ## 你的数据
 
-Gocast 没有账号，不会把你的任何信息发到别处。它只在检查更新和每天取一次汇率时联网，取汇率时不带你输入的任何内容。两样都能在设置 › 通用里关掉（“自动检查更新”“在搜索中计算”）。预设和设置都是普通文件，放在 `~/Library/Application Support/com.hugo.gocast/`。
+Gocast 只在检查更新和每天取一次汇率时联网，两样都能关。预设、设置和剪贴板历史都在 `~/Library/Application Support/com.hugo.gocast/`，不会上传。[隐私政策 →](https://gocast.yichenlab.com/zh/privacy/)
 
-剪贴板历史也只存在这台 Mac 上（同一个文件夹），不会上传。密码管理器拷贝的密码不会记。可以在设置 › 剪贴板里关掉、清空，或者选哪些应用不记。
+## 参与
 
-## 从源码构建
-
-需要 Apple 芯片的 Mac（macOS 13 或更高版本）、Go 1.27.3 或更高版本，以及和 `go.mod` 里版本一致的 `mygo` 命令行工具（按下面的命令安装，`~/go/bin` 要在 `PATH` 里）。
-
-```sh
-git clone https://github.com/xcc3641/gocast.git
-cd gocast
-go install "github.com/egoist/mygo/cmd/mygo@$(go list -m -f '{{.Version}}' github.com/egoist/mygo)"
-go run .            # 运行
-go test ./...       # 跑测试
-mygo build          # 在 build/darwin-arm64/ 里生成 Gocast.app 和 .dmg
-```
-
-提交改动前请先看 [CONTRIBUTING.md](CONTRIBUTING.md)。界面改动以 [docs/design.md](docs/design.md) 为准，文案以 [docs/copy.md](docs/copy.md) 为准。
+发现问题、有想法，欢迎提到 [Issues](https://github.com/xcc3641/gocast/issues)。想从源码构建或提交改动，先看 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## 致谢
 
-Gocast 用 [MyGo](https://github.com/egoist/mygo) 写成。终端用的是 [Ghostty](https://ghostty.org) 的 libghostty-vt，拼音搜索用的是 [go-pinyin](https://github.com/mozillazg/go-pinyin)，汇率来自 [Frankfurter](https://frankfurter.dev)（各国央行公布的参考汇率）。
-
-Gocast 受 Raycast 和 Ghostty 快捷终端的启发，与两者都没有关联，也没有得到它们的认可，没有使用它们的代码或图片素材。
+Gocast 用 [MyGo](https://github.com/egoist/mygo) 写成。终端用的是 [Ghostty](https://ghostty.org) 的 libghostty-vt，拼音搜索用的是 [go-pinyin](https://github.com/mozillazg/go-pinyin)，汇率来自 [Frankfurter](https://frankfurter.dev)。受 Raycast 和 Ghostty 快捷终端的启发，与两者都没有关联。
 
 ## 许可证
 
-[Apache License 2.0](LICENSE)。Gocast 附带的第三方软件见 [NOTICE](NOTICE) 和 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+[Apache License 2.0](LICENSE)。附带的第三方软件见 [NOTICE](NOTICE) 和 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
