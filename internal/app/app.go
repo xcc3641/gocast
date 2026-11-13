@@ -16,6 +16,7 @@ import (
 	"gocast/internal/presets"
 	"gocast/internal/settings"
 	"gocast/internal/shortcut"
+	"gocast/internal/termhost"
 	"gocast/internal/usage"
 	"gocast/locales"
 )
@@ -40,6 +41,7 @@ type gocast struct {
 	dir      string // ~/Library/Application Support/com.hugo.gocast
 	launcher *launcher
 	term     *termPanel
+	host     *termHost // where the floating terminal's programs run
 	prefs    *prefsWindow
 	tray     *mygo.Tray
 	clip     *clipService
@@ -326,7 +328,9 @@ func (g *gocast) ready() {
 	g.clip = newClipService(g)
 	g.calc = newCalcService(g)
 	g.launcher = newLauncher(g)
+	g.host = newTermHost(termHostDir(g.dir, mygo.App.Version() == ""))
 	g.term = newTermPanel(g)
+	g.term.restore() // the tabs of the terminals that went on as Gocast quit
 	g.prefs = newPrefsWindow(g)
 	g.updates = newUpdateService(g, time.Now())
 	g.registerShortcuts()
@@ -363,6 +367,13 @@ func (g *gocast) ready() {
 // Run starts Gocast. When another Gocast is running, it returns at once,
 // and the running one shows its search panel.
 func Run() {
+	// Started by Gocast as its terminal host, which keeps the floating
+	// terminal's programs running while Gocast quits or updates: no app,
+	// no window, no menu bar icon (internal/termhost).
+	if len(os.Args) == 3 && os.Args[1] == termhost.Flag {
+		termhost.Main(os.Args[2], appVersion())
+		return
+	}
 	if !mygo.App.RequestSingleInstanceLock() {
 		return // the running Gocast shows its panel (OnSecondInstance)
 	}

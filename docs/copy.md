@@ -1,4 +1,6 @@
-# Gocast 界面文案 v1.26（搜索面板 · 悬浮终端 · 设置）
+# Gocast 界面文案 v1.27（搜索面板 · 悬浮终端 · 设置）
+
+v1.27 改动：新增第 13 节「Gocast 重启时终端不断」：菜单项「结束所有终端」、确认框、接不回时的一行字，以及卸载 / 删数据 / 首页终端那段的改法。
 
 v1.26 改动：设置侧边栏「终端预设」改名「悬浮终端」；终端的五行设置从通用搬到这一页上半，下面是「预设」一组。通用里只剩 Gocast 自己的开关和外观。
 
@@ -783,3 +785,35 @@ English: Gocast only goes online to check for updates and to fetch exchange rate
 | 说明 | 打开后，Gocast 会在后台下好新版本，下次重新打开时换上。关掉就只在点“检查更新”时查。 | Gocast downloads new versions in the background and switches to them next time it opens. Turn this off to check only when you click Check for Updates. |
 
 不要的：跳过这个版本、稍后提醒、「以后自动下载并安装更新」勾选框、整个「软件更新」窗口和它的标题。
+
+## 13. Gocast 重启时终端不断（v1.27；位置以 design.md 为准）
+
+范围：只管 Gocast 自己重开（更新、崩溃、退出再开），终端里的命令一直在跑，重开后接回原来的标签。Mac 重启不管，也不写任何「恢复」字样。
+
+用词：说「终端还在跑」「接着跑」，不说「保活」「会话」「后台进程」「守护」。用户看到的只是标签还在。
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 菜单栏菜单（放在「退出 Gocast」上面，只在有终端开着时出现） | 结束所有终端 | Close All Terminals |
+| 上面那项的确认标题 | 结束所有终端？ | Close all terminals? |
+| 确认说明 | 正在跑的命令会停掉，标签全部关闭。 | Running commands stop and every tab closes. |
+| 确认按钮 | 结束 / 取消 | Close / Cancel |
+| 重开后接回时（不提示） | — | — |
+| Gocast 开着时终端突然断了（标签和输出留着，照 3.6 多一行暗色字，再变回普通终端） | 这个终端断开了，之前的命令已经停了。 | This terminal was disconnected. Its command has stopped. |
+| Gocast 重开时接不上（输出已经没了） | 不留标签、不提示，下次唤出当第一次。 | No tab, no message. |
+
+退出 Gocast 时不弹提示：终端接着跑是默认的、也是用户要的，每次退出都问一句就成了打扰。想全部停掉就用「结束所有终端」。「退出 Gocast」这几个字不改。
+接上了就什么都不说，跟更新以后什么都不提示一样。
+
+### 13.1 别处要跟着改的字（网站由 Leto 改，README 没有相关说法，不用改）
+
+退出 Gocast 不再停掉终端，所以凡是「退出 Gocast 再删东西」的地方，都要先结束终端。
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 支持页「怎么卸载」 | 不改。卸载脚本会顺手结束终端；拖进废纸篓的，Gocast 发现自己没了，开着的终端也会一起结束。 | No change. |
+| 隐私页「想删掉全部数据」 | 想删掉全部数据，先在菜单栏点「结束所有终端」并退出 Gocast，再删除 `~/Library/Application Support/com.hugo.gocast/`。 | To delete everything, choose Close All Terminals from the menu bar, quit Gocast, then delete `~/Library/Application Support/com.hugo.gocast/`. |
+| 首页终端那段第一句（发版后再换） | 浮在所有应用上面。收起它、退出或更新 Gocast，正在跑的命令都不会停。 | It floats above every app. Hide it, quit Gocast or update it: your commands keep running. |
+
+删数据那条要先结束终端：数据文件夹里有终端在用的东西，开着终端就删，终端会突然断。
+Mac 重启后终端不在了，这件事不写：本来所有终端都这样，不需要专门说。

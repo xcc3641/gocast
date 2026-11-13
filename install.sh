@@ -341,8 +341,32 @@ macos_uninstall() {
 		fail "$app_name is not installed in /Applications or ~/Applications"
 	fi
 	quit_app
+	stop_terminal_host
 	rm -rf "$app" || fail "could not remove $app"
 	echo "Uninstalled $app_name. Its settings and data are still in place."
+}
+
+# stop_terminal_host ends the terminals of the floating terminal, which go
+# on after Gocast quits, in their own process: the one terminal-host.pid in
+# the data folder names, once it is that process (Gocast --terminal-host).
+# Added to the script mygo build writes: keep it when copying a new one.
+stop_terminal_host() {
+	pidfile="$HOME/Library/Application Support/$bundle_id/terminal-host.pid"
+	[ -f "$pidfile" ] || return 0
+	pid="$(tr -cd 0-9 <"$pidfile")"
+	[ -n "$pid" ] || return 0
+	case "$(ps -o command= -p "$pid" 2>/dev/null)" in
+	*--terminal-host*) ;;
+	*) return 0 ;;
+	esac
+	echo "Closing the terminals of $app_name"
+	kill -TERM "$pid" 2>/dev/null || return 0
+	i=0
+	while kill -0 "$pid" 2>/dev/null; do
+		i=$((i + 1))
+		[ "$i" -le 10 ] || break
+		sleep 1
+	done
 }
 
 # app_folder prints the folder of the app on macOS: the one that holds it,

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"gocast/internal/running"
+	"gocast/internal/termhost"
 )
 
 // fakeAppPaths are the apps the tests have installed, by bundle ID, as
@@ -49,6 +50,10 @@ func TestMain(m *testing.M) {
 	sysMaxScale = func() float64 { return 2 }
 	sysFileIcon = func(string, int) ([]byte, error) { return nil, errors.New("no icons in tests") }
 	sysTypeIcon = sysFileIcon
+	// Nor of the terminal host: no test starts one, or connects to the
+	// user's; the terminals run in Gocast. Nor asks before closing them.
+	sysTermHost = func(string, bool) (*termhost.Client, error) { return nil, errors.New("no terminal host in tests") }
+	sysConfirmCloseAll = func() bool { return false }
 	os.Exit(m.Run())
 }
 

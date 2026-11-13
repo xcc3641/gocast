@@ -39,7 +39,7 @@ func (g *gocast) updateTray() {
 }
 
 func (g *gocast) trayMenu() *mygo.Menu {
-	return mygo.NewMenu([]*mygo.MenuItem{
+	items := []*mygo.MenuItem{
 		{Label: locales.TraySearch(), Accelerator: g.launcherKey, Click: func(*mygo.MenuItem, *mygo.Window) { g.launcher.show() }},
 		{Label: locales.TrayTerminal(), Accelerator: g.terminalKey, Click: func(*mygo.MenuItem, *mygo.Window) { g.term.toggle() }},
 		{Label: locales.ClipboardHistory(), Accelerator: g.clipKey, Click: func(*mygo.MenuItem, *mygo.Window) { g.launcher.openClip(false) }},
@@ -47,8 +47,15 @@ func (g *gocast) trayMenu() *mygo.Menu {
 		{Label: locales.TraySettings(), Accelerator: "Cmd+,", Click: func(*mygo.MenuItem, *mygo.Window) { g.openSettings("") }},
 		g.updateMenuItem(),
 		mygo.Separator(),
-		{Label: locales.TrayQuit(), Accelerator: "CmdOrCtrl+Q", Click: func(*mygo.MenuItem, *mygo.Window) { mygo.App.Quit() }},
-	})
+	}
+	// Close All Terminals, over Quit, while there is a tab (design.md 5):
+	// the terminals go on after Gocast quits, and only it ends them all.
+	if g.term != nil && len(g.term.tabs) > 0 {
+		items = append(items, &mygo.MenuItem{Label: locales.TrayCloseAllTerminals(), Click: func(*mygo.MenuItem, *mygo.Window) { g.term.closeAll() }})
+	}
+	return mygo.NewMenu(append(items,
+		&mygo.MenuItem{Label: locales.TrayQuit(), Accelerator: "CmdOrCtrl+Q", Click: func(*mygo.MenuItem, *mygo.Window) { mygo.App.Quit() }},
+	))
 }
 
 // updateMenuItem is the tray's line of updates (design.md 4.5, 5):

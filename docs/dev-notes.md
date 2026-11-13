@@ -33,7 +33,7 @@ The windows are `w1` the search panel, `w2` the floating terminal and `w3` Setti
 
 The automation plugin is always imported but listens only when `MYGO_AUTOMATION` is set. `mygo build` leaves it out (`mygo_noinspector`).
 
-The single-instance lock is keyed by the app's name. An unpackaged build (`gocast`) therefore runs alongside an installed `Gocast.app`. The two share `~/Library/Application Support/com.hugo.gocast/`.
+The single-instance lock is keyed by the app's name. An unpackaged build (`gocast`) therefore runs alongside an installed `Gocast.app`. The two share `~/Library/Application Support/com.hugo.gocast/`, but not their terminals: an unpackaged build's terminal host lives in `dev-terminals/` inside it (see "The terminal host").
 
 For real window captures, `screencapture -x -o -l <CGWindowID>` works. Get the ID from `CGWindowListCopyWindowInfo`, filtered by PID.
 
@@ -56,7 +56,9 @@ Release builds are signed with the Developer ID in `macos.signingIdentity` (mygo
 | `main.go` | The entry point: it only calls `app.Run` (internal/app) |
 | `internal/app/app.go` | App setup, single instance, global shortcuts (register / suspend while recording / change), settings, quit handling |
 | `internal/app/launcher.go` | Search panel: field, results, actions capsule, ⌘K menu, notices |
-| `internal/app/termpanel.go` | Floating terminal (`plugins/terminal`): tabs, banners, end bar, show/hide |
+| `internal/app/termpanel.go` | Floating terminal (`plugins/terminal`): tabs, banners, end bar, show/hide, restored tabs, a host lost |
+| `internal/app/termhost.go` | Gocast's side of the terminal host: the connection and its request queue, a tab's `hostConn`, what a tab keeps in the host (`tabMeta`) |
+| `internal/termhost` | The terminal host, which runs the terminals so that they outlive Gocast: the process (`Gocast --terminal-host`), its protocol, server and client |
 | `internal/app/prefs.go` | Settings window: Shortcuts, Terminal Presets (editor), General, About |
 | `internal/app/tray.go` | Tray icon and menu |
 | `internal/app/updates.go` | Updates without a window: the checks and installs (`mygo.Updater`), the search panel's new version pill, About's status line |
@@ -80,6 +82,7 @@ These files are in `~/Library/Application Support/com.hugo.gocast/`:
 - `presets.json`. It is edited in Settings; editing it by hand works too, and it is reloaded when the panel or Settings opens. There are no presets on first run. The first terminal is then a plain shell, with the tip that points to Settings.
 - `settings.json`. It holds the shortcuts, font size and keep-terminal-on-blur, 自动检查更新 (`autoUpdate`) and the time of the last update check (`updatesCheckedAt`), and only stores values that differ from the defaults.
 - `usage.json`. Frecency.
+- `terminal.sock`, `terminal-host.pid`, `terminal-host.lock`, `terminal-host.log`: the terminal host's, while it runs (the log stays). Nothing of the terminals is written to disk.
 
 The builds with the earlier bundle ID kept them in `dev.gocast.app/`. At launch, after the single-instance lock and before anything else touches the folder, `migrateDataDir` (migrate.go) copies that folder to `com.hugo.gocast/` when the new one does not exist: modes, modification times and symbolic links kept, into `.com.hugo.gocast.migrating/` first and renamed into place when complete (a copy cut short is removed at the next launch, which copies again). The old folder is never changed. When the copy fails, Gocast logs it and starts with a new, empty folder, the old one still there.
 
@@ -254,7 +257,7 @@ Automation can't cover these:
   - composing Chinese in the search field: nothing is acted on while composing, and Enter commits;
   - the candidate window position in the field and in the terminal.
 - **⌘V image paste into pi** (plugins/terminal's Kitty 5522 / empty bracketed paste).
-- **Tray:** clicks on the icon and menu (unreachable for automation), and the icon itself in the menu bar.
+- **Tray:** clicks on the icon and menu (unreachable for automation), and the icon itself in the menu bar. System Events reaches an isolated instance's menu by its PID (`click menu bar item 1 of menu bar 2` of the process whose unix id is …), which is how 结束所有终端 and its alert were checked.
 - **Folder picker** (系统选文件夹) in the preset editor.
 - **System prompts:** the login-item prompt for 登录时自动启动.
 - **Update check:**
@@ -276,6 +279,20 @@ Automation can't cover these:
   - `mygo build`, with the feed: it checks `https://github.com/xcc3641/gocast/releases/latest/download/update-darwin-arm64.json`. Until a release is published that is a 404, logged as `updates: …404 Not Found`, and the line says 现在检查不了更新，稍后会自动再试。
 - **Feed.** mygo.config.ts has `updates: { publicKey: "7xqUsSnSTZgGQ69hBuh+pm1jexm7Z3Ngl0lQ17EKPRQ=", github: "xcc3641/gocast" }`. The repository must be public, with releases tagged `v0.1.0` …; it doesn't exist yet. `mygo build` needs no key: without one it builds the app and the disk image and skips the update files.
 - **Releasing.** The update signing key and the release steps are in RELEASING.md.
+
+## The terminal host (design.md 3.6, 5; copy.md 13)
+
+The floating terminal's programs run in a process of their own, so they go on while Gocast quits, crashes or updates; Gocast shows them again when it starts.
+
+- **Process.** The same executable, started as `Gocast --terminal-host <data folder>` (`app.Run` branches on it before anything else: no NSApplication, no single-instance lock, no menu bar icon). Gocast starts it with the first terminal (`termhost.Ensure`): in a session of its own (`Setsid`), cwd `/`, output to `terminal-host.log`, Gocast's environment without `MYGO_AUTOMATION`. No LaunchAgent, no login item. A `flock` on `terminal-host.lock` keeps it to one per data folder. It exits 10 s after its last terminal ends, and right after 结束所有终端. An update moves the bundle and deletes it; the host keeps running from the deleted files, and the next Gocast connects to it (its new tabs go there too, until it exits).
+- **Socket.** `<data folder>/terminal.sock` (folder 0700, socket 0600); a path of 100 bytes or more goes to `$TMPDIR/gocast-term-<uid>-<hash>.sock` instead. A build not packaged (`mygo.App.Version() == ""`) uses `<data folder>/dev-terminals/` for all of these, so `go run` never shows nor ends the installed Gocast's terminals.
+- **Protocol** (`internal/termhost/protocol.go`). A type byte, a uint32 length, the payload; requests and replies in JSON. Hello (proto 1, build, pid, capabilities), list, create, close, close all, set meta, set active, attach. An attached connection is a tab's stream: the host sends Mirror frames (`plugins/terminal`'s `NewMirror`) with the size they were made at, which resizes the tab's terminal first (`ResizeByConn`), then an exit; the tab sends input, its size, its colors, pastes with every format (5522), clears and whether it shows. Version 1 only grows: new requests come with a capability, so an older host still running its terminals keeps working with a newer Gocast.
+- **Frames.** A terminal no view shows has no change notification, so the host polls each stream's Mirror: 2 ms after input, 8 ms after a frame, backing off to 250 ms while the tab shows and 1 s while it doesn't. Measured with 5 idle shells (packaged build, Apple silicon, `ps` CPU time over 30 s): host 0.43 % and Gocast 0.56 % with the panel showing; host 0.33 % and Gocast 0.03 % hidden; host 0 % with Gocast quit.
+- **Gocast's side.** A tab's terminal is made at once with a `hostConn` as its `Conn`, which holds the input, size and colors until the host started the terminal and attached it (`termPanel.connect`, on the host's request goroutine). No host could start: the tab runs in Gocast as before (and ends as Gocast quits). Each tab keeps its preset, folder, font size and whether it is plain now with its terminal (`tabMeta`), and the active tab; `ready()` lists them (without starting a host), and the panel's next show attaches them. Quit leaves the host's terminals running.
+- **A host lost** while Gocast shows its tabs: each tab keeps what it showed (`Terminal.History`), with copy.md 13's dim line under it, over a new shell in its folder, a plain terminal, in a new host. At launch, no host means no tabs.
+- **Uninstall.** A packaged host looks for its bundle's `Contents/Info.plist` every 30 s; missing at two looks at least 60 s apart, with no Gocast connected, it ends its terminals and exits. `install.sh --uninstall` sends SIGTERM to the PID in `terminal-host.pid` after checking that its command line has `--terminal-host` (that function is added to the script `mygo build` writes: keep it when copying a new one, RELEASING.md).
+- **Trying it in isolation** (never with the installed Gocast's data, never `pkill gocast`, which would end its host too): build with `go build -o <dir>/gocast .`, run it with its own `HOME` and `TMPDIR` (`env -i HOME=… TMPDIR=… MYGO_AUTOMATION=… <dir>/gocast`), open terminals, then quit it (SIGTERM), `kill -9` it, or `kill -9` the PID in `<HOME>/Library/Application Support/com.hugo.gocast/dev-terminals/terminal-host.pid` (the host lost), and start it again. Stop the host through that PID file only. A packaged build (`mygo build -debug -sign - -skip-dmg`, which keeps automation) uses the data folder itself and checks its bundle.
+- **Tests.** `internal/termhost/host_test.go` (a host in the test, real terminals running `/bin/sh`; skipped without libghostty-vt) and `internal/app/termhost_test.go`; `TestMain` makes the host unreachable (`sysTermHost`), so the app's tests run their terminals in Gocast.
 
 ## Open issues
 

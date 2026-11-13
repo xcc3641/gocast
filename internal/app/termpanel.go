@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/json"
 	"log"
 	"math"
 	"os"
@@ -13,11 +14,13 @@ import (
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/plugins/sfsymbols"
 	"github.com/egoist/mygo/plugins/terminal"
+	"github.com/egoist/mygo/transfer"
 	"github.com/egoist/mygo/ui"
 
 	"gocast/internal/presets"
 	"gocast/internal/settings"
 	"gocast/internal/shortcut"
+	"gocast/internal/termhost"
 	"gocast/locales"
 )
 
@@ -48,14 +51,21 @@ const (
 )
 
 // session is a tab: a terminal running a preset, or a plain one (no
-// preset), which keeps running while the panel hides, until its program
-// ends or the user closes the tab.
+// preset), which keeps running while the panel hides, and while Gocast
+// quits, in the terminal host (termhost.go), until its program ends or
+// the user closes the tab.
 type session struct {
 	presetID string         // "" for a plain terminal
 	preset   presets.Preset // as when it last started
 	term     *terminal.Terminal
-	gen      int // a new view for each run, keyed by it
-	key      int // the tab's key, for its whole life
+	// conn joins term to the host's terminal id; nil for a terminal
+	// running in Gocast, as when no host could start.
+	conn     *hostConn
+	id       string
+	restored bool   // the host's, from before Gocast started: joined as the panel first shows
+	dir      string // the folder it started in
+	gen      int    // a new view for each run, keyed by it
+	key      int    // the tab's key, for its whole life
 	focus    ui.Handle
 
 	pending    bool   // to start in the next frame, which sizes it
@@ -130,9 +140,11 @@ func newTermPanel(g *gocast) *termPanel {
 			p.hide()
 		}
 	})
+	// The host's terminals go on as Gocast quits (copy.md 13); those
+	// running in Gocast end with it.
 	mygo.App.OnWillQuit(func(*mygo.QuitEvent) {
 		for _, s := range p.tabs {
-			if s.term != nil {
+			if s.term != nil && s.conn == nil {
 				s.term.Close()
 			}
 		}
@@ -265,6 +277,7 @@ func (p *termPanel) shortcuts(c *ui.Context) {
 		if s.term != nil {
 			s.term.SetFont(termFont(size))
 		}
+		p.saveMeta(s)
 	}
 }
 
@@ -493,6 +506,9 @@ func (p *termPanel) newTab(pr *presets.Preset) {
 		s.presetID, s.preset = pr.ID, *pr
 	}
 	p.tabs = append(p.tabs, s)
+	if len(p.tabs) == 1 {
+		p.g.updateTray() // Close All Terminals shows
+	}
 	p.activate(len(p.tabs) - 1)
 }
 
@@ -501,31 +517,99 @@ func (p *termPanel) activate(i int) {
 	p.reveal = true
 	if s := p.current(); s != nil {
 		s.focus.Focus()
+		if s.id != "" {
+			id := s.id
+			p.request("set active", func(c *termhost.Client) error { return c.SetActive(id) })
+		}
 	}
+	p.syncVisible()
 	p.win.Invalidate()
+}
+
+// syncVisible tells the host which terminal shows: the active tab's, while
+// the panel shows. The others it looks at less often.
+func (p *termPanel) syncVisible() {
+	cur := p.current()
+	for _, s := range p.tabs {
+		if s.conn != nil {
+			s.conn.setVisible(p.shown && s == cur)
+		}
+	}
+}
+
+// request sends the host a request whose answer nothing waits for.
+func (p *termPanel) request(what string, fn func(c *termhost.Client) error) {
+	if p.g.host != nil {
+		p.g.host.request(what, fn)
+	}
+}
+
+// saveMeta keeps what the tab shows with its terminal in the host, for a
+// Gocast started again.
+func (p *termPanel) saveMeta(s *session) {
+	if s.id == "" {
+		return
+	}
+	id, meta := s.id, s.meta()
+	p.request("set meta", func(c *termhost.Client) error { return c.SetMeta(id, meta) })
 }
 
 // closeTab ends a tab's program and shows the tab after it, or the one
 // before; the panel hides with the last.
 func (p *termPanel) closeTab(s *session) {
+	if s.term != nil {
+		t := s.term
+		s.term = nil
+		t.Close()
+	}
+	if s.id != "" {
+		id := s.id
+		p.request("close", func(c *termhost.Client) error { return c.CloseTerminal(id) })
+	}
+	p.removeTab(s)
+}
+
+// removeTab takes the tab away, its terminal ended.
+func (p *termPanel) removeTab(s *session) {
 	i := slices.Index(p.tabs, s)
 	if i < 0 {
 		return
-	}
-	if s.term != nil {
-		s.term.Close()
 	}
 	p.tabs = slices.Delete(p.tabs, i, i+1)
 	switch {
 	case len(p.tabs) == 0:
 		p.active = -1
-		p.hide() // the shortcut opens the default preset next
+		p.g.updateTray() // Close All Terminals goes
+		p.hide()         // the shortcut opens the default preset next
 	case p.active > i:
 		p.activate(p.active - 1)
 	case p.active == i:
 		p.activate(min(i, len(p.tabs)-1)) // the tab after it, else the one before
 	}
 	p.win.Invalidate()
+}
+
+// closeAll ends every terminal, once the user confirmed (design.md 5):
+// the tabs close, the panel hides, and the host exits.
+func (p *termPanel) closeAll() {
+	if len(p.tabs) == 0 || !sysConfirmCloseAll() {
+		return
+	}
+	for _, s := range p.tabs {
+		if s.term != nil {
+			t := s.term
+			s.term = nil
+			t.Close()
+		}
+	}
+	p.tabs, p.active = nil, -1
+	p.menu = false
+	p.g.updateTray()
+	p.hide()
+	p.request("close all", func(c *termhost.Client) error { return c.CloseAll() })
+	if p.win != nil {
+		p.win.Invalidate()
+	}
 }
 
 // start runs the session's preset (or the user's shell) in a new
@@ -549,13 +633,24 @@ func (p *termPanel) start(s *session) {
 		dir = presets.ExpandHome("~")
 	}
 	s.done = false
+	s.dir = dir
+	p.run(s, termhost.CreateRequest{
+		Argv:      pr.Argv(presets.UserShell(), afterCommand(pr)),
+		Dir:       dir,
+		Env:       pr.Environ(),
+		DoneTitle: presets.AfterTitle,
+	}, "", p.g.host != nil)
+}
+
+// run shows the terminal req starts in a new terminal of the tab: in the
+// host, as its terminal id when that runs there already, once the host
+// started it; in Gocast without inHost.
+func (p *termPanel) run(s *session, req termhost.CreateRequest, id string, inHost bool) {
 	s.gen++
 	var term *terminal.Terminal
+	var conn *hostConn
 	opts := terminal.Options{
-		Command: pr.Argv(presets.UserShell(), afterCommand(pr)),
-		Dir:     dir,
-		Env:     pr.Environ(),
-		Font:    termFont(s.fontSize),
+		Font: termFont(s.fontSize),
 		// The glass shows through the terminal, in the colors of
 		// design.md 3.3a; its room is the view's padding (termPadX…),
 		// which changes as capsules come and go.
@@ -572,6 +667,7 @@ func (p *termPanel) start(s *session) {
 		// Kitty clipboard protocol, mode 5522); an image alone pastes an
 		// empty bracketed paste, which Claude Code takes as its cue. Both
 		// are the plugin's defaults: reads outside a paste stay refused.
+		// In the host, its terminal pastes (OnPaste).
 
 		// The preset's command ended and its shell goes on as a plain
 		// terminal (presets.After, design.md 3.6 「命令结束」).
@@ -580,8 +676,9 @@ func (p *termPanel) start(s *session) {
 				return
 			}
 			p.win.Update(func() {
-				if s.term == term {
+				if s.term == term && !s.done {
 					s.done = true
+					p.saveMeta(s)
 				}
 			})
 		},
@@ -590,20 +687,215 @@ func (p *termPanel) start(s *session) {
 				if s.term != term {
 					return
 				}
+				if conn != nil && conn.lost() {
+					p.lost(s) // the host went away
+					return
+				}
 				p.closeTab(s) // the shell exited, as in every terminal app
 			})
 		},
+	}
+	if inHost {
+		// The host's terminal shows here, at its size (ResizeByConn): it
+		// pastes, with every format, and clears itself, for its frames to
+		// show it.
+		conn = newHostConn()
+		opts.Conn, opts.ResizeByConn = conn, true
+		opts.OnPaste = func(d transfer.Data) bool {
+			st := conn.stream()
+			return st != nil && st.Paste(d)
+		}
+		opts.OnClear = func(terminal.Clear) bool {
+			st := conn.stream()
+			return st != nil && st.Clear()
+		}
+	} else {
+		opts.Command, opts.Dir, opts.Env = req.Argv, req.Dir, req.Env
 	}
 	t, err := terminal.New(opts)
 	if err != nil {
 		// No libghostty-vt (the first run downloads it), or no shell.
 		log.Printf("terminal: %v", err)
 		s.failure = err.Error()
-		s.term = nil
+		s.term, s.conn = nil, nil
 		return
 	}
 	term = t
-	s.term = t
+	s.term, s.conn = t, conn
+	if !inHost {
+		if len(req.Prefill) > 0 {
+			t.Feed(req.Prefill)
+		}
+		return
+	}
+	p.syncVisible()
+	p.connect(s, t, conn, req, id)
+}
+
+// connect has the host start the terminal req asks, or find its terminal
+// id, and joins conn to it; with no host, the terminal runs in Gocast
+// instead, and a terminal of the host's that ended meanwhile closes its
+// tab.
+func (p *termPanel) connect(s *session, term *terminal.Terminal, conn *hostConn, req termhost.CreateRequest, id string) {
+	h := p.g.host
+	restored := id != ""
+	req.Meta = s.meta()
+	h.run(func() {
+		var st *termhost.Stream
+		created := ""
+		err := h.do(!restored, func(c *termhost.Client) error {
+			tid := id
+			if !restored {
+				var err error
+				if tid, err = c.Create(req); err != nil {
+					return err
+				}
+				created = tid
+			}
+			var err error
+			st, err = c.Attach(tid)
+			return err
+		})
+		p.win.Update(func() {
+			switch {
+			case s.term != term: // closed meanwhile
+				if st != nil {
+					st.Close()
+				}
+				if created != "" {
+					p.request("close", func(c *termhost.Client) error { return c.CloseTerminal(created) })
+				}
+			case err != nil && restored:
+				log.Printf("terminal host: attach: %v", err)
+				s.term, s.conn, s.id = nil, nil, ""
+				conn.fail()
+				term.Close()
+				p.removeTab(s) // its program ended while no Gocast showed it
+				if len(p.tabs) == 0 && p.shown {
+					p.newTab(p.g.defaultPreset())
+				}
+			case err != nil:
+				log.Printf("terminal host: %v; the terminal runs in Gocast", err)
+				conn.fail()
+				p.run(s, req, "", false)
+				term.Close()
+			default:
+				s.id = created
+				if restored {
+					s.id = id
+				}
+				conn.bind(st, term.Resize)
+				if s == p.current() {
+					sid := s.id
+					p.request("set active", func(c *termhost.Client) error { return c.SetActive(sid) })
+				}
+			}
+		})
+	})
+}
+
+// lost follows a tab whose host went away (design.md 3.6): what it showed
+// stays, with a dim line under it, over a new shell in its folder, a
+// plain terminal now, in a host started anew.
+func (p *termPanel) lost(s *session) {
+	old := s.term
+	cols, rows := old.Size()
+	prefill := disconnected(old.History())
+	old.Close()
+	s.term, s.conn, s.id = nil, nil, ""
+	s.done = true
+	dir := s.dir
+	if !isDir(dir) {
+		dir = presets.ExpandHome("~")
+	}
+	p.run(s, termhost.CreateRequest{Dir: dir, Prefill: prefill, Cols: cols, Rows: rows}, "", p.g.host != nil)
+	p.win.Invalidate()
+}
+
+// restore brings back the tabs of the host's terminals, which a Gocast
+// before this one showed, once the host said them: shown as the panel
+// next shows. No host, no tabs.
+func (p *termPanel) restore() {
+	h := p.g.host
+	if h == nil {
+		return
+	}
+	h.run(func() {
+		var list []termhost.Session
+		var active string
+		err := h.do(false, func(c *termhost.Client) error {
+			var err error
+			list, active, err = c.List()
+			return err
+		})
+		if err != nil || len(list) == 0 {
+			return
+		}
+		p.win.Update(func() {
+			p.addRestored(list, active)
+			p.win.Invalidate()
+		})
+	})
+}
+
+// addRestored adds the tabs of the host's terminals list before those
+// opened meanwhile, in the order they were made, showing active's, and
+// in Settings' font size unless a tab had its own.
+func (p *termPanel) addRestored(list []termhost.Session, active string) {
+	var tabs []*session
+	sel := -1
+	for _, ts := range list {
+		if slices.ContainsFunc(p.tabs, func(s *session) bool { return s.id == ts.ID }) {
+			continue
+		}
+		var m tabMeta
+		_ = json.Unmarshal(ts.Meta, &m)
+		p.keys++
+		s := &session{id: ts.ID, key: p.keys, restored: true, dir: m.Dir, done: ts.Done || m.Done, fontSize: m.FontSize}
+		if s.fontSize <= 0 {
+			s.fontSize = float32(p.g.settings.Font())
+		}
+		if m.Preset != nil {
+			s.presetID, s.preset = m.PresetID, *m.Preset
+		}
+		if ts.ID == active {
+			sel = len(tabs)
+		}
+		tabs = append(tabs, s)
+	}
+	if len(tabs) == 0 {
+		return
+	}
+	cur := p.current()
+	was := len(p.tabs)
+	p.tabs = append(tabs, p.tabs...)
+	switch {
+	case cur != nil:
+		p.active = slices.Index(p.tabs, cur)
+	case sel >= 0:
+		p.active = sel
+	default:
+		p.active = len(tabs) - 1
+	}
+	for _, s := range p.tabs {
+		if i := presets.Find(p.g.presets, s.presetID); i >= 0 {
+			s.preset.Name = p.g.presets[i].Name
+		}
+	}
+	if was == 0 {
+		p.g.updateTray() // Close All Terminals shows
+	}
+}
+
+// attachRestored joins the restored tabs to the host's terminals, as the
+// panel shows: their output and programs, as they are.
+func (p *termPanel) attachRestored() {
+	for _, s := range p.tabs {
+		if s.restored {
+			s.restored = false
+			p.run(s, termhost.CreateRequest{}, s.id, true)
+		}
+	}
 }
 
 // openPreset shows the panel on the tab of the preset with the ID, opening
@@ -627,8 +919,9 @@ func (p *termPanel) openPreset(id string, newTab bool) {
 // presets deleted keep running (copy.md 4.2).
 func (p *termPanel) presetsChanged() {
 	for _, s := range p.tabs {
-		if i := presets.Find(p.g.presets, s.presetID); i >= 0 {
+		if i := presets.Find(p.g.presets, s.presetID); i >= 0 && s.preset.Name != p.g.presets[i].Name {
 			s.preset.Name = p.g.presets[i].Name
+			p.saveMeta(s)
 		}
 	}
 	p.win.Invalidate()
@@ -642,6 +935,7 @@ func (p *termPanel) fontChanged() {
 		if s.term != nil {
 			s.term.SetFont(termFont(size))
 		}
+		p.saveMeta(s)
 	}
 	p.win.Invalidate()
 }
@@ -662,6 +956,7 @@ func (p *termPanel) toggle() {
 		p.newTab(p.g.defaultPreset())
 	}
 	p.show()
+	p.attachRestored()
 }
 
 // focused reports whether the panel shows and is the key window: where
@@ -700,6 +995,7 @@ func (p *termPanel) show() {
 		return
 	}
 	p.shown = true
+	p.syncVisible()
 	wa := mygo.Screen.DisplayNearestPoint(mygo.Screen.CursorScreenPoint()).WorkArea
 	w, h := termSize(wa.Width, wa.Height, p.g.settings)
 	x, y := wa.X+(wa.Width-w)/2, wa.Y+termTopGap
@@ -857,6 +1153,7 @@ func (p *termPanel) hide() {
 	}
 	p.shown = false
 	p.menu = false
+	p.syncVisible()
 	gen := p.anim.Add(1)
 	done := func() {
 		if p.anim.Load() == gen {

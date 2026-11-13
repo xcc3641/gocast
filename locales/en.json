@@ -20,6 +20,26 @@
   "@trayQuit": {
     "description": "Tray menu: quits the app."
   },
+  "trayCloseAllTerminals": "Close All Terminals",
+  "@trayCloseAllTerminals": {
+    "description": "Tray menu, just above Quit, only while a terminal tab is open: ends every terminal, after asking (copy.md 13, design.md 5)."
+  },
+  "termCloseAllTitle": "Close all terminals?",
+  "@termCloseAllTitle": {
+    "description": "The title of the alert that Close All Terminals asks first (copy.md 13)."
+  },
+  "termCloseAllDetail": "Running commands stop and every tab closes.",
+  "@termCloseAllDetail": {
+    "description": "The text under termCloseAllTitle (copy.md 13)."
+  },
+  "termCloseAllConfirm": "Close",
+  "@termCloseAllConfirm": {
+    "description": "The destructive button of the Close All Terminals alert; cancel is the other (copy.md 13)."
+  },
+  "termDisconnected": "This terminal was disconnected. Its command has stopped.",
+  "@termDisconnected": {
+    "description": "Written dim into a terminal whose program stopped as the process keeping it went away, above the new prompt (copy.md 13, design.md 3.6)."
+  },
   "searchPlaceholder": "Search apps or terminal presets",
   "@searchPlaceholder": {
     "description": "The search field's placeholder."

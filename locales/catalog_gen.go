@@ -106,6 +106,82 @@ func (msgs Messages) TrayQuit() string {
 	return Catalog.Format(msgs.locale, "trayQuit", nil)
 }
 
+// TrayCloseAllTerminals says "Close All Terminals"
+// in the language the app shows.
+//
+// Tray menu, just above Quit, only while a terminal tab is open: ends every
+// terminal, after asking (copy.md 13, design.md 5).
+func TrayCloseAllTerminals() string { return In(i18n.Locale()).TrayCloseAllTerminals() }
+
+// TrayCloseAllTerminals says "Close All Terminals"
+// in the language of msgs.
+//
+// Tray menu, just above Quit, only while a terminal tab is open: ends every
+// terminal, after asking (copy.md 13, design.md 5).
+func (msgs Messages) TrayCloseAllTerminals() string {
+	return Catalog.Format(msgs.locale, "trayCloseAllTerminals", nil)
+}
+
+// TermCloseAllTitle says "Close all terminals?"
+// in the language the app shows.
+//
+// The title of the alert that Close All Terminals asks first (copy.md 13).
+func TermCloseAllTitle() string { return In(i18n.Locale()).TermCloseAllTitle() }
+
+// TermCloseAllTitle says "Close all terminals?"
+// in the language of msgs.
+//
+// The title of the alert that Close All Terminals asks first (copy.md 13).
+func (msgs Messages) TermCloseAllTitle() string {
+	return Catalog.Format(msgs.locale, "termCloseAllTitle", nil)
+}
+
+// TermCloseAllDetail says "Running commands stop and every tab closes."
+// in the language the app shows.
+//
+// The text under termCloseAllTitle (copy.md 13).
+func TermCloseAllDetail() string { return In(i18n.Locale()).TermCloseAllDetail() }
+
+// TermCloseAllDetail says "Running commands stop and every tab closes."
+// in the language of msgs.
+//
+// The text under termCloseAllTitle (copy.md 13).
+func (msgs Messages) TermCloseAllDetail() string {
+	return Catalog.Format(msgs.locale, "termCloseAllDetail", nil)
+}
+
+// TermCloseAllConfirm says "Close"
+// in the language the app shows.
+//
+// The destructive button of the Close All Terminals alert; cancel is the
+// other (copy.md 13).
+func TermCloseAllConfirm() string { return In(i18n.Locale()).TermCloseAllConfirm() }
+
+// TermCloseAllConfirm says "Close"
+// in the language of msgs.
+//
+// The destructive button of the Close All Terminals alert; cancel is the
+// other (copy.md 13).
+func (msgs Messages) TermCloseAllConfirm() string {
+	return Catalog.Format(msgs.locale, "termCloseAllConfirm", nil)
+}
+
+// TermDisconnected says "This terminal was disconnected. Its command has stopped."
+// in the language the app shows.
+//
+// Written dim into a terminal whose program stopped as the process keeping
+// it went away, above the new prompt (copy.md 13, design.md 3.6).
+func TermDisconnected() string { return In(i18n.Locale()).TermDisconnected() }
+
+// TermDisconnected says "This terminal was disconnected. Its command has stopped."
+// in the language of msgs.
+//
+// Written dim into a terminal whose program stopped as the process keeping
+// it went away, above the new prompt (copy.md 13, design.md 3.6).
+func (msgs Messages) TermDisconnected() string {
+	return Catalog.Format(msgs.locale, "termDisconnected", nil)
+}
+
 // SearchPlaceholder says "Search apps or terminal presets"
 // in the language the app shows.
 //

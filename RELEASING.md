@@ -49,11 +49,18 @@ anywhere, or keep them in the repository.
    builds the app and the disk image but skips the update files ("Not
    signing an update"), which is fine for local builds, and `-upload`
    refuses to run.
-5. Copy the install script the build wrote over the one in the repository
-   and commit it if it changed: the README points people at it.
+5. Copy the install script the build wrote over the one in the repository,
+   then put back what Gocast adds to it: `stop_terminal_host` and its call
+   in `macos_uninstall`, which end the terminals still running as
+   `install.sh --uninstall` removes the app (`mygo build` has no hook for
+   it; `git diff install.sh` shows them gone). Commit it if it changed: the
+   README points people at it. Copy it back over the build's, for step 7
+   to upload.
 
    ```sh
    cp build/darwin-arm64/install.sh install.sh
+   git diff install.sh   # put stop_terminal_host back
+   cp install.sh build/darwin-arm64/install.sh
    ```
 
 6. Notarize the disk image and staple the ticket to it:
@@ -66,17 +73,17 @@ anywhere, or keep them in the repository.
 
    `spctl` should say "source=Notarized Developer ID". `macos.notarize` in
    mygo.config.ts is not used, as it needs a notarytool keychain profile.
-7. Stapling changes the disk image, so regenerate its line of `SHA256SUMS`
-   and put both back on the draft:
+7. Stapling changes the disk image, and step 5 the install script, so
+   regenerate their lines of `SHA256SUMS` and put them back on the draft:
 
    ```sh
    cd build/darwin-arm64
-   grep -v ' gocast-x.y.z-arm64.dmg$' ../SHA256SUMS > ../SHA256SUMS.new
-   shasum -a 256 gocast-x.y.z-arm64.dmg >> ../SHA256SUMS.new
+   grep -v ' gocast-x.y.z-arm64.dmg$' ../SHA256SUMS | grep -v ' install.sh$' > ../SHA256SUMS.new
+   shasum -a 256 gocast-x.y.z-arm64.dmg install.sh >> ../SHA256SUMS.new
    mv ../SHA256SUMS.new ../SHA256SUMS
    shasum -a 256 -c ../SHA256SUMS   # every line should say OK
    cd ../..
-   gh release upload vx.y.z build/darwin-arm64/gocast-x.y.z-arm64.dmg build/SHA256SUMS --clobber
+   gh release upload vx.y.z build/darwin-arm64/gocast-x.y.z-arm64.dmg build/darwin-arm64/install.sh build/SHA256SUMS --clobber
    ```
 
 8. Check the draft on GitHub (its notes and assets, and try the disk
