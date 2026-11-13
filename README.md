@@ -30,7 +30,7 @@
   <img src="docs/images/search-panel-en.png" alt="The Gocast search panel, listing the apps and presets used most" width="720">
 </p>
 
-Gocast is a small, native launcher for the Mac. Press ⌘Space to open any app, ⌃\` for a terminal that drops down from the top of the screen, and ⌃⌘V for everything you copied. Type math, units or currencies in the same search field and the answer is already there.
+Gocast is a small, native launcher for the Mac. Press ⌘Space to open any app, ⌃\` for a terminal that drops down from the top of the screen, and ⌃⌘V for everything you copied. Give any app or preset its own shortcut, and type math, units or currencies in the same search field to get the answer right there.
 
 No account, no data collected, free and open source.
 
