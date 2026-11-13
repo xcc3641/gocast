@@ -115,6 +115,7 @@ func (p *prefsWindow) show(page string) {
 	if p.g.loadPresets() { // edited by hand meanwhile
 		p.g.presetsChanged()
 	}
+	p.g.refreshAppHotkeys(true)
 	p.login = mygo.App.OpenAtLogin()
 	p.autoUpdate = updater.AutomaticChecks()
 	p.searchOnly = p.g.settings.SearchOnly
@@ -491,13 +492,17 @@ func (p *prefsWindow) recordKey(row int, ev ui.InputEvent) bool {
 }
 
 // shortcutUser is the row of another shortcut that is accel, and its
-// label, or 0.
+// label, or -1 and the name of the app or preset whose hotkey it is, or
+// 0.
 func (p *prefsWindow) shortcutUser(row int, accel string) (int, string) {
 	labels := [4]string{"", locales.ShortcutLauncher(), locales.ShortcutTerminal(), locales.ShortcutClipboard()}
 	for r, s := range p.g.shortcutRows() {
-		if r > 0 && r != row && *s.key != "" && strings.EqualFold(accel, *s.key) {
+		if r > 0 && r != row && *s.key != "" && shortcut.Same(accel, *s.key) {
 			return r, labels[r]
 		}
+	}
+	if h, ok := p.g.settings.HotkeyOwner(accel, settings.Hotkey{}); ok {
+		return -1, p.g.hotkeyLabel(h)
 	}
 	return 0, ""
 }

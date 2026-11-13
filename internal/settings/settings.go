@@ -1,7 +1,8 @@
 // Package settings keeps Gocast's preferences in settings.json: the two
 // global shortcuts, the terminal's font size, whether the floating
 // terminal hides as the user clicks away, its size, the tips dismissed,
-// the clipboard history's and the calculator's switches.
+// the clipboard history's and the calculator's switches, and the hotkeys
+// of apps and terminal presets.
 package settings
 
 import (
@@ -84,6 +85,13 @@ type Settings struct {
 	// are not kept; nil until the user changes them, for the defaults,
 	// and an empty list once the user removed them all.
 	ClipboardIgnoredApps *[]string `json:"clipboardIgnoredApps,omitempty"`
+
+	// AppHotkeys open apps, by their bundle IDs, which outlive updates
+	// and moves of the app; PresetHotkeys open terminal presets, by their
+	// IDs. The values are MyGo's accelerators. An app not installed keeps
+	// its hotkey, for when it comes back.
+	AppHotkeys    map[string]string `json:"appHotkeys,omitempty"`
+	PresetHotkeys map[string]string `json:"presetHotkeys,omitempty"`
 }
 
 // Calculator reports whether the search panel calculates.

@@ -57,6 +57,12 @@ type gocast struct {
 	// spotlight: Spotlight has ⌘Space, the search panel's shortcut, which
 	// would open both; ⌥⇧Space stands in until it doesn't.
 	spotlight bool
+	// The hotkeys of apps and presets (hotkeys.go): those registered, as
+	// registered, and how each of the settings stands.
+	hotkeys      map[settings.Hotkey]string
+	hotkeyStates map[settings.Hotkey]hotkeyState
+	// suspended: the shortcuts are let through to a recorder.
+	suspended bool
 
 	// quitting is set while the app quits: the panels, which hide rather
 	// than close, close then, or their OnClose would cancel the quit.
@@ -64,6 +70,7 @@ type gocast struct {
 
 	presets      []presets.Preset
 	presetsStamp time.Time
+	presetsErr   error // presets.json could not be read: no presets for now
 	usage        *usage.Store
 }
 
@@ -86,7 +93,7 @@ func (g *gocast) loadPresets() bool {
 	if err != nil {
 		log.Printf("presets: %v", err)
 	}
-	g.presets = ps
+	g.presets, g.presetsErr = ps, err
 	if g.presets == nil {
 		g.presets = []presets.Preset{}
 	}
@@ -101,7 +108,7 @@ func (g *gocast) savePresets(ps []presets.Preset) error {
 	if err := presets.Save(g.presetsPath(), ps); err != nil {
 		return err
 	}
-	g.presets = ps
+	g.presets, g.presetsErr = ps, nil
 	if fi, err := os.Stat(g.presetsPath()); err == nil {
 		g.presetsStamp = fi.ModTime()
 	}
@@ -109,8 +116,10 @@ func (g *gocast) savePresets(ps []presets.Preset) error {
 	return nil
 }
 
-// presetsChanged tells the panels the presets changed.
+// presetsChanged tells the panels the presets changed, and removes the
+// hotkeys of those deleted.
 func (g *gocast) presetsChanged() {
+	g.prunePresetHotkeys()
 	g.launcher.rebuild()
 	g.term.presetsChanged()
 	g.launcher.win.Invalidate()
@@ -141,7 +150,8 @@ var errShortcutTaken = errors.New("shortcut taken")
 
 // registerShortcuts takes the shortcuts of the settings, but ⌥⇧Space for
 // ⌘Space while Spotlight has it, and the fallback of a default that
-// another app has, which Settings › Shortcuts then says.
+// another app has, which Settings › Shortcuts then says; then the hotkeys
+// of apps and presets.
 func (g *gocast) registerShortcuts() {
 	try := func(row int, accel string, fn func()) string {
 		if err := mygo.GlobalShortcut.Register(accel, fn); err != nil {
@@ -169,6 +179,7 @@ func (g *gocast) registerShortcuts() {
 	g.launcherKey = try(1, launcher, g.launcher.toggle)
 	g.terminalKey = try(2, g.settings.Terminal(), g.term.toggle)
 	g.clipKey = try(3, g.settings.Clipboard(), g.launcher.toggleClip)
+	g.registerHotkeys()
 }
 
 // shortcutRows are the shortcuts by their row in Settings › Shortcuts
@@ -223,8 +234,9 @@ func (g *gocast) keepFallback() {
 	}
 }
 
-// suspendShortcuts lets the keys of the shortcuts through to the app,
-// while the user records a new one; resumeShortcuts takes them again.
+// suspendShortcuts lets the keys of the shortcuts, and of the hotkeys of
+// apps and presets, through to the app, while the user records a new one;
+// resumeShortcuts takes them again.
 func (g *gocast) suspendShortcuts() {
 	rows := g.shortcutRows()
 	for _, r := range rows[1:] {
@@ -232,6 +244,7 @@ func (g *gocast) suspendShortcuts() {
 			mygo.GlobalShortcut.Unregister(*r.key)
 		}
 	}
+	g.suspendHotkeys()
 }
 
 func (g *gocast) resumeShortcuts() {
@@ -241,6 +254,7 @@ func (g *gocast) resumeShortcuts() {
 			_ = mygo.GlobalShortcut.Register(*r.key, r.fn)
 		}
 	}
+	g.resumeHotkeys()
 }
 
 // setShortcut makes accel the shortcut of the row (1 the search panel, 2
@@ -277,6 +291,7 @@ func (g *gocast) setShortcut(row int, accel string) error {
 			_ = mygo.GlobalShortcut.Register(*r.key, r.fn)
 		}
 	}
+	g.resumeHotkeys()
 	g.saveSettings()
 	g.updateTray()
 	return nil

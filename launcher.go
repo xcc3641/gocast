@@ -1186,6 +1186,7 @@ func (l *launcher) show() {
 	if l.g.loadPresets() {
 		l.g.presetsChanged()
 	}
+	l.g.refreshAppHotkeys(false) // an app installed again
 	l.load()
 }
 

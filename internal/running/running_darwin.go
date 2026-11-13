@@ -1,8 +1,11 @@
-// Package running tells whether an app is running and asks it to quit,
-// by its bundle identifier, through NSRunningApplication.
+// Package running tells whether an app is running, asks it to quit, hides
+// it and opens it, by its bundle identifier, through NSRunningApplication
+// and NSWorkspace, which need no Accessibility permission.
 package running
 
 import (
+	"errors"
+	"os/exec"
 	"sync"
 
 	"github.com/ebitengine/purego"
@@ -22,12 +25,19 @@ var (
 	selURLFor = objc.RegisterName("URLForApplicationWithBundleIdentifier:")
 	selPath   = objc.RegisterName("path")
 	selUTF8   = objc.RegisterName("UTF8String")
+	selFront  = objc.RegisterName("frontmostApplication")
+	selBundle = objc.RegisterName("bundleIdentifier")
+	selHidden = objc.RegisterName("isHidden")
+	selHide   = objc.RegisterName("hide")
+	selConfig = objc.RegisterName("configuration")
+	selActs   = objc.RegisterName("setActivates:")
+	selOpen   = objc.RegisterName("openApplicationAtURL:configuration:completionHandler:")
 )
 
 var (
 	load                          sync.Once
 	classStr, classApp, classPool objc.ID
-	classWorkspace                objc.ID
+	classWorkspace, classConfig   objc.ID
 )
 
 // classes looks the classes up once AppKit is loaded, which MyGo has done
@@ -39,6 +49,7 @@ func classes() bool {
 		classApp = objc.ID(objc.GetClass("NSRunningApplication"))
 		classPool = objc.ID(objc.GetClass("NSAutoreleasePool"))
 		classWorkspace = objc.ID(objc.GetClass("NSWorkspace"))
+		classConfig = objc.ID(objc.GetClass("NSWorkspaceOpenConfiguration"))
 	})
 	return classStr != 0 && classApp != 0 && classPool != 0
 }
@@ -94,4 +105,75 @@ func AppPath(bundleID string) string {
 		return ""
 	}
 	return objc.Send[string](path, selUTF8)
+}
+
+// ErrNotInstalled is Open's error for an app Launch Services can't find.
+var ErrNotInstalled = errors.New("app not installed")
+
+// Frontmost is the bundle ID of the frontmost app, the one with the menu
+// bar, and whether it is hidden; "" when there is none or it has no
+// bundle ID.
+func Frontmost() (bundleID string, hidden bool) {
+	if !classes() || classWorkspace == 0 {
+		return "", false
+	}
+	pool := classPool.Send(selPool)
+	defer pool.Send(selDrain)
+	app := classWorkspace.Send(selShared).Send(selFront)
+	if app == 0 {
+		return "", false
+	}
+	if id := app.Send(selBundle); id != 0 {
+		bundleID = objc.Send[string](id, selUTF8)
+	}
+	return bundleID, objc.Send[bool](app, selHidden)
+}
+
+// Hide hides every instance of the app with bundleID, as its Hide menu
+// item (Command-H) would; the next app comes forward.
+func Hide(bundleID string) bool {
+	hid := false
+	each(bundleID, func(app objc.ID) { hid = objc.Send[bool](app, selHide) || hid })
+	return hid
+}
+
+// Open opens the app with bundleID as a click on its Dock icon does: it
+// launches it, or brings it forward, unhidden, and the app opens a window
+// when it has none (Launch Services sends it the reopen event). This is
+// NSWorkspace's openApplicationAtURL:configuration:completionHandler:, as
+// macOS 14 may ignore an activation that an app in the background asks
+// for itself (NSRunningApplication's activateWithOptions:), but not one
+// through Launch Services. It returns before the app has opened: errors
+// past finding the app are not known.
+func Open(bundleID string) error {
+	if bundleID == "" {
+		return ErrNotInstalled
+	}
+	if !classes() || classWorkspace == 0 || classConfig == 0 {
+		return openTool(bundleID)
+	}
+	pool := classPool.Send(selPool)
+	defer pool.Send(selDrain)
+	ws := classWorkspace.Send(selShared)
+	url := ws.Send(selURLFor, classStr.Send(selString, bundleID))
+	if url == 0 {
+		return ErrNotInstalled
+	}
+	cfg := classConfig.Send(selConfig) // autoreleased
+	cfg.Send(selActs, true)
+	// No completion handler (nil, which the API takes): there is nothing
+	// to do once the app opened, and a block is awkward from Go.
+	ws.Send(selOpen, url, cfg, objc.ID(0))
+	return nil
+}
+
+// openTool opens the app with /usr/bin/open -b, which does what Open does,
+// where AppKit's classes can't be had.
+func openTool(bundleID string) error {
+	cmd := exec.Command("/usr/bin/open", "-b", bundleID)
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+	go func() { _ = cmd.Wait() }()
+	return nil
 }

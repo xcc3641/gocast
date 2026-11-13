@@ -3,6 +3,7 @@ package settings
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"slices"
 	"strings"
 	"testing"
@@ -85,7 +86,7 @@ func TestShortcutSettingsRoundTrip(t *testing.T) {
 		t.Errorf("settings.json = %s", data)
 	}
 	out, err := Load(path)
-	if err != nil || out != in {
+	if err != nil || !reflect.DeepEqual(out, in) {
 		t.Errorf("Load = %+v, %v; want %+v", out, err, in)
 	}
 	// An empty file, as a first launch's, checks Spotlight.

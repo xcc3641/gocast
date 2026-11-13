@@ -95,22 +95,10 @@ func FromKey(mods ui.Modifiers, key ui.Key) (accel string, ok bool) {
 	if name == "" {
 		return "", false
 	}
-	fn := key >= ui.KeyF1 && key <= ui.KeyF12
-	if !fn && mods&(ui.Ctrl|ui.Alt|ui.Super) == 0 {
+	if !recordable(mods, key >= ui.KeyF1 && key <= ui.KeyF12) {
 		return "", false
 	}
-	var b strings.Builder
-	for _, m := range []struct {
-		mod  ui.Modifiers
-		name string
-	}{{ui.Ctrl, "Ctrl"}, {ui.Alt, "Alt"}, {ui.Shift, "Shift"}, {ui.Super, "Cmd"}} {
-		if mods&m.mod != 0 {
-			b.WriteString(m.name)
-			b.WriteByte('+')
-		}
-	}
-	b.WriteString(name)
-	return b.String(), true
+	return spell(mods, name), true
 }
 
 func keyName(k ui.Key) string {
