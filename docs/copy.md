@@ -1,4 +1,6 @@
-# Gocast 界面文案 v1.16（搜索面板 · 悬浮终端 · 设置）
+# Gocast 界面文案 v1.17（搜索面板 · 悬浮终端 · 设置）
+
+v1.17 改动：计算器跟 design.md 2.3a 对齐。卡片上不放「计算器」标记，只留在读屏里。补两句：算不出时「算不出来」，第一次取汇率时「正在获取汇率…」。
 
 v1.16 改动：新增第 7 节「计算器」（卡片、小字、汇率日期、没汇率时的提示、⌘K、设置开关、读屏、README 草稿）。统一用词加「计算器」「答案」「汇率」。
 
@@ -473,7 +475,6 @@ English: Clipboard history stays on this Mac too, in the same folder, and is nev
 
 | 位置 | 中文 | English |
 |---|---|---|
-| 卡片右侧标记 | 计算器 | Calculator |
 | 左边 | 算式，照用户打的显示，全角符号换成半角 | The expression as typed, full-width symbols normalized |
 | 右边 | 答案。单位用符号：`3.048 m`、`86 °F`、`50 kg`、`32 px`；货币用代码：`15,432 JPY` | Answer with unit symbols or currency codes |
 | 时间答案 | {h} 小时 {m} 分（如「2 小时 25 分」）；不满 1 小时写「{m} 分」，有天写「{d} 天 {h} 小时」 | {h} h {m} min; {d} d {h} h |
@@ -481,7 +482,11 @@ English: Clipboard history stays on this Mac too, in the same folder, and is nev
 | 右边小字（换算） | 目标单位全名，如「米」「日元」 | Target full name, e.g. “meters”, “Japanese yen” |
 | 右边小字（汇率） | {币种全名} · 汇率更新于 {日期} | {currency} · Rates from {date} |
 | 没有汇率又没联网（右边） | 需要联网获取一次汇率 | Go online once to get exchange rates |
+| 第一次正在取汇率（右边） | 正在获取汇率… | Getting exchange rates… |
+| 算不出（右边，如除以 0、单位换不了） | 算不出来 | Can’t calculate this |
 
+卡片上不放「计算器」标记（design.md：箭头和左右两栏已经说明它是什么），「计算器」只在读屏里出现。
+「算不出来」跟全应用「打不开…」「读不出…」「找不到…」同一种口气，不写「无法计算」。打到一半（结尾是运算符）不算算不出，留着上一次的答案变灰，见 design.md。
 纯四则、百分比没有小字。小字写全名是为了让人看清 Gocast 是怎么理解的：打 `¥5000` 时，左边小字写「人民币」或「日元」，看一眼就知道对不对；不对就改写成 `5000 jpy`。不另加提示。
 日期跟剪贴板 6.3 一样用系统的相对写法：今天 / 昨天 / 11月10日。断网时继续用旧汇率，日期本身就说明了新旧，不另写「离线」。
 
@@ -516,6 +521,8 @@ English: Clipboard history stays on this Mac too, in the same folder, and is nev
 | 带单位或货币时 | 用全名读：「100 美元 等于 15,432 日元，计算器」 | Read full names: “100 US dollars equals 15,432 Japanese yen, Calculator” |
 | 汇率日期 | 接在后面：「，汇率更新于 11月13日」 | Append: “, rates from November 13” |
 | 没有汇率 | {算式}，需要联网获取一次汇率，计算器 | {expression}, go online once to get exchange rates, Calculator |
+| 正在取汇率 | {算式}，正在获取汇率，计算器 | {expression}, getting exchange rates, Calculator |
+| 算不出 | {算式}，算不出来，计算器 | {expression}, can’t calculate this, Calculator |
 
 符号读成字：× 读「乘」，÷ 读「除以」，^ 读「的…次方」，% 读「百分之」。
 
