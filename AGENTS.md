@@ -7,11 +7,11 @@ Gocast is a macOS launcher written in Go with MyGo's native UI. Module `gocast`.
 - `main.go`: the entry point. It only calls `app.Run()`.
 - `internal/app/`: the app (package `app`): search panel, floating terminal, clipboard history, calculator, Settings, tray, updates. `helpers_test.go` holds `TestMain` and the fakes the tests share.
 - `internal/`: the other packages: `apps`, `search`, `usage`, `presets`, `settings`, `shortcut`, `running`, `clipboard`, `calc`, `sysfmt`.
-- `locales/`: the UI text catalogs (`en.json` is the source, `zh-Hans.json`); `mygo generate` writes `catalog_gen.go`. mygo.json's `i18n.dir` points here.
+- `locales/`: the UI text catalogs (`en.json` is the source, `zh-Hans.json`); `mygo generate` writes `catalog_gen.go`. mygo.config.ts's `i18n.dir` points here.
 - `icon/`: the icons, drawn by `make-icon.py`; `icon.go` embeds the PNGs the app draws. Never edit the PNGs by hand.
 - `scripts/`: `gen-third-party-notices.go`, which writes `THIRD_PARTY_NOTICES.md`, and the license texts it uses.
 - `docs/`: `design.md` (the design spec, wins on any conflict), `copy.md` (the UI text), `dev-notes.md`.
-- `mygo.json`: the app's configuration. `entitlements.plist`: what the app is signed with.
+- `mygo.config.ts`: the app's configuration. `entitlements.plist`: what the app is signed with.
 - `CONTRIBUTING.md` (setup and checks), `RELEASING.md` (cutting a release), `CHANGELOG.md`.
 
 ## Tests

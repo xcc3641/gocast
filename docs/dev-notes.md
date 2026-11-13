@@ -43,9 +43,9 @@ For real window captures, `screencapture -x -o -l <CGWindowID>` works. Get the I
 - `<dir>/darwin-arm64/Gocast.app`
 - `gocast-0.1.0-arm64.dmg`
 
-Release builds are signed with the Developer ID in `macos.signingIdentity` (mygo.json) under the hardened runtime; `-sign -` builds ad-hoc. Contents/Resources holds `libghostty-vt.dylib` and, through `resources` in mygo.json, `THIRD_PARTY_NOTICES.md`, `LICENSE` and `NOTICE`. The default `<dir>` is `build/`. With `updates` in mygo.json the output also has `install.sh` and `SHA256SUMS`; without `MYGO_UPDATER_PRIVATE_KEY` it skips the update files ("Not signing an update"), which local builds don't need.
+Release builds are signed with the Developer ID in `macos.signingIdentity` (mygo.config.ts) under the hardened runtime; `-sign -` builds ad-hoc. Contents/Resources holds `libghostty-vt.dylib` and, through `resources` in mygo.config.ts, `THIRD_PARTY_NOTICES.md`, `LICENSE` and `NOTICE`. The default `<dir>` is `build/`. With `updates` in mygo.config.ts the output also has `install.sh` and `SHA256SUMS`; without `MYGO_UPDATER_PRIVATE_KEY` it skips the update files ("Not signing an update"), which local builds don't need.
 
-**App icon (design.md 1.6).** mygo.json's `icon` is `icon/icon.png` (1024) and `macos.icon` is `icon/AppIcon.icon` (Icon Composer). With Xcode 26's `actool`, `mygo build` compiles the `.icon` into `Assets.car` (`CFBundleIconName` AppIcon, which macOS 26 draws with its glass, dark and tinted looks) and uses the `AppIcon.icns` that `actool` renders from it; without it (or if it fails) the `.icon` is skipped and the `.icns` is made from `icon.png`. `go run` / `go build` have no icon (no bundle). All the icon files come from `icon/make-icon.py` (the designer's; change the shapes there, never the PNGs by hand).
+**App icon (design.md 1.6).** mygo.config.ts's `icon` is `icon/icon.png` (1024) and `macos.icon` is `icon/AppIcon.icon` (Icon Composer). With Xcode 26's `actool`, `mygo build` compiles the `.icon` into `Assets.car` (`CFBundleIconName` AppIcon, which macOS 26 draws with its glass, dark and tinted looks) and uses the `AppIcon.icns` that `actool` renders from it; without it (or if it fails) the `.icon` is skipped and the `.icns` is made from `icon.png`. `go run` / `go build` have no icon (no bundle). All the icon files come from `icon/make-icon.py` (the designer's; change the shapes there, never the PNGs by hand).
 
 **Third-party notices.** `THIRD_PARTY_NOTICES.md` is generated: run `go run scripts/gen-third-party-notices.go` after any change to go.mod (CI runs it with `-check`). It reads the license files of the compiled modules from the module cache, the license texts of libghostty-vt's components from `scripts/notices/`, and stops when MyGo bundles a libghostty-vt from another Ghostty commit than those texts describe.
 
@@ -274,7 +274,7 @@ Automation can't cover these:
 - **What About says when 检查更新 is pressed:**
   - `go run` / `go build` (dev): the button is dimmed and the line says 开发版本不会自己更新。 (en: Development builds don’t update themselves.); a bundle that can't update itself says Gocast 没法在当前位置自己更新…
   - `mygo build`, with the feed: it checks `https://github.com/xcc3641/gocast/releases/latest/download/update-darwin-arm64.json`. Until a release is published that is a 404, logged as `updates: …404 Not Found`, and the line says 现在检查不了更新，稍后会自动再试。
-- **Feed.** mygo.json has `"updates": {"publicKey": "7xqUsSnSTZgGQ69hBuh+pm1jexm7Z3Ngl0lQ17EKPRQ=", "github": "xcc3641/gocast"}`. The repository must be public, with releases tagged `v0.1.0` …; it doesn't exist yet. `mygo build` needs no key: without one it builds the app and the disk image and skips the update files.
+- **Feed.** mygo.config.ts has `updates: { publicKey: "7xqUsSnSTZgGQ69hBuh+pm1jexm7Z3Ngl0lQ17EKPRQ=", github: "xcc3641/gocast" }`. The repository must be public, with releases tagged `v0.1.0` …; it doesn't exist yet. `mygo build` needs no key: without one it builds the app and the disk image and skips the update files.
 - **Releasing.** The update signing key and the release steps are in RELEASING.md.
 
 ## Open issues

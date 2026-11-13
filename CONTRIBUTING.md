@@ -21,6 +21,8 @@ Everyone taking part follows the [code of conduct](CODE_OF_CONDUCT.md).
   version. Use this command rather than `@latest`: Gocast depends on a MyGo
   commit that is newer than MyGo's latest release. `mygo doctor` checks the
   setup.
+- Node.js 22.6 or later (or Bun), which `mygo` runs
+  [mygo.config.ts](mygo.config.ts) with.
 
 ## Build and run
 
@@ -76,7 +78,7 @@ appearance, in English and Simplified Chinese.
 | `docs/` | `design.md` (the design spec), `copy.md` (the UI text), `dev-notes.md` |
 | `scripts/` | `gen-third-party-notices.go` and the license texts it uses |
 | `install.sh` | The install script `mygo build` writes, kept here so people can read it; the release carries the same file |
-| `entitlements.plist` | The entitlements `mygo build` signs the app with (`macos.entitlements` in mygo.json) |
+| `entitlements.plist` | The entitlements `mygo build` signs the app with (`macos.entitlements` in mygo.config.ts) |
 
 See [AGENTS.md](AGENTS.md) for how the tests are written.
 

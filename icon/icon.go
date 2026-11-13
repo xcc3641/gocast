@@ -1,5 +1,5 @@
 // Package icon holds Gocast's icons, which make-icon.py beside them draws:
-// AppIcon.icon and icon.png are the app's (mygo.json), and the PNGs below
+// AppIcon.icon and icon.png are the app's (mygo.config.ts), and the PNGs below
 // are embedded for the app to draw.
 package icon
 

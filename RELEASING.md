@@ -2,7 +2,7 @@
 
 For maintainers. Releases are published as GitHub releases of
 [xcc3641/gocast](https://github.com/xcc3641/gocast), which installed apps
-check for updates: `updates` in [mygo.json](mygo.json) holds the public key
+check for updates: `updates` in [mygo.config.ts](mygo.config.ts) holds the public key
 and that repository (see the Updates section of
 [docs/dev-notes.md](docs/dev-notes.md)). Releases are built on a
 maintainer's Mac, not in CI.
@@ -10,11 +10,14 @@ maintainer's Mac, not in CI.
 You need:
 
 - The GitHub CLI (`gh`), signed in with access to the repository.
-- The Developer ID Application certificate named in `macos.signingIdentity`
-  in mygo.json, in a keychain codesign searches.
+- A Developer ID Application certificate in a keychain codesign searches,
+  and its name in `MACOS_SIGNING_IDENTITY`, which `macos.signingIdentity`
+  in mygo.config.ts reads (set it in your shell's profile, as
+  `export MACOS_SIGNING_IDENTITY="Developer ID Application: …"`). Without
+  it the build is signed ad hoc and notarization refuses it.
 - The update signing key (`MYGO_UPDATER_PRIVATE_KEY`), from the
   maintainers' secret store. `mygo keygen` made it with its public half,
-  which is `updates.publicKey` in mygo.json.
+  which is `updates.publicKey` in mygo.config.ts.
 - Credentials for `xcrun notarytool` (an App Store Connect API key or an
   Apple ID with an app-specific password).
 
@@ -23,7 +26,7 @@ anywhere, or keep them in the repository.
 
 ## Cut a release
 
-1. Bump `version` in [mygo.json](mygo.json).
+1. Bump `version` in [mygo.config.ts](mygo.config.ts).
 2. In [CHANGELOG.md](CHANGELOG.md), turn `## [Unreleased]` into
    `## [x.y.z] - YYYY-MM-DD` for that version. The section is required:
    `mygo build` stops without it, and it is the release notes the update
@@ -62,7 +65,7 @@ anywhere, or keep them in the repository.
    ```
 
    `spctl` should say "source=Notarized Developer ID". `macos.notarize` in
-   mygo.json is not used, as it needs a notarytool keychain profile.
+   mygo.config.ts is not used, as it needs a notarytool keychain profile.
 7. Stapling changes the disk image, so regenerate its line of `SHA256SUMS`
    and put both back on the draft:
 
@@ -94,7 +97,7 @@ anywhere, or keep them in the repository.
    GitHub's `releases/latest` can lag about 30 seconds after publishing,
    so a check right away may still get the previous release.
 
-Installed apps update only from builds that had `updates` in mygo.json:
+Installed apps update only from builds that had `updates` in mygo.config.ts:
 builds made before it never update themselves.
 
 ## Signing
@@ -103,4 +106,4 @@ Releases are signed with a Developer ID certificate and notarized by
 Apple, so they open with a double-click. Builds from source
 (`mygo build -sign -`) work the same, but macOS asks for permissions again
 after each build. Updates and the install script check the Ed25519
-signature against the public key in mygo.json.
+signature against the public key in mygo.config.ts.

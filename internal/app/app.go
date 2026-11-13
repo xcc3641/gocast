@@ -392,7 +392,7 @@ func Run() {
 		mygo.Theme.SetSource(mygo.ThemeLight)
 	}
 	// No Dock icon or app switcher entry; a bundle says so from the start
-	// with LSUIElement (mygo.json).
+	// with LSUIElement (mygo.config.ts).
 	mygo.App.SetActivationPolicy(mygo.ActivationPolicyAccessory)
 	mygo.App.OnWindowAllClosed(func() {}) // keep running without windows
 	mygo.App.OnSecondInstance(func([]string, string) { g.launcher.show() })

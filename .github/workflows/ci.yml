@@ -17,6 +17,11 @@ jobs:
         with:
           go-version-file: go.mod
 
+      # mygo evaluates mygo.config.ts with Node.js 22.6 or later.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
       - name: gofmt
         run: |
           unformatted="$(git ls-files -z '*.go' | xargs -0 gofmt -l)"
