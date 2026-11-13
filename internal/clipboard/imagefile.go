@@ -54,6 +54,25 @@ func DecodeImage(b []byte) (image.Image, error) {
 
 // ImageFileThumbnail is the PNG thumbnail of the image file at path, as
 // the thumbnails of images, and the image's size in pixels.
+// ImageFileSize is how many pixels wide and high the image file at path
+// is, from its header alone: quick enough to lay out its preview with
+// before the image is read.
+func ImageFileSize(path string) (w, h int, err error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return 0, 0, err
+	}
+	defer f.Close()
+	cfg, _, err := image.DecodeConfig(f)
+	if err != nil {
+		return 0, 0, err
+	}
+	if cfg.Width <= 0 || cfg.Height <= 0 {
+		return 0, 0, errors.New("empty image")
+	}
+	return cfg.Width, cfg.Height, nil
+}
+
 func ImageFileThumbnail(path string) (thumb []byte, w, h int, err error) {
 	b, err := ReadImageFile(path)
 	if err != nil {

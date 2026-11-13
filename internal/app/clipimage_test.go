@@ -121,3 +121,35 @@ func TestScreensClipImageFile(t *testing.T) {
 		saveScreen(t, tt, dir, "clip-imagefile-"+mode, image.Rect(marginX, marginTop, marginX+clipWidth, marginTop+expandedHeight))
 	}
 }
+
+// The preview's image has its final size from its first frame: the box
+// it fits in is worked out before layout, for any item, so it never shows
+// larger and shrinks (Hugo, 0.1.4).
+func TestClipPreviewBoxKnownBeforeLayout(t *testing.T) {
+	l, tt, e := clipImageFileView(t, "en", false)
+	v := l.clip
+	for i := range 4 { // the image file, then the items after it
+		tt.Frame()
+		got := v.pane
+		box, ok := tt.Find(locales.ClipPreview())
+		if !ok {
+			t.Fatalf("%d: no preview", i)
+		}
+		if abs32(got.W-box.W) > 0.5 || abs32(got.H-box.H) > 0.5 {
+			t.Errorf("%d: worked out %v×%v, laid out %v×%v", i, got.W, got.H, box.W, box.H)
+		}
+		if i == 0 {
+			if w, h, ok := v.imageDims(e); !ok || w != 1600 || h != 1000 {
+				t.Errorf("size before the thumbnail: %d×%d %v", w, h, ok)
+			}
+		}
+		v.choose(v.chosen + 1)
+	}
+}
+
+func abs32(f float32) float32 {
+	if f < 0 {
+		return -f
+	}
+	return f
+}

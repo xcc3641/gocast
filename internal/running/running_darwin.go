@@ -6,6 +6,7 @@ package running
 import (
 	"errors"
 	"os/exec"
+	"runtime"
 	"sync"
 
 	"github.com/ebitengine/purego"
@@ -59,6 +60,9 @@ func each(bundleID string, fn func(app objc.ID)) {
 	if bundleID == "" || !classes() {
 		return
 	}
+	// An autorelease pool is the thread's: keep to it till it drains.
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
 	pool := classPool.Send(selPool)
 	defer pool.Send(selDrain)
 	str := classStr.Send(selString, bundleID)
@@ -94,6 +98,9 @@ func AppPath(bundleID string) string {
 	if bundleID == "" || !classes() || classWorkspace == 0 {
 		return ""
 	}
+	// An autorelease pool is the thread's: keep to it till it drains.
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
 	pool := classPool.Send(selPool)
 	defer pool.Send(selDrain)
 	url := classWorkspace.Send(selShared).Send(selURLFor, classStr.Send(selString, bundleID))
@@ -117,6 +124,9 @@ func Frontmost() (bundleID string, hidden bool) {
 	if !classes() || classWorkspace == 0 {
 		return "", false
 	}
+	// An autorelease pool is the thread's: keep to it till it drains.
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
 	pool := classPool.Send(selPool)
 	defer pool.Send(selDrain)
 	app := classWorkspace.Send(selShared).Send(selFront)
@@ -152,6 +162,9 @@ func Open(bundleID string) error {
 	if !classes() || classWorkspace == 0 || classConfig == 0 {
 		return openTool(bundleID)
 	}
+	// An autorelease pool is the thread's: keep to it till it drains.
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
 	pool := classPool.Send(selPool)
 	defer pool.Send(selDrain)
 	ws := classWorkspace.Send(selShared)

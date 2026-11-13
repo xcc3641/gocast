@@ -3,6 +3,7 @@
 package sysfmt
 
 import (
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -85,6 +86,9 @@ func Date(t, now time.Time, locale string) string {
 		return fallbackDate(t, now)
 	}
 	var s string
+	// An autorelease pool is the thread's: keep to it till it drains.
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
 	pool := classPool.Send(selNew)
 	defer pool.Send(selDrain)
 	f := classDateFmt.Send(selNew)
@@ -114,6 +118,9 @@ func Bytes(n int64) string {
 	if !classes() {
 		return fallbackBytes(n)
 	}
+	// An autorelease pool is the thread's: keep to it till it drains.
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
 	pool := classPool.Send(selNew)
 	defer pool.Send(selDrain)
 	const countStyleFile = 0
@@ -128,6 +135,9 @@ func Day(t, now time.Time, locale string, long bool) string {
 	if !classes() {
 		return fallbackDay(t, now)
 	}
+	// An autorelease pool is the thread's: keep to it till it drains.
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
 	pool := classPool.Send(selNew)
 	defer pool.Send(selDrain)
 	f := classDateFmt.Send(selNew)
@@ -162,6 +172,9 @@ func Separators() (group, decimal string) {
 	if !classes() {
 		return ",", "."
 	}
+	// An autorelease pool is the thread's: keep to it till it drains.
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
 	pool := classPool.Send(selNew)
 	defer pool.Send(selDrain)
 	cur := classLocale.Send(selCurrent)

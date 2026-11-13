@@ -3,6 +3,7 @@
 package region
 
 import (
+	"runtime"
 	"sync"
 
 	"github.com/ebitengine/purego"
@@ -33,6 +34,9 @@ func classes() bool {
 // countryCode), else the POSIX locale's; "" when unknown.
 func Code() string {
 	if classes() {
+		// An autorelease pool is the thread's: keep to it till it drains.
+		runtime.LockOSThread()
+		defer runtime.UnlockOSThread()
 		pool := classPool.Send(selNew)
 		defer pool.Send(selDrain)
 		if c := classLocale.Send(selCurrent).Send(selCountry); c != 0 {

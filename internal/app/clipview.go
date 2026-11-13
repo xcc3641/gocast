@@ -91,6 +91,7 @@ type clipView struct {
 
 	thumbs     map[string]*ui.Bitmap // by entry ID; nil where it can't be read
 	fileThumbs map[string]*fileThumb // of image files, by path
+	fileSizes  map[string][2]int     // of image files, by path, from their headers; 0×0 unreadable
 	icons      map[string]*ui.Bitmap // by path and size
 	image      clipImage
 	pane       ui.Rect // the preview's content box, as last laid out
@@ -129,7 +130,7 @@ var (
 )
 
 func newClipView(l *launcher) *clipView {
-	return &clipView{l: l, chosen: -1, thumbs: map[string]*ui.Bitmap{}, fileThumbs: map[string]*fileThumb{}, icons: map[string]*ui.Bitmap{}}
+	return &clipView{l: l, chosen: -1, thumbs: map[string]*ui.Bitmap{}, fileThumbs: map[string]*fileThumb{}, fileSizes: map[string][2]int{}, icons: map[string]*ui.Bitmap{}}
 }
 
 func (v *clipView) svc() *clipService { return v.l.g.clip }
@@ -627,11 +628,19 @@ func (v *clipView) imageDims(e clipboard.Entry) (w, h int, ok bool) {
 	if !ok {
 		return 0, 0, false
 	}
-	t := v.fileThumbs[path]
-	if t == nil || !t.done || t.bitmap == nil {
-		return 0, 0, false
+	return v.fileSize(path)
+}
+
+// fileSize is how large the image file at path is, read once from its
+// header, so the preview has its final size from its first frame
+// (design.md 2.8.5).
+func (v *clipView) fileSize(path string) (w, h int, ok bool) {
+	d, ok := v.fileSizes[path]
+	if !ok {
+		d[0], d[1], _ = clipboard.ImageFileSize(path)
+		v.fileSizes[path] = d
 	}
-	return t.w, t.h, true
+	return d[0], d[1], d[0] > 0 && d[1] > 0
 }
 
 // fileThumb is the thumbnail of the image file at path, read once on a
@@ -733,12 +742,21 @@ func (v *clipView) previewPane(c *ui.Context, k tokens) {
 		return
 	}
 	infos := clipInfos(e, time.Now(), sysLocale(), filesSize, v.imageDims)
-	ui.Column(c).Grow(1).Padding(0, clipPanePad, clipBottom, clipPanePad).Children(func() {
+	outer := ui.Column(c).Grow(1).Padding(0, clipPanePad, clipBottom, clipPanePad)
+	// The preview's box, worked out from the pane rather than read from
+	// the box: a new item's box is new, and the info under it has as many
+	// lines as the item has, so the image has its size from its first
+	// frame and never shrinks into it (design.md 2.8.5).
+	infoH := float32(len(infos)*clipInfoRow + 1)
+	if b := outer.Bounds(); b.W > 0 {
+		v.pane = ui.Rect{X: b.X + clipPanePad, Y: b.Y, W: b.W - 2*clipPanePad, H: b.H - clipBottom - infoH}
+	} else {
+		// Not laid out yet: the pane under no banner.
+		v.pane = ui.Rect{W: clipPaneWidth - 2*clipPanePad, H: listHeight - clipBottom - infoH}
+	}
+	outer.Children(func() {
 		c.Key(e.ID) // a new item's preview starts at its top
 		box := ui.Column(c).Grow(1).Shrink(1).Padding(16, 0).Role(ui.RoleGroup).Label(locales.ClipPreview())
-		if b := box.Bounds(); b.W > 0 {
-			v.pane = b
-		}
 		box.Children(func() { v.preview(c, k, e) })
 		ui.Box(c).Height(1).Shrink(0).Background(k.hairline).AccessHidden(true)
 		for i, in := range infos {
@@ -811,11 +829,14 @@ func (v *clipView) imageFilePreview(c *ui.Context, k tokens, e clipboard.Entry, 
 		v.loadImage(e.ID, imageFile(path))
 	}
 	t := v.fileThumb(path)
-	w, h := t.w, t.h
-	if b := v.image.bitmap; b != nil {
-		w, h = b.Size()
+	w, h, ok := v.fileSize(path)
+	if !ok {
+		w, h = t.w, t.h
+		if b := v.image.bitmap; b != nil {
+			w, h = b.Size()
+		}
 	}
-	if w <= 0 || h <= 0 { // neither read yet: a spinner where it will be
+	if w <= 0 || h <= 0 { // not read yet: a spinner where it will be
 		w, h = 64, 64
 	}
 	v.showImage(c, k, w, h, t.bitmap, clipTitle(e))
@@ -831,10 +852,6 @@ func (v *clipView) showImage(c *ui.Context, k tokens, pxW, pxH int, thumb *ui.Bi
 	}
 	scale := float32(sysMaxScale())
 	boxW, boxH := v.pane.W, v.pane.H-32
-	if boxW <= 0 {
-		// Not laid out yet: the pane under no banner, four lines of info.
-		boxW, boxH = clipPaneWidth-2*clipPanePad, listHeight-clipBottom-4*clipInfoRow-1-32
-	}
 	w0, h0 := float32(pxW)/scale, float32(pxH)/scale
 	w, h := fitSize(w0, h0, min(boxW, w0), min(boxH, h0))
 	ui.Column(c).Grow(1).Justify(ui.Center).AlignItems(ui.Center).Children(func() {
