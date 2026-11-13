@@ -38,9 +38,7 @@ No account, no data collected, free and open source.
 
 ## Install
 
-**Disk image.** Download the latest `.dmg` from [Releases](https://github.com/xcc3641/gocast/releases/latest), open it, and drag Gocast to Applications. It is notarized by Apple, so it opens with a double-click.
-
-**Terminal.** One line. It downloads the latest release, checks it is the official build, puts it in Applications (or `~/Applications`), and opens Gocast. No admin password. You can read the [install script](install.sh) first.
+**One line.** Paste this into Terminal. It downloads the latest release, checks it is the official build, puts it in Applications (or `~/Applications`), and opens Gocast. No admin password, and macOS won't ask whether to open it. You can read the [install script](install.sh) first.
 
 ```sh
 curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh | sh
@@ -53,6 +51,8 @@ curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh
 ```
 
 Your presets, settings and clipboard history stay.
+
+**Disk image.** Prefer to drag it yourself: download the latest `.dmg` from [Releases](https://github.com/xcc3641/gocast/releases/latest), open it, and drag Gocast to Applications. It is notarized by Apple, so it opens with a double-click.
 
 Requires macOS 13 or later on Apple silicon. Spotlight uses ⌘Space by default, so Gocast starts on ⌥⇧Space until you turn Spotlight's shortcut off; [here's how](https://gocast.yichenlab.com/support/).
 

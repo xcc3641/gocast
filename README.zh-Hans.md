@@ -38,9 +38,7 @@ Gocast 是一个 Mac 上的原生小启动器。按 ⌘Space 打开任何应用�
 
 ## 安装
 
-**磁盘映像。** 到 [Releases](https://github.com/xcc3641/gocast/releases/latest) 下载最新的 `.dmg`，打开后把 Gocast 拖进“应用程序”文件夹。安装包经过 Apple 公证，双击就能打开。
-
-**终端。** 贴一行就装好。它下载最新版，核对是官方发布的，放进“应用程序”（或 `~/Applications`），然后打开 Gocast，不用管理员密码。可以先看看[安装脚本](install.sh)。
+**一行装好。** 在终端里贴这行，它下载最新版、核对是官方发布的、放进“应用程序”（或 `~/Applications`），然后打开 Gocast。不用管理员密码，系统也不会问你要不要打开。可以先看看[安装脚本](install.sh)。
 
 ```sh
 curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh | sh
@@ -53,6 +51,8 @@ curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh
 ```
 
 预设、设置和剪贴板历史会留着。
+
+**磁盘映像。** 想自己拖：到 [Releases](https://github.com/xcc3641/gocast/releases/latest) 下载最新的 `.dmg`，打开后把 Gocast 拖进“应用程序”文件夹。安装包经过 Apple 公证，双击就能打开。
 
 需要 macOS 13 或更高版本，Apple 芯片。系统默认把 ⌘Space 给了聚焦搜索，所以在你关掉聚焦的快捷键之前，Gocast 先用 ⌥⇧Space；[怎么关](https://gocast.yichenlab.com/zh/support/)。
 
