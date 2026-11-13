@@ -16,6 +16,8 @@ Gocast 是一个 Mac 上的小启动器。按 ⌘Space，找到应用就打开�
 
 **剪贴板历史。** 按 ⌃⌘V，找回之前拷贝过的文字、链接、图片和文件，按 ↵ 粘贴到刚才的应用。常用的可以置顶。往终端里粘贴图片时，贴进去的是图片在本机的文件路径。
 
+**计算器。** 在搜索框里直接打算式、单位或汇率，比如 `(12+8)*3`、`10 ft in m`、`100 美元换日元`，最上面就是答案，按 ↵ 拷走。汇率每天取一次，断网也能用上次的。
+
 Gocast 待在菜单栏，不占 Dock。深色、浅色跟着系统走，界面有简体中文和英文。会自动更新。
 
 ## 安装
@@ -60,7 +62,7 @@ Gocast 想用 ⌘Space，而系统默认把它给了聚焦搜索。如果聚焦�
 
 ## 你的数据
 
-Gocast 没有账号，不会把你的任何信息发到别处。它只在检查更新时联网，可以在设置 › 通用里关掉“自动检查更新”。预设和设置都是普通文件，放在 `~/Library/Application Support/dev.gocast.app/`。
+Gocast 没有账号，不会把你的任何信息发到别处。它只在检查更新和每天取一次汇率时联网，取汇率时不带你输入的任何内容。两样都能在设置 › 通用里关掉（“自动检查更新”“在搜索中计算”）。预设和设置都是普通文件，放在 `~/Library/Application Support/dev.gocast.app/`。
 
 剪贴板历史也只存在这台 Mac 上（同一个文件夹），不会上传。密码管理器拷贝的密码不会记。可以在设置 › 剪贴板里关掉、清空，或者选哪些应用不记。
 
@@ -81,7 +83,7 @@ mygo build          # 在 build/darwin-arm64/ 里生成 Gocast.app 和 .dmg
 
 ## 致谢
 
-Gocast 用 [MyGo](https://github.com/egoist/mygo) 写成。终端用的是 [Ghostty](https://ghostty.org) 的 libghostty-vt，拼音搜索用的是 [go-pinyin](https://github.com/mozillazg/go-pinyin)。
+Gocast 用 [MyGo](https://github.com/egoist/mygo) 写成。终端用的是 [Ghostty](https://ghostty.org) 的 libghostty-vt，拼音搜索用的是 [go-pinyin](https://github.com/mozillazg/go-pinyin)，汇率来自 [Frankfurter](https://frankfurter.dev)（各国央行公布的参考汇率）。
 
 Gocast 受 Raycast 和 Ghostty 快捷终端的启发，与两者都没有关联，也没有得到它们的认可，没有使用它们的代码或图片素材。
 

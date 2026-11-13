@@ -16,6 +16,8 @@ Gocast is a small launcher for the Mac. Press ⌘Space to find and open an app. 
 
 **Clipboard history.** Press ⌃⌘V to find the text, links, images and files you copied before, and press ↵ to paste into the app you were in. Pin the ones you use often. Paste an image into a terminal and you get the image's file path on this Mac.
 
+**Calculator.** Type math, units or currencies right in the search panel, like `(12+8)*3`, `10 ft in m` or `100 usd in jpy`. The answer shows up on top; press ↵ to copy it. Exchange rates are fetched once a day, so it keeps working offline.
+
 It lives in the menu bar, with no Dock icon. It follows your Mac's light or dark appearance and speaks English and Simplified Chinese. It updates itself.
 
 ## Install
@@ -60,7 +62,7 @@ All three shortcuts can be changed in Settings › Shortcuts.
 
 ## Your data
 
-Gocast has no account and sends nothing about you anywhere. It only goes online to check for updates, which you can turn off in Settings › General. Your presets and settings are plain files in `~/Library/Application Support/dev.gocast.app/`.
+Gocast has no account and sends nothing about you anywhere. It only goes online to check for updates and to fetch exchange rates once a day, and that request carries nothing you typed. Turn either off in Settings › General (Check for updates automatically, Calculate in search). Your presets and settings are plain files in `~/Library/Application Support/dev.gocast.app/`.
 
 Clipboard history stays on this Mac too, in the same folder, and is never uploaded. Passwords from password managers are never kept. Turn it off, clear it, or exclude apps in Settings › Clipboard.
 
@@ -81,7 +83,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) before sending a change. Interface change
 
 ## Thanks
 
-Gocast is built with [MyGo](https://github.com/egoist/mygo). Its terminal runs on libghostty-vt from [Ghostty](https://ghostty.org), and pinyin search uses [go-pinyin](https://github.com/mozillazg/go-pinyin).
+Gocast is built with [MyGo](https://github.com/egoist/mygo). Its terminal runs on libghostty-vt from [Ghostty](https://ghostty.org), pinyin search uses [go-pinyin](https://github.com/mozillazg/go-pinyin), and exchange rates come from [Frankfurter](https://frankfurter.dev), which publishes central bank reference rates.
 
 Gocast is inspired by Raycast and by Ghostty's quick terminal. It is not affiliated with or endorsed by either, and uses none of their code or artwork.
 
