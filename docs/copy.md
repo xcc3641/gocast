@@ -1,4 +1,6 @@
-# Gocast 界面文案 v1.17（搜索面板 · 悬浮终端 · 设置）
+# Gocast 界面文案 v1.18（搜索面板 · 悬浮终端 · 设置）
+
+v1.18 改动：计算器加 7.6 单位和币种的中文全名（公里、公斤、港币、澳元、加元；数据单位写清 1000 还是 1024）。读屏补「还没打完」那句。
 
 v1.17 改动：计算器跟 design.md 2.3a 对齐。卡片上不放「计算器」标记，只留在读屏里。补两句：算不出时「算不出来」，第一次取汇率时「正在获取汇率…」。
 
@@ -523,8 +525,27 @@ English: Clipboard history stays on this Mac too, in the same folder, and is nev
 | 没有汇率 | {算式}，需要联网获取一次汇率，计算器 | {expression}, go online once to get exchange rates, Calculator |
 | 正在取汇率 | {算式}，正在获取汇率，计算器 | {expression}, getting exchange rates, Calculator |
 | 算不出 | {算式}，算不出来，计算器 | {expression}, can’t calculate this, Calculator |
+| 打到一半（旧答案灰掉，不能拷走） | {算式}，还没打完，上一个答案是 {答案}，计算器 | {expression}, not finished, previous answer {answer}, Calculator |
 
 符号读成字：× 读「乘」，÷ 读「除以」，^ 读「的…次方」，% 读「百分之」。
+
+### 7.6 单位和币种的全名（小字和读屏用）
+
+原则：用大家嘴上的叫法，不用教科书叫法。英文用 CLDR 的复数全名，不改。
+
+| 单位 / 币种 | 中文 | 不用 |
+|---|---|---|
+| km | 公里 | 千米 |
+| kg | 公斤 | 千克 |
+| km/h | 公里每小时 | 千米每小时 |
+| km² | 平方公里 | 平方千米 |
+| KB / MB / GB / TB / PB | KB（1000 字节）/ MB（1000 KB）/ GB（1000 MB）/ TB（1000 GB）/ PB（1000 TB） | 千字节、兆字节、吉字节… |
+| KiB / MiB / GiB / TiB / PiB | KiB（1024 字节）/ MiB（1024 KiB）/ GiB（1024 MiB）/ TiB（1024 GiB）/ PiB（1024 TiB） | 二进制千字节… |
+| HKD | 港币 | 港元 |
+| AUD | 澳元 | 澳大利亚元 |
+| CAD | 加元 | 加拿大元 |
+
+数据单位的小字要让人看出按 1000 还是 1024 算，这是大家真会搞错的地方；「吉字节」「二进制千字节」没人这么说。其余单位和币种用现在 locales 里的写法。时长答案里用「天 / 小时 / 分 / 秒」（「2 小时 25 分」），单位全名里写「分钟」，两处不冲突。
 
 ### 7.5 README（功能合进来时再加，现在不改）
 
