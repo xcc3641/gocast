@@ -61,18 +61,24 @@ appearance, in English and Simplified Chinese.
 
 | Path | What |
 | --- | --- |
-| `main.go` | App setup, single instance, global shortcuts, settings, quitting |
-| `launcher.go` | The search panel: field, results, actions capsule, ⌘K menu |
-| `termpanel.go` | The floating terminal: tabs, banners, show and hide |
-| `prefs.go` | The Settings window |
-| `tray.go`, `updates.go` | The menu-bar icon and menu; the update window |
-| `kit.go`, `theme.go` | Shared components and the color tokens they draw with |
-| `internal/` | App scanning, search and pinyin matching, usage ranking, presets, settings, shortcuts, running apps |
+| `main.go` | The entry point; it only calls `app.Run` |
+| `internal/app/` | The app (package `app`) |
+| `internal/app/app.go` | App setup, single instance, global shortcuts, settings, quitting |
+| `internal/app/launcher.go` | The search panel: field, results, actions capsule, ⌘K menu |
+| `internal/app/termpanel.go` | The floating terminal: tabs, banners, show and hide |
+| `internal/app/prefs.go` | The Settings window |
+| `internal/app/tray.go`, `updates.go` | The menu-bar icon and menu; the update window |
+| `internal/app/kit.go`, `theme.go` | Shared components and the color tokens they draw with |
+| `internal/app/helpers_test.go` | `TestMain` and the fakes the tests share |
+| `internal/` | Also: app scanning, search and pinyin matching, usage ranking, presets, settings, shortcuts, running apps, clipboard, calculator |
 | `locales/` | The UI text: `en.json` (source) and `zh-Hans.json`; `catalog_gen.go` is generated |
-| `assets/` | Icons, with the scripts that draw them |
+| `icon/` | The icons, with `make-icon.py`, which draws them; `icon.go` embeds the ones the app draws |
 | `docs/` | `design.md` (the design spec), `copy.md` (the UI text), `dev-notes.md` |
 | `scripts/` | `gen-third-party-notices.go` and the license texts it uses |
 | `install.sh` | The install script `mygo build` writes, kept here so people can read it; the release carries the same file |
+| `entitlements.plist` | The entitlements `mygo build` signs the app with (`macos.entitlements` in mygo.json) |
+
+See [AGENTS.md](AGENTS.md) for how the tests are written.
 
 ## UI and text
 
@@ -121,68 +127,4 @@ stops and asks for them to be checked and updated.
 
 ## Releasing
 
-For maintainers. Releases are published as GitHub releases of
-[xcc3641/gocast](https://github.com/xcc3641/gocast), which installed apps
-check for updates: `updates` in mygo.json holds the public key and that
-repository (see the Updates section of docs/dev-notes.md). Uploading needs
-the GitHub CLI (`gh`), signed in with access to the repository.
-
-1. Bump `version` in [mygo.json](mygo.json).
-2. In CHANGELOG.md, turn `## [Unreleased]` into `## [x.y.z] - YYYY-MM-DD`
-   for that version. The section is required: `mygo build` stops without
-   it, and it is the release notes the update window shows, so write it for
-   users, in Chinese and English.
-3. Make sure the checks above pass and THIRD_PARTY_NOTICES.md is current.
-   Commit, tag `vx.y.z` and push both.
-4. Build and upload with the update signing key, which comes from the
-   maintainers' secret store. Never commit it, paste it anywhere or keep it
-   in the repository:
-
-   ```sh
-   MYGO_UPDATER_PRIVATE_KEY="$(cat path/to/mygo-update.key)" \
-     mygo build -upload
-   ```
-
-   The build signs with the Developer ID in `macos.signingIdentity` in
-   mygo.json (see below), which must be in a keychain codesign searches.
-   It builds the app, the disk image and the signed update files and
-   uploads them to a draft release for the version on xcc3641/gocast.
-   Without the key, `mygo build` still builds the app and the disk image
-   but skips the update files (fine for local builds), and `-upload`
-   refuses to run.
-5. Copy the install script the build wrote over the one in the repository
-   (`cp build/darwin-arm64/install.sh install.sh`) and commit it if it
-   changed: the README points people at it.
-6. Notarize the disk image and staple the ticket to it, then put it and
-   a fresh `SHA256SUMS` back on the draft:
-
-   ```sh
-   xcrun notarytool submit build/darwin-arm64/gocast-x.y.z-arm64.dmg --wait <credentials>
-   xcrun stapler staple build/darwin-arm64/gocast-x.y.z-arm64.dmg
-   gh release upload vx.y.z build/darwin-arm64/gocast-x.y.z-arm64.dmg build/SHA256SUMS --clobber
-   ```
-
-   (regenerate `SHA256SUMS` for the stapled image first). Check it with
-   `spctl -a -vv -t open --context context:primary-signature <dmg>`, which
-   should say "source=Notarized Developer ID".
-7. Check the draft on GitHub (try the disk image and
-   `curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh | sh`
-   once it is published), then publish it.
-   Publishing makes it the latest release: installed apps find it on their
-   next automatic check, or when the user chooses Check for Updates.
-
-Releases are signed with the maintainers' Developer ID Application
-certificate under the hardened runtime, and the disk
-image is notarized by Apple, so it opens with a double-click. macOS
-identifies the app by its Team ID and bundle identifier, so what users
-allowed Gocast (Accessibility, to paste from clipboard history) carries
-over to the next version. The terminal library in Resources is signed with
-the same Team ID, so library validation stays on and `entitlements.plist`
-grants nothing. The certificate's private key stays with the maintainers,
-like the update key; CI never gets it. Builds from source without the
-certificate (`mygo build -sign -`) are ad-hoc signed and work the same,
-but macOS asks for their permissions again after each build.
-
-Updates and the install script download with no quarantine flag; both
-check the Ed25519 signature of what they install against the public key
-in mygo.json.
+The release procedure is in [RELEASING.md](RELEASING.md).

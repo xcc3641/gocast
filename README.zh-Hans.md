@@ -1,5 +1,5 @@
 <h1 align="center">
-  <a href="https://gocast.yichenlab.com/zh/"><img src="assets/icon/icon.png" alt="Gocast 应用图标" width="128" height="128"></a><br>
+  <a href="https://gocast.yichenlab.com/zh/"><img src="icon/icon.png" alt="Gocast 应用图标" width="128" height="128"></a><br>
   Gocast
 </h1>
 

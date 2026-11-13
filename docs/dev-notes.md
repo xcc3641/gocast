@@ -45,7 +45,7 @@ For real window captures, `screencapture -x -o -l <CGWindowID>` works. Get the I
 
 Release builds are signed with the Developer ID in `macos.signingIdentity` (mygo.json) under the hardened runtime; `-sign -` builds ad-hoc. Contents/Resources holds `libghostty-vt.dylib` and, through `resources` in mygo.json, `THIRD_PARTY_NOTICES.md`, `LICENSE` and `NOTICE`. The default `<dir>` is `build/`. With `updates` in mygo.json the output also has `install.sh` and `SHA256SUMS`; without `MYGO_UPDATER_PRIVATE_KEY` it skips the update files ("Not signing an update"), which local builds don't need.
 
-**App icon (design.md 1.6).** mygo.json's `icon` is `assets/icon/icon.png` (1024) and `macos.icon` is `assets/icon/AppIcon.icon` (Icon Composer). With Xcode 26's `actool`, `mygo build` compiles the `.icon` into `Assets.car` (`CFBundleIconName` AppIcon, which macOS 26 draws with its glass, dark and tinted looks) and uses the `AppIcon.icns` that `actool` renders from it; without it (or if it fails) the `.icon` is skipped and the `.icns` is made from `icon.png`. `go run` / `go build` have no icon (no bundle). All the icon files come from `assets/icon/make-icon.py` (the designer's; change the shapes there, never the PNGs by hand).
+**App icon (design.md 1.6).** mygo.json's `icon` is `icon/icon.png` (1024) and `macos.icon` is `icon/AppIcon.icon` (Icon Composer). With Xcode 26's `actool`, `mygo build` compiles the `.icon` into `Assets.car` (`CFBundleIconName` AppIcon, which macOS 26 draws with its glass, dark and tinted looks) and uses the `AppIcon.icns` that `actool` renders from it; without it (or if it fails) the `.icon` is skipped and the `.icns` is made from `icon.png`. `go run` / `go build` have no icon (no bundle). All the icon files come from `icon/make-icon.py` (the designer's; change the shapes there, never the PNGs by hand).
 
 **Third-party notices.** `THIRD_PARTY_NOTICES.md` is generated: run `go run scripts/gen-third-party-notices.go` after any change to go.mod (CI runs it with `-check`). It reads the license files of the compiled modules from the module cache, the license texts of libghostty-vt's components from `scripts/notices/`, and stops when MyGo bundles a libghostty-vt from another Ghostty commit than those texts describe.
 
@@ -53,14 +53,16 @@ Release builds are signed with the Developer ID in `macos.signingIdentity` (mygo
 
 | File | What |
 | --- | --- |
-| `main.go` | App setup, single instance, global shortcuts (register / suspend while recording / change), settings, quit handling |
-| `launcher.go` | Search panel: field, results, actions capsule, ⌘K menu, notices |
-| `termpanel.go` | Floating terminal (`plugins/terminal`): tabs, banners, end bar, show/hide |
-| `prefs.go` | Settings window: Shortcuts, Terminal Presets (editor), General, About |
-| `tray.go` | Tray icon and menu |
-| `updates.go` | MyGo's update window (`plugins/updater/native`): its texts from the catalogs, its icon |
-| `theme.go` | design.md 1.2 color tokens, keycaps |
-| `assets/icon/` | The icons, all drawn by `make-icon.py`: `AppIcon.icon` and `icon.png` (the app's, also About's at 64), `tray.png` (tray, template), `logo-template.png` (Gocast's mark in the search bar and the terminal's tab bar, tinted `textSecondaryOnGlass`), `update-icon.png` (update window) |
+| `main.go` | The entry point: it only calls `app.Run` (internal/app) |
+| `internal/app/app.go` | App setup, single instance, global shortcuts (register / suspend while recording / change), settings, quit handling |
+| `internal/app/launcher.go` | Search panel: field, results, actions capsule, ⌘K menu, notices |
+| `internal/app/termpanel.go` | Floating terminal (`plugins/terminal`): tabs, banners, end bar, show/hide |
+| `internal/app/prefs.go` | Settings window: Shortcuts, Terminal Presets (editor), General, About |
+| `internal/app/tray.go` | Tray icon and menu |
+| `internal/app/updates.go` | MyGo's update window (`plugins/updater/native`): its texts from the catalogs, its icon |
+| `internal/app/theme.go` | design.md 1.2 color tokens, keycaps |
+| `internal/app/helpers_test.go` | `TestMain` and the fakes the tests share (running apps, global shortcuts) |
+| `icon/` | The icons, all drawn by `make-icon.py`, and `icon.go`, which embeds the PNGs the app draws: `AppIcon.icon` and `icon.png` (the app's, also About's at 64), `tray.png` (tray, template), `logo-template.png` (Gocast's mark in the search bar and the terminal's tab bar, tinted `textSecondaryOnGlass`), `update-icon.png` (update window) |
 | `CHANGELOG.md` | Keep a Changelog; the version's section is the update's release notes |
 | `scripts/gen-third-party-notices.go` | Writes `THIRD_PARTY_NOTICES.md`; `scripts/notices/` holds the texts that are not in the module cache |
 | `internal/apps` | App scan, localized names |
@@ -270,19 +272,15 @@ Automation can't cover these:
 - **What a build says when 检查更新 is pressed:**
   - `go run` / `go build` (dev): 没法在这里更新 / 开发版本不会自己更新。 (en: Updates Unavailable / Development builds don’t update themselves.)
   - `mygo build`, with the feed: it checks `https://github.com/xcc3641/gocast/releases/latest/download/update-darwin-arm64.json`. Until a release is published that is a 404, and the window says 更新出错 / 现在检查不了更新，请稍后再试。 with the plugin's detail line `mygo: checking for updates: GET https://github.com/xcc3641/gocast/releases/latest/download/update-darwin-arm64.json: 404 Not Found`. (Before the feed it said 没法在这里更新 / Gocast 没法在当前安装位置自己更新…)
-- **Keys.** `mygo keygen` made `mygo-update.key` (secret) and `mygo-update.pub`; the maintainer keeps them outside the repository. The public key is in mygo.json. Put the secret in a password manager and in CI as `MYGO_UPDATER_PRIVATE_KEY`; never commit it.
 - **Feed.** mygo.json has `"updates": {"publicKey": "7xqUsSnSTZgGQ69hBuh+pm1jexm7Z3Ngl0lQ17EKPRQ=", "github": "xcc3641/gocast"}`. The repository must be public, with releases tagged `v0.1.0` …; it doesn't exist yet. `mygo build` needs no key: without one it builds the app and the disk image and skips the update files.
-- **Releasing** (see CONTRIBUTING.md, Releasing):
-  1. `MYGO_UPDATER_PRIVATE_KEY="$(cat path/to/mygo-update.key)" mygo build` also writes `gocast-<version>-darwin-arm64.tar.gz` and `update-darwin-arm64.json`, and needs the version's `## [x.y.z]` section in CHANGELOG.md;
-  2. `mygo build -upload` (needs the key) makes a draft release on xcc3641/gocast; publishing it makes it the latest, which apps check.
-  Installed apps update only from builds that had `updates`: builds made before this one never update themselves.
+- **Releasing.** The update signing key and the release steps are in RELEASING.md.
 
 ## Open issues
 
 - **Platform:**
   - `minimumSystemVersion` is 13.0, MyGo's floor.
   - `mygo build` makes arm64 only. A universal (Intel too) build is planned for a later release.
-- **Signing.** Developer ID Application, hardened runtime, library validation on. The disk image is notarized and stapled after `mygo build` (CONTRIBUTING.md, Releasing); `macos.notarize` is not used because it needs a notarytool keychain profile.
+- **Signing.** Developer ID Application, hardened runtime, library validation on. The disk image is notarized and stapled after `mygo build` (RELEASING.md); `macos.notarize` is not used because it needs a notarytool keychain profile.
 - **`mygo build` locales warning.** It warns "The app does not import gocast/locales". This is a false positive and harmless: MyGo's `compiledDirs` splits `go list` output with `strings.Fields`, which breaks when the project's path has a space in it. It should be reported upstream.
 - **Unbundled app names.** An unbundled binary gets app names in English from Launch Services; `Localized(App.Locale())` corrects them.
 
