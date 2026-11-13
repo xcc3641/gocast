@@ -1,7 +1,7 @@
 {
   "name": "Gocast",
   "identifier": "com.hugo.gocast",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "icon": "icon/icon.png",
   "out": "build",
   "resources": ["THIRD_PARTY_NOTICES.md", "LICENSE", "NOTICE"],
