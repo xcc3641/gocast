@@ -574,7 +574,13 @@ func (v *clipView) rowIcon(c *ui.Context, k tokens, e clipboard.Entry) {
 		}
 		if len(e.Files) > 0 {
 			if b := v.fileIcon(e.Files[0], iconCell); b != nil {
-				listIcon(c, func() { ui.Image(c, b).Size(iconCell, iconCell).AccessHidden(true) })
+				// An image file gone before it was read: its icon, faded
+				// (design.md 2.8.4).
+				opacity := float32(1)
+				if !there && len(e.Files) == 1 && clipboard.IsImageFile(e.Files[0]) {
+					opacity = 0.4
+				}
+				listIcon(c, func() { ui.Image(c, b).Size(iconCell, iconCell).AccessHidden(true).Opacity(opacity) })
 				return
 			}
 		}
