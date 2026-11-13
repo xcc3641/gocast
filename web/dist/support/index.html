@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gocast Support</title>
+<meta name="description" content="Gocast is a free launcher for the Mac: apps, a drop-down terminal and clipboard history, each on one key.">
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111113" media="(prefers-color-scheme: dark)">
+<meta property="og:title" content="Gocast Support">
+<meta property="og:description" content="Gocast is a free launcher for the Mac: apps, a drop-down terminal and clipboard history, each on one key.">
+<meta property="og:image" content="/assets/icon-256.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231C1C1E'/%3E%3Crect x='25' y='17' width='14' height='30' rx='3' fill='white'/%3E%3C/svg%3E" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<link rel="alternate" hreflang="en" href="/support/">
+<link rel="alternate" hreflang="zh-Hans" href="/zh/support/">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+<nav class="lang" aria-label="Language"><a href="/zh/support/" hreflang="zh-Hans">简体中文</a></nav>
+<main class="page">
+<a class="back" href="/">← Gocast</a>
+<h1>Gocast Support</h1>
+<p class="lede">Gocast is a free launcher for the Mac: apps, a drop-down terminal and clipboard history, each on one key.</p>
+<h2>Get help</h2>
+<p>Report a problem or ask a question in <a href="https://github.com/xcc3641/gocast/issues">GitHub Issues</a>. We usually reply within a few days. For a security problem, don’t open a public issue: use “Report a vulnerability” on the repository’s Security tab.</p>
+<h2 class="faq-h">Common questions</h2>
+<h3>macOS says it can’t verify the developer.</h3><div>Gocast isn’t signed with an Apple Developer ID yet. The first time, open System Settings › Privacy &amp; Security and click Open Anyway. You only do this once; updates install without asking. If you install from Terminal with the line below, macOS won’t ask at all.<pre>curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh | sh</pre></div>
+<h3>⌘Space opens Spotlight, not Gocast.</h3><div>Spotlight uses ⌘Space by default, so Gocast starts on ⌥⇧Space. Turn off “Show Spotlight search” in System Settings › Keyboard › Keyboard Shortcuts › Spotlight and Gocast switches to ⌘Space on its own. Or pick any shortcut in Gocast’s Settings › Shortcuts.</div>
+<h3>Return copies but doesn’t paste.</h3><div>To paste into another app, Gocast presses ⌘V for you, and macOS asks you to turn on Gocast in System Settings › Privacy &amp; Security › Accessibility first. Until then, Return copies and you press ⌘V yourself.</div>
+<h3>Which Macs does it run on?</h3><div>macOS 13 or later on Apple silicon. Intel support is planned.</div>
+<h3>How do I uninstall it?</h3><div>Quit Gocast from its menu bar icon and move it to the Trash, or run:<pre>curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh | sh -s -- --uninstall</pre>Your presets, settings and clipboard history stay in <code>~/Library/Application Support/dev.gocast.app/</code>; delete that folder to remove them too.</div>
+</main>
+<footer>
+<span class="copy">© 2026 The Gocast Authors</span>
+<a href="/support/">Support</a>
+<a href="/privacy/">Privacy</a>
+<a href="https://github.com/xcc3641/gocast">GitHub</a>
+</footer>
+</body>
+</html>
