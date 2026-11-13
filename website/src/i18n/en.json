@@ -84,7 +84,7 @@
     },
     {
       "h": "When Gocast goes online",
-      "text": "Only twice, and neither request carries anything you typed or copied:<ul><li><strong>Checking for updates</strong>, from the Gocast project on GitHub, about once a day. Turn it off with Settings › General › Check for updates automatically.</li><li><strong>Exchange rates</strong> for the calculator, from Frankfurter (frankfurter.dev), once a day. Turn it off with Settings › General › Calculate in search.</li></ul>GitHub and Frankfurter see the request like any website sees a visit, such as your IP address, under their own privacy policies. Gocast sends them nothing else."
+      "text": "Only twice, and neither request carries anything you typed or copied:<ul><li><strong>Checking for updates</strong>, from the Gocast project on GitHub, about once a day; when there is a newer version, it downloads it in the background. Turn it off with Settings › General › Check for updates automatically.</li><li><strong>Exchange rates</strong> for the calculator, from Frankfurter (frankfurter.dev), once a day. Turn it off with Settings › General › Calculate in search.</li></ul>GitHub and Frankfurter see the request like any website sees a visit, such as your IP address, under their own privacy policies. Gocast sends them nothing else."
     },
     {
       "h": "Third parties",
