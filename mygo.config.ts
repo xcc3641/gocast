@@ -5,7 +5,7 @@
 export default {
   name: "Gocast",
   identifier: "com.hugo.gocast",
-  version: "0.1.4",
+  version: "0.1.5",
   icon: "icon/icon.png",
   out: "build",
   resources: ["THIRD_PARTY_NOTICES.md", "LICENSE", "NOTICE"],

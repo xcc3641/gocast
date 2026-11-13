@@ -8,6 +8,11 @@ The section of each version is the release notes that the update window
 shows (MyGo reads `## [version]`), so write it for users, in Chinese and
 English.
 
+## [0.1.5] - 2026-11-13
+
+修好了剪贴板历史里看图时会先撑到原尺寸再缩回去的问题，现在一选中就是原本该有的大小。
+Fixed an image in clipboard history briefly appearing at full size before shrinking: it now opens at its final size.
+
 ## [0.1.4] - 2026-11-13
 
 剪贴板历史里，截图软件拷来的图片现在能直接看到了：列表里是缩略图，右边显示整张图，下面多一行尺寸。这类条目仍算「文件」，粘贴出去还是文件。图是从原文件读的，没有另存一份，原文件删掉或挪走后就看不到了。
