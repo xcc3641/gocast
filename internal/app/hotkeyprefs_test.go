@@ -14,6 +14,7 @@ import (
 	"github.com/egoist/mygo/ui"
 	plistlib "howett.net/plist"
 
+	"gocast/internal/presets"
 	"gocast/internal/settings"
 	"gocast/locales"
 )
@@ -553,4 +554,44 @@ func icnsBitmap(path string) *ui.Bitmap {
 		}
 	}
 	return nil
+}
+
+func TestScreensDefaultFolder(t *testing.T) {
+	dir := screensDir(t)
+	full := image.Rect(0, 0, prefsWidth, prefsHeight)
+	defer func(f func(string) bool) { isDir = f }(isDir)
+	for _, dark := range []bool{false, true} {
+		mode := "light"
+		if dark {
+			mode = "dark"
+		}
+		shot := func(name, folder string, there bool, setup func(p *prefsWindow, tt *ui.Tester)) {
+			isDir = func(string) bool { return there }
+			p, tt, _ := hotkeyPrefs(t, "zh-Hans")
+			p.g.settings.TerminalDir = folder
+			if p.g.term == nil { // the size sliders' range
+				p.g.term = &termPanel{g: p.g, shown: true, wa: mygo.Rectangle{Width: 1512, Height: 944}}
+			}
+			p.page = pageGeneral
+			st := p.g.settings
+			p.autoUpdate, p.calculator, p.hideBlur = st.AutoUpdates(), st.Calculator(), !st.KeepTerminalOnBlur
+			p.fontSize, p.termHeight = float64(st.Font()), float64(st.TermHeight())
+			p.termWidth = float64(st.TermWidthOn(1512))
+			p.checkDefaultFolder()
+			tt.SetScale(2)
+			tt.SetDark(dark)
+			if setup != nil {
+				setup(p, tt)
+			}
+			tt.Frame()
+			saveScreen(t, tt, dir, name+"-"+mode, full)
+		}
+		shot("df-home", "", true, nil)
+		shot("df-set", "~/Work", true, nil)
+		shot("df-gone", "~/Work", false, nil)
+		shot("df-preset", "~/Work", true, func(p *prefsWindow, tt *ui.Tester) {
+			p.page = pagePresets
+			p.editID, p.draft, p.editing = "", presets.Preset{Name: "pi", Command: "pi"}, true
+		})
+	}
 }

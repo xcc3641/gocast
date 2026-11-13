@@ -48,14 +48,14 @@ func TestLoadBad(t *testing.T) {
 
 func TestValidate(t *testing.T) {
 	ps := []Preset{{ID: "1", Name: "pi", Dir: "~"}}
-	if n, d := Validate(Preset{ID: "2", Name: " ", Dir: ""}, ps); n != NameEmpty || d != DirEmpty {
-		t.Errorf("empty: %v %v", n, d)
+	if n := Validate(Preset{ID: "2", Name: " ", Dir: ""}, ps); n != NameEmpty { // no folder is fine
+		t.Errorf("empty: %v", n)
 	}
-	if n, _ := Validate(Preset{ID: "2", Name: "PI", Dir: "~"}, ps); n != NameTaken {
+	if n := Validate(Preset{ID: "2", Name: "PI", Dir: "~"}, ps); n != NameTaken {
 		t.Errorf("taken: %v", n)
 	}
-	if n, d := Validate(Preset{ID: "1", Name: "pi", Dir: "~"}, ps); n != OK || d != OK {
-		t.Errorf("itself: %v %v", n, d)
+	if n := Validate(Preset{ID: "1", Name: "pi", Dir: "~"}, ps); n != OK {
+		t.Errorf("ok: %v", n)
 	}
 }
 

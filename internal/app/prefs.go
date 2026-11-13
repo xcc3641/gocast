@@ -53,7 +53,6 @@ type prefsWindow struct {
 	envOpen       bool
 	makeDefault   bool
 	nameProblem   string
-	dirProblem    string
 	nameInput     ui.Handle
 	focusName     bool
 	confirmDelete bool // the editor asks before deleting
@@ -64,6 +63,7 @@ type prefsWindow struct {
 	searchOnly bool // the search panel opens with its search field alone
 	calculator bool // the search panel calculates (design.md 2.3a)
 	fontSize   float64
+	folderGone bool    // the default folder is not there, as of the last look
 	termWidth  float64 // percent of the work area
 	termHeight float64
 	hideBlur   bool
@@ -90,6 +90,10 @@ func newPrefsWindow(g *gocast) *prefsWindow {
 		Transparent:   true,
 		Vibrancy:      mygo.VibrancySidebar,
 		Content:       ui.View(p.view),
+	})
+	p.win.OnFocus(func() { // the default folder, gone or back meanwhile
+		p.checkDefaultFolder()
+		p.win.Invalidate()
 	})
 	p.win.OnClose(func(e *mygo.CloseEvent) {
 		if g.quitting {
@@ -122,6 +126,7 @@ func (p *prefsWindow) show(page string) {
 	p.termWidth = float64(p.g.settings.TermWidth())
 	p.termHeight = float64(p.g.settings.TermHeight())
 	p.hideBlur = !p.g.settings.KeepTerminalOnBlur
+	p.checkDefaultFolder()
 	p.loadClipboard()
 	if !p.win.IsVisible() {
 		p.win.Center()
@@ -289,7 +294,8 @@ func groupDivider(c *ui.Context, k tokens) {
 const groupInset = 14
 
 // row is a row of a group: label and a description under it at the left,
-// the control at the right.
+// the control at the right. A description in the warning color says a
+// problem, after a warning sign.
 func (g *group) row(c *ui.Context, k tokens, label, desc string, descColor ui.Color, control func()) {
 	if g.rows > 0 {
 		groupDivider(c, k)
@@ -298,7 +304,12 @@ func (g *group) row(c *ui.Context, k tokens, label, desc string, descColor ui.Co
 	ui.Row(c).MinHeight(44).Padding(8, 14, 8, 0).Gap(12).AlignItems(ui.Center).Children(func() {
 		ui.Column(c).Grow(1).Shrink(1).Gap(2).Children(func() {
 			ui.Text(c, label).FontSize(13).TextColor(k.text)
-			if desc != "" {
+			if desc != "" && descColor == k.warning {
+				ui.Row(c).Gap(4).AlignItems(ui.Center).Children(func() {
+					sfsymbols.Symbol(c, "exclamationmark.triangle").Size(12).Color(k.warning)
+					ui.Text(c, desc).FontSize(12).TextColor(descColor).Shrink(1)
+				})
+			} else if desc != "" {
 				ui.Text(c, desc).FontSize(12).TextColor(descColor)
 			}
 		})
@@ -406,7 +417,7 @@ func (p *prefsWindow) presetsPage(c *ui.Context, k tokens) {
 			id := pr.ID
 			c.Key(id)
 			ui.Row(c).Height(52).Padding(0, 14, 0, 0).Gap(8).AlignItems(ui.Center).Role(ui.RoleButton).
-				Label(presetTitle(pr) + "，" + presetSubtitle(pr)).OnClick(func() { p.edit(id) }).Children(func() {
+				Label(presetTitle(pr) + "，" + p.g.presetSubtitle(pr)).OnClick(func() { p.edit(id) }).Children(func() {
 				ui.Column(c).Grow(1).Shrink(1).Gap(2).Children(func() {
 					ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
 						ui.Text(c, presetTitle(pr)).FontSize(13).FontWeight(500).TextColor(k.text).SingleLine().Shrink(1)
@@ -416,7 +427,7 @@ func (p *prefsWindow) presetsPage(c *ui.Context, k tokens) {
 							})
 						}
 					})
-					ui.Text(c, presetSubtitle(pr)).FontSize(12).TextColor(k.textSecondary).SingleLine().TruncateMiddle()
+					ui.Text(c, p.g.presetSubtitle(pr)).FontSize(12).TextColor(k.textSecondary).SingleLine().TruncateMiddle()
 				})
 				sfsymbols.Symbol(c, "chevron.right").Size(12).Color(k.textSecondary)
 			})
@@ -436,7 +447,7 @@ func (p *prefsWindow) edit(id string) {
 	p.envText = presets.FormatEnv(p.draft.Env)
 	p.envOpen = p.envText != ""
 	p.makeDefault = p.draft.Default
-	p.nameProblem, p.dirProblem = "", ""
+	p.nameProblem = ""
 	p.editing, p.focusName, p.confirmDelete = true, true, false
 	p.win.Invalidate()
 }
@@ -464,17 +475,17 @@ func (p *prefsWindow) editor(c *ui.Context, k tokens) {
 				}).Error(p.nameProblem)
 				ui.Field(c, locales.PresetFolder(), func() {
 					ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-						dir := ""
-						if strings.TrimSpace(p.draft.Dir) != "" {
-							dir = presets.ShortPath(p.draft.Dir)
-						}
 						ui.Box(c).Height(28).Grow(1).Shrink(1).Padding(0, 8).Radius(6).Background(k.groupFill).
 							Justify(ui.Center).Children(func() {
-							ui.Text(c, dir).FontSize(12).Font("monospace").TextColor(k.text).SingleLine().TruncateMiddle()
+							if strings.TrimSpace(p.draft.Dir) != "" {
+								ui.Text(c, presets.ShortPath(p.draft.Dir)).FontSize(12).Font("monospace").TextColor(k.text).SingleLine().TruncateMiddle()
+							} else { // the default folder, which it starts in
+								ui.Text(c, locales.PresetFolderDefault(presets.ShortPath(p.g.settings.TerminalDir))).FontSize(12).TextColor(k.textSecondary).SingleLine().TruncateMiddle()
+							}
 						})
 						ui.Button(c, locales.PresetChoose()).OnClick(p.chooseFolder)
 					})
-				}).Error(p.dirProblem)
+				})
 				ui.Field(c, locales.PresetCommand(), func() {
 					cmd := ui.TextInput(c, &p.draft.Command).Font("monospace").FontSize(13).Placeholder(locales.PresetCommandPlaceholder())
 					submit = submit || cmd.Submitted()
@@ -524,20 +535,27 @@ func (p *prefsWindow) deleteConfirmation(c *ui.Context, k tokens) {
 }
 
 func (p *prefsWindow) chooseFolder() {
-	start := presets.ExpandHome(p.draft.Dir)
-	if strings.TrimSpace(p.draft.Dir) == "" {
-		start = presets.ExpandHome("~")
-	}
-	paths, err := mygo.Dialog.Open(mygo.OpenDialogOptions{Parent: p.win, Directory: true, DefaultPath: start, CreateDirectories: true})
-	if err != nil {
-		log.Print(err)
-		return
-	}
-	if len(paths) > 0 {
-		p.draft.Dir = presets.ShortPath(paths[0])
-		p.dirProblem = ""
+	if dir, ok := p.pickFolder(p.g.workDir(p.draft)); ok {
+		p.draft.Dir = dir
 		p.win.Invalidate()
 	}
+}
+
+// pickFolder asks for a folder with the system's dialog, from start: the
+// one chosen, as the user reads it (~/Work), and whether there was one.
+func (p *prefsWindow) pickFolder(start string) (string, bool) {
+	if !isDir(start) {
+		start = presets.ExpandHome("~")
+	}
+	paths, err := mygo.Dialog.Open(mygo.OpenDialogOptions{Parent: p.win, Directory: true, DefaultPath: start, CreateDirectories: true, ButtonLabel: locales.DialogChoose()})
+	if err != nil {
+		log.Print(err)
+		return "", false
+	}
+	if len(paths) == 0 {
+		return "", false
+	}
+	return presets.ShortPath(paths[0]), true
 }
 
 // save checks the draft and saves it, or says what to fix under its
@@ -547,21 +565,18 @@ func (p *prefsWindow) save() {
 	d.Name = strings.TrimSpace(d.Name)
 	d.Command = strings.TrimSpace(d.Command)
 	d.ID = p.editID
-	name, dir := presets.Validate(d, p.g.presets)
-	p.nameProblem, p.dirProblem = "", ""
+	name := presets.Validate(d, p.g.presets)
+	p.nameProblem = ""
 	switch name {
 	case presets.NameEmpty:
 		p.nameProblem = locales.PresetNameEmpty()
 	case presets.NameTaken:
 		p.nameProblem = locales.PresetNameTaken(d.Name)
 	}
-	if dir == presets.DirEmpty {
-		p.dirProblem = locales.PresetFolderEmpty()
-	}
 	if p.nameProblem != "" {
 		p.nameInput.Focus()
 	}
-	if p.nameProblem != "" || p.dirProblem != "" {
+	if p.nameProblem != "" {
 		return
 	}
 	if d.ID == "" {
@@ -648,6 +663,7 @@ func (p *prefsWindow) generalPage(c *ui.Context, k tokens) {
 	})
 	groupTitle(c, k, locales.GeneralTerminalGroup(), locales.GeneralTerminalGroupHint())
 	newGroup(c, k, func(g *group) {
+		p.defaultFolderRow(c, k, g)
 		g.row(c, k, locales.GeneralFontSize(), "", k.textSecondary, func() {
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 				ui.Text(c, strconv.Itoa(int(p.fontSize))).FontSize(13).Font("monospace").TextColor(k.text)
@@ -782,4 +798,60 @@ func (g *gocast) defaultPreset() *presets.Preset {
 		return &p
 	}
 	return nil
+}
+
+// defaultFolderRow is the first row of the terminal's group (design.md
+// 4.4): the folder new terminals start in, and Choose….
+func (p *prefsWindow) defaultFolderRow(c *ui.Context, k tokens, g *group) {
+	dir := p.g.settings.TerminalDir
+	home := strings.TrimSpace(dir) == "" || presets.ExpandHome(dir) == presets.ExpandHome("~")
+	hint, hintColor := locales.GeneralDefaultFolderHint(), k.textSecondary
+	if p.folderGone {
+		hint, hintColor = locales.GeneralDefaultFolderMissing(), k.warning
+	}
+	g.row(c, k, locales.GeneralDefaultFolder(), hint, hintColor, func() {
+		ui.Row(c).Gap(8).AlignItems(ui.Center).Shrink(0).Children(func() {
+			// On the group's fill: the window's (design.md 4.4).
+			box := ui.Box(c).Width(240).Height(28).Padding(0, 8).Radius(6).Background(k.surface).Justify(ui.Center).
+				OnClick(p.chooseDefaultFolder)
+			if home {
+				box.Children(func() {
+					ui.Text(c, locales.GeneralDefaultFolderHome()).FontSize(12).TextColor(k.text).SingleLine()
+				})
+				return
+			}
+			box.Tooltip(presets.ExpandHome(dir)).Children(func() {
+				t := ui.Text(c, presets.ShortPath(dir)).FontSize(12).Font("monospace").SingleLine().TruncateMiddle()
+				if p.folderGone {
+					t.TextColor(k.textSecondary).Strikethrough()
+				} else {
+					t.TextColor(k.text)
+				}
+			})
+		})
+		ui.Button(c, locales.PresetChoose()).Label(locales.GeneralDefaultFolder()).OnClick(p.chooseDefaultFolder)
+	})
+}
+
+// chooseDefaultFolder asks for the default folder, from the one it is;
+// choosing the home folder sets it back.
+func (p *prefsWindow) chooseDefaultFolder() {
+	dir, ok := p.pickFolder(p.g.workDir(presets.Preset{}))
+	if !ok {
+		return
+	}
+	if dir == "~" {
+		dir = ""
+	}
+	p.g.settings.TerminalDir = dir
+	p.g.saveSettings()
+	p.checkDefaultFolder()
+	p.win.Invalidate()
+}
+
+// checkDefaultFolder looks whether the default folder is there: as
+// Settings shows, and each time it comes to the front.
+func (p *prefsWindow) checkDefaultFolder() {
+	dir := p.g.settings.TerminalDir
+	p.folderGone = strings.TrimSpace(dir) != "" && !isDir(presets.ExpandHome(dir))
 }

@@ -119,12 +119,12 @@ const (
 	OK Problem = iota
 	NameEmpty
 	NameTaken
-	DirEmpty
 )
 
 // Validate checks p as it is about to be saved among ps (where it may be
-// already, by its ID): the first problem of its name, and of its folder.
-func Validate(p Preset, ps []Preset) (name, dir Problem) {
+// already, by its ID): the first problem of its name. A preset without a
+// folder starts in the default folder (Settings).
+func Validate(p Preset, ps []Preset) (name Problem) {
 	n := strings.TrimSpace(p.Name)
 	switch {
 	case n == "":
@@ -132,10 +132,7 @@ func Validate(p Preset, ps []Preset) (name, dir Problem) {
 	case slices.ContainsFunc(ps, func(o Preset) bool { return o.ID != p.ID && strings.EqualFold(strings.TrimSpace(o.Name), n) }):
 		name = NameTaken
 	}
-	if strings.TrimSpace(p.Dir) == "" {
-		dir = DirEmpty
-	}
-	return name, dir
+	return name
 }
 
 // ExpandHome replaces a leading ~ with the home directory.
@@ -152,6 +149,9 @@ func ExpandHome(p string) string {
 	}
 	return p
 }
+
+// HasDir reports whether the preset has a folder of its own.
+func (p Preset) HasDir() bool { return strings.TrimSpace(p.Dir) != "" }
 
 // WorkDir is the directory the preset starts in: Dir with ~ expanded, or
 // the home directory when empty.

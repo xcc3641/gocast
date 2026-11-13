@@ -300,7 +300,7 @@ func (p *termPanel) tab(c *ui.Context, k tokens, i int, s *session) {
 	}
 	tip := locales.TermTabDefault()
 	if !s.plain() {
-		tip = presetSubtitle(s.preset)
+		tip = p.g.presetSubtitle(s.preset)
 	}
 	if i < 9 {
 		tip += "  ⌘" + strconv.Itoa(i+1)
@@ -415,7 +415,7 @@ func (p *termPanel) newTabMenu(c *ui.Context, k tokens) {
 					menuRow(c, k, "", locales.TermPlain(), "", nil, i == p.chosen, func() { p.runMenu(idx) })
 					continue
 				}
-				menuRow(c, k, "", presetTitle(*pr), lastDir(pr.ShortDir()), nil, i == p.chosen, func() { p.runMenu(idx) })
+				menuRow(c, k, "", presetTitle(*pr), lastDir(p.g.shortDir(*pr)), nil, i == p.chosen, func() { p.runMenu(idx) })
 			}
 		})
 	})
@@ -530,17 +530,22 @@ func (p *termPanel) closeTab(s *session) {
 
 // start runs the session's preset (or the user's shell) in a new
 // terminal: a preset's command through the user's shell as a login and
-// interactive shell ($SHELL -lic), in its folder, or the home folder when
-// that is gone.
+// interactive shell ($SHELL -lic), in its folder, or the default folder
+// (Settings) when that is gone; a plain one, and a preset without a
+// folder, in the default folder, quietly the home folder when that is
+// gone.
 func (p *termPanel) start(s *session) {
 	pr := s.preset
 	if s.plain() {
-		pr = presets.Preset{Dir: "~"}
+		pr = presets.Preset{}
 	}
-	dir := pr.WorkDir()
 	s.missingDir, s.failure, s.announced = "", "", false
-	if fi, err := os.Stat(dir); err != nil || !fi.IsDir() {
-		s.missingDir = pr.ShortDir()
+	dir := p.g.workDir(pr)
+	if !isDir(dir) && pr.HasDir() {
+		s.missingDir = pr.ShortDir() // said, in the default folder
+		dir = p.g.workDir(presets.Preset{})
+	}
+	if !isDir(dir) {
 		dir = presets.ExpandHome("~")
 	}
 	s.done = false
@@ -937,4 +942,27 @@ func commandName(command string) string {
 		return f[0]
 	}
 	return ""
+}
+
+// workDir is the folder the preset pr starts in: its own, else the
+// default folder of Settings (the home folder unset).
+func (g *gocast) workDir(pr presets.Preset) string {
+	if pr.HasDir() {
+		return pr.WorkDir()
+	}
+	return presets.Preset{Dir: g.settings.TerminalDir}.WorkDir()
+}
+
+// shortDir is workDir as the user reads it (~/Work).
+func (g *gocast) shortDir(pr presets.Preset) string {
+	if pr.HasDir() {
+		return pr.ShortDir()
+	}
+	return presets.ShortPath(g.settings.TerminalDir)
+}
+
+// isDir reports whether dir is a folder that is there; a fake in tests.
+var isDir = func(dir string) bool {
+	fi, err := os.Stat(dir)
+	return err == nil && fi.IsDir()
 }

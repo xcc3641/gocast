@@ -1,4 +1,6 @@
-# Gocast 界面文案 v1.24（搜索面板 · 悬浮终端 · 设置）
+# Gocast 界面文案 v1.25（搜索面板 · 悬浮终端 · 设置）
+
+v1.25 改动：通用里新增「默认文件夹」（4.3），新开的终端从这里开始。
 
 v1.24 改动：搜索结果和推荐里的应用行不再放运行中的小圆点，读屏也不再读「正在运行」（第 2、9 节）；终端标签前那个小圆点一起去掉。
 
@@ -167,7 +169,7 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 | 命令正常结束（退出码 0，以及 130 被 ⌃C 打断、143 被结束） | 什么都不留。标签当场变回普通终端，就在预设那个文件夹里，接着敲命令；标签标题同时从预设名改成「终端」 | Nothing. The tab turns into a plain terminal in the preset’s folder, and its title goes from the preset’s name to “Terminal” |
 | 其他退出码（只有这种情况留字，一行暗色，不加按钮、不能点掉） | {预设名} 已结束（退出码 {code}） | {preset} finished (exit code {code}) |
 | 命令找不到（同样只留一行暗色，不要按钮） | 找不到命令“{命令}”。检查一下这个预设里的命令，也可以直接在这里接着敲。 | Can’t find the command “{command}”. Check it in this preset, or just keep typing here. |
-| 文件夹不存在 | 找不到文件夹 {文件夹}，已改在你的主文件夹里打开。 | Can’t find the folder {folder}. Opened in your home folder instead. |
+| 文件夹不存在 | 找不到文件夹 {文件夹}，已在你的默认文件夹里打开。 | Can’t find the folder {folder}. Opened in your default folder instead. |
 | 首次打开、没有预设时（终端上方一行，可关闭） | 这是一个普通终端。想一键在某个文件夹里运行命令，去设置里添加预设。 | This is a plain terminal. To run a command in a folder with one key, add a preset in Settings. |
 | 上面那行的按钮 | 添加预设 | Add Preset |
 | 提示胶囊右上的 ×（读屏） | 关闭 | Dismiss |
@@ -213,6 +215,8 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 | 名称占位 | 如：my-app · pi | e.g. my-app · pi |
 | 字段：文件夹 | 文件夹 | Folder |
 | 文件夹按钮 | 选择… | Choose… |
+| 文件夹留空时（灰字占位，显示实际会用的那个） | 默认文件夹（{路径}）；默认是主文件夹时写「默认文件夹（~）」 | Default folder ({path}); “Default folder (~)” when that’s your home folder |
+| 选文件夹对话框的确认按钮 | 选择 / 取消 | Choose / Cancel |
 | 字段：命令 | 命令 | Command |
 | 命令占位 | 留空则打开普通终端 | Leave empty for a plain terminal |
 | 字段：环境变量（折叠，默认收起） | 环境变量（可选） | Environment variables (optional) |
@@ -226,7 +230,6 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 | 删除确认说明 | 已经开着的标签不会受影响，但之后搜不到这个预设了。 | Tabs you already have open stay open, but you won’t find this preset in search anymore. |
 | 名称为空 | 给预设起个名字。 | Give this preset a name. |
 | 名称重复 | 已经有叫“{名称}”的预设了。 | A preset named “{name}” already exists. |
-| 文件夹为空 | 请选择一个文件夹。 | Choose a folder. |
 
 ### 4.3 通用 / General
 
@@ -245,6 +248,11 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 | 高度 | 高度 | Height |
 | 高度说明 | 占当前屏幕的百分之几。 | Percent of the current screen. |
 | 高度值 | {n}% | {n}% |
+| 默认文件夹 | 默认文件夹 | Default folder |
+| 默认文件夹的值 | 主文件夹；换成别的就显示路径，长的从中间省略，如 `~/Projects/my-app` | Home; otherwise the path, shortened in the middle, e.g. `~/Projects/my-app` |
+| 默认文件夹的按钮 | 选择… | Choose… |
+| 默认文件夹说明 | 新开的终端都从这里开始。预设还是用它自己的文件夹；那个文件夹没了就回这里。 | New terminals start here. Presets still use their own folder; if that one is gone, they start here instead. |
+| 这个文件夹不在了（路径变灰加删除线，下面一行） | 这个文件夹不在了，新开的终端会从主文件夹开始。 | This folder is gone. New terminals will start in your home folder. |
 | 开关 | 失焦时收起悬浮终端 | Hide floating terminal when you click away |
 | 开关说明 | 关掉后，切去别的窗口时终端还留在屏幕上。 | When off, the terminal stays on screen while you work in other windows. |
 | 外观 | 外观 | Appearance |
@@ -254,6 +262,8 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 | 开关说明 | 打开后，有新版本会自己来问你。关掉就只在点“检查更新”时查。 | When on, Gocast asks you when a new version is ready. When off, it only checks if you ask. |
 
 第一版外观只有“跟随系统”一项，需要时再加选项；不要显示一个只有一项的下拉框，用一行说明文字即可。
+预设的文件夹可以留空，留空就用这里的默认文件夹，所以原来那条「文件夹为空 / 请选择一个文件夹」的校验去掉。「默认文件夹」默认是主文件夹。不叫「工作区」也不叫「根目录」：预设那一栏一直就说「文件夹」，同一样东西不要两个名字；主文件夹就用「主文件夹」，和「找不到文件夹 {文件夹}，已在你的默认文件夹里打开」里的说法一致。这一项只管普通终端（⌃` 打开、⌘T 新开的），管不到已经开着的标签，也不改预设自己的文件夹。
+
 「打开时只显示搜索框」默认关。不叫「紧凑模式」：用户看不出「紧凑」紧的是什么，开关名直接说看到的样子。放在通用里哪一行以 design.md 为准。
 「悬浮终端」的分组说明放在标题下面、分组上面。宽度和高度两行共用同一句说明；拖边缘改大小写在分组说明里，不要分别写在宽度或高度下面。
 
@@ -594,7 +604,7 @@ English: Exchange rates come from [Frankfurter](https://frankfurter.dev), which 
 
 ## 给开发
 - 文案放进一个语言表（zh-Hans / en），跟系统语言走，不要写死在界面代码里。
-- “已改在你的主文件夹里打开”这条说明做兜底：预设文件夹丢了不要让终端打不开。
+- “已在你的默认文件夹里打开”这条说明做兜底：预设文件夹丢了不要让终端打不开。兜底去的是通用里那个默认文件夹，不是写死主文件夹。
 - ⌘Space 被聚焦搜索占用的提示只在第一次打开时出现；从系统设置切回来再查一次，空出来就换成 ⌘Space 并显示「已改用 ⌘Space」。点「就用 ⌥⇧Space」后默认改成它，不再提示。别的应用占着检测不到，不要用这组文案。
 
 ## 8. 签名和公证之后的安装说明（已验过，已写入新版 README）

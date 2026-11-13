@@ -58,6 +58,10 @@ type Settings struct {
 	// or dragging the panel's edges).
 	TerminalWidth  int `json:"terminalWidthPercent,omitempty"`
 	TerminalHeight int `json:"terminalHeightPercent,omitempty"`
+	// TerminalDir is the folder new plain terminals start in, and presets
+	// without a folder of their own, as the user reads it (~/Work); empty
+	// for the home folder.
+	TerminalDir string `json:"terminalDir,omitempty"`
 	// PlainTipDismissed: the tip over a plain terminal, closed for good.
 	PlainTipDismissed bool `json:"plainTerminalTipDismissed,omitempty"`
 	// SearchOnly: the search panel shows its search field alone as it

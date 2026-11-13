@@ -222,7 +222,7 @@
       }
     }
   },
-  "termFolderMissing": "Can’t find the folder {folder}. Opened in your home folder instead.",
+  "termFolderMissing": "Can’t find the folder {folder}. Opened in your default folder instead.",
   "@termFolderMissing": {
     "description": "Notice above the terminal when the preset's folder is missing.",
     "placeholders": {
@@ -326,6 +326,20 @@
   "@presetChoose": {
     "description": "Preset editor: picks the folder."
   },
+  "presetFolderDefault": "Default folder ({path})",
+  "@presetFolderDefault": {
+    "description": "Placeholder of a preset's empty folder field: it starts in the default folder of Settings (copy.md 4.3).",
+    "placeholders": {
+      "path": {
+        "type": "String",
+        "example": "~/Work"
+      }
+    }
+  },
+  "dialogChoose": "Choose",
+  "@dialogChoose": {
+    "description": "Confirm button of the system dialog that chooses a folder."
+  },
   "presetCommand": "Command",
   "@presetCommand": {
     "description": "Preset editor field."
@@ -398,10 +412,6 @@
       }
     }
   },
-  "presetFolderEmpty": "Choose a folder.",
-  "@presetFolderEmpty": {
-    "description": "Preset editor error."
-  },
   "generalLogin": "Open Gocast at login",
   "@generalLogin": {
     "description": "General: switch."
@@ -435,6 +445,22 @@
   "generalTerminalGroup": "Floating Terminal",
   "@generalTerminalGroup": {
     "description": "General: title over the floating terminal group."
+  },
+  "generalDefaultFolder": "Default folder",
+  "@generalDefaultFolder": {
+    "description": "Settings › General › Floating Terminal: the folder new terminals start in."
+  },
+  "generalDefaultFolderHome": "Home",
+  "@generalDefaultFolderHome": {
+    "description": "Value of Default folder when it is the home folder."
+  },
+  "generalDefaultFolderHint": "New terminals start here. Presets still use their own folder; if that one is gone, they start here instead.",
+  "@generalDefaultFolderHint": {
+    "description": "Description under Default folder."
+  },
+  "generalDefaultFolderMissing": "This folder is gone. New terminals will start in your home folder.",
+  "@generalDefaultFolderMissing": {
+    "description": "Description under Default folder, in warning color, when the folder is not there."
   },
   "generalFontSize": "Font size",
   "@generalFontSize": {

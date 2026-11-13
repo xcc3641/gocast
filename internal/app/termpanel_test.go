@@ -2,10 +2,12 @@ package app
 
 import (
 	"math"
+	"strings"
 	"testing"
 
 	"github.com/egoist/mygo"
 
+	"gocast/internal/presets"
 	"gocast/internal/settings"
 )
 
@@ -126,5 +128,26 @@ func TestDragSize(t *testing.T) {
 		if w != c.wantW || h != c.wantH {
 			t.Errorf("%s: dragSize = %d×%d, want %d×%d", c.name, w, h, c.wantW, c.wantH)
 		}
+	}
+}
+
+// Plain terminals and presets without a folder start in the default
+// folder of Settings; presets with one, in theirs (copy.md 4.3).
+func TestDefaultFolder(t *testing.T) {
+	home := presets.ExpandHome("~")
+	g := &gocast{}
+	if got := g.workDir(presets.Preset{}); got != home {
+		t.Errorf("unset: %q", got)
+	}
+	g.settings.TerminalDir = "~/Work"
+	if got, short := g.workDir(presets.Preset{}), g.shortDir(presets.Preset{}); got != home+"/Work" || short != "~/Work" {
+		t.Errorf("set: %q %q", got, short)
+	}
+	pr := presets.Preset{Dir: "/tmp"}
+	if got, short := g.workDir(pr), g.shortDir(pr); got != "/tmp" || short != "/tmp" {
+		t.Errorf("own folder: %q %q", got, short)
+	}
+	if got := g.presetSubtitle(presets.Preset{Command: "pi"}); !strings.Contains(got, "~/Work") {
+		t.Errorf("subtitle: %q", got)
 	}
 }

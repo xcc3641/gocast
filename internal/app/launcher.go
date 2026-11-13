@@ -500,7 +500,7 @@ func (l *launcher) itemRow(c *ui.Context, k tokens, item int, chosen bool) {
 	case e.app == nil:
 		tag = locales.SearchTagPreset()
 		if j := presets.Find(l.g.presets, e.preset); j >= 0 {
-			subtitle = presetSubtitle(l.g.presets[j])
+			subtitle = l.g.presetSubtitle(l.g.presets[j])
 		}
 	}
 	listRow(c, k, chosen, func() {
@@ -590,16 +590,16 @@ func (l *launcher) itemLabel(item int) string {
 		return s + hotkeySpoken(l.entryAccel(e))
 	}
 	if j := presets.Find(l.g.presets, e.preset); j >= 0 {
-		return presetLabel(l.g.presets[j]) + hotkeySpoken(l.entryAccel(e))
+		return l.g.presetLabel(l.g.presets[j]) + hotkeySpoken(l.entryAccel(e))
 	}
 	return it.Title + sep + locales.SearchTagPreset() + hotkeySpoken(l.entryAccel(e))
 }
 
 // presetLabel is what assistive technology reads of a preset's row:
 // "my-app · pi, Preset, ~/Projects/my-app".
-func presetLabel(p presets.Preset) string {
+func (g *gocast) presetLabel(p presets.Preset) string {
 	sep := listSep()
-	return presetTitle(p) + sep + locales.SearchTagPreset() + sep + p.ShortDir()
+	return presetTitle(p) + sep + locales.SearchTagPreset() + sep + g.shortDir(p)
 }
 
 func (l *launcher) noResults(c *ui.Context, k tokens) {
@@ -811,7 +811,7 @@ func (l *launcher) actions() []action {
 	return append(as, action{"folder", locales.ActionShowFolder(), nil, func() {
 		if j := presets.Find(l.g.presets, id); j >= 0 {
 			l.hide()
-			mygo.Shell.ShowItemInFolder(l.g.presets[j].WorkDir())
+			mygo.Shell.ShowItemInFolder(l.g.workDir(l.g.presets[j]))
 		}
 	}})
 }
@@ -1295,9 +1295,9 @@ func presetTitle(p presets.Preset) string {
 }
 
 // presetSubtitle says where and what a preset runs: "~/Projects/x · pi".
-func presetSubtitle(p presets.Preset) string {
+func (g *gocast) presetSubtitle(p presets.Preset) string {
 	if strings.TrimSpace(p.Command) == "" {
-		return locales.PresetSubtitleShell(p.ShortDir())
+		return locales.PresetSubtitleShell(g.shortDir(p))
 	}
-	return locales.PresetSubtitle(p.ShortDir(), p.Command)
+	return locales.PresetSubtitle(g.shortDir(p), p.Command)
 }

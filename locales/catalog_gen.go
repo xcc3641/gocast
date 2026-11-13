@@ -614,13 +614,13 @@ func (msgs Messages) TermCommandMissing(command string) string {
 	return Catalog.Format(msgs.locale, "termCommandMissing", map[string]any{"command": command})
 }
 
-// TermFolderMissing says "Can’t find the folder {folder}. Opened in your home folder instead."
+// TermFolderMissing says "Can’t find the folder {folder}. Opened in your default folder instead."
 // in the language the app shows.
 //
 // Notice above the terminal when the preset's folder is missing.
 func TermFolderMissing(folder string) string { return In(i18n.Locale()).TermFolderMissing(folder) }
 
-// TermFolderMissing says "Can’t find the folder {folder}. Opened in your home folder instead."
+// TermFolderMissing says "Can’t find the folder {folder}. Opened in your default folder instead."
 // in the language of msgs.
 //
 // Notice above the terminal when the preset's folder is missing.
@@ -936,6 +936,36 @@ func (msgs Messages) PresetChoose() string {
 	return Catalog.Format(msgs.locale, "presetChoose", nil)
 }
 
+// PresetFolderDefault says "Default folder ({path})"
+// in the language the app shows.
+//
+// Placeholder of a preset's empty folder field: it starts in the default
+// folder of Settings (copy.md 4.3).
+func PresetFolderDefault(path string) string { return In(i18n.Locale()).PresetFolderDefault(path) }
+
+// PresetFolderDefault says "Default folder ({path})"
+// in the language of msgs.
+//
+// Placeholder of a preset's empty folder field: it starts in the default
+// folder of Settings (copy.md 4.3).
+func (msgs Messages) PresetFolderDefault(path string) string {
+	return Catalog.Format(msgs.locale, "presetFolderDefault", map[string]any{"path": path})
+}
+
+// DialogChoose says "Choose"
+// in the language the app shows.
+//
+// Confirm button of the system dialog that chooses a folder.
+func DialogChoose() string { return In(i18n.Locale()).DialogChoose() }
+
+// DialogChoose says "Choose"
+// in the language of msgs.
+//
+// Confirm button of the system dialog that chooses a folder.
+func (msgs Messages) DialogChoose() string {
+	return Catalog.Format(msgs.locale, "dialogChoose", nil)
+}
+
 // PresetCommand says "Command"
 // in the language the app shows.
 //
@@ -1146,20 +1176,6 @@ func (msgs Messages) PresetNameTaken(name string) string {
 	return Catalog.Format(msgs.locale, "presetNameTaken", map[string]any{"name": name})
 }
 
-// PresetFolderEmpty says "Choose a folder."
-// in the language the app shows.
-//
-// Preset editor error.
-func PresetFolderEmpty() string { return In(i18n.Locale()).PresetFolderEmpty() }
-
-// PresetFolderEmpty says "Choose a folder."
-// in the language of msgs.
-//
-// Preset editor error.
-func (msgs Messages) PresetFolderEmpty() string {
-	return Catalog.Format(msgs.locale, "presetFolderEmpty", nil)
-}
-
 // GeneralLogin says "Open Gocast at login"
 // in the language the app shows.
 //
@@ -1264,6 +1280,66 @@ func GeneralTerminalGroup() string { return In(i18n.Locale()).GeneralTerminalGro
 // General: title over the floating terminal group.
 func (msgs Messages) GeneralTerminalGroup() string {
 	return Catalog.Format(msgs.locale, "generalTerminalGroup", nil)
+}
+
+// GeneralDefaultFolder says "Default folder"
+// in the language the app shows.
+//
+// Settings › General › Floating Terminal: the folder new terminals
+// start in.
+func GeneralDefaultFolder() string { return In(i18n.Locale()).GeneralDefaultFolder() }
+
+// GeneralDefaultFolder says "Default folder"
+// in the language of msgs.
+//
+// Settings › General › Floating Terminal: the folder new terminals
+// start in.
+func (msgs Messages) GeneralDefaultFolder() string {
+	return Catalog.Format(msgs.locale, "generalDefaultFolder", nil)
+}
+
+// GeneralDefaultFolderHome says "Home"
+// in the language the app shows.
+//
+// Value of Default folder when it is the home folder.
+func GeneralDefaultFolderHome() string { return In(i18n.Locale()).GeneralDefaultFolderHome() }
+
+// GeneralDefaultFolderHome says "Home"
+// in the language of msgs.
+//
+// Value of Default folder when it is the home folder.
+func (msgs Messages) GeneralDefaultFolderHome() string {
+	return Catalog.Format(msgs.locale, "generalDefaultFolderHome", nil)
+}
+
+// GeneralDefaultFolderHint says "New terminals start here. Presets still use their own folder; if that one is gone, they start here instead."
+// in the language the app shows.
+//
+// Description under Default folder.
+func GeneralDefaultFolderHint() string { return In(i18n.Locale()).GeneralDefaultFolderHint() }
+
+// GeneralDefaultFolderHint says "New terminals start here. Presets still use their own folder; if that one is gone, they start here instead."
+// in the language of msgs.
+//
+// Description under Default folder.
+func (msgs Messages) GeneralDefaultFolderHint() string {
+	return Catalog.Format(msgs.locale, "generalDefaultFolderHint", nil)
+}
+
+// GeneralDefaultFolderMissing says "This folder is gone. New terminals will start in your home folder."
+// in the language the app shows.
+//
+// Description under Default folder, in warning color, when the folder is
+// not there.
+func GeneralDefaultFolderMissing() string { return In(i18n.Locale()).GeneralDefaultFolderMissing() }
+
+// GeneralDefaultFolderMissing says "This folder is gone. New terminals will start in your home folder."
+// in the language of msgs.
+//
+// Description under Default folder, in warning color, when the folder is
+// not there.
+func (msgs Messages) GeneralDefaultFolderMissing() string {
+	return Catalog.Format(msgs.locale, "generalDefaultFolderMissing", nil)
 }
 
 // GeneralFontSize says "Font size"
