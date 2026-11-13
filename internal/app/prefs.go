@@ -282,6 +282,14 @@ func newGroup(c *ui.Context, k tokens, rows func(g *group)) {
 	ui.Column(c).Background(k.groupFill).Radius(10).Padding(0, 0, 0, 14).Margin(0, 0, 20, 0).Children(func() { rows(g) })
 }
 
+// newGroupNoted is a group with a note under it (12, textSecondary), 20
+// over what follows.
+func newGroupNoted(c *ui.Context, k tokens, note string, rows func(g *group)) {
+	g := &group{}
+	ui.Column(c).Background(k.groupFill).Radius(10).Padding(0, 0, 0, 14).Children(func() { rows(g) })
+	ui.Text(c, note).FontSize(12).TextColor(k.textSecondary).Margin(6, 14, 20, 14)
+}
+
 // groupDivider is the hairline between a group's rows, inset 14 from
 // both of the group's edges, as System Settings draws it (design.md 4.3):
 // the group pads 14 on the left, the divider keeps 14 on the right.
@@ -395,11 +403,59 @@ func (p *prefsWindow) spotlightSolved() {
 	p.win.Invalidate()
 }
 
-// --- Presets ---
+// --- Floating Terminal: the terminal, then its presets ---
+
+// terminalGroup is the floating terminal's own settings, over the
+// presets on their page, with the note on resizing under it (design.md
+// 4.4).
+func (p *prefsWindow) terminalGroup(c *ui.Context, k tokens) {
+	newGroupNoted(c, k, locales.GeneralTerminalGroupHint(), func(g *group) {
+		p.defaultFolderRow(c, k, g)
+		g.row(c, k, locales.GeneralFontSize(), "", k.textSecondary, func() {
+			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+				ui.Text(c, strconv.Itoa(int(p.fontSize))).FontSize(13).Font("monospace").TextColor(k.text)
+				if ui.Stepper(c, &p.fontSize, settings.MinFontSize, settings.MaxFontSize, 1).Label(locales.GeneralFontSize()).Changed() {
+					p.g.settings.FontSize = int(p.fontSize)
+					if p.g.settings.FontSize == settings.DefaultFontSize {
+						p.g.settings.FontSize = 0
+					}
+					p.g.saveSettings()
+					p.g.term.fontChanged()
+				}
+			})
+		})
+		sizeHint := locales.GeneralSizeHint()
+		g.row(c, k, locales.GeneralWidth(), sizeHint, k.textSecondary, func() {
+			// From the least the terminal is wide on its display; the
+			// width set shown no less, though kept until changed.
+			lo := settings.MinTermWidth(p.g.term.workAreaWidth())
+			p.termWidth = max(p.termWidth, float64(lo))
+			if p.percentSlider(c, k, locales.GeneralWidth(), &p.termWidth, lo, settings.MaxTerminalWidth) {
+				p.g.settings.TerminalWidth = int(p.termWidth)
+				p.g.saveSettings()
+				p.g.term.sizeChanged()
+			}
+		})
+		g.row(c, k, locales.GeneralHeight(), sizeHint, k.textSecondary, func() {
+			if p.percentSlider(c, k, locales.GeneralHeight(), &p.termHeight, settings.MinTerminalHeight, settings.MaxTerminalHeight) {
+				p.g.settings.TerminalHeight = int(p.termHeight)
+				p.g.saveSettings()
+				p.g.term.sizeChanged()
+			}
+		})
+		g.row(c, k, locales.GeneralHideOnBlur(), locales.GeneralHideOnBlurHint(), k.textSecondary, func() {
+			if ui.Switch(c, &p.hideBlur).Label(locales.GeneralHideOnBlur()).Changed() {
+				p.g.settings.KeepTerminalOnBlur = !p.hideBlur
+				p.g.saveSettings()
+			}
+		})
+	})
+}
 
 func (p *prefsWindow) presetsPage(c *ui.Context, k tokens) {
 	pageTitle(c, k, locales.PagePresets())
-	ui.Text(c, locales.PresetsIntro()).FontSize(12).TextColor(k.textSecondary).Margin(0, 0, 8, 0)
+	p.terminalGroup(c, k)
+	groupTitle(c, k, locales.PresetsGroup(), locales.PresetsIntro())
 	if len(p.g.presets) == 0 {
 		ui.Column(c).Height(160).Background(k.groupFill).Radius(10).Justify(ui.Center).AlignItems(ui.Center).Gap(6).Children(func() {
 			sfsymbols.Symbol(c, "apple.terminal").Size(28).Color(k.textSecondary)
@@ -658,48 +714,6 @@ func (p *prefsWindow) generalPage(c *ui.Context, k tokens) {
 		g.row(c, k, locales.GeneralCalculator(), locales.GeneralCalculatorHint(), k.textSecondary, func() {
 			if ui.Switch(c, &p.calculator).Label(locales.GeneralCalculator()).Changed() {
 				p.g.calc.setOn(p.calculator)
-			}
-		})
-	})
-	groupTitle(c, k, locales.GeneralTerminalGroup(), locales.GeneralTerminalGroupHint())
-	newGroup(c, k, func(g *group) {
-		p.defaultFolderRow(c, k, g)
-		g.row(c, k, locales.GeneralFontSize(), "", k.textSecondary, func() {
-			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-				ui.Text(c, strconv.Itoa(int(p.fontSize))).FontSize(13).Font("monospace").TextColor(k.text)
-				if ui.Stepper(c, &p.fontSize, settings.MinFontSize, settings.MaxFontSize, 1).Label(locales.GeneralFontSize()).Changed() {
-					p.g.settings.FontSize = int(p.fontSize)
-					if p.g.settings.FontSize == settings.DefaultFontSize {
-						p.g.settings.FontSize = 0
-					}
-					p.g.saveSettings()
-					p.g.term.fontChanged()
-				}
-			})
-		})
-		sizeHint := locales.GeneralSizeHint()
-		g.row(c, k, locales.GeneralWidth(), sizeHint, k.textSecondary, func() {
-			// From the least the terminal is wide on its display; the
-			// width set shown no less, though kept until changed.
-			lo := settings.MinTermWidth(p.g.term.workAreaWidth())
-			p.termWidth = max(p.termWidth, float64(lo))
-			if p.percentSlider(c, k, locales.GeneralWidth(), &p.termWidth, lo, settings.MaxTerminalWidth) {
-				p.g.settings.TerminalWidth = int(p.termWidth)
-				p.g.saveSettings()
-				p.g.term.sizeChanged()
-			}
-		})
-		g.row(c, k, locales.GeneralHeight(), sizeHint, k.textSecondary, func() {
-			if p.percentSlider(c, k, locales.GeneralHeight(), &p.termHeight, settings.MinTerminalHeight, settings.MaxTerminalHeight) {
-				p.g.settings.TerminalHeight = int(p.termHeight)
-				p.g.saveSettings()
-				p.g.term.sizeChanged()
-			}
-		})
-		g.row(c, k, locales.GeneralHideOnBlur(), locales.GeneralHideOnBlurHint(), k.textSecondary, func() {
-			if ui.Switch(c, &p.hideBlur).Label(locales.GeneralHideOnBlur()).Changed() {
-				p.g.settings.KeepTerminalOnBlur = !p.hideBlur
-				p.g.saveSettings()
 			}
 		})
 	})

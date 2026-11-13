@@ -558,7 +558,7 @@ func icnsBitmap(path string) *ui.Bitmap {
 
 func TestScreensDefaultFolder(t *testing.T) {
 	dir := screensDir(t)
-	full := image.Rect(0, 0, prefsWidth, prefsHeight)
+	whole := image.Rect(0, 0, prefsWidth, 4000) // the frame, whatever its height
 	defer func(f func(string) bool) { isDir = f }(isDir)
 	for _, dark := range []bool{false, true} {
 		mode := "light"
@@ -572,7 +572,7 @@ func TestScreensDefaultFolder(t *testing.T) {
 			if p.g.term == nil { // the size sliders' range
 				p.g.term = &termPanel{g: p.g, shown: true, wa: mygo.Rectangle{Width: 1512, Height: 944}}
 			}
-			p.page = pageGeneral
+			p.page = pagePresets
 			st := p.g.settings
 			p.autoUpdate, p.calculator, p.hideBlur = st.AutoUpdates(), st.Calculator(), !st.KeepTerminalOnBlur
 			p.fontSize, p.termHeight = float64(st.Font()), float64(st.TermHeight())
@@ -584,14 +584,29 @@ func TestScreensDefaultFolder(t *testing.T) {
 				setup(p, tt)
 			}
 			tt.Frame()
-			saveScreen(t, tt, dir, name+"-"+mode, full)
+			saveScreen(t, tt, dir, name+"-"+mode, whole)
 		}
 		shot("df-home", "", true, nil)
 		shot("df-set", "~/Work", true, nil)
 		shot("df-gone", "~/Work", false, nil)
 		shot("df-preset", "~/Work", true, func(p *prefsWindow, tt *ui.Tester) {
-			p.page = pagePresets
 			p.editID, p.draft, p.editing = "", presets.Preset{Name: "pi", Command: "pi"}, true
 		})
+		// The Floating Terminal page whole, in a window tall enough not
+		// to scroll: with presets, and with none (design.md 4.4).
+		const tall = 700
+		shot("ft-full", "~/Work", true, func(p *prefsWindow, tt *ui.Tester) {
+			p.g.presets = []presets.Preset{
+				{ID: "a", Name: "pi", Dir: "~/Work/gocast", Command: "pi", Default: true},
+				{ID: "b", Name: "服务器", Dir: "~/Work/site", Command: "npm run dev"},
+				{ID: "c", Name: "日志", Command: "tail -f /var/log/system.log"},
+			}
+			tt.SetSize(prefsWidth, tall)
+		})
+		shot("ft-empty", "", true, func(p *prefsWindow, tt *ui.Tester) {
+			p.g.presets = nil
+			tt.SetSize(prefsWidth, tall)
+		})
+		shot("general", "", true, func(p *prefsWindow, tt *ui.Tester) { p.page = pageGeneral })
 	}
 }

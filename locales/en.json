@@ -248,7 +248,7 @@
   "@pageShortcuts": {
     "description": "Settings sidebar."
   },
-  "pagePresets": "Terminal Presets",
+  "pagePresets": "Floating Terminal",
   "@pagePresets": {
     "description": "Settings sidebar."
   },
@@ -293,6 +293,10 @@
         "example": "Open search panel"
       }
     }
+  },
+  "presetsGroup": "Presets",
+  "@presetsGroup": {
+    "description": "Settings › Floating Terminal: title of the presets group, under the terminal's settings."
   },
   "presetsIntro": "A preset remembers which command to run in which folder. Type its name in the search panel to open it.",
   "@presetsIntro": {
@@ -441,10 +445,6 @@
   "generalAutoUpdateHint": "Gocast downloads new versions in the background and switches to them next time it opens. Turn this off to check only when you click Check for Updates.",
   "@generalAutoUpdateHint": {
     "description": "Settings › General: note under Check for updates automatically (copy.md 12.3)."
-  },
-  "generalTerminalGroup": "Floating Terminal",
-  "@generalTerminalGroup": {
-    "description": "General: title over the floating terminal group."
   },
   "generalDefaultFolder": "Default folder",
   "@generalDefaultFolder": {

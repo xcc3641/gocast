@@ -684,13 +684,13 @@ func (msgs Messages) PageShortcuts() string {
 	return Catalog.Format(msgs.locale, "pageShortcuts", nil)
 }
 
-// PagePresets says "Terminal Presets"
+// PagePresets says "Floating Terminal"
 // in the language the app shows.
 //
 // Settings sidebar.
 func PagePresets() string { return In(i18n.Locale()).PagePresets() }
 
-// PagePresets says "Terminal Presets"
+// PagePresets says "Floating Terminal"
 // in the language of msgs.
 //
 // Settings sidebar.
@@ -822,6 +822,22 @@ func ShortcutUsedFor(other string) string { return In(i18n.Locale()).ShortcutUse
 // Shortcuts: the other row has it.
 func (msgs Messages) ShortcutUsedFor(other string) string {
 	return Catalog.Format(msgs.locale, "shortcutUsedFor", map[string]any{"other": other})
+}
+
+// PresetsGroup says "Presets"
+// in the language the app shows.
+//
+// Settings › Floating Terminal: title of the presets group, under the
+// terminal's settings.
+func PresetsGroup() string { return In(i18n.Locale()).PresetsGroup() }
+
+// PresetsGroup says "Presets"
+// in the language of msgs.
+//
+// Settings › Floating Terminal: title of the presets group, under the
+// terminal's settings.
+func (msgs Messages) PresetsGroup() string {
+	return Catalog.Format(msgs.locale, "presetsGroup", nil)
 }
 
 // PresetsIntro says "A preset remembers which command to run in which folder. Type its name in the search panel to open it."
@@ -1266,20 +1282,6 @@ func GeneralAutoUpdateHint() string { return In(i18n.Locale()).GeneralAutoUpdate
 // 12.3).
 func (msgs Messages) GeneralAutoUpdateHint() string {
 	return Catalog.Format(msgs.locale, "generalAutoUpdateHint", nil)
-}
-
-// GeneralTerminalGroup says "Floating Terminal"
-// in the language the app shows.
-//
-// General: title over the floating terminal group.
-func GeneralTerminalGroup() string { return In(i18n.Locale()).GeneralTerminalGroup() }
-
-// GeneralTerminalGroup says "Floating Terminal"
-// in the language of msgs.
-//
-// General: title over the floating terminal group.
-func (msgs Messages) GeneralTerminalGroup() string {
-	return Catalog.Format(msgs.locale, "generalTerminalGroup", nil)
 }
 
 // GeneralDefaultFolder says "Default folder"
