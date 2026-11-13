@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 )
 
@@ -72,11 +73,11 @@ func TestEnv(t *testing.T) {
 }
 
 func TestArgv(t *testing.T) {
-	if got := (Preset{}).Argv("/bin/zsh"); got != nil {
+	if got := (Preset{}).Argv("/bin/zsh", After{}); got != nil {
 		t.Errorf("empty command: %q", got)
 	}
-	got := Preset{Command: "pi --continue"}.Argv("/bin/zsh")
-	if !slices.Equal(got, []string{"/bin/zsh", "-lic", "pi --continue"}) {
+	got := Preset{Command: "pi --continue # x"}.Argv("/bin/zsh", After{})
+	if len(got) != 3 || got[0] != "/bin/zsh" || got[1] != "-lic" || !strings.HasPrefix(got[2], "pi --continue # x\n") || !strings.HasSuffix(got[2], "\nexec /bin/zsh -li") {
 		t.Errorf("argv: %q", got)
 	}
 	env := Preset{Env: map[string]string{"B": "2", "A": "1"}}.Environ()

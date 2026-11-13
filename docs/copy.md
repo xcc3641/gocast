@@ -1,4 +1,6 @@
-# Gocast 界面文案 v1.22（搜索面板 · 悬浮终端 · 设置）
+# Gocast 界面文案 v1.23（搜索面板 · 悬浮终端 · 设置）
+
+v1.23 改动：预设的命令结束后，标签直接变回普通终端（第 3 节）。原来的「命令已结束」大提示、「重新运行」「关闭标签」两个按钮都不要了；成功就什么都不留，失败只留一行暗色字。
 
 v1.22 改动：剪贴板里「只有一个文件、而且是图片」这种（CleanShot 截图后拷贝就是这种）补上 6.2 / 6.3 / 6.10 三处用词。它仍算文件，不算图片：粘贴出去的是文件，按文件类型筛才找得到。行和预览显示缩略图。
 
@@ -162,16 +164,15 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 | 新标签菜单底部 | 普通终端 | Plain terminal |
 | 关闭标签（提示） | 关闭标签（⌘W） | Close tab (⌘W) |
 | 收起（提示） | 收起（再按 {快捷键} 回来） | Hide (press {shortcut} to come back) |
-| 命令结束提示 | 命令已结束（退出码 {code}） | Command finished (exit code {code}) |
-| 命令结束按钮 | 重新运行 | Run Again |
-| 命令结束次按钮 | 关闭标签 | Close Tab |
-| 命令不存在 | 找不到命令“{命令}”。请检查这个预设里的命令是否写对。 | Can’t find the command “{command}”. Check the command in this preset. |
-| 命令不存在时的主按钮 | 编辑预设 | Edit Preset |
-| 命令不存在时的次按钮 | 关闭标签 | Close Tab |
+| 命令正常结束（退出码 0，以及 130 被 ⌃C 打断、143 被结束） | 什么都不留。标签当场变回普通终端，就在预设那个文件夹里，接着敲命令；标签标题同时从预设名改成「终端」 | Nothing. The tab turns into a plain terminal in the preset’s folder, and its title goes from the preset’s name to “Terminal” |
+| 其他退出码（只有这种情况留字，一行暗色，不加按钮、不能点掉） | {预设名} 已结束（退出码 {code}） | {preset} finished (exit code {code}) |
+| 命令找不到（同样只留一行暗色，不要按钮） | 找不到命令“{命令}”。检查一下这个预设里的命令，也可以直接在这里接着敲。 | Can’t find the command “{command}”. Check it in this preset, or just keep typing here. |
 | 文件夹不存在 | 找不到文件夹 {文件夹}，已改在你的主文件夹里打开。 | Can’t find the folder {folder}. Opened in your home folder instead. |
 | 首次打开、没有预设时（终端上方一行，可关闭） | 这是一个普通终端。想一键在某个文件夹里运行命令，去设置里添加预设。 | This is a plain terminal. To run a command in a folder with one key, add a preset in Settings. |
 | 上面那行的按钮 | 添加预设 | Add Preset |
 | 提示胶囊右上的 ×（读屏） | 关闭 | Dismiss |
+
+说明：命令结束以后这个标签就是普通终端了：⌘W 关掉、⌘T 另开、接着敲命令都跟普通标签一样，不再有「重新运行」。成功的时候一个字都不留，因为普通终端也不会说「上一条跑完了」；失败才值得说一句，退出码一过就找不回来了，所以那一行要带上。130（自己按 ⌃C）和 143（被别人结束）也算正常，不留字：那不是出错，说「退出码 130」只是噪音。别用「完成」「运行结束」这类词，「已结束」最短也最像人在说话。
 
 说明：收起不结束命令，所以"收起"的提示里不用"关闭"二字；"关闭标签"才会结束它。提示胶囊上的 × 只关这条提示，读屏用「关闭」，不要写「收起」或「关闭标签」。
 
@@ -588,7 +589,7 @@ English: Exchange rates come from [Frankfurter](https://frankfurter.dev), which 
 
 ## 给设计
 - 搜索面板里一行最多放：图标、名称、右侧标记；预设行和同名应用行多一段副标题，副标题过长从中间省略（保留文件夹最后一段和命令开头）。
-- “退出码”只在非 0 时显示；退出码 0 时只写“命令已结束”。
+- 命令结束时：成功什么都不画；失败画一行暗色「{预设名} 已结束（退出码 {code}）」，和终端里跑完一条命令的输出排在一起，不加底色、不加按钮。
 - 全部文案要同时能放进英文，英文通常更长 20% 左右，别把按钮宽度卡死。
 
 ## 给开发

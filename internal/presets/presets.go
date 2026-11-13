@@ -164,12 +164,74 @@ func (p Preset) WorkDir() string {
 
 // Argv is the program to run for the preset, through shell: nil (the
 // terminal's login shell) without a command, else shell -lic command.
-func (p Preset) Argv(shell string) []string {
+func (p Preset) Argv(shell string, after After) []string {
 	cmd := strings.TrimSpace(p.Command)
 	if cmd == "" {
 		return nil
 	}
-	return []string{shell, "-lic", cmd}
+	return []string{shell, "-lic", cmd + "\n" + after.script(shell)}
+}
+
+// After is what the shell does once a preset's command ends, by itself or
+// with ⌃C (design.md 3.6): says, in the terminal's dim grey (ANSI 90) on a
+// line of its own, that it failed (Failed, around its exit code) or was
+// not found (Missing); nothing when it ended with 0, 130 (⌃C) or 143
+// (ended); sets the title Ended, which tells Gocast; and goes on as the
+// user's shell, a plain terminal in the preset's folder.
+type After struct {
+	Failed  [2]string
+	Missing string
+	Ended   string
+}
+
+// AfterTitle is the title After sets once the command ends: the shell
+// says so through the terminal's title (OSC 2), the one channel there is.
+const AfterTitle = "gocast:command-ended"
+
+// script is After in the language of shell: fish, or a POSIX shell. It
+// starts on a line of its own, so a comment at the end of the command
+// does not swallow it.
+func (a After) script(shell string) string {
+	q := shellQuote
+	// A line of its own: at the start of the line, a line's width less one
+	// of spaces stays on it and is wiped; past it, they wrap to a new one.
+	line := func(code string) string {
+		return `printf '%*s\r\033[K\033[90m%s\033[0m\n' "$__gocast_w" '' ` + code
+	}
+	if filepath.Base(shell) == "fish" {
+		return strings.Join([]string{
+			`set -l __gocast_s $status`,
+			`set -l __gocast_w (math (tput cols 2>/dev/null; or echo 80) - 1)`,
+			`switch $__gocast_s`,
+			`case 0 130 143`,
+			`case 127`,
+			"\t" + strings.ReplaceAll(line(q(a.Missing)), `"$__gocast_w"`, `$__gocast_w`),
+			`case '*'`,
+			"\t" + strings.ReplaceAll(line(`(printf '%s%s%s' `+q(a.Failed[0])+` $__gocast_s `+q(a.Failed[1])+`)`), `"$__gocast_w"`, `$__gocast_w`),
+			`end`,
+			`printf '\033]2;%s\007' ` + q(a.Ended),
+			`exec ` + q(shell) + ` -li`,
+		}, "\n")
+	}
+	return strings.Join([]string{
+		`__gocast_s=$?`,
+		`__gocast_w=$(( ${COLUMNS:-$(tput cols 2>/dev/null || echo 80)} - 1 ))`,
+		`case $__gocast_s in`,
+		`0|130|143) ;;`,
+		`127) ` + line(q(a.Missing)) + ` ;;`,
+		`*) ` + line(`"$(printf '%s%s%s' `+q(a.Failed[0])+` "$__gocast_s" `+q(a.Failed[1])+`)"`) + ` ;;`,
+		`esac`,
+		`printf '\033]2;%s\007' ` + q(a.Ended),
+		`exec ` + q(shell) + ` -li`,
+	}, "\n")
+}
+
+// shellQuote is s quoted for a POSIX shell and fish.
+func shellQuote(s string) string {
+	if s != "" && strings.Trim(s, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/._-") == "" {
+		return s
+	}
+	return "'" + strings.ReplaceAll(s, "'", `'"'"'`) + "'"
 }
 
 // Environ is Env as KEY=value pairs, sorted by key.

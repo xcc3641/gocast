@@ -66,12 +66,13 @@ type session struct {
 	failure    string // the terminal could not start
 	fontSize   float32
 	announced  bool // the banner or end bar was read out
+	done       bool // its command ended: a plain terminal now (design.md 3.6)
 }
 
 func (s *session) plain() bool { return s.presetID == "" }
 
 func (s *session) title() string {
-	if s.plain() {
+	if s.plain() || s.done {
 		return locales.TermTabDefault()
 	}
 	return presetTitle(s.preset)
@@ -594,12 +595,12 @@ func (p *termPanel) start(s *session) {
 		s.missingDir = pr.ShortDir()
 		dir = presets.ExpandHome("~")
 	}
-	s.exited, s.exitCode = false, 0
+	s.exited, s.exitCode, s.done = false, 0, false
 	s.ranCommand = strings.TrimSpace(pr.Command)
 	s.gen++
 	var term *terminal.Terminal
 	opts := terminal.Options{
-		Command: pr.Argv(presets.UserShell()),
+		Command: pr.Argv(presets.UserShell(), afterCommand(pr)),
 		Dir:     dir,
 		Env:     pr.Environ(),
 		Font:    termFont(s.fontSize),
@@ -620,12 +621,27 @@ func (p *termPanel) start(s *session) {
 		// Kitty clipboard protocol, mode 5522); an image alone pastes an
 		// empty bracketed paste, which Claude Code takes as its cue. Both
 		// are the plugin's defaults: reads outside a paste stay refused.
+		// The preset's command ended and its shell goes on as a plain
+		// terminal (presets.After).
+		OnTitle: func(title string) {
+			if title != presets.AfterTitle {
+				return
+			}
+			p.win.Update(func() {
+				if s.term == term {
+					s.done = true
+				}
+			})
+		},
 		OnExit: func(code int) {
 			p.win.Update(func() {
 				if s.term != term {
 					return
 				}
-				if s.plain() || s.ranCommand == "" {
+				// A shell exited, as in every terminal app; a preset's
+				// before its command was through (as with exit in it)
+				// still says so.
+				if s.plain() || s.ranCommand == "" || s.done {
 					p.closeTab(s) // the shell exited, as in every terminal app
 					return
 				}
@@ -973,4 +989,15 @@ func cubicBezier(x1, y1, x2, y2, x float64) float64 {
 		}
 	}
 	return b(y1, y2, (lo+hi)/2)
+}
+
+// afterCommand is what the shell of the preset pr says and does once its
+// command ends (design.md 3.6, copy.md 3).
+func afterCommand(pr presets.Preset) presets.After {
+	before, after, _ := strings.Cut(locales.TermEndedCode(presetTitle(pr), "\x00"), "\x00")
+	return presets.After{
+		Failed:  [2]string{before, after},
+		Missing: locales.TermCommandMissing(strings.TrimSpace(pr.Command)),
+		Ended:   presets.AfterTitle,
+	}
 }

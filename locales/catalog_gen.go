@@ -622,6 +622,26 @@ func (msgs Messages) TermFinishedCode(code int) string {
 	return Catalog.Format(msgs.locale, "termFinishedCode", map[string]any{"code": code})
 }
 
+// TermEndedCode says "{name} finished (exit code {code})"
+// in the language the app shows.
+//
+// A dim line in the terminal when a preset's command ended with an exit
+// code other than 0, 130 or 143; the tab goes on as a plain terminal
+// (design.md 3.6).
+func TermEndedCode(name string, code string) string {
+	return In(i18n.Locale()).TermEndedCode(name, code)
+}
+
+// TermEndedCode says "{name} finished (exit code {code})"
+// in the language of msgs.
+//
+// A dim line in the terminal when a preset's command ended with an exit
+// code other than 0, 130 or 143; the tab goes on as a plain terminal
+// (design.md 3.6).
+func (msgs Messages) TermEndedCode(name string, code string) string {
+	return Catalog.Format(msgs.locale, "termEndedCode", map[string]any{"name": name, "code": code})
+}
+
 // TermRunAgain says "Run Again"
 // in the language the app shows.
 //
@@ -650,16 +670,18 @@ func (msgs Messages) TermCloseTab() string {
 	return Catalog.Format(msgs.locale, "termCloseTab", nil)
 }
 
-// TermCommandMissing says "Can’t find the command “{command}”. Check the command in this preset."
+// TermCommandMissing says "Can’t find the command “{command}”. Check it in this preset, or just keep typing here."
 // in the language the app shows.
 //
-// When the preset's command is not found (exit code 127).
+// A dim line in the terminal when the preset's command is not found (exit
+// code 127); the tab goes on as a plain terminal (design.md 3.6).
 func TermCommandMissing(command string) string { return In(i18n.Locale()).TermCommandMissing(command) }
 
-// TermCommandMissing says "Can’t find the command “{command}”. Check the command in this preset."
+// TermCommandMissing says "Can’t find the command “{command}”. Check it in this preset, or just keep typing here."
 // in the language of msgs.
 //
-// When the preset's command is not found (exit code 127).
+// A dim line in the terminal when the preset's command is not found (exit
+// code 127); the tab goes on as a plain terminal (design.md 3.6).
 func (msgs Messages) TermCommandMissing(command string) string {
 	return Catalog.Format(msgs.locale, "termCommandMissing", map[string]any{"command": command})
 }

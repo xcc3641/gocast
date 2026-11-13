@@ -216,6 +216,20 @@
       }
     }
   },
+  "termEndedCode": "{name} finished (exit code {code})",
+  "@termEndedCode": {
+    "description": "A dim line in the terminal when a preset's command ended with an exit code other than 0, 130 or 143; the tab goes on as a plain terminal (design.md 3.6).",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "pi"
+      },
+      "code": {
+        "type": "String",
+        "example": "1"
+      }
+    }
+  },
   "termRunAgain": "Run Again",
   "@termRunAgain": {
     "description": "Button of the finished bar (Enter presses it)."
@@ -224,9 +238,9 @@
   "@termCloseTab": {
     "description": "Secondary button of the finished bar."
   },
-  "termCommandMissing": "Can’t find the command “{command}”. Check the command in this preset.",
+  "termCommandMissing": "Can’t find the command “{command}”. Check it in this preset, or just keep typing here.",
   "@termCommandMissing": {
-    "description": "When the preset's command is not found (exit code 127).",
+    "description": "A dim line in the terminal when the preset's command is not found (exit code 127); the tab goes on as a plain terminal (design.md 3.6).",
     "placeholders": {
       "command": {
         "type": "String",
