@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Writes the Gocast site's six static pages into web/dist/.
 
-    python3 web-src/build.py
+    python3 website/build.py
 
 Hand-edited copy lives in COPY below (English and Simplified Chinese).
 Wording follows README.md / README.zh-Hans.md and docs/copy.md.
@@ -9,7 +9,7 @@ No build step is needed to deploy: the output is plain HTML committed in dist/.
 """
 import os
 
-HERE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "web")
+HERE = os.path.dirname(os.path.abspath(__file__))
 DIST = os.path.join(HERE, "dist")
 REPO = "https://github.com/xcc3641/gocast"
 DMG = REPO + "/releases/latest"
@@ -242,9 +242,28 @@ def write(rel, html):
         f.write(html)
 
 
+NOT_FOUND = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Not found · Gocast</title>
+<link rel="icon" href="{ICON}" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body>
+<main class="page">
+<h1>Page not found</h1>
+<p class="lede">There’s nothing here. <a href="/">Go to Gocast</a> · <a href="/zh/">前往 Gocast 中文页</a></p>
+</main>
+</body>
+</html>
+"""
+
 for key, c in COPY.items():
     base = "" if key == "en" else "zh/"
     write(base + "index.html", landing(c))
     write(base + "support/index.html", support(c))
     write(base + "privacy/index.html", privacy(c))
+write("404.html", NOT_FOUND.replace("{ICON}", ICON_SVG))
 print("wrote", DIST)
