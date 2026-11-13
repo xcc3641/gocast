@@ -91,14 +91,50 @@ func Glyphs(accel string) string {
 // key (F1–F12), alone or with modifiers. ok is false for any other key, or
 // a modifier pressed alone.
 func FromKey(mods ui.Modifiers, key ui.Key) (accel string, ok bool) {
-	name := keyName(key)
+	return FromEvent(ui.InputEvent{Kind: ui.InputKeyDown, Mods: mods, Key: key})
+}
+
+// FromEvent is FromKey for a key event, which also names F13–F19 (by
+// their codes: they have no Key).
+func FromEvent(ev ui.InputEvent) (accel string, ok bool) {
+	pressed := Pressed(ev)
+	if pressed == "" {
+		return "", false
+	}
+	mods, key, _ := parse(pressed)
+	if !recordable(mods, fnKey(key) > 0) {
+		return "", false
+	}
+	return pressed, true
+}
+
+// Pressed spells the key of a key event with its modifiers, whatever they
+// are ("Shift+S", which the recorder refuses), for the recorder to show
+// it; "" for a modifier alone or a key it has no name for.
+func Pressed(ev ui.InputEvent) string {
+	name := keyName(ev.Key)
+	if name == "" && ev.Code >= ui.CodeF13 && ev.Code <= ui.CodeF19 {
+		name = "F" + strconv.Itoa(int(ev.Code-ui.CodeF13)+13)
+	}
 	if name == "" {
-		return "", false
+		return ""
 	}
-	if !recordable(mods, key >= ui.KeyF1 && key <= ui.KeyF12) {
-		return "", false
+	return spell(ev.Mods, name)
+}
+
+// ModifierCaps are the keycaps of modifiers held, in macOS's order, as the
+// recorder shows them before the key comes.
+func ModifierCaps(mods ui.Modifiers) []string {
+	var caps []string
+	for _, m := range []struct {
+		mod ui.Modifiers
+		cap string
+	}{{ui.Ctrl, "⌃"}, {ui.Alt, "⌥"}, {ui.Shift, "⇧"}, {ui.Super, "⌘"}} {
+		if mods&m.mod != 0 {
+			caps = append(caps, m.cap)
+		}
 	}
-	return spell(mods, name), true
+	return caps
 }
 
 func keyName(k ui.Key) string {

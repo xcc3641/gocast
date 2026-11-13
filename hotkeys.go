@@ -18,7 +18,17 @@ import (
 	"gocast/internal/running"
 	"gocast/internal/settings"
 	"gocast/internal/shortcut"
+	"gocast/locales"
 )
+
+// shortcutRegistry registers global shortcuts: MyGo's, which needs the
+// app running, and a fake in tests.
+type shortcutRegistry interface {
+	Register(accel string, fn func()) error
+	Unregister(accel string)
+}
+
+var globalShortcuts shortcutRegistry = mygo.GlobalShortcut
 
 // hotkeyState is how the hotkey of an app or preset stands, for Settings
 // and the search panel to say (gocast.hotkeyStates).
@@ -88,6 +98,71 @@ func (g *gocast) removePresetHotkey(id string) {
 func (g *gocast) hotkeyStatus(h settings.Hotkey) (state hotkeyState, ok bool) {
 	state, ok = g.hotkeyStates[h]
 	return state, ok
+}
+
+// hotkeyItem is an app or preset that may have a hotkey, as a list of
+// them shows it.
+type hotkeyItem struct {
+	item  settings.Hotkey
+	name  string
+	app   *mygo.InstalledApp // nil for a preset, or an app not installed
+	accel string             // its hotkey, "" for none
+	state hotkeyState        // how accel stands
+}
+
+// hotkeyItems are all the items that may have a hotkey: the presets, the
+// apps the search panel knows, and the apps not installed that have one.
+// Cheap enough to call as a list shows (the settings' maps, no lookups
+// but for the names of apps not installed).
+func (g *gocast) hotkeyItems() []hotkeyItem {
+	items := make([]hotkeyItem, 0, len(g.presets)+len(g.launcher.apps))
+	add := func(h settings.Hotkey, name string, app *mygo.InstalledApp) {
+		it := hotkeyItem{item: h, name: name, app: app, accel: g.settings.Hotkey(h)}
+		it.state = g.hotkeyStates[h]
+		items = append(items, it)
+	}
+	for _, p := range g.presets {
+		add(settings.Hotkey{Preset: p.ID}, presetTitle(p), nil)
+	}
+	known := make(map[string]bool, len(g.launcher.apps))
+	for i := range g.launcher.apps {
+		a := &g.launcher.apps[i]
+		known[a.ID] = true
+		add(settings.Hotkey{App: a.ID}, a.Name, a)
+	}
+	for _, h := range g.settings.Hotkeys() {
+		if h.App != "" && !known[h.App] {
+			add(h, g.hotkeyLabel(h), nil)
+		}
+	}
+	return items
+}
+
+// hotkeyProblem is what the recorder says of a hotkey refused (copy.md
+// 11.2): a conflict names the other, by its row's label or its name.
+func (g *gocast) hotkeyProblem(err error) string {
+	var ce *hotkeyConflictError
+	switch {
+	case errors.As(err, &ce) && ce.owner.row > 0:
+		return locales.ShortcutUsedFor(shortcutLabel(ce.owner.row))
+	case errors.As(err, &ce):
+		return locales.ShortcutUsedFor(g.hotkeyLabel(ce.owner.item))
+	case errors.Is(err, errShortcutTaken):
+		return locales.HotkeyInUse()
+	}
+	return locales.HotkeyNeedsModifier()
+}
+
+// shortcutLabel is the label of the row of one of Gocast's own
+// shortcuts, 1 to 3.
+func shortcutLabel(row int) string {
+	switch row {
+	case 1:
+		return locales.ShortcutLauncher()
+	case 2:
+		return locales.ShortcutTerminal()
+	}
+	return locales.ShortcutClipboard()
 }
 
 // hotkeyLabel names the app or preset of h, as a conflict says it: the
@@ -185,7 +260,7 @@ func (g *gocast) registerHotkey(h settings.Hotkey) hotkeyState {
 		log.Printf("hotkey %v: %s is another's", h, n)
 		return hotkeyConflict
 	}
-	if err := mygo.GlobalShortcut.Register(n, g.hotkeyFunc(h)); err != nil {
+	if err := globalShortcuts.Register(n, g.hotkeyFunc(h)); err != nil {
 		log.Printf("hotkey %v: %s: %v", h, n, err)
 		return hotkeyTaken
 	}
@@ -216,7 +291,7 @@ func (g *gocast) hotkeyFunc(h settings.Hotkey) func() {
 func (g *gocast) unregisterHotkey(h settings.Hotkey) {
 	if k, ok := g.hotkeys[h]; ok {
 		if !g.suspended { // suspended, it is not registered now
-			mygo.GlobalShortcut.Unregister(k)
+			globalShortcuts.Unregister(k)
 		}
 		delete(g.hotkeys, h)
 	}
@@ -229,7 +304,7 @@ func (g *gocast) suspendHotkeys() {
 		return
 	}
 	for _, k := range g.hotkeys {
-		mygo.GlobalShortcut.Unregister(k)
+		globalShortcuts.Unregister(k)
 	}
 	g.suspended = true
 }
@@ -240,7 +315,7 @@ func (g *gocast) resumeHotkeys() {
 	}
 	g.suspended = false
 	for h, k := range g.hotkeys {
-		if err := mygo.GlobalShortcut.Register(k, g.hotkeyFunc(h)); err != nil {
+		if err := globalShortcuts.Register(k, g.hotkeyFunc(h)); err != nil {
 			// Another app took it meanwhile, or ⌥⇧Space came back for
 			// ⌘Space (keepFallback).
 			log.Printf("hotkey %v: %s: %v", h, k, err)
@@ -251,14 +326,15 @@ func (g *gocast) resumeHotkeys() {
 }
 
 // setHotkey makes accel h's hotkey: see setAppHotkey. It resumes the
-// shortcuts if a recorder suspended them.
+// shortcuts if a recorder suspended them, unless accel is refused before
+// it is tried (errHotkeyInvalid, a conflict): the recorder goes on then.
 func (g *gocast) setHotkey(h settings.Hotkey, accel string) error {
-	if g.suspended {
-		g.resumeShortcuts()
-	}
 	n, err := checkHotkey(h, accel, g.ownShortcuts(), g.settings)
 	if err != nil {
 		return err
+	}
+	if g.suspended {
+		g.resumeShortcuts()
 	}
 	old, had := g.hotkeys[h]
 	if had && old == n {
@@ -268,15 +344,9 @@ func (g *gocast) setHotkey(h settings.Hotkey, accel string) error {
 	g.unregisterHotkey(h)
 	state := hotkeyMissing
 	if installed {
-		if err := mygo.GlobalShortcut.Register(n, g.hotkeyFunc(h)); err != nil {
+		if err := globalShortcuts.Register(n, g.hotkeyFunc(h)); err != nil {
 			log.Printf("hotkey %v: %s: %v", h, n, err)
-			if had { // the old one back
-				if mygo.GlobalShortcut.Register(old, g.hotkeyFunc(h)) == nil {
-					g.hotkeys[h] = old
-				} else {
-					g.hotkeyStates[h] = hotkeyTaken
-				}
-			}
+			g.reregister(h, old, had) // the old one back
 			return errShortcutTaken
 		}
 		g.hotkeys[h] = n
@@ -286,6 +356,80 @@ func (g *gocast) setHotkey(h settings.Hotkey, accel string) error {
 	g.settings.SetHotkey(h, n)
 	g.saveSettings()
 	return nil
+}
+
+// moveHotkey gives to the hotkey of from, another app's or preset's (not
+// Gocast's own, which can't be taken), in one step: from loses it, and
+// to's own, if it had one, is let go. When the system refuses it for to
+// (errShortcutTaken), both keep what they had.
+func (g *gocast) moveHotkey(from, to settings.Hotkey) error {
+	accel, ok := shortcut.Normalize(g.settings.Hotkey(from))
+	switch {
+	case !ok || from == to:
+		return errHotkeyInvalid
+	case to.Preset != "" && presets.Find(g.presets, to.Preset) < 0:
+		return errNoPreset
+	}
+	if g.suspended {
+		g.resumeShortcuts()
+	}
+	fromKey, fromOn := g.hotkeys[from]
+	toKey, toOn := g.hotkeys[to]
+	g.unregisterHotkey(from)
+	g.unregisterHotkey(to)
+	state := hotkeyMissing
+	if to.App == "" || running.AppPath(to.App) != "" {
+		if err := globalShortcuts.Register(accel, g.hotkeyFunc(to)); err != nil {
+			log.Printf("hotkey %v: %s: %v", to, accel, err)
+			g.reregister(from, fromKey, fromOn)
+			g.reregister(to, toKey, toOn)
+			return errShortcutTaken
+		}
+		g.hotkeys[to] = accel
+		state = hotkeyOn
+	}
+	g.hotkeyStates[to] = state
+	delete(g.hotkeyStates, from)
+	g.settings.SetHotkey(to, accel)
+	g.settings.RemoveHotkey(from)
+	g.saveSettings()
+	return nil
+}
+
+// takeHotkey gives one of Gocast's own shortcuts, by its row (1 to 3),
+// the hotkey of from, an app's or preset's, which loses it (design.md
+// 4.4: Use Here). When the system refuses it, both keep what they had
+// (errShortcutTaken).
+func (g *gocast) takeHotkey(row int, from settings.Hotkey) error {
+	accel, ok := shortcut.Normalize(g.settings.Hotkey(from))
+	if !ok || row < 1 || row > 3 {
+		return errHotkeyInvalid
+	}
+	key, on := g.hotkeys[from]
+	g.suspendShortcuts()
+	delete(g.hotkeys, from) // suspended: not registered now
+	if err := g.setShortcut(row, accel); err != nil {
+		g.reregister(from, key, on)
+		return err
+	}
+	delete(g.hotkeyStates, from)
+	g.settings.RemoveHotkey(from)
+	g.saveSettings()
+	return nil
+}
+
+// reregister registers again the hotkey of h that was registered as key
+// (on), as a change that failed leaves it; taken if the system now
+// refuses it.
+func (g *gocast) reregister(h settings.Hotkey, key string, on bool) {
+	if !on {
+		return
+	}
+	if err := globalShortcuts.Register(key, g.hotkeyFunc(h)); err != nil {
+		g.hotkeyStates[h] = hotkeyTaken
+		return
+	}
+	g.hotkeys[h] = key
 }
 
 // removeHotkey removes the hotkey of h, and saves it.

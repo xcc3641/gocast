@@ -1,4 +1,8 @@
-# Gocast 界面文案 v1.18（搜索面板 · 悬浮终端 · 设置）
+# Gocast 界面文案 v1.20（搜索面板 · 悬浮终端 · 设置）
+
+v1.20 改动：11.3 设置 › 快捷键改成一整张能搜的列表（照 Raycast）：搜索框、四个筛选、行里直接设、撞了可以「改用在这里」。去掉「添加应用…」「选择预设…」和原来的空状态。11.4 补设置列表的读屏（含「未设快捷键」）；「已设快捷键」的空状态改成说应用或预设，因为 Gocast 三项一直列在上面。
+
+v1.19 改动：新增第 11 节「给应用和预设设快捷键」（⌘K 菜单、面板里录制、设置 › 快捷键「应用和预设」分组、找不到应用、结果行键帽的读屏）。仍叫「快捷键」，不跟 Raycast 叫热键。
 
 v1.18 改动：计算器加 7.6 单位和币种的中文全名（公里、公斤、港币、澳元、加元；数据单位写清 1000 还是 1024）。读屏补「还没打完」那句。
 
@@ -613,3 +617,92 @@ README 里那一段（网站隐私页同样意思）：
 English: Gocast only goes online to check for updates and to fetch exchange rates once a day, and both can be turned off. Your presets, settings, clipboard history, and a record of what you open from search and the words you typed to find it (so your usual picks come first; the words are kept for 17 days) all stay in ~/Library/Application Support/com.hugo.gocast/ and are never uploaded.
 
 另外记一句：签名里带公司名和团队编号、Bundle ID 里有 hugo，这些是公开信息，公开后谁都能看到，不用在文案里解释。
+
+## 11. 给应用和预设设快捷键（v1.19，需求见 app-hotkeys-brief）
+
+用词：还是「快捷键」，不叫「热键」「Hotkey」（Raycast 这么叫，我们统一用词表里一直是快捷键）。按下后应用到前面叫「打开」，已在最前面再按叫「隐藏」（跟 ⌘H 和系统菜单里的「隐藏」一致）；预设那边是悬浮终端，用「收起」，跟 ⌃` 一样。
+
+### 11.1 ⌘K 菜单（应用和预设都有，放在原有几项后面，位置以 design.md 为准）
+
+| 情况 | 中文 | English |
+|---|---|---|
+| 还没设 | 设置快捷键… | Set Shortcut… |
+| 已经有了 | 更改快捷键… | Change Shortcut… |
+| 已经有了 | 移除快捷键 | Remove Shortcut |
+
+「设置」后面带省略号，因为点了还要再按键；「移除」点了就生效，不带。
+
+### 11.2 面板里录制
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 标题 | 给“{名称}”设快捷键 | Shortcut for “{name}” |
+| 录制中 | 请按下新的快捷键 | Press the new shortcut |
+| 录制中提示 | 按 esc 取消 | Press esc to cancel |
+| 只按了 ⇧ 或普通键 | 要带上 ⌘、⌥ 或 ⌃，或者单独用 F1–F19。 | Include ⌘, ⌥ or ⌃, or use F1–F19 on its own. |
+| 跟 Gocast 自己的或别的应用、预设撞了 | 这个快捷键已用于“{另一项}”。 | This shortcut is already used for “{other}”. |
+| 被别的应用占着（系统拒绝注册） | 这个快捷键已被别的应用占用。如果是在别的启动器里设过，先在那边删掉。 | Another app already uses this shortcut. If you set it in another launcher, remove it there first. |
+| 存好后（左下角提示胶囊） | 已设为 {快捷键} | Shortcut set to {shortcut} |
+| 移除后（左下角提示胶囊） | 已移除快捷键 | Shortcut removed |
+
+{另一项} 用看得见的名字：Gocast 自己的三个写行标签（打开搜索面板、显示或收起悬浮终端、打开剪贴板历史），应用写应用名，预设写预设名。
+「别的启动器」那半句就是给从 Raycast 搬过来的人看的，只在这条报错里出现一次，界面里不点 Raycast 的名字。
+
+### 11.3 设置 › 快捷键（v1.20 改成一整张能搜的列表，照 Raycast）
+
+不用先添加：Gocast 自己的三项在最上面，下面是所有应用和所有终端预设，每行右边直接点着设。原来的「添加应用…」「选择预设…」、空状态那句、选应用的系统窗口都不要了。
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 页面说明（列表上面一行） | 给应用或预设设一个快捷键，按一下打开，已在最前面时再按一下隐藏。 | Give an app or preset a shortcut. Press it to open, and again while it’s in front to hide it. |
+| 搜索框占位 | 搜索应用或预设 | Search apps and presets |
+| 筛选 · 1 | 全部 | All |
+| 筛选 · 2 | 已设快捷键 | With Shortcut |
+| 筛选 · 3 | 应用 | Apps |
+| 筛选 · 4 | 预设 | Presets |
+| 行右边的类型小字 | 应用 / 预设 / Gocast | App / Preset / Gocast |
+| 没设时录制框里的灰字 | 设置快捷键 | Set Shortcut |
+| 录制中 / 录制中提示 | 请按下新的快捷键 / 按 esc 取消 | Press the new shortcut / Press esc to cancel |
+| 行末 ×（读屏） | 移除“{名称}”的快捷键 | Remove shortcut for “{name}” |
+| 搜不到 | 没有匹配的应用或预设 | No matching apps or presets |
+| 「已设快捷键」下没有应用或预设（Gocast 三项照常列在上面） | 还没有给应用或预设设快捷键。在「全部」里点任意一行右边就能设。 | No app or preset shortcuts yet. In All, click the right side of any row to set one. |
+| 找不到的应用（行变灰，名字下面一行） | 找不到这个应用 | Can’t find this app |
+| 找不到的应用 · 鼠标停留说明 | 应用装回来后，快捷键会自动恢复。 | The shortcut works again once the app is back. |
+
+冲突（录制框变红，下面一行）：
+
+| 情况 | 中文 | English |
+|---|---|---|
+| 跟别的应用或预设撞了 | 这个快捷键已用于“{另一项}”。 | This shortcut is already used for “{other}”. |
+| 同一行的按钮 | 改用在这里 | Use Here |
+| 跟 Gocast 自己的三项撞了（没有按钮） | 这个快捷键已用于“{另一项}”，换一个吧。 | This shortcut is already used for “{other}”. Try a different one. |
+| 被别的应用占着 | 同 11.2 | Same as 11.2 |
+
+「改用在这里」点了就生效：这一行拿到快捷键，“{另一项}”那行变回「设置快捷键」，不再弹确认，也不出提示，两行的变化就在眼前。不叫「覆盖」「替换」：用户想的是“把这个键挪过来”，这四个字正好是这个意思。
+筛选用「已设快捷键」不用「已设置」：单看筛选那一排，「已设置」不知道设了什么。
+类型小字跟搜索面板里结果行的标记同一套（应用、预设），Gocast 自己的三项写「Gocast」，跟搜索面板里那一组的组名一样。
+11.2 面板里录制的「被别的应用占用」那句（带“别的启动器”半句）设置页也用同一句。
+
+### 11.4 读屏（VoiceOver）
+
+结果行有快捷键时，在原来那句最后加「快捷键 {按键}」，按键读成英文键名，跟系统读屏一致：
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 应用行 | {名称}，应用[，正在运行]，快捷键 {按键} | {name}, App[, Running], shortcut {keys} |
+| 预设行 | {名称}，预设，{文件夹}，快捷键 {按键} | {name}, Preset, {folder}, shortcut {keys} |
+| {按键} 的读法 | Control Option Command Shift 加键名，如「Option Command T」 | e.g. “Option Command T” |
+
+看得见的键帽不配文字，跟 Gocast 组里的那几行一样。
+
+设置 › 快捷键列表里的行（v1.20）：
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 已设 | {名称}，{类型}，快捷键 {按键} | {name}, {type}, shortcut {keys} |
+| 没设 | {名称}，{类型}，未设快捷键 | {name}, {type}, no shortcut |
+| 找不到的应用 | {名称}，应用，找不到这个应用，快捷键 {按键} | {name}, App, can’t find this app, shortcut {keys} |
+| 录制中 | {名称}，请按下新的快捷键 | {name}, press the new shortcut |
+| 撞了 | {名称}，这个快捷键已用于“{另一项}”，改用在这里，按钮 | {name}, this shortcut is already used for “{other}”, Use Here, button |
+
+{类型} 就是行上的小字：应用 / 预设 / Gocast。

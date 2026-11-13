@@ -7371,3 +7371,413 @@ func CalcCurrencyZWL() string { return In(i18n.Locale()).CalcCurrencyZWL() }
 func (msgs Messages) CalcCurrencyZWL() string {
 	return Catalog.Format(msgs.locale, "calcCurrencyZWL", nil)
 }
+
+// ActionSetShortcut says "Set Shortcut…"
+// in the language the app shows.
+//
+// Cmd-K menu: give the app or preset a shortcut (copy.md 11.1).
+func ActionSetShortcut() string { return In(i18n.Locale()).ActionSetShortcut() }
+
+// ActionSetShortcut says "Set Shortcut…"
+// in the language of msgs.
+//
+// Cmd-K menu: give the app or preset a shortcut (copy.md 11.1).
+func (msgs Messages) ActionSetShortcut() string {
+	return Catalog.Format(msgs.locale, "actionSetShortcut", nil)
+}
+
+// ActionChangeShortcut says "Change Shortcut…"
+// in the language the app shows.
+//
+// Cmd-K menu: when the app or preset has a shortcut (copy.md 11.1).
+func ActionChangeShortcut() string { return In(i18n.Locale()).ActionChangeShortcut() }
+
+// ActionChangeShortcut says "Change Shortcut…"
+// in the language of msgs.
+//
+// Cmd-K menu: when the app or preset has a shortcut (copy.md 11.1).
+func (msgs Messages) ActionChangeShortcut() string {
+	return Catalog.Format(msgs.locale, "actionChangeShortcut", nil)
+}
+
+// ActionRemoveShortcut says "Remove Shortcut"
+// in the language the app shows.
+//
+// Cmd-K menu: removes its shortcut at once (copy.md 11.1).
+func ActionRemoveShortcut() string { return In(i18n.Locale()).ActionRemoveShortcut() }
+
+// ActionRemoveShortcut says "Remove Shortcut"
+// in the language of msgs.
+//
+// Cmd-K menu: removes its shortcut at once (copy.md 11.1).
+func (msgs Messages) ActionRemoveShortcut() string {
+	return Catalog.Format(msgs.locale, "actionRemoveShortcut", nil)
+}
+
+// HotkeyRecordTitle says "Shortcut for “{name}”"
+// in the language the app shows.
+//
+// Search panel: title of the shortcut recorder card (copy.md 11.2).
+func HotkeyRecordTitle(name string) string { return In(i18n.Locale()).HotkeyRecordTitle(name) }
+
+// HotkeyRecordTitle says "Shortcut for “{name}”"
+// in the language of msgs.
+//
+// Search panel: title of the shortcut recorder card (copy.md 11.2).
+func (msgs Messages) HotkeyRecordTitle(name string) string {
+	return Catalog.Format(msgs.locale, "hotkeyRecordTitle", map[string]any{"name": name})
+}
+
+// HotkeyNeedsModifier says "Include ⌘, ⌥ or ⌃, or use F1–F19 on its own."
+// in the language the app shows.
+//
+// Shortcut recorder: only Shift or a plain key pressed (copy.md 11.2).
+func HotkeyNeedsModifier() string { return In(i18n.Locale()).HotkeyNeedsModifier() }
+
+// HotkeyNeedsModifier says "Include ⌘, ⌥ or ⌃, or use F1–F19 on its own."
+// in the language of msgs.
+//
+// Shortcut recorder: only Shift or a plain key pressed (copy.md 11.2).
+func (msgs Messages) HotkeyNeedsModifier() string {
+	return Catalog.Format(msgs.locale, "hotkeyNeedsModifier", nil)
+}
+
+// HotkeyInUse says "Another app already uses this shortcut. If you set it in another launcher, remove it there first."
+// in the language the app shows.
+//
+// Shortcut recorder of an app or preset: the system refused it (copy.md
+// 11.2).
+func HotkeyInUse() string { return In(i18n.Locale()).HotkeyInUse() }
+
+// HotkeyInUse says "Another app already uses this shortcut. If you set it in another launcher, remove it there first."
+// in the language of msgs.
+//
+// Shortcut recorder of an app or preset: the system refused it (copy.md
+// 11.2).
+func (msgs Messages) HotkeyInUse() string {
+	return Catalog.Format(msgs.locale, "hotkeyInUse", nil)
+}
+
+// HotkeySetTo says "Shortcut set to {shortcut}"
+// in the language the app shows.
+//
+// Search panel notice after a shortcut was recorded (copy.md 11.2).
+func HotkeySetTo(shortcut string) string { return In(i18n.Locale()).HotkeySetTo(shortcut) }
+
+// HotkeySetTo says "Shortcut set to {shortcut}"
+// in the language of msgs.
+//
+// Search panel notice after a shortcut was recorded (copy.md 11.2).
+func (msgs Messages) HotkeySetTo(shortcut string) string {
+	return Catalog.Format(msgs.locale, "hotkeySetTo", map[string]any{"shortcut": shortcut})
+}
+
+// HotkeyRemoved says "Shortcut removed"
+// in the language the app shows.
+//
+// Search panel notice after Remove Shortcut (copy.md 11.2).
+func HotkeyRemoved() string { return In(i18n.Locale()).HotkeyRemoved() }
+
+// HotkeyRemoved says "Shortcut removed"
+// in the language of msgs.
+//
+// Search panel notice after Remove Shortcut (copy.md 11.2).
+func (msgs Messages) HotkeyRemoved() string {
+	return Catalog.Format(msgs.locale, "hotkeyRemoved", nil)
+}
+
+// HotkeySpoken says "shortcut {keys}"
+// in the language the app shows.
+//
+// Screen reader: after a row's label when it has a shortcut; keys are
+// English key names (copy.md 11.4).
+func HotkeySpoken(keys string) string { return In(i18n.Locale()).HotkeySpoken(keys) }
+
+// HotkeySpoken says "shortcut {keys}"
+// in the language of msgs.
+//
+// Screen reader: after a row's label when it has a shortcut; keys are
+// English key names (copy.md 11.4).
+func (msgs Messages) HotkeySpoken(keys string) string {
+	return Catalog.Format(msgs.locale, "hotkeySpoken", map[string]any{"keys": keys})
+}
+
+// HotkeysIntro says "Give an app or preset a shortcut. Press it to open, and again while it’s in front to hide it."
+// in the language the app shows.
+//
+// Settings › Shortcuts: line over the list (copy.md 11.3).
+func HotkeysIntro() string { return In(i18n.Locale()).HotkeysIntro() }
+
+// HotkeysIntro says "Give an app or preset a shortcut. Press it to open, and again while it’s in front to hide it."
+// in the language of msgs.
+//
+// Settings › Shortcuts: line over the list (copy.md 11.3).
+func (msgs Messages) HotkeysIntro() string {
+	return Catalog.Format(msgs.locale, "hotkeysIntro", nil)
+}
+
+// HotkeysSearch says "Search apps and presets"
+// in the language the app shows.
+//
+// Settings › Shortcuts: placeholder of the search field (copy.md 11.3).
+func HotkeysSearch() string { return In(i18n.Locale()).HotkeysSearch() }
+
+// HotkeysSearch says "Search apps and presets"
+// in the language of msgs.
+//
+// Settings › Shortcuts: placeholder of the search field (copy.md 11.3).
+func (msgs Messages) HotkeysSearch() string {
+	return Catalog.Format(msgs.locale, "hotkeysSearch", nil)
+}
+
+// HotkeysFilterAll says "All"
+// in the language the app shows.
+//
+// Settings › Shortcuts: filter (copy.md 11.3).
+func HotkeysFilterAll() string { return In(i18n.Locale()).HotkeysFilterAll() }
+
+// HotkeysFilterAll says "All"
+// in the language of msgs.
+//
+// Settings › Shortcuts: filter (copy.md 11.3).
+func (msgs Messages) HotkeysFilterAll() string {
+	return Catalog.Format(msgs.locale, "hotkeysFilterAll", nil)
+}
+
+// HotkeysFilterSet says "With Shortcut"
+// in the language the app shows.
+//
+// Settings › Shortcuts: filter, the rows with a shortcut (copy.md 11.3).
+func HotkeysFilterSet() string { return In(i18n.Locale()).HotkeysFilterSet() }
+
+// HotkeysFilterSet says "With Shortcut"
+// in the language of msgs.
+//
+// Settings › Shortcuts: filter, the rows with a shortcut (copy.md 11.3).
+func (msgs Messages) HotkeysFilterSet() string {
+	return Catalog.Format(msgs.locale, "hotkeysFilterSet", nil)
+}
+
+// HotkeysFilterApps says "Apps"
+// in the language the app shows.
+//
+// Settings › Shortcuts: filter (copy.md 11.3).
+func HotkeysFilterApps() string { return In(i18n.Locale()).HotkeysFilterApps() }
+
+// HotkeysFilterApps says "Apps"
+// in the language of msgs.
+//
+// Settings › Shortcuts: filter (copy.md 11.3).
+func (msgs Messages) HotkeysFilterApps() string {
+	return Catalog.Format(msgs.locale, "hotkeysFilterApps", nil)
+}
+
+// HotkeysFilterPresets says "Presets"
+// in the language the app shows.
+//
+// Settings › Shortcuts: filter (copy.md 11.3).
+func HotkeysFilterPresets() string { return In(i18n.Locale()).HotkeysFilterPresets() }
+
+// HotkeysFilterPresets says "Presets"
+// in the language of msgs.
+//
+// Settings › Shortcuts: filter (copy.md 11.3).
+func (msgs Messages) HotkeysFilterPresets() string {
+	return Catalog.Format(msgs.locale, "hotkeysFilterPresets", nil)
+}
+
+// HotkeysFilter says "Show"
+// in the language the app shows.
+//
+// Settings › Shortcuts: screen reader name of the filter.
+func HotkeysFilter() string { return In(i18n.Locale()).HotkeysFilter() }
+
+// HotkeysFilter says "Show"
+// in the language of msgs.
+//
+// Settings › Shortcuts: screen reader name of the filter.
+func (msgs Messages) HotkeysFilter() string {
+	return Catalog.Format(msgs.locale, "hotkeysFilter", nil)
+}
+
+// HotkeysSetShortcut says "Set Shortcut"
+// in the language the app shows.
+//
+// Settings › Shortcuts: grey text in the recorder of a row without one
+// (copy.md 11.3).
+func HotkeysSetShortcut() string { return In(i18n.Locale()).HotkeysSetShortcut() }
+
+// HotkeysSetShortcut says "Set Shortcut"
+// in the language of msgs.
+//
+// Settings › Shortcuts: grey text in the recorder of a row without one
+// (copy.md 11.3).
+func (msgs Messages) HotkeysSetShortcut() string {
+	return Catalog.Format(msgs.locale, "hotkeysSetShortcut", nil)
+}
+
+// HotkeysRemoveFor says "Remove shortcut for “{name}”"
+// in the language the app shows.
+//
+// Settings › Shortcuts: the × in a recorder, for the screen reader
+// (copy.md 11.3).
+func HotkeysRemoveFor(name string) string { return In(i18n.Locale()).HotkeysRemoveFor(name) }
+
+// HotkeysRemoveFor says "Remove shortcut for “{name}”"
+// in the language of msgs.
+//
+// Settings › Shortcuts: the × in a recorder, for the screen reader
+// (copy.md 11.3).
+func (msgs Messages) HotkeysRemoveFor(name string) string {
+	return Catalog.Format(msgs.locale, "hotkeysRemoveFor", map[string]any{"name": name})
+}
+
+// HotkeysNoMatch says "No matching apps or presets"
+// in the language the app shows.
+//
+// Settings › Shortcuts: nothing matches the search (copy.md 11.3).
+func HotkeysNoMatch() string { return In(i18n.Locale()).HotkeysNoMatch() }
+
+// HotkeysNoMatch says "No matching apps or presets"
+// in the language of msgs.
+//
+// Settings › Shortcuts: nothing matches the search (copy.md 11.3).
+func (msgs Messages) HotkeysNoMatch() string {
+	return Catalog.Format(msgs.locale, "hotkeysNoMatch", nil)
+}
+
+// HotkeysNoneSet says "No app or preset shortcuts yet. In All, click the right side of any row to set one."
+// in the language the app shows.
+//
+// Settings › Shortcuts, With Shortcut filter: no app or preset has one
+// (copy.md 11.3).
+func HotkeysNoneSet() string { return In(i18n.Locale()).HotkeysNoneSet() }
+
+// HotkeysNoneSet says "No app or preset shortcuts yet. In All, click the right side of any row to set one."
+// in the language of msgs.
+//
+// Settings › Shortcuts, With Shortcut filter: no app or preset has one
+// (copy.md 11.3).
+func (msgs Messages) HotkeysNoneSet() string {
+	return Catalog.Format(msgs.locale, "hotkeysNoneSet", nil)
+}
+
+// HotkeysAppMissing says "Can’t find this app"
+// in the language the app shows.
+//
+// Settings › Shortcuts: an app with a shortcut that is not installed
+// (copy.md 11.3).
+func HotkeysAppMissing() string { return In(i18n.Locale()).HotkeysAppMissing() }
+
+// HotkeysAppMissing says "Can’t find this app"
+// in the language of msgs.
+//
+// Settings › Shortcuts: an app with a shortcut that is not installed
+// (copy.md 11.3).
+func (msgs Messages) HotkeysAppMissing() string {
+	return Catalog.Format(msgs.locale, "hotkeysAppMissing", nil)
+}
+
+// HotkeysAppMissingTip says "The shortcut works again once the app is back."
+// in the language the app shows.
+//
+// Settings › Shortcuts: tooltip of a missing app's row (copy.md 11.3).
+func HotkeysAppMissingTip() string { return In(i18n.Locale()).HotkeysAppMissingTip() }
+
+// HotkeysAppMissingTip says "The shortcut works again once the app is back."
+// in the language of msgs.
+//
+// Settings › Shortcuts: tooltip of a missing app's row (copy.md 11.3).
+func (msgs Messages) HotkeysAppMissingTip() string {
+	return Catalog.Format(msgs.locale, "hotkeysAppMissingTip", nil)
+}
+
+// HotkeysUseHere says "Use Here"
+// in the language the app shows.
+//
+// Settings › Shortcuts: moves the shortcut from the other item to this
+// row (copy.md 11.3).
+func HotkeysUseHere() string { return In(i18n.Locale()).HotkeysUseHere() }
+
+// HotkeysUseHere says "Use Here"
+// in the language of msgs.
+//
+// Settings › Shortcuts: moves the shortcut from the other item to this
+// row (copy.md 11.3).
+func (msgs Messages) HotkeysUseHere() string {
+	return Catalog.Format(msgs.locale, "hotkeysUseHere", nil)
+}
+
+// HotkeysUsedByGocast says "This shortcut is already used for “{other}”. Try a different one."
+// in the language the app shows.
+//
+// Settings › Shortcuts: conflict with one of Gocast's own shortcuts
+// (copy.md 11.3).
+func HotkeysUsedByGocast(other string) string { return In(i18n.Locale()).HotkeysUsedByGocast(other) }
+
+// HotkeysUsedByGocast says "This shortcut is already used for “{other}”. Try a different one."
+// in the language of msgs.
+//
+// Settings › Shortcuts: conflict with one of Gocast's own shortcuts
+// (copy.md 11.3).
+func (msgs Messages) HotkeysUsedByGocast(other string) string {
+	return Catalog.Format(msgs.locale, "hotkeysUsedByGocast", map[string]any{"other": other})
+}
+
+// HotkeysNoShortcut says "no shortcut"
+// in the language the app shows.
+//
+// Screen reader: a row of Settings › Shortcuts without one (copy.md
+// 11.4).
+func HotkeysNoShortcut() string { return In(i18n.Locale()).HotkeysNoShortcut() }
+
+// HotkeysNoShortcut says "no shortcut"
+// in the language of msgs.
+//
+// Screen reader: a row of Settings › Shortcuts without one (copy.md
+// 11.4).
+func (msgs Messages) HotkeysNoShortcut() string {
+	return Catalog.Format(msgs.locale, "hotkeysNoShortcut", nil)
+}
+
+// HotkeysAppMissingSpoken says "can’t find this app"
+// in the language the app shows.
+//
+// Screen reader: a missing app's row (copy.md 11.4).
+func HotkeysAppMissingSpoken() string { return In(i18n.Locale()).HotkeysAppMissingSpoken() }
+
+// HotkeysAppMissingSpoken says "can’t find this app"
+// in the language of msgs.
+//
+// Screen reader: a missing app's row (copy.md 11.4).
+func (msgs Messages) HotkeysAppMissingSpoken() string {
+	return Catalog.Format(msgs.locale, "hotkeysAppMissingSpoken", nil)
+}
+
+// HotkeysRecordingSpoken says "press the new shortcut"
+// in the language the app shows.
+//
+// Screen reader: a row recording (copy.md 11.4).
+func HotkeysRecordingSpoken() string { return In(i18n.Locale()).HotkeysRecordingSpoken() }
+
+// HotkeysRecordingSpoken says "press the new shortcut"
+// in the language of msgs.
+//
+// Screen reader: a row recording (copy.md 11.4).
+func (msgs Messages) HotkeysRecordingSpoken() string {
+	return Catalog.Format(msgs.locale, "hotkeysRecordingSpoken", nil)
+}
+
+// HotkeysUsedForSpoken says "this shortcut is already used for “{other}”"
+// in the language the app shows.
+//
+// Screen reader: a row in conflict (copy.md 11.4).
+func HotkeysUsedForSpoken(other string) string { return In(i18n.Locale()).HotkeysUsedForSpoken(other) }
+
+// HotkeysUsedForSpoken says "this shortcut is already used for “{other}”"
+// in the language of msgs.
+//
+// Screen reader: a row in conflict (copy.md 11.4).
+func (msgs Messages) HotkeysUsedForSpoken(other string) string {
+	return Catalog.Format(msgs.locale, "hotkeysUsedForSpoken", map[string]any{"other": other})
+}

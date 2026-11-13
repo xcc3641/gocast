@@ -14,6 +14,7 @@ import (
 	"gocast/internal/presets"
 	"gocast/internal/running"
 	"gocast/internal/search"
+	"gocast/internal/settings"
 	"gocast/locales"
 )
 
@@ -121,6 +122,11 @@ type launcher struct {
 	menuItems     []action // the menu's actions, as it opened
 	menuShown     []int    // those matching menuQuery
 
+	// rec is the card recording the hotkey of an app or preset, in the
+	// menu's place (design.md 2.5b).
+	rec      hotkeyRecorder
+	recInput ui.Handle
+
 	// own are Gocast's own items, the Gocast group's rows (design.md
 	// 2.5a).
 	own []ownItem
@@ -226,7 +232,9 @@ func (l *launcher) view(c *ui.Context) {
 		l.clip.view(c, k)
 		return
 	}
-	l.shortcuts(c)
+	if !l.rec.on { // the recorder takes every key
+		l.shortcuts(c)
+	}
 
 	target := l.targetHeight()
 	l.setRegion(panelWidth, target)
@@ -264,6 +272,9 @@ func (l *launcher) view(c *ui.Context) {
 		}
 		if l.menuOpen {
 			l.actionsMenu(c, k)
+		}
+		if l.rec.on {
+			l.recorderCard(c, k)
 		}
 	})
 	if l.announce {
@@ -526,6 +537,9 @@ func (l *launcher) itemRow(c *ui.Context, k tokens, item int, chosen bool) {
 				MaxWidth(listNoteMax).Shrink(1)
 		}
 		ui.Spacer(c)
+		if chosen { // the hotkey's keys, on the row chosen alone (design.md 2.3)
+			rowKeycaps(c, k, l.entryAccel(e))
+		}
 		listNote(c, k, tag).Shrink(0)
 	})
 }
@@ -583,12 +597,12 @@ func (l *launcher) itemLabel(item int) string {
 		if l.isRunning(e.app.ID) {
 			s += sep + locales.SearchRunning()
 		}
-		return s
+		return s + hotkeySpoken(l.entryAccel(e))
 	}
 	if j := presets.Find(l.g.presets, e.preset); j >= 0 {
-		return presetLabel(l.g.presets[j])
+		return presetLabel(l.g.presets[j]) + hotkeySpoken(l.entryAccel(e))
 	}
-	return it.Title + sep + locales.SearchTagPreset()
+	return it.Title + sep + locales.SearchTagPreset() + hotkeySpoken(l.entryAccel(e))
 }
 
 // presetLabel is what assistive technology reads of a preset's row:
@@ -755,13 +769,21 @@ func (l *launcher) toggleMenu() {
 	l.menuItems = l.actions()
 	l.filterMenu()
 	l.menuInput.Focus()
-	l.win.Invalidate()
+	l.redraw()
 }
 
 func (l *launcher) closeMenu() {
 	l.menuOpen = false
 	l.input.Focus()
-	l.win.Invalidate()
+	l.redraw()
+}
+
+// redraw draws the panel again, for state changed outside a frame; a
+// panel drawn in a test has no window.
+func (l *launcher) redraw() {
+	if l.win != nil {
+		l.win.Invalidate()
+	}
 }
 
 // actions are what the menu offers for the result chosen, its primary
@@ -784,6 +806,8 @@ func (l *launcher) actions() []action {
 			{"folder", locales.ActionShowInFinder(), []string{"⌘", "↩"}, l.secondary},
 			{"doc.on.doc", locales.ActionCopyPath(), []string{"⌘", "⇧", "C"}, func() { l.copyPath(app) }},
 		}
+		h, _ := entryHotkey(e)
+		as = append(as, l.hotkeyActions(h, app.Name, e)...)
 		if running.IsRunning(app.ID) {
 			as = append(as, action{"xmark.circle", locales.ActionQuitApp(app.Name), nil, func() {
 				running.Quit(app.ID)
@@ -793,17 +817,18 @@ func (l *launcher) actions() []action {
 		return as
 	}
 	id := e.preset
-	return []action{
+	as := []action{
 		{"apple.terminal", locales.ActionOpenInTerminal(), []string{"↩"}, l.primary},
 		{"plus.square.on.square", locales.ActionNewTab(), []string{"⌘", "↩"}, l.secondary},
 		{"pencil", locales.ActionEditPreset(), []string{"⌘", "E"}, func() { l.editPreset(id) }},
-		{"folder", locales.ActionShowFolder(), nil, func() {
-			if j := presets.Find(l.g.presets, id); j >= 0 {
-				l.hide()
-				mygo.Shell.ShowItemInFolder(l.g.presets[j].WorkDir())
-			}
-		}},
 	}
+	as = append(as, l.hotkeyActions(settings.Hotkey{Preset: id}, l.presetName(id), e)...)
+	return append(as, action{"folder", locales.ActionShowFolder(), nil, func() {
+		if j := presets.Find(l.g.presets, id); j >= 0 {
+			l.hide()
+			mygo.Shell.ShowItemInFolder(l.g.presets[j].WorkDir())
+		}
+	}})
 }
 
 // menuDim reports whether the menu's actions can't be taken: the
@@ -953,6 +978,9 @@ func (l *launcher) say(text string, danger bool) {
 	l.notice, l.noticeDanger, l.announce = text, danger, true
 	l.noticeGen++
 	gen := l.noticeGen
+	if l.win == nil { // drawn in a test
+		return
+	}
 	time.AfterFunc(noticeFor, func() {
 		l.win.Update(func() {
 			if l.noticeGen == gen {
@@ -1214,6 +1242,7 @@ func (l *launcher) enterSearch(now time.Time) {
 	l.selectAll = restore && l.query != ""
 	clear(l.running) // apps started or quit meanwhile
 	l.menuOpen = false
+	l.stopRecorder()
 	l.gen++ // appears at its size, without animating to it
 }
 
@@ -1235,6 +1264,7 @@ func (l *launcher) leave(now time.Time) {
 		l.hiddenAt = now
 	}
 	l.menuOpen = false
+	l.stopRecorder() // the recording void
 	l.shown = false
 }
 

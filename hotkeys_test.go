@@ -2,7 +2,12 @@ package main
 
 import (
 	"errors"
+	"fmt"
+	"slices"
+	"strings"
 	"testing"
+
+	"github.com/egoist/mygo"
 
 	"gocast/internal/presets"
 	"gocast/internal/settings"
@@ -128,5 +133,204 @@ func TestPrunePresetHotkeys(t *testing.T) {
 	saved, err := settings.Load(g.settingsPath())
 	if err != nil || saved.Hotkey(deleted) != "" || saved.Hotkey(kept) != "Ctrl+Alt+1" {
 		t.Errorf("saved %v, %v", saved.PresetHotkeys, err)
+	}
+}
+
+// fakeShortcuts stands for MyGo's global shortcuts: it refuses the
+// shortcuts of refuse, as the system does those another app has.
+type fakeShortcuts struct {
+	on     map[string]bool
+	refuse map[string]bool
+}
+
+func (f *fakeShortcuts) Register(accel string, fn func()) error {
+	if f.refuse[accel] || f.on[accel] {
+		return errShortcutTaken
+	}
+	f.on[accel] = true
+	return nil
+}
+
+func (f *fakeShortcuts) Unregister(accel string) { delete(f.on, accel) }
+
+func useFakeShortcuts(t *testing.T) *fakeShortcuts {
+	f := &fakeShortcuts{on: map[string]bool{}, refuse: map[string]bool{}}
+	old := globalShortcuts
+	globalShortcuts = f
+	t.Cleanup(func() { globalShortcuts = old })
+	return f
+}
+
+// newHotkeyTest is a Gocast with presets a, b and c, a's hotkey ⌃⌥1 and
+// b's ⌃⌥2, registered.
+func newHotkeyTest(t *testing.T) (*gocast, *fakeShortcuts) {
+	f := useFakeShortcuts(t)
+	g := &gocast{dir: t.TempDir(), launcher: &launcher{}, presets: []presets.Preset{
+		{ID: "a", Name: "A"}, {ID: "b", Name: "B"}, {ID: "c", Name: "C"},
+	}}
+	g.settings.SetHotkey(settings.Hotkey{Preset: "a"}, "Ctrl+Alt+1")
+	g.settings.SetHotkey(settings.Hotkey{Preset: "b"}, "Ctrl+Alt+2")
+	g.registerHotkeys()
+	return g, f
+}
+
+func TestMoveHotkey(t *testing.T) {
+	a, b, c := settings.Hotkey{Preset: "a"}, settings.Hotkey{Preset: "b"}, settings.Hotkey{Preset: "c"}
+
+	t.Run("to one without", func(t *testing.T) {
+		g, f := newHotkeyTest(t)
+		if err := g.moveHotkey(a, c); err != nil {
+			t.Fatal(err)
+		}
+		if g.settings.Hotkey(a) != "" || g.settings.Hotkey(c) != "Ctrl+Alt+1" {
+			t.Errorf("settings: a %q, c %q", g.settings.Hotkey(a), g.settings.Hotkey(c))
+		}
+		if _, ok := g.hotkeys[a]; ok || g.hotkeys[c] != "Ctrl+Alt+1" || !f.on["Ctrl+Alt+1"] {
+			t.Errorf("registered %v, system %v", g.hotkeys, f.on)
+		}
+		if _, ok := g.hotkeyStatus(a); ok {
+			t.Error("a still has a state")
+		}
+		if st, _ := g.hotkeyStatus(c); st != hotkeyOn {
+			t.Errorf("c is %v", st)
+		}
+		saved, err := settings.Load(g.settingsPath())
+		if err != nil || saved.Hotkey(a) != "" || saved.Hotkey(c) != "Ctrl+Alt+1" {
+			t.Errorf("saved %v, %v", saved.PresetHotkeys, err)
+		}
+	})
+
+	t.Run("to one with its own", func(t *testing.T) {
+		g, f := newHotkeyTest(t)
+		if err := g.moveHotkey(a, b); err != nil {
+			t.Fatal(err)
+		}
+		if g.settings.Hotkey(a) != "" || g.settings.Hotkey(b) != "Ctrl+Alt+1" {
+			t.Errorf("settings: a %q, b %q", g.settings.Hotkey(a), g.settings.Hotkey(b))
+		}
+		if f.on["Ctrl+Alt+2"] || !f.on["Ctrl+Alt+1"] || len(g.hotkeys) != 1 {
+			t.Errorf("registered %v, system %v", g.hotkeys, f.on)
+		}
+	})
+
+	t.Run("the system refuses it", func(t *testing.T) {
+		g, f := newHotkeyTest(t)
+		f.refuse["Ctrl+Alt+1"] = true // as if another app took it as a was let go
+		if err := g.moveHotkey(a, b); !errors.Is(err, errShortcutTaken) {
+			t.Fatalf("err = %v", err)
+		}
+		if g.settings.Hotkey(a) != "Ctrl+Alt+1" || g.settings.Hotkey(b) != "Ctrl+Alt+2" {
+			t.Errorf("settings: a %q, b %q", g.settings.Hotkey(a), g.settings.Hotkey(b))
+		}
+		if g.hotkeys[b] != "Ctrl+Alt+2" || !f.on["Ctrl+Alt+2"] {
+			t.Errorf("b not registered again: %v, system %v", g.hotkeys, f.on)
+		}
+		// a's could not come back: the other app has it now.
+		if st, _ := g.hotkeyStatus(a); st != hotkeyTaken {
+			t.Errorf("a is %v", st)
+		}
+	})
+
+	t.Run("the system refuses it, the old ones come back", func(t *testing.T) {
+		g, f := newHotkeyTest(t)
+		calls := 0
+		globalShortcuts = &refuseOnce{f, &calls}
+		if err := g.moveHotkey(a, b); !errors.Is(err, errShortcutTaken) {
+			t.Fatalf("err = %v", err)
+		}
+		if !f.on["Ctrl+Alt+1"] || !f.on["Ctrl+Alt+2"] || g.hotkeys[a] != "Ctrl+Alt+1" || g.hotkeys[b] != "Ctrl+Alt+2" {
+			t.Errorf("registered %v, system %v", g.hotkeys, f.on)
+		}
+		for _, h := range []settings.Hotkey{a, b} {
+			if st, _ := g.hotkeyStatus(h); st != hotkeyOn {
+				t.Errorf("%v is %v", h, st)
+			}
+		}
+	})
+
+	t.Run("refused", func(t *testing.T) {
+		g, _ := newHotkeyTest(t)
+		for _, c := range []struct {
+			from, to settings.Hotkey
+			err      error
+		}{
+			{c, a, errHotkeyInvalid}, // c has none
+			{a, a, errHotkeyInvalid},
+			{a, settings.Hotkey{Preset: "gone"}, errNoPreset},
+		} {
+			if err := g.moveHotkey(c.from, c.to); !errors.Is(err, c.err) {
+				t.Errorf("%v → %v: err = %v, want %v", c.from, c.to, err, c.err)
+			}
+		}
+		if g.settings.Hotkey(a) != "Ctrl+Alt+1" {
+			t.Error("a lost its hotkey")
+		}
+	})
+}
+
+// refuseOnce refuses the first shortcut registered, then is fakeShortcuts.
+type refuseOnce struct {
+	*fakeShortcuts
+	calls *int
+}
+
+func (r *refuseOnce) Register(accel string, fn func()) error {
+	*r.calls++
+	if *r.calls == 1 {
+		return errShortcutTaken
+	}
+	return r.fakeShortcuts.Register(accel, fn)
+}
+
+func TestHotkeyItems(t *testing.T) {
+	g, _ := newHotkeyTest(t)
+	g.settings.SetHotkey(settings.Hotkey{App: "com.example.gone"}, "Alt+Cmd+G")
+	g.hotkeyStates[settings.Hotkey{App: "com.example.gone"}] = hotkeyMissing
+	g.launcher.apps = []mygo.InstalledApp{{ID: "com.apple.Safari", Name: "Safari"}}
+
+	items := g.hotkeyItems()
+	var got []string
+	for _, it := range items {
+		got = append(got, fmt.Sprintf("%v %s %q %v %v", it.item, it.name, it.accel, it.state, it.app != nil))
+	}
+	want := []string{
+		`{ a} A "Ctrl+Alt+1" 0 false`,
+		`{ b} B "Ctrl+Alt+2" 0 false`,
+		`{ c} C "" 0 false`,
+		`{com.apple.Safari } Safari "" 0 true`,
+		`{com.example.gone } com.example.gone "Alt+Cmd+G" 2 false`,
+	}
+	if !slices.Equal(got, want) {
+		t.Errorf("hotkeyItems:\n%s\nwant\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))
+	}
+}
+
+// One of Gocast's own shortcuts takes a preset's hotkey (Use Here): the
+// preset loses it; refused by the system, both keep theirs.
+func TestTakeHotkey(t *testing.T) {
+	a := settings.Hotkey{Preset: "a"}
+	g, f := newHotkeyTest(t)
+	g.terminalKey = "Ctrl+`"
+	f.on["Ctrl+`"] = true
+	if err := g.takeHotkey(2, a); err != nil {
+		t.Fatal(err)
+	}
+	if g.terminalKey != "Ctrl+Alt+1" || g.settings.TerminalShortcut != "Ctrl+Alt+1" || g.settings.Hotkey(a) != "" {
+		t.Errorf("terminal %q (%q), a %q", g.terminalKey, g.settings.TerminalShortcut, g.settings.Hotkey(a))
+	}
+	if f.on["Ctrl+`"] || !f.on["Ctrl+Alt+1"] || !f.on["Ctrl+Alt+2"] || g.suspended {
+		t.Errorf("system %v, suspended %v", f.on, g.suspended)
+	}
+	if _, ok := g.hotkeyStatus(a); ok {
+		t.Error("a still has a state")
+	}
+
+	b := settings.Hotkey{Preset: "b"}
+	f.refuse["Ctrl+Alt+2"] = true
+	if err := g.takeHotkey(3, b); !errors.Is(err, errShortcutTaken) {
+		t.Fatalf("err = %v", err)
+	}
+	if g.settings.Hotkey(b) != "Ctrl+Alt+2" || g.clipKey != "" || g.suspended {
+		t.Errorf("b %q, clipboard %q, suspended %v", g.settings.Hotkey(b), g.clipKey, g.suspended)
 	}
 }

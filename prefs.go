@@ -36,12 +36,11 @@ type prefsWindow struct {
 	win  *mygo.Window
 	page string
 
-	// The shortcut recorder: the row recording (0 for none, 1 the search
-	// panel's, 2 the terminal's, 3 the clipboard history's), and each
-	// row's problem.
-	recording int
-	problem   [4]string
-	recorder  [4]ui.Handle
+	// Settings › Shortcuts: the list, its recorder, and what stands wrong
+	// with Gocast's own shortcuts by row (1 the search panel's, 2 the
+	// terminal's, 3 the clipboard history's), as the system refused one.
+	hk      hotkeyPage
+	problem [4]string
 	// The notice over the shortcuts that Spotlight has ⌘Space, or that
 	// ⌘Space is the search panel's now (design.md 4.4).
 	notice    int
@@ -82,8 +81,8 @@ func newPrefsWindow(g *gocast) *prefsWindow {
 	p.win = mygo.NewWindow(mygo.WindowOptions{
 		Title:         locales.SettingsTitle(),
 		Hidden:        true,
-		Width:         720,
-		Height:        500,
+		Width:         prefsWidth,
+		Height:        prefsHeight,
 		DisableResize: true,
 		TitleBarStyle: mygo.TitleBarHidden, // the view draws under it, the traffic lights kept
 		Transparent:   true,
@@ -116,6 +115,9 @@ func (p *prefsWindow) show(page string) {
 		p.g.presetsChanged()
 	}
 	p.g.refreshAppHotkeys(true)
+	if p.page == pageShortcuts {
+		p.enterShortcuts()
+	}
 	p.login = mygo.App.OpenAtLogin()
 	p.autoUpdate = updater.AutomaticChecks()
 	p.searchOnly = p.g.settings.SearchOnly
@@ -137,7 +139,7 @@ func (p *prefsWindow) show(page string) {
 // hide hides Settings, and Gocast with it, for the keyboard to go back to
 // the app the user was in.
 func (p *prefsWindow) hide() {
-	p.stopRecording()
+	p.stopRecording(false)
 	p.win.Hide()
 	mygo.App.Hide()
 }
@@ -151,11 +153,19 @@ func (p *prefsWindow) view(c *ui.Context) {
 	} else {
 		root.Background(k.groupFill)
 	}
-	if c.Shortcut(ui.Cmd, ui.KeyW) {
+	if !p.isRecording() && c.Shortcut(ui.Cmd, ui.KeyW) { // recording, the recorder takes it
 		p.hide()
 	}
 	ui.Row(c).Fill().AlignItems(ui.Stretch).Children(func() {
 		p.sidebar(c, k)
+		if p.page == pageShortcuts {
+			// The page itself does not scroll, its list does (design.md
+			// 4.4).
+			ui.Column(c).Grow(1).Shrink(1).Background(k.surface).Padding(52, 28, 24, 28).Children(func() {
+				p.shortcutsPage(c, k)
+			})
+			return
+		}
 		ui.Scroll(c).Grow(1).Background(k.surface).Children(func() {
 			ui.Column(c).Padding(52, 28, 24, 28).Children(func() {
 				switch p.page {
@@ -233,8 +243,11 @@ func (p *prefsWindow) sidebar(c *ui.Context, k tokens) {
 }
 
 func (p *prefsWindow) goTo(page string) {
-	p.stopRecording()
+	p.stopRecording(false)
 	p.page = page
+	if page == pageShortcuts {
+		p.enterShortcuts()
+	}
 	if page == pageGeneral {
 		p.autoUpdate = updater.AutomaticChecks()
 	}
@@ -311,16 +324,6 @@ const (
 // noticeSolvedFor is how long "Now using ⌘Space" shows.
 const noticeSolvedFor = 3 * time.Second
 
-func (p *prefsWindow) shortcutsPage(c *ui.Context, k tokens) {
-	pageTitle(c, k, locales.PageShortcuts())
-	p.spotlightNotice(c, k)
-	newGroup(c, k, func(g *group) {
-		p.shortcutRow(c, k, g, 1)
-		p.shortcutRow(c, k, g, 2)
-		p.shortcutRow(c, k, g, 3)
-	})
-}
-
 // spotlightNotice is the notice over the shortcuts, on the groups' fill:
 // that Spotlight has ⌘Space, with a button to System Settings and one to
 // keep ⌥⇧Space; then, once the user freed ⌘Space, that the search panel
@@ -335,7 +338,7 @@ func (p *prefsWindow) spotlightNotice(c *ui.Context, k tokens) {
 		tr = ui.ElementTransition{}
 	}
 	c.Key("spotlightNotice")
-	block := ui.Row(c).Background(k.groupFill).Radius(10).Padding(14).Gap(10).Margin(0, 0, 20, 0).
+	block := ui.Row(c).Background(k.groupFill).Radius(10).Padding(14).Gap(10).Margin(0, 0, 14, 0).Shrink(0).
 		AlignItems(ui.Start).Transition(tr)
 	if p.notice == noticeSolved {
 		block.AlignItems(ui.Center).Role(ui.RoleStatus).Children(func() {
@@ -382,150 +385,6 @@ func (p *prefsWindow) spotlightSolved() {
 			}
 		})
 	})
-	p.win.Invalidate()
-}
-
-// shortcutRow is a shortcut's row: its recorder, and Reset to Default when
-// it is not the default.
-func (p *prefsWindow) shortcutRow(c *ui.Context, k tokens, g *group, row int) {
-	label, current, def := locales.ShortcutLauncher(), p.g.launcherKey, p.g.settings.DefaultLauncher()
-	if p.g.spotlight { // ⌥⇧Space is the default while Spotlight has ⌘Space
-		def = settings.FallbackLauncherShortcut
-	}
-	switch row {
-	case 2:
-		label, current, def = locales.ShortcutTerminal(), p.g.terminalKey, settings.DefaultTerminalShortcut
-	case 3:
-		label, current, def = locales.ShortcutClipboard(), p.g.clipKey, settings.DefaultClipboardShortcut
-	}
-	if current == "" { // the system refused it: what the settings ask for
-		switch row {
-		case 1:
-			current = p.g.settings.Launcher()
-		case 2:
-			current = p.g.settings.Terminal()
-		case 3:
-			current = p.g.settings.Clipboard()
-		}
-	}
-	desc, descColor := "", k.textSecondary
-	switch {
-	case p.recording == row:
-		desc = locales.ShortcutRecordingHint()
-	case p.problem[row] != "":
-		desc, descColor = p.problem[row], k.danger
-	case row == 1 && p.g.spotlight:
-		desc = locales.ShortcutSpotlightBusy()
-	}
-	g.row(c, k, label, desc, descColor, func() {
-		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-			if current != def && p.recording != row {
-				ui.Text(c, locales.ShortcutReset()).FontSize(12).TextColor(c.Theme().Accent).
-					Role(ui.RoleButton).Label(locales.ShortcutReset()).OnClick(func() { p.apply(row, def) })
-			}
-			if p.problem[row] != "" && p.recording != row {
-				ui.Box(c).Size(6, 6).Radius(3).Background(k.danger)
-			}
-			c.Key("recorder") // the same element as Reset comes and goes, for the focus
-			box := ui.Row(c).Height(28).MinWidth(140).Padding(0, 6).Radius(6).Background(k.surface).
-				Justify(ui.Center).AlignItems(ui.Center).Focusable().Bind(&p.recorder[row]).
-				Role(ui.RoleButton).Label(label + " " + shortcut.Glyphs(current))
-			switch {
-			case p.recording == row:
-				box.Border(2, c.Theme().Accent)
-			case p.problem[row] != "":
-				box.Border(1, k.danger)
-			default:
-				box.Border(1, k.hairline)
-			}
-			box.OnClick(func() { p.startRecording(row) })
-			box.HandleInput(func(ev ui.InputEvent) bool { return p.recordKey(row, ev) })
-			box.Children(func() {
-				if p.recording == row {
-					ui.Text(c, locales.ShortcutRecording()).FontSize(12).TextColor(k.textSecondary).SingleLine()
-					return
-				}
-				keycaps(c, k, shortcut.Caps(current), 13)
-			})
-		})
-	})
-}
-
-// startRecording records the row's new shortcut, the global shortcuts off
-// meanwhile, so that pressing the current ones reaches the recorder.
-func (p *prefsWindow) startRecording(row int) {
-	if p.recording == row {
-		return
-	}
-	if p.recording == 0 {
-		p.g.suspendShortcuts()
-	}
-	p.recording = row
-	p.problem[row] = ""
-	p.recorder[row].Focus()
-}
-
-func (p *prefsWindow) stopRecording() {
-	if p.recording != 0 {
-		p.recording = 0
-		p.g.resumeShortcuts()
-	}
-}
-
-// recordKey takes the keys pressed in a recorder while it records: Escape
-// cancels, a valid shortcut is saved at once.
-func (p *prefsWindow) recordKey(row int, ev ui.InputEvent) bool {
-	if p.recording != row || ev.Kind != ui.InputKeyDown {
-		return false
-	}
-	if ev.Key == ui.KeyEscape && ev.Mods == 0 {
-		p.stopRecording()
-		return true
-	}
-	accel, ok := shortcut.FromKey(ev.Mods, ev.Key)
-	if !ok {
-		return true // a modifier alone, or a key that needs one: keep recording
-	}
-	p.recording = 0
-	p.apply(row, accel)
-	return true
-}
-
-// shortcutUser is the row of another shortcut that is accel, and its
-// label, or -1 and the name of the app or preset whose hotkey it is, or
-// 0.
-func (p *prefsWindow) shortcutUser(row int, accel string) (int, string) {
-	labels := [4]string{"", locales.ShortcutLauncher(), locales.ShortcutTerminal(), locales.ShortcutClipboard()}
-	for r, s := range p.g.shortcutRows() {
-		if r > 0 && r != row && *s.key != "" && shortcut.Same(accel, *s.key) {
-			return r, labels[r]
-		}
-	}
-	if h, ok := p.g.settings.HotkeyOwner(accel, settings.Hotkey{}); ok {
-		return -1, p.g.hotkeyLabel(h)
-	}
-	return 0, ""
-}
-
-// apply makes accel the row's shortcut, unless another row has it or
-// another app does; the shortcut stays as it was then, and the row says
-// why. It resumes the global shortcuts.
-func (p *prefsWindow) apply(row int, accel string) {
-	other, otherLabel := p.shortcutUser(row, accel)
-	p.g.suspendShortcuts()
-	switch {
-	case other != 0:
-		p.g.resumeShortcuts()
-		p.problem[row] = locales.ShortcutUsedFor(otherLabel)
-	case row == 1 && strings.EqualFold(accel, settings.DefaultLauncherShortcut) && shortcut.SpotlightHasCmdSpace():
-		// Both would open: the system's hot keys don't refuse it.
-		p.g.resumeShortcuts()
-		p.problem[row] = locales.ShortcutSpotlightBusy()
-	case p.g.setShortcut(row, accel) != nil:
-		p.problem[row] = locales.ShortcutTaken()
-	default:
-		p.problem[row] = ""
-	}
 	p.win.Invalidate()
 }
 

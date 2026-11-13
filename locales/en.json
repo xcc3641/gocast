@@ -2191,5 +2191,153 @@
   "calcCurrencyZWL": "Zimbabwean dollars (2009)",
   "@calcCurrencyZWL": {
     "description": "Calculator card: the full name of the currency ZWL, in its notes and for the screen reader (copy.md 7.1)."
+  },
+  "actionSetShortcut": "Set Shortcut…",
+  "@actionSetShortcut": {
+    "description": "Cmd-K menu: give the app or preset a shortcut (copy.md 11.1)."
+  },
+  "actionChangeShortcut": "Change Shortcut…",
+  "@actionChangeShortcut": {
+    "description": "Cmd-K menu: when the app or preset has a shortcut (copy.md 11.1)."
+  },
+  "actionRemoveShortcut": "Remove Shortcut",
+  "@actionRemoveShortcut": {
+    "description": "Cmd-K menu: removes its shortcut at once (copy.md 11.1)."
+  },
+  "hotkeyRecordTitle": "Shortcut for “{name}”",
+  "@hotkeyRecordTitle": {
+    "description": "Search panel: title of the shortcut recorder card (copy.md 11.2).",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Terminal"
+      }
+    }
+  },
+  "hotkeyNeedsModifier": "Include ⌘, ⌥ or ⌃, or use F1–F19 on its own.",
+  "@hotkeyNeedsModifier": {
+    "description": "Shortcut recorder: only Shift or a plain key pressed (copy.md 11.2)."
+  },
+  "hotkeyInUse": "Another app already uses this shortcut. If you set it in another launcher, remove it there first.",
+  "@hotkeyInUse": {
+    "description": "Shortcut recorder of an app or preset: the system refused it (copy.md 11.2)."
+  },
+  "hotkeySetTo": "Shortcut set to {shortcut}",
+  "@hotkeySetTo": {
+    "description": "Search panel notice after a shortcut was recorded (copy.md 11.2).",
+    "placeholders": {
+      "shortcut": {
+        "type": "String",
+        "example": "⌥⌘T"
+      }
+    }
+  },
+  "hotkeyRemoved": "Shortcut removed",
+  "@hotkeyRemoved": {
+    "description": "Search panel notice after Remove Shortcut (copy.md 11.2)."
+  },
+  "hotkeySpoken": "shortcut {keys}",
+  "@hotkeySpoken": {
+    "description": "Screen reader: after a row's label when it has a shortcut; keys are English key names (copy.md 11.4).",
+    "placeholders": {
+      "keys": {
+        "type": "String",
+        "example": "Option Command T"
+      }
+    }
+  },
+  "hotkeysIntro": "Give an app or preset a shortcut. Press it to open, and again while it’s in front to hide it.",
+  "@hotkeysIntro": {
+    "description": "Settings › Shortcuts: line over the list (copy.md 11.3)."
+  },
+  "hotkeysSearch": "Search apps and presets",
+  "@hotkeysSearch": {
+    "description": "Settings › Shortcuts: placeholder of the search field (copy.md 11.3)."
+  },
+  "hotkeysFilterAll": "All",
+  "@hotkeysFilterAll": {
+    "description": "Settings › Shortcuts: filter (copy.md 11.3)."
+  },
+  "hotkeysFilterSet": "With Shortcut",
+  "@hotkeysFilterSet": {
+    "description": "Settings › Shortcuts: filter, the rows with a shortcut (copy.md 11.3)."
+  },
+  "hotkeysFilterApps": "Apps",
+  "@hotkeysFilterApps": {
+    "description": "Settings › Shortcuts: filter (copy.md 11.3)."
+  },
+  "hotkeysFilterPresets": "Presets",
+  "@hotkeysFilterPresets": {
+    "description": "Settings › Shortcuts: filter (copy.md 11.3)."
+  },
+  "hotkeysFilter": "Show",
+  "@hotkeysFilter": {
+    "description": "Settings › Shortcuts: screen reader name of the filter."
+  },
+  "hotkeysSetShortcut": "Set Shortcut",
+  "@hotkeysSetShortcut": {
+    "description": "Settings › Shortcuts: grey text in the recorder of a row without one (copy.md 11.3)."
+  },
+  "hotkeysRemoveFor": "Remove shortcut for “{name}”",
+  "@hotkeysRemoveFor": {
+    "description": "Settings › Shortcuts: the × in a recorder, for the screen reader (copy.md 11.3).",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Safari"
+      }
+    }
+  },
+  "hotkeysNoMatch": "No matching apps or presets",
+  "@hotkeysNoMatch": {
+    "description": "Settings › Shortcuts: nothing matches the search (copy.md 11.3)."
+  },
+  "hotkeysNoneSet": "No app or preset shortcuts yet. In All, click the right side of any row to set one.",
+  "@hotkeysNoneSet": {
+    "description": "Settings › Shortcuts, With Shortcut filter: no app or preset has one (copy.md 11.3)."
+  },
+  "hotkeysAppMissing": "Can’t find this app",
+  "@hotkeysAppMissing": {
+    "description": "Settings › Shortcuts: an app with a shortcut that is not installed (copy.md 11.3)."
+  },
+  "hotkeysAppMissingTip": "The shortcut works again once the app is back.",
+  "@hotkeysAppMissingTip": {
+    "description": "Settings › Shortcuts: tooltip of a missing app's row (copy.md 11.3)."
+  },
+  "hotkeysUseHere": "Use Here",
+  "@hotkeysUseHere": {
+    "description": "Settings › Shortcuts: moves the shortcut from the other item to this row (copy.md 11.3)."
+  },
+  "hotkeysUsedByGocast": "This shortcut is already used for “{other}”. Try a different one.",
+  "@hotkeysUsedByGocast": {
+    "description": "Settings › Shortcuts: conflict with one of Gocast's own shortcuts (copy.md 11.3).",
+    "placeholders": {
+      "other": {
+        "type": "String",
+        "example": "Open search panel"
+      }
+    }
+  },
+  "hotkeysNoShortcut": "no shortcut",
+  "@hotkeysNoShortcut": {
+    "description": "Screen reader: a row of Settings › Shortcuts without one (copy.md 11.4)."
+  },
+  "hotkeysAppMissingSpoken": "can’t find this app",
+  "@hotkeysAppMissingSpoken": {
+    "description": "Screen reader: a missing app's row (copy.md 11.4)."
+  },
+  "hotkeysRecordingSpoken": "press the new shortcut",
+  "@hotkeysRecordingSpoken": {
+    "description": "Screen reader: a row recording (copy.md 11.4)."
+  },
+  "hotkeysUsedForSpoken": "this shortcut is already used for “{other}”",
+  "@hotkeysUsedForSpoken": {
+    "description": "Screen reader: a row in conflict (copy.md 11.4).",
+    "placeholders": {
+      "other": {
+        "type": "String",
+        "example": "Safari"
+      }
+    }
   }
 }

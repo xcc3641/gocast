@@ -154,7 +154,7 @@ var errShortcutTaken = errors.New("shortcut taken")
 // of apps and presets.
 func (g *gocast) registerShortcuts() {
 	try := func(row int, accel string, fn func()) string {
-		if err := mygo.GlobalShortcut.Register(accel, fn); err != nil {
+		if err := globalShortcuts.Register(accel, fn); err != nil {
 			// Carbon refuses a shortcut another app registered (Raycast's
 			// ⌘Space), not Spotlight's, which the check below is for.
 			log.Printf("shortcut %s: %v", accel, err)
@@ -162,7 +162,7 @@ func (g *gocast) registerShortcuts() {
 			if !ok {
 				return ""
 			}
-			if err := mygo.GlobalShortcut.Register(fb, fn); err != nil {
+			if err := globalShortcuts.Register(fb, fn); err != nil {
 				log.Printf("shortcut %s: %v", fb, err)
 				return ""
 			}
@@ -203,7 +203,7 @@ func (g *gocast) shortcutRows() [4]struct {
 // search panel when it doesn't (design.md 4.4). It reports whether
 // ⌘Space is the search panel's now.
 func (g *gocast) spotlightChanged() bool {
-	if !g.spotlight || g.prefs.recording != 0 || shortcut.SpotlightHasCmdSpace() {
+	if !g.spotlight || g.prefs.isRecording() || shortcut.SpotlightHasCmdSpace() {
 		return false
 	}
 	g.spotlight = false
@@ -241,7 +241,7 @@ func (g *gocast) suspendShortcuts() {
 	rows := g.shortcutRows()
 	for _, r := range rows[1:] {
 		if *r.key != "" {
-			mygo.GlobalShortcut.Unregister(*r.key)
+			globalShortcuts.Unregister(*r.key)
 		}
 	}
 	g.suspendHotkeys()
@@ -251,7 +251,7 @@ func (g *gocast) resumeShortcuts() {
 	rows := g.shortcutRows()
 	for _, r := range rows[1:] {
 		if *r.key != "" {
-			_ = mygo.GlobalShortcut.Register(*r.key, r.fn)
+			_ = globalShortcuts.Register(*r.key, r.fn)
 		}
 	}
 	g.resumeHotkeys()
@@ -263,7 +263,7 @@ func (g *gocast) resumeShortcuts() {
 // shortcuts suspended; it resumes them.
 func (g *gocast) setShortcut(row int, accel string) error {
 	rows := g.shortcutRows()
-	if err := mygo.GlobalShortcut.Register(accel, rows[row].fn); err != nil {
+	if err := globalShortcuts.Register(accel, rows[row].fn); err != nil {
 		log.Printf("shortcut %s: %v", accel, err)
 		g.resumeShortcuts()
 		return errShortcutTaken
@@ -288,7 +288,7 @@ func (g *gocast) setShortcut(row int, accel string) error {
 	}
 	for i, r := range rows[1:] {
 		if i+1 != row && *r.key != "" {
-			_ = mygo.GlobalShortcut.Register(*r.key, r.fn)
+			_ = globalShortcuts.Register(*r.key, r.fn)
 		}
 	}
 	g.resumeHotkeys()

@@ -124,3 +124,38 @@ func Same(a, b string) bool {
 	}
 	return a != "" && strings.EqualFold(a, b)
 }
+
+// spokenKeys are the names VoiceOver says for the keys that are not
+// letters, digits or function keys.
+var spokenKeys = map[string]string{
+	"Space": "Space", "Enter": "Return", "Tab": "Tab", "Backspace": "Delete",
+	"Delete": "Forward Delete", "Escape": "Escape", "Home": "Home", "End": "End",
+	"PageUp": "Page Up", "PageDown": "Page Down",
+	"Left": "Left Arrow", "Right": "Right Arrow", "Up": "Up Arrow", "Down": "Down Arrow",
+	"`": "Grave Accent", "-": "Minus", "=": "Equals", ",": "Comma", ".": "Period",
+	"/": "Slash", ";": "Semicolon", "'": "Quote", "[": "Left Bracket", "]": "Right Bracket",
+	"\\": "Backslash", "+": "Plus",
+}
+
+// Spoken says an accelerator as VoiceOver names keys, in English whatever
+// the language, the modifiers in copy.md 11.4's order, Control Option
+// Command Shift: "Alt+Cmd+T" is "Option Command T".
+func Spoken(accel string) string {
+	mods, key, ok := parse(accel)
+	if !ok {
+		return accel
+	}
+	var words []string
+	for _, m := range []struct {
+		mod  ui.Modifiers
+		name string
+	}{{ui.Ctrl, "Control"}, {ui.Alt, "Option"}, {ui.Super, "Command"}, {ui.Shift, "Shift"}} {
+		if mods&m.mod != 0 {
+			words = append(words, m.name)
+		}
+	}
+	if name, ok := spokenKeys[key]; ok {
+		key = name
+	}
+	return strings.Join(append(words, key), " ")
+}
