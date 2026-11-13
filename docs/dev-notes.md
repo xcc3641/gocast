@@ -59,10 +59,10 @@ Release builds are signed with the Developer ID in `macos.signingIdentity` (mygo
 | `internal/app/termpanel.go` | Floating terminal (`plugins/terminal`): tabs, banners, end bar, show/hide |
 | `internal/app/prefs.go` | Settings window: Shortcuts, Terminal Presets (editor), General, About |
 | `internal/app/tray.go` | Tray icon and menu |
-| `internal/app/updates.go` | MyGo's update window (`plugins/updater/native`): its texts from the catalogs, its icon |
+| `internal/app/updates.go` | Updates without a window: the checks and installs (`mygo.Updater`), the search panel's new version pill, About's status line |
 | `internal/app/theme.go` | design.md 1.2 color tokens, keycaps |
 | `internal/app/helpers_test.go` | `TestMain` and the fakes the tests share (running apps, global shortcuts) |
-| `icon/` | The icons, all drawn by `make-icon.py`, and `icon.go`, which embeds the PNGs the app draws: `AppIcon.icon` and `icon.png` (the app's, also About's at 64), `tray.png` (tray, template), `logo-template.png` (Gocast's mark in the search bar and the terminal's tab bar, tinted `textSecondaryOnGlass`), `update-icon.png` (update window) |
+| `icon/` | The icons, all drawn by `make-icon.py`, and `icon.go`, which embeds the PNGs the app draws: `AppIcon.icon` and `icon.png` (the app's, also About's at 64), `tray.png` (tray, template), `logo-template.png` (Gocast's mark in the search bar and the terminal's tab bar, tinted `textSecondaryOnGlass`) |
 | `CHANGELOG.md` | Keep a Changelog; the version's section is the update's release notes |
 | `scripts/gen-third-party-notices.go` | Writes `THIRD_PARTY_NOTICES.md`; `scripts/notices/` holds the texts that are not in the module cache |
 | `internal/apps` | App scan, localized names |
@@ -78,12 +78,12 @@ Release builds are signed with the Developer ID in `macos.signingIdentity` (mygo
 
 These files are in `~/Library/Application Support/com.hugo.gocast/`:
 - `presets.json`. It is edited in Settings; editing it by hand works too, and it is reloaded when the panel or Settings opens. There are no presets on first run. The first terminal is then a plain shell, with the tip that points to Settings.
-- `settings.json`. It holds the shortcuts, font size and keep-terminal-on-blur, and only stores values that differ from the defaults.
+- `settings.json`. It holds the shortcuts, font size and keep-terminal-on-blur, 自动检查更新 (`autoUpdate`) and the time of the last update check (`updatesCheckedAt`), and only stores values that differ from the defaults.
 - `usage.json`. Frecency.
 
 The builds with the earlier bundle ID kept them in `dev.gocast.app/`. At launch, after the single-instance lock and before anything else touches the folder, `migrateDataDir` (migrate.go) copies that folder to `com.hugo.gocast/` when the new one does not exist: modes, modification times and symbolic links kept, into `.com.hugo.gocast.migrating/` first and renamed into place when complete (a copy cut short is removed at the next launch, which copies again). The old folder is never changed. When the copy fails, Gocast logs it and starts with a new, empty folder, the old one still there.
 
-`updater.json` is not there: it is the updater plugin's own (自动检查更新 `automaticChecks`, the window's download-and-install checkbox, a skipped version, the last check) and lives in MyGo's `PathUserData`, which is Application Support joined with the app's *name*, so `~/Library/Application Support/Gocast/`, for the bundle and for a `go build` binary alike (checked on a `mygo build` app: its first check wrote `Gocast/updater.json`).
+The builds that used MyGo's updater plugin kept 自动检查更新 in the plugin's `updater.json` (`automaticChecks`, and `lastCheck`), in MyGo's `PathUserData`, which is Application Support joined with the app's *name*: `~/Library/Application Support/Gocast/updater.json`. The first launch whose `settings.json` has no `autoUpdate` reads it once (`settings.MigrateUpdater`): `automaticChecks` false turns the switch off, anything else (no file, no field, a damaged file) leaves it on, and `lastCheck` becomes `updatesCheckedAt`; then it saves `settings.json` and never reads the file again. The file itself is left as it is.
 
 Commands run through the user's login shell, as a login and interactive shell, so their PATH applies.
 
@@ -258,20 +258,22 @@ Automation can't cover these:
 - **Folder picker** (系统选文件夹) in the preset editor.
 - **System prompts:** the login-item prompt for 登录时自动启动.
 - **Update check:**
-  - a real update, with Install, Relaunch, Skip and Remind Later (needs a published release on xcc3641/gocast);
-  - the tray's 检查更新… (automation can't reach the tray; it is the plugin's `MenuItem`, the same call as About's button).
+  - a real update, downloaded and installed in the background, then Relaunch from the pill, the Gocast group, the tray and About (needs a published release on xcc3641/gocast);
+  - the tray's 检查更新… and its 重新打开以更新到 {版本} (automation can't reach the tray; `TestUpdateTrayItem` checks the item).
 - **Accessibility settings:** Reduce Transparency (the fallback to `surface`), Increase Contrast, and Reduce Motion (fades only).
 - **English UI** (system language en).
 
-## Updates (design.md 4.4, 4.5; copy.md v1.9)
+## Updates (design.md 4.4, 4.5; copy.md 12)
 
-- **Window.** `mygo.Use(native.New(updater.Options{Icon, Strings}))` in `updates.go`. The texts are copy.md 4.5's, from the catalogs (`update*` keys), for `en` and `zh-Hans`; no exclamation marks (`TestUpdateStrings`). `Language` is left empty, which is `App.Locale()`: the one of Gocast's catalogs the app shows, so `MYGO_LOCALE` and a change of the system language apply, and a system language Gocast doesn't have gets English, as the rest of the app.
-- **Tray.** 检查更新… is `updater.MenuItem()`, whose label is our `trayCheckUpdates` (passed as `Strings.MenuItem`). The menu is rebuilt on a locale change, so it follows.
-- **About.** A plain 检查更新 button calling `updater.CheckForUpdates()`. The page doesn't change: the earlier spinner, the 已是最新版本 line and the own update alert are gone, with their catalog keys.
-- **General.** 自动检查更新 is the second row of the first group, under 登录时自动启动. It reads `updater.AutomaticChecks()` when Settings shows and when the General page is chosen, and on `updater.OnChange`; it writes `updater.SetAutomaticChecks`. It is on by default (no `DisableAutomaticChecks`), and it is not the window's download-and-install checkbox.
-- **What a build says when 检查更新 is pressed:**
-  - `go run` / `go build` (dev): 没法在这里更新 / 开发版本不会自己更新。 (en: Updates Unavailable / Development builds don’t update themselves.)
-  - `mygo build`, with the feed: it checks `https://github.com/xcc3641/gocast/releases/latest/download/update-darwin-arm64.json`. Until a release is published that is a 404, and the window says 更新出错 / 现在检查不了更新，请稍后再试。 with the plugin's detail line `mygo: checking for updates: GET https://github.com/xcc3641/gocast/releases/latest/download/update-darwin-arm64.json: 404 Not Found`. (Before the feed it said 没法在这里更新 / Gocast 没法在当前安装位置自己更新…)
+- **No window.** `updates.go` calls `mygo.Updater.Check` and the update's `Install` itself; the updater plugin is gone, with its window, its strings and `icon/update-icon.png`. `Install` downloads, checks the signature and stages the new bundle, which a helper swaps in once Gocast exits, so a version ready runs at the next launch even without Relaunch. Relaunch is `mygo.App.Relaunch("--relaunched")`: the new Gocast sees the argument and shows nothing as it opens, as at login. A quit canceled (`OnQuitCanceled`) offers Relaunch again.
+- **Timer.** With 自动检查更新 on, the next check is due at `nextCheck(last, launched, now)`: 10 s after launch, or a day after the last check (`updatesCheckedAt`, saved as each check begins) when that is later, so a relaunch doesn't check again; a last check in the future (the clock set back) counts for none. `schedule` arms one `time.AfterFunc` for it, posted to the main thread, and checks at once when it is due; it runs again after each check, as the switch changes and on `Power.OnResume` (the timer counts no time asleep). Off, nothing is armed; a check asked for (About, the tray) still checks and downloads. A check asked for while one runs joins it.
+- **Ready.** The version installed shows in four places: the pill at the bottom left of the search panel (until its × for this run; a 4 s notice covers it), the Gocast group's first row 重新打开以更新到 {版本} (never chosen first, never scored, found by update/relaunch/更新/重新打开), the tray line in place of 检查更新…, and About's primary 重新打开. A check that finds the same version doesn't download it again; a newer one replaces it.
+- **About.** The button (检查更新, dimmed while checking or downloading or when the build can't update; 重新打开 once ready) and a status line 32 high under it, empty or saying 正在检查… / 已是最新版本 (4 s) / 正在下载 {版本}… / {版本} 已就绪 / the failures, with 看看改了什么 linking to the website's changelog (`/zh/changelog/#v{版本}` in Chinese). A background check shows checking, downloading and ready, but not 已是最新版本 nor failures. The tray's 检查更新… opens About and checks there.
+- **General.** 自动检查更新 is the second row of the first group, under 登录时自动启动, kept in `settings.json` (`autoUpdate`, on by default). Off, a version downloaded stays ready.
+- **Tests.** `updates_test.go`, over `fakeUpdater` (helpers_test.go): fake checks, installs, relaunch, clock and timers; `TestMain` makes the real updater unreachable. `GOCAST_SCREENS=… go test -run TestScreensUpdates ./internal/app` renders the pill, the row and About's states.
+- **What About says when 检查更新 is pressed:**
+  - `go run` / `go build` (dev): the button is dimmed and the line says 开发版本不会自己更新。 (en: Development builds don’t update themselves.); a bundle that can't update itself says Gocast 没法在当前位置自己更新…
+  - `mygo build`, with the feed: it checks `https://github.com/xcc3641/gocast/releases/latest/download/update-darwin-arm64.json`. Until a release is published that is a 404, logged as `updates: …404 Not Found`, and the line says 现在检查不了更新，稍后会自动再试。
 - **Feed.** mygo.json has `"updates": {"publicKey": "7xqUsSnSTZgGQ69hBuh+pm1jexm7Z3Ngl0lQ17EKPRQ=", "github": "xcc3641/gocast"}`. The repository must be public, with releases tagged `v0.1.0` …; it doesn't exist yet. `mygo build` needs no key: without one it builds the app and the disk image and skips the update files.
 - **Releasing.** The update signing key and the release steps are in RELEASING.md.
 

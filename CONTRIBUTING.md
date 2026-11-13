@@ -67,7 +67,7 @@ appearance, in English and Simplified Chinese.
 | `internal/app/launcher.go` | The search panel: field, results, actions capsule, ⌘K menu |
 | `internal/app/termpanel.go` | The floating terminal: tabs, banners, show and hide |
 | `internal/app/prefs.go` | The Settings window |
-| `internal/app/tray.go`, `updates.go` | The menu-bar icon and menu; the update window |
+| `internal/app/tray.go`, `updates.go` | The menu-bar icon and menu; updates without a window (checks, the new version pill, About's status line) |
 | `internal/app/kit.go`, `theme.go` | Shared components and the color tokens they draw with |
 | `internal/app/helpers_test.go` | `TestMain` and the fakes the tests share |
 | `internal/` | Also: app scanning, search and pinyin matching, usage ranking, presets, settings, shortcuts, running apps, clipboard, calculator |
