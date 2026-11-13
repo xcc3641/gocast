@@ -3,7 +3,7 @@ module gocast
 go 1.27.3
 
 require (
-	github.com/egoist/mygo v0.9.1-0.20261111182651-0d644f4aca24
+	github.com/egoist/mygo v0.9.1-0.20261112135621-87b823988f48
 	github.com/mozillazg/go-pinyin v0.21.0
 	howett.net/plist v1.0.1
 )

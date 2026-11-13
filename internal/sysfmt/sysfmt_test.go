@@ -23,14 +23,18 @@ func TestRelativeDay(t *testing.T) {
 }
 
 func TestDate(t *testing.T) {
-	now := time.Date(2026, 11, 12, 15, 0, 0, 0, time.Local)
-	today := time.Date(2026, 11, 12, 14, 5, 0, 0, time.Local)
+	// macOS words 今天 and Yesterday against the real date, not now, so
+	// the relative cases sit on today's date.
+	y, m, d := time.Now().Date()
+	now := time.Date(y, m, d, 15, 0, 0, 0, time.Local)
+	today := time.Date(y, m, d, 14, 5, 0, 0, time.Local)
 	if got := Date(today, now, "zh-Hans"); !strings.HasPrefix(got, "今天") || !strings.Contains(got, "05") {
 		t.Errorf("today in Chinese: %q", got)
 	}
 	if got := Date(today.AddDate(0, 0, -1), now, "en"); !strings.HasPrefix(got, "Yesterday") {
 		t.Errorf("yesterday in English: %q", got)
 	}
+	now = time.Date(2026, 11, 12, 15, 0, 0, 0, time.Local)
 	earlier := time.Date(2026, 11, 10, 18, 30, 0, 0, time.Local)
 	if got := Date(earlier, now, "zh-Hans"); !strings.Contains(got, "11月10日") || strings.Contains(got, "2026") {
 		t.Errorf("earlier this year in Chinese: %q", got)

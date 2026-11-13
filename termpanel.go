@@ -611,6 +611,10 @@ func (p *termPanel) start(s *session) {
 		DarkTheme:       p.themes[1],
 		MinimumContrast: terminalContrast,
 		Padding:         terminal.Padding{X: -1, Y: -1},
+		// Gocast says a preset's program ended in its own capsule
+		// (design.md 3.6 「命令结束」), so the terminal's dim [Process exited] line
+		// would say it twice.
+		NoExitMessage: true,
 		// Programs that read the clipboard themselves, as coding agents
 		// taking pasted images, are offered every format of a paste (the
 		// Kitty clipboard protocol, mode 5522); an image alone pastes an
