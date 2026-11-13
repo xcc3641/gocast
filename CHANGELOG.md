@@ -8,6 +8,11 @@ The section of each version is the release notes that the update window
 shows (MyGo reads `## [version]`), so write it for users, in Chinese and
 English.
 
+## [0.1.4] - 2026-11-13
+
+剪贴板历史里，截图软件拷来的图片现在能直接看到了：列表里是缩略图，右边显示整张图，下面多一行尺寸。这类条目仍算「文件」，粘贴出去还是文件。图是从原文件读的，没有另存一份，原文件删掉或挪走后就看不到了。
+Images you copy as files, the way screenshot apps do it, now show up in clipboard history: a thumbnail in the list, the whole picture on the right, and its dimensions underneath. They still count as files. The picture is read from the original file and not stored separately, so it’s gone once that file is moved or deleted.
+
 ## [0.1.3] - 2026-11-13
 
 更新不再弹窗口了。Gocast 会在后台把新版本下好，只在搜索面板左下角、⌘K 里和菜单栏轻轻提示一句「重新打开」；点了几秒内换上，不点也没关系，下次退出或重启 Mac 就是新版。关于页的「检查更新」也直接在那里显示结果。
