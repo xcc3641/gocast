@@ -27,7 +27,7 @@ import (
 
 const (
 	appName    = "Gocast"
-	identifier = "dev.gocast.app"
+	identifier = "com.hugo.gocast"
 )
 
 // Fallbacks of the default shortcuts, taken when another app has the
@@ -42,7 +42,7 @@ var fallbackShortcuts = map[string]string{
 // gocast holds the app's state. Everything here is read and changed on the
 // main thread.
 type gocast struct {
-	dir      string // ~/Library/Application Support/dev.gocast.app
+	dir      string // ~/Library/Application Support/com.hugo.gocast
 	launcher *launcher
 	term     *termPanel
 	prefs    *prefsWindow
@@ -341,6 +341,13 @@ func main() {
 	base, err := os.UserConfigDir() // ~/Library/Application Support
 	if err != nil {
 		log.Fatal(err)
+	}
+	// The data of the builds with the legacy bundle ID, copied over on the
+	// first launch; Gocast starts without it when that fails.
+	if copied, err := migrateDataDir(base, legacyIdentifier, identifier); err != nil {
+		log.Printf("copy %s to %s: %v", legacyIdentifier, identifier, err)
+	} else if copied {
+		log.Printf("copied %s to %s", legacyIdentifier, identifier)
 	}
 	g := &gocast{dir: filepath.Join(base, identifier)}
 	if err := os.MkdirAll(g.dir, 0o755); err != nil {

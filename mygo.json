@@ -1,6 +1,6 @@
 {
   "name": "Gocast",
-  "identifier": "dev.gocast.app",
+  "identifier": "com.hugo.gocast",
   "version": "0.1.0",
   "icon": "assets/icon/icon.png",
   "out": "build",

@@ -2,10 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- Release builds are signed with a self-signed certificate under the
-	     hardened runtime. Such a signature has no Team ID, so library
-	     validation would refuse the terminal library in Resources. -->
-	<key>com.apple.security.cs.disable-library-validation</key>
-	<true/>
+	<!-- Release builds are signed with a Developer ID under the hardened
+	     runtime and notarized. The terminal library in Resources is signed
+	     with the same Team ID, so library validation stays on. -->
 </dict>
 </plist>

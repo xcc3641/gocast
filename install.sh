@@ -25,7 +25,7 @@ tag_prefix=''
 # macOS: the bundle of the app, its identifier, and the Ed25519 public key
 # of updates, which the archive it installs is signed with.
 bundle='Gocast.app'
-bundle_id='dev.gocast.app'
+bundle_id='com.hugo.gocast'
 public_key='7xqUsSnSTZgGQ69hBuh+pm1jexm7Z3Ngl0lQ17EKPRQ='
 # For tests only: where the manifests are instead, and on macOS the folder
 # to install the app in and leaving it closed.

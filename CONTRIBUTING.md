@@ -38,7 +38,7 @@ force the appearance and the language for one run, which is handy for
 checking both themes and both languages.
 
 A development build shares its data with an installed Gocast, in
-`~/Library/Application Support/dev.gocast.app/`. More details, including
+`~/Library/Application Support/com.hugo.gocast/`. More details, including
 how to drive the app with `mygo-automation`, are in
 [docs/dev-notes.md](docs/dev-notes.md).
 

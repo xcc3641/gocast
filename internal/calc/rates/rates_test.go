@@ -74,7 +74,7 @@ func TestEndpoint(t *testing.T) {
 
 func TestRefreshSavesAndLoads(t *testing.T) {
 	srv := newServer(t)
-	dir := filepath.Join(t.TempDir(), "dev.gocast.app")
+	dir := filepath.Join(t.TempDir(), "com.hugo.gocast")
 	s := newStore(t, srv, dir)
 	if s.Rates() != nil || s.Date() != "" {
 		t.Fatal("rates before any fetch")

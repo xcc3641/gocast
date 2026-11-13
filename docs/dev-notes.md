@@ -1,7 +1,7 @@
 # Gocast dev notes
 
 Gocast v1 (0.1.0). It is written in Go with MyGo's native UI (the `ui` package, no webview).
-- Module `gocast`, bundle id `dev.gocast.app`.
+- Module `gocast`, bundle id `com.hugo.gocast` (earlier builds: `dev.gocast.app`).
 - MyGo `v0.9.1-0.20261111182651-0d644f4aca24` (the real module version, no `replace`).
 
 The sources, in priority order:
@@ -33,7 +33,7 @@ The windows are `w1` the search panel, `w2` the floating terminal and `w3` Setti
 
 The automation plugin is always imported but listens only when `MYGO_AUTOMATION` is set. `mygo build` leaves it out (`mygo_noinspector`).
 
-The single-instance lock is keyed by the app's name. An unpackaged build (`gocast`) therefore runs alongside an installed `Gocast.app`. The two share `~/Library/Application Support/dev.gocast.app/`.
+The single-instance lock is keyed by the app's name. An unpackaged build (`gocast`) therefore runs alongside an installed `Gocast.app`. The two share `~/Library/Application Support/com.hugo.gocast/`.
 
 For real window captures, `screencapture -x -o -l <CGWindowID>` works. Get the ID from `CGWindowListCopyWindowInfo`, filtered by PID.
 
@@ -74,10 +74,12 @@ The bundle is ad-hoc signed. Contents/Resources holds `libghostty-vt.dylib` and,
 
 ## Data
 
-These files are in `~/Library/Application Support/dev.gocast.app/`:
+These files are in `~/Library/Application Support/com.hugo.gocast/`:
 - `presets.json`. It is edited in Settings; editing it by hand works too, and it is reloaded when the panel or Settings opens. There are no presets on first run. The first terminal is then a plain shell, with the tip that points to Settings.
 - `settings.json`. It holds the shortcuts, font size and keep-terminal-on-blur, and only stores values that differ from the defaults.
 - `usage.json`. Frecency.
+
+The builds with the earlier bundle ID kept them in `dev.gocast.app/`. At launch, after the single-instance lock and before anything else touches the folder, `migrateDataDir` (migrate.go) copies that folder to `com.hugo.gocast/` when the new one does not exist: modes, modification times and symbolic links kept, into `.com.hugo.gocast.migrating/` first and renamed into place when complete (a copy cut short is removed at the next launch, which copies again). The old folder is never changed. When the copy fails, Gocast logs it and starts with a new, empty folder, the old one still there.
 
 `updater.json` is not there: it is the updater plugin's own (自动检查更新 `automaticChecks`, the window's download-and-install checkbox, a skipped version, the last check) and lives in MyGo's `PathUserData`, which is Application Support joined with the app's *name*, so `~/Library/Application Support/Gocast/`, for the bundle and for a `go build` binary alike (checked on a `mygo build` app: its first check wrote `Gocast/updater.json`).
 
