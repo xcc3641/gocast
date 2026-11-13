@@ -1,4 +1,4 @@
-package main
+package app
 
 // clipprefs.go is Settings › Clipboard (design.md 4.4, copy.md 6.8):
 // recording, how long items are kept, pasting on Return, the apps whose

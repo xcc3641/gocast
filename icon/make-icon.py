@@ -1,6 +1,6 @@
 """Draws Gocast's icons: a white terminal cursor block.
 
-    python3 assets/icon/make-icon.py   (needs Pillow)
+    python3 icon/make-icon.py   (needs Pillow)
 
 Writes, next to this script:
   icon.png          1024 app icon (rounded square on a transparent margin), for mygo build

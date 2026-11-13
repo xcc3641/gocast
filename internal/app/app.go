@@ -1,12 +1,7 @@
-// Gocast is a launcher for macOS in the manner of Raycast, in MyGo's native
-// UI: Option+Shift+Space shows a search panel over every app to find and
-// open installed apps (by their English and Chinese names, and by pinyin)
-// and terminal presets; Control+` drops a floating terminal from the top
-// of the screen, whose tabs run the presets. It lives in the menu bar,
-// without a Dock icon, and runs once.
-//
-//	go run .
-package main
+// Package app is Gocast, run by the main package at the repository root:
+// the search panel, the floating terminal, the clipboard history,
+// Settings and the menu-bar icon.
+package app
 
 import (
 	"errors"
@@ -349,7 +344,9 @@ func (g *gocast) ready() {
 	}
 }
 
-func main() {
+// Run starts Gocast. When another Gocast is running, it returns at once,
+// and the running one shows its search panel.
+func Run() {
 	if !mygo.App.RequestSingleInstanceLock() {
 		return // the running Gocast shows its panel (OnSecondInstance)
 	}

@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"os"
@@ -35,4 +35,31 @@ func TestMain(m *testing.M) {
 	}
 	sysQuit = func(string) bool { return false }
 	os.Exit(m.Run())
+}
+
+// fakeShortcuts stands for MyGo's global shortcuts: it refuses the
+// shortcuts of refuse, as the system does those another app has.
+type fakeShortcuts struct {
+	on     map[string]bool
+	refuse map[string]bool
+}
+
+func (f *fakeShortcuts) Register(accel string, fn func()) error {
+	if f.refuse[accel] || f.on[accel] {
+		return errShortcutTaken
+	}
+	f.on[accel] = true
+	return nil
+}
+
+func (f *fakeShortcuts) Unregister(accel string) { delete(f.on, accel) }
+
+// useFakeShortcuts puts a fakeShortcuts in place of the global shortcuts
+// for the test.
+func useFakeShortcuts(t *testing.T) *fakeShortcuts {
+	f := &fakeShortcuts{on: map[string]bool{}, refuse: map[string]bool{}}
+	old := globalShortcuts
+	globalShortcuts = f
+	t.Cleanup(func() { globalShortcuts = old })
+	return f
 }

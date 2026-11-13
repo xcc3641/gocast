@@ -1,4 +1,4 @@
-package main
+package app
 
 // clipview.go draws the clipboard history's view, which the search panel
 // turns into (design.md 2.8, copy.md 6): the search bar with the type

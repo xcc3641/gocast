@@ -1,21 +1,19 @@
-package main
+package app
 
 import (
-	_ "embed"
 	"log"
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/plugins/updater"
 
+	"gocast/icon"
 	"gocast/locales"
 )
 
 // trayPNG is Gocast's mark, the search bar's shape, 18 DIP (36 px),
 // black on transparent for macOS to tint (design.md 1.6);
-// assets/icon/make-icon.py draws it.
-//
-//go:embed assets/icon/tray.png
-var trayPNG []byte
+// icon/make-icon.py draws it.
+var trayPNG = icon.Tray
 
 // setUpTray puts Gocast's icon in the menu bar, with its menu (copy.md 1):
 // search, the floating terminal, the clipboard history (copy.md 6.1),

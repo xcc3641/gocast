@@ -1,4 +1,4 @@
-package main
+package app
 
 // kit.go is Gocast's one set of components, drawn with the tokens of
 // theme.go, which the search panel, the floating terminal and Settings
@@ -9,7 +9,6 @@ package main
 
 import (
 	"bytes"
-	_ "embed"
 	"image"
 	"image/color"
 	"image/png"
@@ -18,6 +17,8 @@ import (
 	"github.com/egoist/mygo/plugins/glass"
 	"github.com/egoist/mygo/plugins/sfsymbols"
 	"github.com/egoist/mygo/ui"
+
+	"gocast/icon"
 )
 
 // The glass windows' and their parts' measures (design.md 1.4, 2.4, 2.5,
@@ -106,11 +107,9 @@ const shadowLeft, shadowTop, shadowBottom = 72, 48, 96
 
 // --- Gocast's mark ---
 
-// logoPNG is Gocast's mark, assets/icon/make-icon.py's template image:
+// logoPNG is Gocast's mark, icon/make-icon.py's template image:
 // 20 DIP (40 px), black on transparent (design.md 1.6).
-//
-//go:embed assets/icon/logo-template.png
-var logoPNG []byte
+var logoPNG = icon.Logo
 
 // logoBitmap is logoPNG in white, keeping its alpha, so that a tint
 // (which multiplies) draws it in the tint's color; made once.

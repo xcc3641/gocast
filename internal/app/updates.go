@@ -1,20 +1,17 @@
-package main
+package app
 
 import (
-	_ "embed"
-
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/plugins/updater"
 	"github.com/egoist/mygo/plugins/updater/native"
 
+	"gocast/icon"
 	"gocast/locales"
 )
 
 // updateIcon is the update window's icon (design.md 4.5): the app icon
-// at 256 px, which assets/icon/make-icon.py draws.
-//
-//go:embed assets/icon/update-icon.png
-var updateIcon []byte
+// at 256 px, which icon/make-icon.py draws.
+var updateIcon = icon.Update
 
 // useUpdater adds MyGo's update window, in native UI (design.md 4.5). It
 // checks in the background while 「自动检查更新」 is on (updater.json,

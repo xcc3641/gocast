@@ -1,4 +1,4 @@
-package main
+package app
 
 // calccard.go is the calculator's card (design.md 2.3a, copy.md 7): the
 // first row of the search panel while the query is a calculation, the

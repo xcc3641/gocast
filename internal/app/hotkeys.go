@@ -1,4 +1,4 @@
-package main
+package app
 
 // The hotkeys of apps and terminal presets: global shortcuts that open an
 // app (or hide it, frontmost) or a preset's tab in the floating terminal

@@ -2,12 +2,12 @@
   "name": "Gocast",
   "identifier": "com.hugo.gocast",
   "version": "0.1.1",
-  "icon": "assets/icon/icon.png",
+  "icon": "icon/icon.png",
   "out": "build",
   "resources": ["THIRD_PARTY_NOTICES.md", "LICENSE", "NOTICE"],
   "macos": {
     "minimumSystemVersion": "13.0",
-    "icon": "assets/icon/AppIcon.icon",
+    "icon": "icon/AppIcon.icon",
     "infoPlist": {
       "LSUIElement": true
     },

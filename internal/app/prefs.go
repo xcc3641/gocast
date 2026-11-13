@@ -1,7 +1,6 @@
-package main
+package app
 
 import (
-	_ "embed"
 	"log"
 	"slices"
 	"strconv"
@@ -13,6 +12,7 @@ import (
 	"github.com/egoist/mygo/plugins/updater"
 	"github.com/egoist/mygo/ui"
 
+	"gocast/icon"
 	"gocast/internal/presets"
 	"gocast/internal/settings"
 	"gocast/internal/shortcut"
@@ -736,10 +736,8 @@ func (p *prefsWindow) aboutPage(c *ui.Context, k tokens) {
 	})
 }
 
-// iconPNG is the app icon, 1024 px; assets/icon/make-icon.py draws it.
-//
-//go:embed assets/icon/icon.png
-var iconPNG []byte
+// iconPNG is the app icon, 1024 px; icon/make-icon.py draws it.
+var iconPNG = icon.App
 
 var appIconBitmap *ui.Bitmap
 

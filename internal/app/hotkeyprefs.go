@@ -1,4 +1,4 @@
-package main
+package app
 
 // Settings › Shortcuts (design.md 4.4, copy.md 11.3): one list of all
 // that can have a shortcut, searched and filtered, each row recording its

@@ -1,4 +1,4 @@
-package main
+package app
 
 // clipservice.go keeps the clipboard history for the app: the store
 // (internal/clipboard), read on a goroutine as Gocast starts, the watcher

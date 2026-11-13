@@ -1,4 +1,4 @@
-package main
+package app
 
 // The search panel's part of the hotkeys of apps and presets (design.md
 // 2.3, 2.5, 2.5b): the Cmd-K items that set and remove one, the recorder

@@ -1,4 +1,4 @@
-package main
+package app
 
 // calcservice.go runs the calculator for the app (design.md 2.3a): the
 // exchange rates (internal/calc/rates), cached in rates.json next to

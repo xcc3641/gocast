@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"errors"
@@ -134,31 +134,6 @@ func TestPrunePresetHotkeys(t *testing.T) {
 	if err != nil || saved.Hotkey(deleted) != "" || saved.Hotkey(kept) != "Ctrl+Alt+1" {
 		t.Errorf("saved %v, %v", saved.PresetHotkeys, err)
 	}
-}
-
-// fakeShortcuts stands for MyGo's global shortcuts: it refuses the
-// shortcuts of refuse, as the system does those another app has.
-type fakeShortcuts struct {
-	on     map[string]bool
-	refuse map[string]bool
-}
-
-func (f *fakeShortcuts) Register(accel string, fn func()) error {
-	if f.refuse[accel] || f.on[accel] {
-		return errShortcutTaken
-	}
-	f.on[accel] = true
-	return nil
-}
-
-func (f *fakeShortcuts) Unregister(accel string) { delete(f.on, accel) }
-
-func useFakeShortcuts(t *testing.T) *fakeShortcuts {
-	f := &fakeShortcuts{on: map[string]bool{}, refuse: map[string]bool{}}
-	old := globalShortcuts
-	globalShortcuts = f
-	t.Cleanup(func() { globalShortcuts = old })
-	return f
 }
 
 // newHotkeyTest is a Gocast with presets a, b and c, a's hotkey ⌃⌥1 and

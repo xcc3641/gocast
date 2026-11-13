@@ -1,4 +1,4 @@
-package main
+package app
 
 // clipmodel.go is what the clipboard history's view shows, worked out
 // without drawing (design.md 2.8, copy.md 6): the list's rows under their

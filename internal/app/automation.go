@@ -1,4 +1,4 @@
-package main
+package app
 
 // The automation plugin lets mygo-automation drive the app (tests, agents)
 // through the socket MYGO_AUTOMATION names. It listens only when that is

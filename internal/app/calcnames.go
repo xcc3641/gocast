@@ -1,4 +1,4 @@
-package main
+package app
 
 // calcnames.go: the full names of the calculator's units and currencies,
 // by their codes (internal/calc), which the card's notes and its label
