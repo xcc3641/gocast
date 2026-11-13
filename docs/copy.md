@@ -1,4 +1,6 @@
-# Gocast 界面文案 v1.20（搜索面板 · 悬浮终端 · 设置）
+# Gocast 界面文案 v1.21（搜索面板 · 悬浮终端 · 设置）
+
+v1.21 改动：新增第 12 节「更新（不弹窗口）」，取代 4.5 更新窗口和 4.4 里「点检查更新打开窗口」的说法。后台查、后台下好，只在提示胶囊、⌘K、菜单栏轻轻提示；关于页就地显示状态。去掉跳过 / 稍后提醒 / 勾选框。
 
 v1.20 改动：11.3 设置 › 快捷键改成一整张能搜的列表（照 Raycast）：搜索框、四个筛选、行里直接设、撞了可以「改用在这里」。去掉「添加应用…」「选择预设…」和原来的空状态。11.4 补设置列表的读屏（含「未设快捷键」）；「已设快捷键」的空状态改成说应用或预设，因为 Gocast 三项一直列在上面。
 
@@ -263,7 +265,7 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 
 点「检查更新」打开更新窗口（和菜单栏「检查更新…」同一个）。检查中、已最新、有新版本、失败都由窗口来说，关于页底下不再另写一行。
 
-### 4.5 更新窗口（MyGo 更新器，用 Options.Strings 覆盖，不要用插件自带那套带感叹号的）
+### 4.5 更新窗口（v1.21 起不用了，见第 12 节；留着只作对照）
 
 | 位置 | 中文 | English |
 |---|---|---|
@@ -708,3 +710,50 @@ English: Gocast only goes online to check for updates and to fetch exchange rate
 | 撞了 | {名称}，这个快捷键已用于“{另一项}”，改用在这里，按钮 | {name}, this shortcut is already used for “{other}”, Use Here, button |
 
 {类型} 就是行上的小字：应用 / 预设 / Gocast。
+
+## 12. 更新（v1.21，不弹窗口，照 Raycast）
+
+后台自己查、自己下好；下好后只轻轻提示，点了几秒内重开，不点就在下次退出或重启 Mac 时自动换上。整个流程不出现「安装」两个字：用户看到的只有「新版本」和「重新打开」。动词用「重新打开」不用「重新启动」「重启」：「重启」听着像重启 Mac。
+
+### 12.1 下好以后的提示
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 搜索面板左下角提示胶囊 | 新版本 {版本} 已就绪 · 重新打开 | Version {version} is ready · Relaunch |
+| ⌘K 菜单里（Gocast 组，下好后才有） | 重新打开以更新到 {版本} | Relaunch to Update to {version} |
+| 菜单栏菜单（替换「检查更新…」那一行） | 重新打开以更新到 {版本} | Relaunch to Update to {version} |
+| 点了之后（胶囊里，一两秒） | 正在重新打开… | Relaunching… |
+
+胶囊里「重新打开」是可点的那半，前半句是说明。胶囊一次会话只出现一次，点掉 × 就不再出，菜单栏那一行一直在，直到换上新版。
+读屏：胶囊读「新版本 {版本} 已就绪，重新打开，按钮」/ "Version {version} is ready, Relaunch, button"。
+
+### 12.2 关于页（「检查更新」按钮下面一行，就地变）
+
+| 状态 | 中文 | English |
+|---|---|---|
+| 平时（不写） | — | — |
+| 检查中 | 正在检查… | Checking… |
+| 已最新 | 已是最新版本 | You’re up to date |
+| 下载中 | 正在下载 {版本}… | Downloading {version}… |
+| 下好了（后面接按钮） | {版本} 已就绪 | {version} is ready |
+| 按钮 | 重新打开 | Relaunch |
+| 查不了 | 现在检查不了更新，稍后会自动再试。 | Couldn’t check for updates. Gocast will try again later. |
+| 下载失败 | 新版本没下完，稍后会自动再试。 | Couldn’t finish downloading. Gocast will try again later. |
+| 开发版 | 开发版本不会自己更新。 | Development builds don’t update themselves. |
+| 装的位置没法自己更新 | Gocast 没法在当前位置自己更新。如果是用其他方式装的，请在那里更新。 | Gocast can’t update itself here. If you installed it another way, update it there. |
+| 改了什么（链接，有新版时出现） | 看看改了什么 | What’s New |
+
+「看看改了什么」打开官网更新记录页（中文界面开 /zh/changelog/，英文开 /changelog/）。
+「已是最新版本」几秒后淡掉，回到平时；其余状态留着直到变化。
+菜单栏「检查更新…」点了不开窗口：打开设置 › 关于，在那一行显示状态（跟按关于页的按钮一样）。
+
+### 12.3 设置 › 通用的开关
+
+开关名不改，还是「自动检查更新」（README、隐私页都写的这个名字）；说明换掉，因为现在会自己下好：
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 开关 | 自动检查更新 | Check for updates automatically |
+| 说明 | 打开后，Gocast 会在后台下好新版本，下次重新打开时换上。关掉就只在点“检查更新”时查。 | Gocast downloads new versions in the background and switches to them next time it opens. Turn this off to check only when you click Check for Updates. |
+
+不要的：跳过这个版本、稍后提醒、「以后自动下载并安装更新」勾选框、整个「软件更新」窗口和它的标题。
