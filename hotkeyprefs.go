@@ -37,6 +37,7 @@ const (
 	hkListPad     = 4  // the list's block, around the list
 	hkIcon        = 20
 	hkTypeWidth   = 56
+	hkTypeGap     = 12 // between the type and the recorder
 	hkRecWidth    = 150
 	hkRecHeight   = 24
 	hkDescLeft    = hkIcon + 10 // the line under a row, from the row's padding: under the name
@@ -48,6 +49,10 @@ const (
 // hkListWidth is a row's width: the content area's, less its padding and
 // the list block's.
 const hkListWidth = prefsWidth - hkContentLeft - 28 - 2*hkListPad
+
+// hkNoteWidth is the widest a line of the list empty, or of the note
+// under Gocast's own, is: 20 clear of either side (design.md 4.4).
+const hkNoteWidth = hkListWidth - 2*20
 
 // The filters of the list, in the segmented control's order.
 const (
@@ -643,8 +648,8 @@ func (p *prefsWindow) hotkeysEmpty(c *ui.Context, k tokens) {
 	if p.hk.filter == hkFilterPresets && len(p.g.presets) == 0 {
 		text = locales.PresetsEmptyTitle()
 	}
-	ui.Column(c).Grow(1).Justify(ui.Center).AlignItems(ui.Center).Padding(0, 24).Children(func() {
-		ui.Text(c, text).FontSize(13).TextColor(k.textSecondary).TextAlign(ui.Center).MaxWidth(360).Role(ui.RoleStatus)
+	ui.Column(c).Grow(1).Justify(ui.Center).AlignItems(ui.Center).Padding(0, 20).Children(func() {
+		ui.Text(c, text).FontSize(13).TextColor(k.textSecondary).TextAlign(ui.Center).MaxWidth(hkNoteWidth).Role(ui.RoleStatus)
 	})
 }
 
@@ -694,8 +699,8 @@ func (p *prefsWindow) hotkeyList(c *ui.Context, k tokens) {
 func (p *prefsWindow) hotkeyRow(c *ui.Context, k tokens, lr ui.ListRow) {
 	r := p.hkRowAt(lr.Index)
 	if r == nil {
-		ui.Box(c).Height(hkNoteHeight).Shrink(0).Center().Padding(0, 24).AccessHidden(true).Children(func() {
-			ui.Text(c, locales.HotkeysNoneSet()).FontSize(13).TextColor(k.textSecondary).TextAlign(ui.Center).MaxWidth(360)
+		ui.Box(c).Height(hkNoteHeight).Shrink(0).Center().Padding(0, 20).AccessHidden(true).Children(func() {
+			ui.Text(c, locales.HotkeysNoneSet()).FontSize(13).TextColor(k.textSecondary).TextAlign(ui.Center).MaxWidth(hkNoteWidth)
 		})
 		return
 	}
@@ -729,7 +734,7 @@ func (p *prefsWindow) hotkeyRow(c *ui.Context, k tokens, lr ui.ListRow) {
 					ui.Text(c, locales.ShortcutSpotlightBusy()).FontSize(12).TextColor(k.textSecondary).SingleLine().Shrink(0).AccessHidden(true)
 				}
 			})
-			ui.Box(c).Width(hkTypeWidth).Shrink(0).AccessHidden(true).Children(func() {
+			ui.Box(c).Width(hkTypeWidth).Shrink(0).Margin(0, hkTypeGap, 0, 0).AccessHidden(true).Children(func() {
 				ui.Text(c, typeLabel(r.kind)).FontSize(12).TextColor(k.textSecondary).SingleLine()
 			})
 			p.recorder(c, k, lr.Index, r, accel, recording, hot, desc != "" && descColor == k.danger)
@@ -787,30 +792,41 @@ func (p *prefsWindow) descHeight(c *ui.Context, desc string, movable bool) float
 	return 56
 }
 
-// rowIcon is a row's icon, 20: the app's, faded for one missing; a
-// symbol on a square for a preset and Gocast's own.
+// rowIcon is a row's icon, 20: the app's, else the system's generic
+// application icon, faded for an app missing; a symbol on a square for
+// a preset and Gocast's own.
 func (p *prefsWindow) rowIcon(c *ui.Context, k tokens, r *hkRow) {
 	square := func(symbol string, size float32) {
-		b := ui.Box(c).Size(hkIcon, hkIcon).Radius(5).Background(k.keycap).Center().Shrink(0).AccessHidden(true)
-		if r.missing {
-			b.Opacity(0.4)
-		}
-		b.Children(func() { sfsymbols.Symbol(c, symbol).Size(size).Color(k.text) })
+		ui.Box(c).Size(hkIcon, hkIcon).Radius(5).Background(k.keycap).Center().Shrink(0).AccessHidden(true).
+			Children(func() { sfsymbols.Symbol(c, symbol).Size(size).Color(k.text) })
 	}
 	switch {
 	case r.own > 0:
 		square([4]string{"", "magnifyingglass", "apple.terminal", "doc.on.clipboard"}[r.own], 11)
+		return
 	case r.kind == hkPreset:
 		square("apple.terminal.fill", 11)
-	case r.path != "":
-		if b := p.g.launcher.clip.fileIcon(r.path, hkIcon); b != nil {
-			ui.Image(c, b).Size(hkIcon, hkIcon).Shrink(0).AccessHidden(true)
-			return
-		}
-		ui.Avatar(c, r.name, nil).Size(hkIcon, hkIcon).Shrink(0).AccessHidden(true)
-	default:
-		square("app.dashed", 12)
+		return
 	}
+	b := p.g.launcher.clip.genericAppIcon(hkIcon)
+	if r.path != "" {
+		if icon := p.g.launcher.clip.fileIcon(r.path, hkIcon); icon != nil {
+			b = icon
+		}
+	}
+	if b == nil {
+		ui.Avatar(c, r.name, nil).Size(hkIcon, hkIcon).Shrink(0).AccessHidden(true).Opacity(missingOpacity(r))
+		return
+	}
+	ui.Image(c, b).Size(hkIcon, hkIcon).Shrink(0).AccessHidden(true).Opacity(missingOpacity(r))
+}
+
+// missingOpacity is the opacity of a row's icon: 40% for an app missing.
+func missingOpacity(r *hkRow) float32 {
+	if r.missing {
+		return 0.4
+	}
+	return 1
 }
 
 // recorder is a row's recorder, 150 by 24 (design.md 4.4): the keys of

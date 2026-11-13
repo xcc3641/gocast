@@ -669,6 +669,8 @@ English: Gocast only goes online to check for updates and to fetch exchange rate
 | 找不到的应用（行变灰，名字下面一行） | 找不到这个应用 | Can’t find this app |
 | 找不到的应用 · 鼠标停留说明 | 应用装回来后，快捷键会自动恢复。 | The shortcut works again once the app is back. |
 
+找不到的应用那一行，名字用设快捷键时记下的应用名（如「微信」），不用包名；只有旧数据里没记名字时才退回包名。
+
 冲突（录制框变红，下面一行）：
 
 | 情况 | 中文 | English |

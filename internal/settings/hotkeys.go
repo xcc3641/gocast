@@ -37,6 +37,9 @@ func (s *Settings) SetHotkey(h Hotkey, accel string) {
 		if len(*m) == 0 {
 			*m = nil
 		}
+		if h.App != "" {
+			s.SetAppHotkeyName(h.App, "")
+		}
 		return
 	}
 	if *m == nil {
@@ -45,7 +48,31 @@ func (s *Settings) SetHotkey(h Hotkey, accel string) {
 	(*m)[key] = accel
 }
 
-// RemoveHotkey removes the hotkey of h.
+// AppHotkeyName is the name the app with the bundle ID id had when its
+// hotkey was set, or "" (none stored: set by an older build).
+func (s Settings) AppHotkeyName(id string) string { return s.AppHotkeyNames[id] }
+
+// SetAppHotkeyName stores name as the name of the app with the bundle ID
+// id, which has a hotkey; "" removes it. The map is nil again once empty.
+func (s *Settings) SetAppHotkeyName(id, name string) {
+	if id == "" {
+		return
+	}
+	if name == "" {
+		delete(s.AppHotkeyNames, id)
+		if len(s.AppHotkeyNames) == 0 {
+			s.AppHotkeyNames = nil
+		}
+		return
+	}
+	if s.AppHotkeyNames == nil {
+		s.AppHotkeyNames = map[string]string{}
+	}
+	s.AppHotkeyNames[id] = name
+}
+
+// RemoveHotkey removes the hotkey of h, and for an app the name stored
+// with it.
 func (s *Settings) RemoveHotkey(h Hotkey) { s.SetHotkey(h, "") }
 
 // Hotkeys are the apps and presets with a hotkey, the apps first, each by

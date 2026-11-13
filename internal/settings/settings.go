@@ -92,6 +92,12 @@ type Settings struct {
 	// its hotkey, for when it comes back.
 	AppHotkeys    map[string]string `json:"appHotkeys,omitempty"`
 	PresetHotkeys map[string]string `json:"presetHotkeys,omitempty"`
+
+	// AppHotkeyNames are the names of the apps of AppHotkeys, by bundle
+	// ID, as they were when the hotkey was set: what Settings shows for
+	// an app no longer installed, rather than its bundle ID. Gone with
+	// the hotkey; files of before have none.
+	AppHotkeyNames map[string]string `json:"appHotkeyNames,omitempty"`
 }
 
 // Calculator reports whether the search panel calculates.

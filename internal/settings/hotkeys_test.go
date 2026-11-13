@@ -46,6 +46,55 @@ func TestHotkeysRoundTrip(t *testing.T) {
 	}
 }
 
+// The names of the apps with hotkeys are kept apart from the hotkeys,
+// gone with them; a file with hotkeys and no names loads as it did.
+func TestAppHotkeyNames(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "settings.json")
+	var s Settings
+	chat := Hotkey{App: "com.tencent.xinWeChat"}
+	s.SetHotkey(chat, "Alt+Cmd+W")
+	s.SetAppHotkeyName(chat.App, "微信")
+	if err := s.Save(path); err != nil {
+		t.Fatal(err)
+	}
+	data, _ := os.ReadFile(path)
+	for _, want := range []string{`"appHotkeys": {`, `"com.tencent.xinWeChat": "Alt+Cmd+W"`, `"appHotkeyNames": {`, `"com.tencent.xinWeChat": "微信"`} {
+		if !strings.Contains(string(data), want) {
+			t.Errorf("settings.json has no %s: %s", want, data)
+		}
+	}
+	out, err := Load(path)
+	if err != nil || out.AppHotkeyName(chat.App) != "微信" || out.Hotkey(chat) != "Alt+Cmd+W" {
+		t.Fatalf("Load = %+v, %v", out, err)
+	}
+	out.RemoveHotkey(chat)
+	if out.AppHotkeyNames != nil || out.AppHotkeyName(chat.App) != "" {
+		t.Errorf("name kept with the hotkey removed: %v", out.AppHotkeyNames)
+	}
+	// Setting "" removes it too; a preset's hotkey has none.
+	out.SetHotkey(chat, "Alt+Cmd+W")
+	out.SetAppHotkeyName(chat.App, "微信")
+	out.SetHotkey(Hotkey{Preset: "p"}, "Ctrl+Alt+1")
+	out.SetHotkey(Hotkey{Preset: "p"}, "")
+	if out.AppHotkeyName(chat.App) != "微信" {
+		t.Error("a preset's hotkey removed took an app's name")
+	}
+	out.SetHotkey(chat, "")
+	if out.AppHotkeyNames != nil {
+		t.Errorf("name kept with the hotkey set to none: %v", out.AppHotkeyNames)
+	}
+
+	// A file of before: hotkeys, no names.
+	old := `{"appHotkeys": {"com.tencent.xinWeChat": "Alt+Cmd+W"}}`
+	if err := os.WriteFile(path, []byte(old), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	s, err = Load(path)
+	if err != nil || s.Hotkey(chat) != "Alt+Cmd+W" || s.AppHotkeyName(chat.App) != "" {
+		t.Fatalf("Load of before = %+v, %v", s, err)
+	}
+}
+
 // A settings.json of a build before hotkeys reads as before, with none.
 func TestHotkeysOldFile(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "settings.json")

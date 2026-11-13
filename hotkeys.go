@@ -166,7 +166,8 @@ func shortcutLabel(row int) string {
 }
 
 // hotkeyLabel names the app or preset of h, as a conflict says it: the
-// app's name, else its bundle's, else its bundle ID.
+// app's name, else its bundle's, else (not installed) the name stored
+// when its hotkey was set, else its bundle ID.
 func (g *gocast) hotkeyLabel(h settings.Hotkey) string {
 	if h.App == "" {
 		if i := presets.Find(g.presets, h.Preset); i >= 0 {
@@ -174,13 +175,36 @@ func (g *gocast) hotkeyLabel(h settings.Hotkey) string {
 		}
 		return h.Preset
 	}
-	if i := slices.IndexFunc(g.launcher.apps, func(a mygo.InstalledApp) bool { return a.ID == h.App }); i >= 0 {
-		return g.launcher.apps[i].Name
+	if name := g.appName(h.App); name != "" {
+		return name
 	}
-	if path := running.AppPath(h.App); path != "" {
-		return strings.TrimSuffix(filepath.Base(path), ".app")
+	if name := g.settings.AppHotkeyName(h.App); name != "" {
+		return name
 	}
 	return h.App
+}
+
+// appName is the name of the app with the bundle ID id as installed: the
+// search panel's, else its bundle's; "" when not installed.
+func (g *gocast) appName(id string) string {
+	if i := slices.IndexFunc(g.launcher.apps, func(a mygo.InstalledApp) bool { return a.ID == id }); i >= 0 {
+		return g.launcher.apps[i].Name
+	}
+	if path := running.AppPath(id); path != "" {
+		return strings.TrimSuffix(filepath.Base(path), ".app")
+	}
+	return ""
+}
+
+// storeHotkeyName stores with the hotkey of h, an app's, the name it has
+// now, for when it is gone; not installed, the name stored stays.
+func (g *gocast) storeHotkeyName(h settings.Hotkey) {
+	if h.App == "" {
+		return
+	}
+	if name := g.appName(h.App); name != "" {
+		g.settings.SetAppHotkeyName(h.App, name)
+	}
 }
 
 // --- Checking ---
@@ -338,6 +362,10 @@ func (g *gocast) setHotkey(h settings.Hotkey, accel string) error {
 	}
 	old, had := g.hotkeys[h]
 	if had && old == n {
+		if h.App != "" && g.settings.AppHotkeyName(h.App) == "" { // set by an older build
+			g.storeHotkeyName(h)
+			g.saveSettings()
+		}
 		return nil
 	}
 	installed := h.App == "" || running.AppPath(h.App) != ""
@@ -354,6 +382,7 @@ func (g *gocast) setHotkey(h settings.Hotkey, accel string) error {
 	}
 	g.hotkeyStates[h] = state
 	g.settings.SetHotkey(h, n)
+	g.storeHotkeyName(h)
 	g.saveSettings()
 	return nil
 }
@@ -391,6 +420,7 @@ func (g *gocast) moveHotkey(from, to settings.Hotkey) error {
 	g.hotkeyStates[to] = state
 	delete(g.hotkeyStates, from)
 	g.settings.SetHotkey(to, accel)
+	g.storeHotkeyName(to)
 	g.settings.RemoveHotkey(from)
 	g.saveSettings()
 	return nil

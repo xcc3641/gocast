@@ -579,6 +579,29 @@ func (v *clipView) fileIcon(path string, size int) *ui.Bitmap {
 	return b
 }
 
+// genericAppIcon is the system's icon for an application with none of
+// its own, size by size (an app not installed: design.md 4.4), or nil.
+func (v *clipView) genericAppIcon(size int) *ui.Bitmap {
+	key := genericAppIconKey(size)
+	if b, ok := v.icons[key]; ok {
+		return b
+	}
+	scale := 1.0
+	for _, d := range mygo.Screen.Displays() {
+		scale = max(scale, d.ScaleFactor)
+	}
+	var b *ui.Bitmap
+	if data, err := mygo.Shell.TypeIcon("app", int(float64(size)*scale)); err == nil {
+		b, _ = ui.DecodeBitmap(data)
+	}
+	v.icons[key] = b
+	return b
+}
+
+// genericAppIconKey is where genericAppIcon keeps its icon of size among
+// the icons: no path starts with a NUL.
+func genericAppIconKey(size int) string { return "\x00app\x00" + string(rune(size)) }
+
 // appPath is where the app with the bundle ID is: among the apps the
 // search panel found, else running.
 func (v *clipView) appPath(bundleID string) string {

@@ -1,12 +1,18 @@
 package main
 
 import (
+	"bytes"
+	"encoding/binary"
 	"image"
+	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
 
+	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
+	plistlib "howett.net/plist"
 
 	"gocast/internal/settings"
 	"gocast/locales"
@@ -23,16 +29,20 @@ func hotkeyPrefs(t *testing.T, locale string) (*prefsWindow, *ui.Tester, *fakeSh
 	for _, a := range l.apps {
 		l.clip.icons[a.Path+"\x00"+string(rune(hkIcon))] = nil // drawn without: icons need the app running
 	}
+	l.clip.icons[genericAppIconKey(hkIcon)] = nil
 	p.enterShortcuts()
 	tt := ui.NewTester(p.view, prefsWidth, prefsHeight)
 	tt.Frame()
 	return p, tt, f
 }
 
-// addGone gives an app not installed a hotkey, ⌃⌥G.
+// addGone gives an app not installed a hotkey, ⌃⌥G, with the name it
+// had when it was set, 微信 (a bundle ID no Mac has, for the tests not to
+// depend on the apps installed).
 func addGone(p *prefsWindow) {
 	h := settings.Hotkey{App: "com.example.Gone"}
 	p.g.settings.SetHotkey(h, "Ctrl+Alt+G")
+	p.g.settings.SetAppHotkeyName(h.App, "微信")
 	p.g.hotkeyStates[h] = p.g.registerHotkey(h)
 }
 
@@ -294,7 +304,7 @@ func TestHotkeyPrefsLabels(t *testing.T) {
 		"app:com.apple.Safari":   "Safari, App, no shortcut",
 		"preset:p":               "gocast, Preset, no shortcut",
 		"own:3":                  "Open clipboard history, Gocast, shortcut Control Command V",
-		"app:com.example.Gone":   "com.example.Gone, App, can’t find this app, shortcut Control Option G",
+		"app:com.example.Gone":   "微信, App, can’t find this app, shortcut Control Option G",
 	} {
 		if got := label(id); got != want {
 			t.Errorf("%s: %q, want %q", id, got, want)
@@ -318,6 +328,85 @@ func TestHotkeyPrefsLabels(t *testing.T) {
 	}
 }
 
+// An app's name is stored with its hotkey, set or moved there, for when
+// the app is gone: what its row, its label and a conflict call it then.
+// Only a hotkey of an older build, with none stored, shows the bundle ID.
+func TestHotkeyPrefsStoredNames(t *testing.T) {
+	p, tt, _ := hotkeyPrefs(t, "en")
+	g, l := p.g, p.g.launcher
+	chat := settings.Hotkey{App: "com.example.Chat"} // no Mac has it: never installed for real
+	safari := settings.Hotkey{App: "com.apple.Safari"}
+	l.apps = append(l.apps, mygo.InstalledApp{Name: "微信", ID: chat.App, Path: "/Applications/Chat.app"})
+	l.alts = append(l.alts, nil)
+	l.places = append(l.places, "")
+
+	if err := g.setHotkey(chat, "Alt+Cmd+W"); err != nil {
+		t.Fatal(err)
+	}
+	if got := g.settings.AppHotkeyName(chat.App); got != "微信" {
+		t.Fatalf("name stored on set: %q", got)
+	}
+	// Use Here: the name goes with the hotkey.
+	if err := g.moveHotkey(chat, safari); err != nil {
+		t.Fatal(err)
+	}
+	if a, b := g.settings.AppHotkeyName(chat.App), g.settings.AppHotkeyName(safari.App); a != "" || b != "Safari" {
+		t.Fatalf("names after the move: %q, %q", a, b)
+	}
+	if err := g.moveHotkey(safari, chat); err != nil {
+		t.Fatal(err)
+	}
+	if a, b := g.settings.AppHotkeyName(chat.App), g.settings.AppHotkeyName(safari.App); a != "微信" || b != "" {
+		t.Fatalf("names after moving back: %q, %q", a, b)
+	}
+
+	// The app uninstalled: its row, label and conflicts use the name.
+	l.apps, l.alts, l.places = l.apps[:len(l.apps)-1], l.alts[:len(l.alts)-1], l.places[:len(l.places)-1]
+	p.enterShortcuts()
+	tt.Frame()
+	i := rowIndex(t, p, "app:com.example.Chat")
+	if r := p.hkRowAt(i); r == nil || !r.missing || r.name != "微信" {
+		t.Fatalf("the row of the app gone: %+v", r)
+	}
+	if got, want := p.hotkeyRowLabel(i), "微信, App, can’t find this app, shortcut Option Command W"; got != want {
+		t.Errorf("label %q, want %q", got, want)
+	}
+	tt.Type("微信")
+	tt.Frame()
+	if got := shownIDs(p); !slices.Equal(got, []string{"app:com.example.Chat"}) {
+		t.Errorf("searching its name: %q", got)
+	}
+	tt.Key(0, ui.KeyEscape)
+	tt.Frame()
+	p.startRecording(rowIndex(t, p, "app:com.apple.Notes"))
+	tt.Frame()
+	tt.Key(ui.Alt|ui.Cmd, ui.KeyW)
+	tt.Frame()
+	if want := locales.ShortcutUsedFor("微信"); p.hk.rec.problem != want {
+		t.Errorf("conflict: %q, want %q", p.hk.rec.problem, want)
+	}
+	tt.Key(0, ui.KeyEscape)
+	tt.Frame()
+
+	// Removed: the name too, the map left out of settings.json.
+	g.removeHotkey(chat)
+	if g.settings.AppHotkeyName(chat.App) != "" || g.settings.AppHotkeyNames != nil {
+		t.Errorf("name kept after removing: %v", g.settings.AppHotkeyNames)
+	}
+
+	// Set by an older build: no name, the bundle ID.
+	g.settings.SetHotkey(chat, "Alt+Cmd+W")
+	if got := g.hotkeyLabel(chat); got != chat.App {
+		t.Errorf("label with no name stored: %q", got)
+	}
+	// Set again as it was, the app installed: now stored.
+	g.settings.SetHotkey(safari, "Alt+Cmd+S")
+	g.hotkeyStates[safari] = g.registerHotkey(safari)
+	if err := g.setHotkey(safari, "Alt+Cmd+S"); err != nil || g.settings.AppHotkeyName(safari.App) != "Safari" {
+		t.Errorf("set again: %v, %q", err, g.settings.AppHotkeyName(safari.App))
+	}
+}
+
 // --- Screenshots ---
 
 func TestScreensSettingsShortcuts(t *testing.T) {
@@ -330,6 +419,7 @@ func TestScreensSettingsShortcuts(t *testing.T) {
 		}
 		shot := func(name string, setup func(p *prefsWindow, tt *ui.Tester, f *fakeShortcuts)) {
 			p, tt, f := hotkeyPrefs(t, "zh-Hans")
+			screenIcons(t, p)
 			addGone(p)
 			p.enterShortcuts()
 			tt.SetScale(2)
@@ -399,10 +489,68 @@ func TestScreensSettingsShortcuts(t *testing.T) {
 			tt.Frame()
 			tt.Key(ui.Alt|ui.Cmd, ui.KeyY)
 		})
+		shot("st-missing-app", func(p *prefsWindow, tt *ui.Tester, f *fakeShortcuts) {
+			p.hk.filter = hkFilterSet
+			p.filterHotkeys(true)
+			chooseID(p, tt, "app:com.example.Gone")
+		})
 		shot("st-spotlight", func(p *prefsWindow, tt *ui.Tester, f *fakeShortcuts) {
 			p.g.spotlight = true
 			p.g.launcherKey = settings.FallbackLauncherShortcut
 			p.notice = noticeSpotlight
 		})
 	}
+}
+
+// screenIcons gives the screenshots the icons the tests draw without
+// (they need the app running): the apps', and the generic one, from
+// their .icns files.
+func screenIcons(t *testing.T, p *prefsWindow) {
+	t.Helper()
+	icons := p.g.launcher.clip.icons
+	for _, a := range p.g.launcher.apps {
+		info, err := os.ReadFile(filepath.Join(a.Path, "Contents", "Info.plist"))
+		if err != nil {
+			continue
+		}
+		var plist map[string]any
+		if _, err := plistlib.Unmarshal(info, &plist); err != nil {
+			continue
+		}
+		name, _ := plist["CFBundleIconFile"].(string)
+		if name == "" {
+			continue
+		}
+		if filepath.Ext(name) == "" {
+			name += ".icns"
+		}
+		icons[a.Path+"\x00"+string(rune(hkIcon))] = icnsBitmap(filepath.Join(a.Path, "Contents", "Resources", name))
+	}
+	icons[genericAppIconKey(hkIcon)] = icnsBitmap("/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/GenericApplicationIcon.icns")
+}
+
+// icnsBitmap is the smallest PNG of 64 pixels or more in the .icns file
+// at path, or nil.
+func icnsBitmap(path string) *ui.Bitmap {
+	data, err := os.ReadFile(path)
+	if err != nil || len(data) < 8 || string(data[:4]) != "icns" {
+		return nil
+	}
+	chunks := map[string][]byte{}
+	for i := 8; i+8 <= len(data); {
+		n := int(binary.BigEndian.Uint32(data[i+4 : i+8]))
+		if n < 8 || i+n > len(data) {
+			break
+		}
+		chunks[string(data[i:i+4])] = data[i+8 : i+n]
+		i += n
+	}
+	for _, typ := range []string{"ic12", "ic07", "ic13", "ic08", "ic14", "ic09", "ic10"} {
+		if png := chunks[typ]; bytes.HasPrefix(png, []byte("\x89PNG")) {
+			if b, err := ui.DecodeBitmap(png); err == nil {
+				return b
+			}
+		}
+	}
+	return nil
 }
