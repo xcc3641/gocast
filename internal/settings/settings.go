@@ -1,8 +1,8 @@
 // Package settings keeps Gocast's preferences in settings.json: the two
 // global shortcuts, the terminal's font size, whether the floating
 // terminal hides as the user clicks away, its size, the tips dismissed,
-// the clipboard history's and the calculator's switches, and the hotkeys
-// of apps and terminal presets.
+// the clipboard history's and the calculator's switches, the hotkeys of
+// apps and terminal presets, and 自动检查更新 with the last check.
 package settings
 
 import (
@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"time"
 )
 
 const (
@@ -67,6 +68,13 @@ type Settings struct {
 	// fetches no exchange rates (the switch "Calculate in search", on by
 	// default; design.md 2.3a, 4.4).
 	CalculatorOff bool `json:"calculatorOff,omitempty"`
+	// AutoUpdate is the switch 「自动检查更新」 (design.md 4.4, 4.5), on
+	// by default: nil until MigrateUpdater took it from the updater
+	// plugin's updater.json, once.
+	AutoUpdate *bool `json:"autoUpdate,omitempty"`
+	// UpdatesChecked is when Gocast last checked for updates, by itself
+	// or as asked: the next automatic check is a day after it.
+	UpdatesChecked time.Time `json:"updatesCheckedAt,omitzero"`
 
 	// The clipboard history (design.md 4.4 剪贴板). ClipboardShortcut
 	// opens it, "" for the default ⌃⌘V.
@@ -102,6 +110,39 @@ type Settings struct {
 
 // Calculator reports whether the search panel calculates.
 func (s Settings) Calculator() bool { return !s.CalculatorOff }
+
+// AutoUpdates reports whether Gocast checks for updates, and downloads
+// them, by itself.
+func (s Settings) AutoUpdates() bool { return s.AutoUpdate == nil || *s.AutoUpdate }
+
+// SetAutoUpdates turns the automatic checks on or off.
+func (s *Settings) SetAutoUpdates(on bool) { s.AutoUpdate = &on }
+
+// MigrateUpdater takes 「自动检查更新」 and the time of the last check
+// from updater.json at path, which MyGo's updater plugin kept before
+// Gocast checked for updates itself (design.md 4.5): its automaticChecks,
+// on when absent, or when the file is missing or damaged. It does so
+// once, the first time AutoUpdate is nil, and only reads the file. It
+// reports whether it changed the settings, which are then to be saved.
+func (s *Settings) MigrateUpdater(path string) bool {
+	if s.AutoUpdate != nil {
+		return false
+	}
+	var old struct {
+		AutomaticChecks *bool     `json:"automaticChecks"`
+		LastCheck       time.Time `json:"lastCheck"`
+	}
+	if data, err := os.ReadFile(path); err == nil {
+		if json.Unmarshal(data, &old) != nil {
+			old.AutomaticChecks, old.LastCheck = nil, time.Time{}
+		}
+	}
+	s.SetAutoUpdates(old.AutomaticChecks == nil || *old.AutomaticChecks)
+	if s.UpdatesChecked.IsZero() {
+		s.UpdatesChecked = old.LastCheck
+	}
+	return true
+}
 
 // Clipboard is the clipboard history's shortcut.
 func (s Settings) Clipboard() string {

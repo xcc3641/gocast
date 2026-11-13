@@ -5,8 +5,10 @@ import (
 	"path/filepath"
 	"reflect"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestSnapPercent(t *testing.T) {
@@ -192,5 +194,69 @@ func TestCalculatorSetting(t *testing.T) {
 	got, err := Load(path)
 	if err != nil || got.Calculator() {
 		t.Errorf("off, read back on: %v", err)
+	}
+}
+
+// MigrateUpdater takes 自动检查更新 from the updater plugin's
+// updater.json once (design.md 4.5): its automaticChecks, on when the
+// file or the field is missing or the file is damaged, and the last
+// check; the file stays as it was, and is not read again.
+func TestMigrateUpdater(t *testing.T) {
+	checked := time.Date(2026, 11, 10, 8, 30, 0, 0, time.UTC)
+	for _, c := range []struct {
+		name, file string // file "" for none
+		want       bool
+		last       time.Time
+	}{
+		{"no file", "", true, time.Time{}},
+		{"off", `{"automaticChecks":false,"automaticDownloads":true,"lastCheck":"2026-11-10T08:30:00Z"}`, false, checked},
+		{"on", `{"automaticChecks":true}`, true, time.Time{}},
+		{"never chosen", `{"skippedVersion":"0.1.1","lastCheck":"2026-11-10T08:30:00Z"}`, true, checked},
+		{"damaged", `{"automaticChecks":fal`, true, time.Time{}},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			dir := t.TempDir()
+			old := filepath.Join(dir, "Gocast", "updater.json")
+			if c.file != "" {
+				if err := os.MkdirAll(filepath.Dir(old), 0o700); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(old, []byte(c.file), 0o600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			path := filepath.Join(dir, "settings.json")
+			s, _ := Load(path)
+			if !s.MigrateUpdater(old) {
+				t.Fatal("first launch: not migrated")
+			}
+			if s.AutoUpdates() != c.want || !s.UpdatesChecked.Equal(c.last) {
+				t.Errorf("migrated: auto %v, last check %v; want %v, %v", s.AutoUpdates(), s.UpdatesChecked, c.want, c.last)
+			}
+			if err := s.Save(path); err != nil {
+				t.Fatal(err)
+			}
+			if c.file != "" {
+				if data, err := os.ReadFile(old); err != nil || string(data) != c.file {
+					t.Errorf("updater.json changed: %q, %v", data, err)
+				}
+			}
+
+			// The next launch keeps the setting, whatever updater.json says
+			// (the user switched it since).
+			if err := os.MkdirAll(filepath.Dir(old), 0o700); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(old, []byte(`{"automaticChecks":`+strconv.FormatBool(!c.want)+`}`), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			s, err := Load(path)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if s.MigrateUpdater(old) || s.AutoUpdates() != c.want || !s.UpdatesChecked.Equal(c.last) {
+				t.Errorf("next launch: auto %v, last check %v; want %v, %v", s.AutoUpdates(), s.UpdatesChecked, c.want, c.last)
+			}
+		})
 	}
 }
