@@ -85,10 +85,15 @@ func readReply(r *bufio.Reader) (reply, error) {
 		return reply{}, err
 	}
 	if rep.Error != "" {
-		return rep, errors.New(rep.Error)
+		return rep, replyError(rep.Error)
 	}
 	return rep, nil
 }
+
+// replyError is an error the host answered.
+type replyError string
+
+func (e replyError) Error() string { return string(e) }
 
 // PID is the host's process ID.
 func (c *Client) PID() int { return c.hello.PID }
@@ -134,10 +139,22 @@ func (c *Client) request(typ byte, v any, timeout time.Duration) (reply, error) 
 	if err := json.Unmarshal(p, &rep); err != nil {
 		return reply{}, err
 	}
+	if rep.Error == errExiting {
+		// The host ends: a request goes to the one started after it.
+		c.lost = true
+		return reply{}, ErrLost
+	}
 	if rep.Error != "" {
 		return rep, errors.New(rep.Error)
 	}
 	return rep, nil
+}
+
+// markLost has the client's next request find the host gone.
+func (c *Client) markLost() {
+	c.mu.Lock()
+	c.lost = true
+	c.mu.Unlock()
 }
 
 // List returns the host's terminals, in the order they were made, and
@@ -160,9 +177,12 @@ func (c *Client) CloseTerminal(id string) error {
 }
 
 // CloseAll ends every terminal, waits for their programs to end, and has
-// the host exit.
+// the host exit: the client's next request starts another.
 func (c *Client) CloseAll() error {
 	_, err := c.request(msgCloseAll, struct{}{}, closeAllTimeout)
+	if err == nil {
+		c.markLost()
+	}
 	return err
 }
 
@@ -179,7 +199,9 @@ func (c *Client) SetActive(id string) error {
 }
 
 // Attach opens a stream of the terminal: its frames, from the first,
-// which shows all it holds, and its input.
+// which shows all it holds, and its input. ErrLost when the stream's
+// connection failed: the client's own may still work, to close the
+// terminal; a host exiting is lost for the client's requests too.
 func (c *Client) Attach(id string) (*Stream, error) {
 	conn, r, h, err := c.connect()
 	if err != nil {
@@ -192,7 +214,15 @@ func (c *Client) Attach(id string) (*Stream, error) {
 	}
 	if _, err := readReply(r); err != nil {
 		conn.Close()
-		return nil, err
+		var re replyError
+		switch {
+		case errors.As(err, &re) && re == errExiting:
+			c.markLost()
+			return nil, ErrLost
+		case errors.As(err, &re):
+			return nil, err
+		}
+		return nil, ErrLost
 	}
 	conn.SetDeadline(time.Time{})
 	return &Stream{conn: conn, r: r, caps: h.Caps, ready: make(chan struct{})}, nil
@@ -217,6 +247,10 @@ type Stream struct {
 	buf        []byte
 	cols, rows int
 
+	// readHook, a test's, runs as Read is called: the terminal wrote
+	// what it read before.
+	readHook func()
+
 	mu     sync.Mutex
 	exited bool // the program ended, as the host said
 	code   int
@@ -233,6 +267,9 @@ func (s *Stream) Bind(resize func(cols, rows int)) {
 
 // Read reads the frames.
 func (s *Stream) Read(p []byte) (int, error) {
+	if s.readHook != nil {
+		s.readHook()
+	}
 	<-s.ready
 	for len(s.buf) == 0 {
 		typ, msg, err := readMsg(s.r)
@@ -246,6 +283,10 @@ func (s *Stream) Read(p []byte) (int, error) {
 		case msgFrame:
 			cols, rows, frame, err := parseFrame(msg)
 			if err != nil {
+				// Not the host's: cut off from it, the program going on.
+				s.mu.Lock()
+				s.lost = !s.closed && !s.exited
+				s.mu.Unlock()
 				return 0, io.EOF
 			}
 			// The terminal takes the host's size before the frame, which

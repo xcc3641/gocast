@@ -3,9 +3,11 @@ package app
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -66,7 +68,7 @@ func TestCloseAllTerminals(t *testing.T) {
 	asked := 0
 	sysConfirmCloseAll = func() bool { asked++; return confirm }
 
-	g := &gocast{host: &termHost{dir: t.TempDir(), run: func(fn func()) { fn() }}}
+	g := &gocast{host: &termHost{dir: t.TempDir(), run: func(_ string, fn func()) { fn() }}}
 	g.term = &termPanel{g: g, tabs: []*session{{key: 1, id: "a"}, {key: 2}}, active: 1}
 	g.term.closeAll()
 	if asked != 1 || len(g.term.tabs) != 2 || g.term.active != 1 || len(spawns) != 0 {
@@ -157,29 +159,27 @@ func TestDisconnectedLine(t *testing.T) {
 	}
 }
 
-// What is typed and the view's size before the host's terminal is joined
-// reach it once it is, in order; a conn the host could not start ends.
-func TestHostConn(t *testing.T) {
+// hostForTest is a terminal host in the test's process, which never
+// exits by itself, and what dials it, over pipes.
+func hostForTest(t *testing.T) (*termhost.Host, func() (net.Conn, error)) {
+	t.Helper()
 	if err := terminal.Load(); err != nil {
 		t.Skipf("no libghostty-vt: %v", err)
 	}
-	dir, err := os.MkdirTemp("", "th") // short: a socket's path
-	if err != nil {
-		t.Fatal(err)
+	h := termhost.New(termhost.Options{AfterFunc: func(time.Duration, func()) func() bool { return func() bool { return true } }})
+	t.Cleanup(h.CloseAll)
+	return h, func() (net.Conn, error) {
+		a, b := net.Pipe()
+		go h.ServeConn(b)
+		return a, nil
 	}
-	t.Cleanup(func() { os.RemoveAll(dir) })
-	sock := filepath.Join(dir, "s")
-	l, err := net.Listen("unix", sock)
-	if err != nil {
-		t.Fatal(err)
-	}
-	h := termhost.New(termhost.Options{})
-	go h.Serve(l)
-	t.Cleanup(func() {
-		h.CloseAll()
-		l.Close()
-	})
-	c, err := termhost.NewClient(func() (net.Conn, error) { return net.Dial("unix", sock) })
+}
+
+// What is typed and the view's size before the host's terminal is joined
+// reach it once it is, in order; a conn the host could not start ends.
+func TestHostConn(t *testing.T) {
+	_, dial := hostForTest(t)
+	c, err := termhost.NewClient(dial)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -196,41 +196,22 @@ func TestHostConn(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	sized := make(chan [2]int, 8)
-	if !conn.bind(st, func(cols, rows int) { sized <- [2]int{cols, rows} }) {
+	// The sizes the frames bring, as Read gives them, before the frame.
+	var sizes [][2]int
+	if !conn.bind(st, func(cols, rows int) { sizes = append(sizes, [2]int{cols, rows}) }) {
 		t.Fatal("bind: closed")
 	}
-	got := make(chan string, 1)
-	go func() {
-		var out []byte
-		buf := make([]byte, 4096)
-		for {
-			n, err := conn.Read(buf)
-			out = append(out, buf[:n]...)
-			if strings.Count(string(out), "one two") >= 2 || err != nil { // the echo, and cat's
-				got <- string(out)
-				return
-			}
-		}
-	}()
-	select {
-	case out := <-got:
-		if strings.Count(out, "one two") < 2 {
-			t.Fatalf("read %q", out)
-		}
-	case <-time.After(10 * time.Second):
-		t.Fatal("no output")
-	}
-	var last [2]int
-	for done := false; !done; {
-		select {
-		case last = <-sized:
-		default:
-			done = true
+	var out []byte
+	buf := make([]byte, 4096)
+	for strings.Count(string(out), "one two") < 2 { // the echo, and cat's
+		n, err := conn.Read(buf)
+		out = append(out, buf[:n]...)
+		if err != nil {
+			t.Fatalf("read %q: %v", out, err)
 		}
 	}
-	if last != [2]int{50, 10} {
-		t.Fatalf("frames at %v, want the view's 50×10", last)
+	if len(sizes) == 0 || sizes[len(sizes)-1] != [2]int{50, 10} {
+		t.Fatalf("frames at %v, want the view's 50×10 last", sizes)
 	}
 	conn.Close()
 	if conn.lost() {
@@ -247,19 +228,112 @@ func TestHostConn(t *testing.T) {
 	}
 }
 
-// A build not packaged keeps its terminals apart from those of the
-// Gocast installed, which share its data folder; a packaged one runs
-// them in the data folder.
+// A terminal whose stream can't be opened is not left running unseen in
+// the host, nor started twice: only starting it is tried again with a
+// host started anew. (Regression: the whole of it was, with the same
+// client, so a preset's command ran twice, once unseen.)
+func TestTermHostOpen(t *testing.T) {
+	_, dial := hostForTest(t)
+	failing := false
+	flaky := func() (net.Conn, error) {
+		if failing {
+			return nil, errors.New("refused")
+		}
+		return dial()
+	}
+	old := sysTermHost
+	t.Cleanup(func() { sysTermHost = old })
+	sysTermHost = func(string, bool) (*termhost.Client, error) { return termhost.NewClient(flaky) }
+	h := &termHost{dir: t.TempDir(), run: func(_ string, fn func()) { fn() }}
+	req := termhost.CreateRequest{Argv: []string{"/bin/sleep", "30"}, Dir: "/", Cols: 20, Rows: 5}
+
+	st, created, err := h.open(req, "")
+	if err != nil || created == "" {
+		t.Fatalf("open: %v", err)
+	}
+	st.Close()
+	if !h.has(created) || h.has("nope") {
+		t.Fatal("has: the terminal started not there, or one that isn't")
+	}
+
+	h.c.Close() // a new client, whose stream will fail
+	h.c = nil
+	sysTermHost = func(string, bool) (*termhost.Client, error) {
+		c, err := termhost.NewClient(flaky)
+		failing = true // the client connected; the stream can't
+		return c, err
+	}
+	if _, _, err := h.open(req, ""); err == nil {
+		t.Fatal("opened with no stream")
+	}
+	failing = false
+	c, err := termhost.NewClient(dial)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer c.Close()
+	list, _, err := c.List()
+	if err != nil || len(list) != 1 || list[0].ID != created {
+		t.Fatalf("the host's terminals: %+v %v, want only the first", list, err)
+	}
+}
+
+// Requests to the host queue without waiting, however many come while the
+// one before runs (a host that answers no more holds it up), in order; a
+// request with a key replaces the one with that key still waiting, in
+// the place of the last.
+func TestRequestQueue(t *testing.T) {
+	q := newRequestQueue()
+	go q.loop()
+	var ran []string
+	hold, held := make(chan struct{}), make(chan struct{})
+	q.add("", func() { close(held); <-hold })
+	<-held
+	for i := range 500 {
+		n := strconv.Itoa(i)
+		q.add("active", func() { ran = append(ran, "active "+n) })
+		q.add("", func() { ran = append(ran, "close "+n) })
+	}
+	q.add("meta a", func() { ran = append(ran, "meta a") })
+	done := make(chan struct{})
+	q.add("", func() { close(done) })
+	close(hold)
+	<-done
+	if len(ran) != 502 || ran[0] != "close 0" || ran[498] != "close 498" || ran[499] != "active 499" || ran[500] != "close 499" || ran[501] != "meta a" {
+		t.Fatalf("%d ran: %v … %v", len(ran), ran[:min(3, len(ran))], ran[max(0, len(ran)-3):])
+	}
+}
+
+// Only the Gocast installed (com.hugo.gocast, built for release) runs its
+// terminals in the data folder; any other build, which shares that folder
+// (go build, mygo dev, a debug build), gets one of its own, so that it
+// never shows nor ends the installed Gocast's terminals.
 func TestTermHostDir(t *testing.T) {
 	dir := t.TempDir()
-	if got := termHostDir(dir, false); got != dir {
-		t.Fatalf("packaged: %s", got)
+	if got := termHostDir(dir, "com.hugo.gocast", false); got != dir {
+		t.Fatalf("installed: %s", got)
 	}
-	got := termHostDir(dir, true)
-	if got != filepath.Join(dir, "dev-terminals") {
-		t.Fatalf("dev: %s", got)
-	}
-	if fi, err := os.Stat(got); err != nil || !fi.IsDir() || fi.Mode().Perm() != 0o700 {
-		t.Fatalf("dev folder: %v %v", fi, err)
+	seen := map[string]string{}
+	for _, c := range []struct {
+		id  string
+		dev bool
+	}{{"com.hugo.gocast", true}, {"com.hugo.gocast.dev", true}, {"com.hugo.gocast.dev", false}, {"", true}, {"", false}, {"x/../..", false}} {
+		got := termHostDir(dir, c.id, c.dev)
+		if filepath.Dir(filepath.Dir(got)) != dir || filepath.Base(filepath.Dir(got)) != "dev-terminals" {
+			t.Errorf("%+v: %s", c, got)
+		}
+		if fi, err := os.Stat(got); err != nil || !fi.IsDir() || fi.Mode().Perm() != 0o700 {
+			t.Errorf("%+v: folder %v %v", c, fi, err)
+		}
+		k := fmt.Sprint(c)
+		if c.id == "" {
+			k = "unbundled" // go build: dev or not, the same
+		}
+		for other, p := range seen {
+			if p == got && other != k {
+				t.Errorf("%s and %s share %s", other, k, got)
+			}
+		}
+		seen[k] = got
 	}
 }

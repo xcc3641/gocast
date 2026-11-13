@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"sync"
 
 	"github.com/egoist/mygo"
@@ -50,15 +51,39 @@ var sysConfirmCloseAll = func() bool {
 	return err == nil && r.Button == 0
 }
 
+// sysBundleID is the identifier of the bundle Gocast runs from, "" when
+// not packaged.
+var sysBundleID = func() string {
+	exe, err := os.Executable()
+	if err != nil {
+		return ""
+	}
+	return termhost.BundleID(exe)
+}
+
 // termHostDir is the folder of the terminal host of the data folder dir:
-// dir itself; for a build not packaged (go run, go build), which shares
-// the data folder with the Gocast installed, a folder of its own in it,
-// so that it never shows nor ends the installed Gocast's terminals.
-func termHostDir(dir string, dev bool) string {
-	if !dev {
+// dir itself for the Gocast installed (identifier com.hugo.gocast, built
+// for release, dev false). Any other build shares the data folder with
+// it, but never its terminals, which it would show and end: go run and go
+// build, mygo dev (com.hugo.gocast.dev), a debug build. Each gets a folder
+// of its own, named after its identifier, in dev-terminals.
+func termHostDir(dir, bundleID string, dev bool) string {
+	if !dev && bundleID == identifier {
 		return dir
 	}
-	d := filepath.Join(dir, "dev-terminals")
+	name := "unbundled"
+	if bundleID != "" {
+		name = strings.Map(func(r rune) rune {
+			if r == '.' || r == '-' || r >= '0' && r <= '9' || r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' {
+				return r
+			}
+			return '_'
+		}, bundleID)
+		if dev {
+			name += "-dev"
+		}
+	}
+	d := filepath.Join(dir, "dev-terminals", name)
 	if err := os.MkdirAll(d, 0o700); err != nil {
 		log.Printf("terminal host: %v", err)
 	}
@@ -70,24 +95,72 @@ func termHostDir(dir string, dev bool) string {
 // main thread.
 type termHost struct {
 	dir string
-	// run runs a request: on the host's goroutine, in order; at once in
-	// tests.
-	run func(func())
+	// run runs a request: on the host's goroutine, in order, after those
+	// before it; one with a key in place of the one with the same key
+	// still waiting. At once in tests.
+	run func(key string, fn func())
 
 	mu sync.Mutex
 	c  *termhost.Client
 }
 
 func newTermHost(dir string) *termHost {
-	h := &termHost{dir: dir}
-	queue := make(chan func(), 64)
-	go func() {
-		for fn := range queue {
+	q := newRequestQueue()
+	go q.loop()
+	return &termHost{dir: dir, run: q.add}
+}
+
+// requestQueue holds the requests to the host, in order, as many as come:
+// adding one never waits, even while a host that answers no more holds up
+// the one running (for as long as its timeout).
+type requestQueue struct {
+	mu    sync.Mutex
+	items []queued
+	wake  chan struct{}
+}
+
+type queued struct {
+	key string
+	fn  func()
+}
+
+func newRequestQueue() *requestQueue { return &requestQueue{wake: make(chan struct{}, 1)} }
+
+// add queues fn; with a key, in place of the request with that key still
+// waiting, which it makes useless (the tab showing, a tab's meta).
+func (q *requestQueue) add(key string, fn func()) {
+	q.mu.Lock()
+	if key != "" {
+		q.items = slices.DeleteFunc(q.items, func(it queued) bool { return it.key == key })
+	}
+	q.items = append(q.items, queued{key, fn})
+	q.mu.Unlock()
+	select {
+	case q.wake <- struct{}{}:
+	default:
+	}
+}
+
+// next takes the first request, if any.
+func (q *requestQueue) next() (func(), bool) {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	if len(q.items) == 0 {
+		return nil, false
+	}
+	fn := q.items[0].fn
+	q.items[0] = queued{}
+	q.items = q.items[1:]
+	return fn, true
+}
+
+// loop runs the requests, for good.
+func (q *requestQueue) loop() {
+	for range q.wake {
+		for fn, ok := q.next(); ok; fn, ok = q.next() {
 			fn()
 		}
-	}()
-	h.run = func(fn func()) { queue <- fn }
-	return h
+	}
 }
 
 // client is the connection to the host, made again when it broke; with
@@ -111,7 +184,8 @@ func (h *termHost) client(spawn bool) (*termhost.Client, error) {
 }
 
 // do runs fn with the host, again with a host started anew when the one
-// it had went away meanwhile (exited after Close All, or died).
+// it had went away meanwhile (exited after Close All, or died): fn must
+// be a single request, which the host never took when it went away.
 func (h *termHost) do(spawn bool, fn func(c *termhost.Client) error) error {
 	c, err := h.client(spawn)
 	if err != nil {
@@ -127,12 +201,59 @@ func (h *termHost) do(spawn bool, fn func(c *termhost.Client) error) error {
 
 // request runs fn with the running host, if any, in order with the other
 // requests, logging its error: requests whose answer nothing waits for.
-func (h *termHost) request(what string, fn func(c *termhost.Client) error) {
-	h.run(func() {
+// One with a key replaces the one with that key still waiting.
+func (h *termHost) request(what, key string, fn func(c *termhost.Client) error) {
+	h.run(key, func() {
 		if err := h.do(false, fn); err != nil {
 			log.Printf("terminal host: %s: %v", what, err)
 		}
 	})
+}
+
+// open has the host start the terminal req asks, or, with id, find its
+// terminal id, and opens a stream of it; created is the terminal it
+// started. Only the start is tried again with a host started anew: a
+// stream that can't be opened ends the terminal started for it, which
+// would run on unseen.
+func (h *termHost) open(req termhost.CreateRequest, id string) (st *termhost.Stream, created string, err error) {
+	var c *termhost.Client
+	err = h.do(id == "", func(cl *termhost.Client) error {
+		c = cl
+		if id != "" {
+			return nil
+		}
+		var err error
+		created, err = cl.Create(req)
+		return err
+	})
+	if err != nil {
+		return nil, "", err
+	}
+	if id == "" {
+		id = created
+	}
+	if st, err = c.Attach(id); err != nil {
+		if created != "" {
+			if cerr := c.CloseTerminal(created); cerr != nil {
+				log.Printf("terminal host: closing %s: %v", created, cerr)
+			}
+		}
+		return nil, "", err
+	}
+	return st, created, nil
+}
+
+// has reports whether the running host still has the terminal id: one
+// whose stream ended without its program, cut off from it, not the host
+// gone.
+func (h *termHost) has(id string) bool {
+	found := false
+	err := h.do(false, func(c *termhost.Client) error {
+		list, _, err := c.List()
+		found = slices.ContainsFunc(list, func(s termhost.Session) bool { return s.ID == id })
+		return err
+	})
+	return err == nil && found
 }
 
 // tabMeta is what the host keeps of a tab for Gocast, to show it again

@@ -1,12 +1,18 @@
 package termhost
 
 import (
+	"bufio"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
 	"net"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
+	"syscall"
 	"testing"
 	"time"
 
@@ -56,6 +62,35 @@ func (c *fakeClock) fire() int {
 	return len(due)
 }
 
+// poke tells a test waiting that what it waits for may have come: a
+// stream read again, the host's sessions changed. Tests wait for these,
+// not for time to pass; one that never comes is go test's timeout.
+type poke chan struct{}
+
+func newPoke() poke { return make(chan struct{}, 1) }
+
+func (p poke) tell() {
+	select {
+	case p <- struct{}{}:
+	default:
+	}
+}
+
+// until waits for cond, looking again each time p is told.
+func until(p poke, cond func() bool) {
+	for !cond() {
+		<-p
+	}
+}
+
+// pokes are the test host's: its sessions changed.
+var hostPokes sync.Map // *Host → poke
+
+func changed(h *Host) poke {
+	p, _ := hostPokes.Load(h)
+	return p.(poke)
+}
+
 // testHost is a host in the test's process, and a client of it over
 // pipes.
 func testHost(t *testing.T) (*Host, *Client, *fakeClock) {
@@ -72,6 +107,10 @@ func testHostConns(t *testing.T) (*Host, *Client, *fakeClock, func()) {
 	}
 	clock := &fakeClock{}
 	h := New(Options{Build: "test", AfterFunc: clock.after})
+	p := newPoke()
+	h.changed = p.tell
+	hostPokes.Store(h, p)
+	t.Cleanup(func() { hostPokes.Delete(h) })
 	var mu sync.Mutex
 	var conns []net.Conn
 	kill := func() {
@@ -99,33 +138,36 @@ func testHostConns(t *testing.T) (*Host, *Client, *fakeClock, func()) {
 	return h, c, clock, kill
 }
 
-// waitFor waits for cond, failing after 10 seconds.
-func waitFor(t *testing.T, what string, cond func() bool) {
-	t.Helper()
-	deadline := time.Now().Add(10 * time.Second)
-	for !cond() {
-		if time.Now().After(deadline) {
-			t.Fatalf("timed out waiting for %s", what)
-		}
-		time.Sleep(10 * time.Millisecond)
-	}
+// shown is a terminal of the client's showing a session, as Gocast's tab.
+type shown struct {
+	*terminal.Terminal
+	st   *Stream
+	read poke // the terminal wrote what it read
+}
+
+// waitText waits for the terminal to show s.
+func (sh *shown) waitText(s string) {
+	until(sh.read, func() bool { return strings.Contains(sh.Text(), s) })
 }
 
 // show attaches a terminal of the client's to the session, as Gocast's
-// tab does.
-func show(t *testing.T, c *Client, id string) (*terminal.Terminal, *Stream) {
+// tab does; onExit, when set, runs as the stream ends.
+func show(t *testing.T, c *Client, id string, onExit func(int)) *shown {
 	t.Helper()
 	st, err := c.Attach(id)
 	if err != nil {
 		t.Fatal(err)
 	}
-	term, err := terminal.New(terminal.Options{Conn: st, ResizeByConn: true, NoExitMessage: true})
+	sh := &shown{st: st, read: newPoke()}
+	st.readHook = sh.read.tell
+	term, err := terminal.New(terminal.Options{Conn: st, ResizeByConn: true, NoExitMessage: true, OnExit: onExit})
 	if err != nil {
 		t.Fatal(err)
 	}
+	sh.Terminal = term
 	st.Bind(func(cols, rows int) { term.Resize(cols, rows) })
 	t.Cleanup(func() { term.Close() })
-	return term, st
+	return sh
 }
 
 // echo is a program that answers each line typed, until it reads "bye".
@@ -140,9 +182,10 @@ func TestAttachAgain(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	term, st := show(t, c, id)
+	term := show(t, c, id, nil)
+	st := term.st
 	st.Write([]byte("one\r"))
-	waitFor(t, "got one", func() bool { return strings.Contains(term.Text(), "got one") })
+	term.waitText("got one")
 	if cols, rows := term.Size(); cols != 40 || rows != 10 {
 		t.Errorf("size %dx%d, want the host's 40x10", cols, rows)
 	}
@@ -157,14 +200,14 @@ func TestAttachAgain(t *testing.T) {
 		t.Fatalf("after detaching: %+v %v", sessions, err)
 	}
 
-	term2, st2 := show(t, c, id)
-	waitFor(t, "the output before", func() bool { return strings.Contains(term2.Text(), "got one") })
-	st2.Write([]byte("two\r"))
-	waitFor(t, "got two", func() bool { return strings.Contains(term2.Text(), "got two") })
+	term2 := show(t, c, id, nil)
+	term2.waitText("got one") // the output before
+	term2.st.Write([]byte("two\r"))
+	term2.waitText("got two")
 
 	// The view's size goes to the host, whose frames bring it back.
-	st2.ResizePixels(52, 14, 8, 16)
-	waitFor(t, "52x14", func() bool { c, r := term2.Size(); return c == 52 && r == 14 })
+	term2.st.ResizePixels(52, 14, 8, 16)
+	until(term2.read, func() bool { c, r := term2.Size(); return c == 52 && r == 14 })
 	if !strings.Contains(term2.Text(), "got one") {
 		t.Errorf("resized: %q", term2.Text())
 	}
@@ -195,50 +238,34 @@ func TestExitCode(t *testing.T) {
 	if n := clock.fire(); n != 0 {
 		t.Fatalf("%d idle timers with a terminal running", n)
 	}
-	exited := make(chan int, 1)
-	st, err := c.Attach(id)
-	if err != nil {
-		t.Fatal(err)
-	}
-	term, err := terminal.New(terminal.Options{Conn: st, ResizeByConn: true, NoExitMessage: true, OnExit: func(int) {
-		_, code, _ := st.Ended()
-		exited <- code
-	}})
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer term.Close()
-	st.Bind(func(cols, rows int) { term.Resize(cols, rows) })
+	exited := make(chan struct{})
+	term := show(t, c, id, func(int) { close(exited) })
+	st := term.st
 	st.Write([]byte("last\r"))
-	waitFor(t, "got last", func() bool { return strings.Contains(term.Text(), "got last") })
+	term.waitText("got last")
 	st.Write([]byte("bye\r"))
-	select {
-	case code := <-exited:
-		if code != 3 {
-			t.Errorf("exit code %d, want 3", code)
-		}
-	case <-time.After(10 * time.Second):
-		t.Fatal("no exit")
+	<-exited
+	if ex, code, lost := st.Ended(); !ex || lost || code != 3 {
+		t.Errorf("ended: exited %v, code %d (want 3), lost %v", ex, code, lost)
 	}
-	if ex, _, lost := st.Ended(); !ex || lost {
-		t.Errorf("ended: exited %v, lost %v", ex, lost)
+	until(changed(h), func() bool { s, _, _ := c.List(); return len(s) == 0 }) // the session gone
+	if n := clock.fire(); n != 1 {
+		t.Fatalf("%d idle timers once the last terminal ended", n)
 	}
-	waitFor(t, "the session gone", func() bool { s, _, _ := c.List(); return len(s) == 0 })
-	waitFor(t, "the idle timer", func() bool { return clock.fire() == 1 })
 	select {
 	case <-h.Done():
-	case <-time.After(time.Second):
+	default:
 		t.Fatal("idle: not done")
 	}
 }
 
 // A program that ends with nobody attached is forgotten.
 func TestExitDetached(t *testing.T) {
-	_, c, _ := testHost(t)
+	h, c, _ := testHost(t)
 	if _, err := c.Create(CreateRequest{Argv: []string{"/bin/sh", "-c", "exit 0"}, Dir: "/", Cols: 20, Rows: 5}); err != nil {
 		t.Fatal(err)
 	}
-	waitFor(t, "the session gone", func() bool { s, _, _ := c.List(); return len(s) == 0 })
+	until(changed(h), func() bool { s, _, _ := c.List(); return len(s) == 0 })
 }
 
 // The client's meta, the tab showing and a preset's end come back in
@@ -273,7 +300,7 @@ func TestListAndCloseAll(t *testing.T) {
 	if err := c.CloseTerminal("nope"); err == nil {
 		t.Error("closed a terminal that isn't")
 	}
-	waitFor(t, "the preset's end", func() bool {
+	until(changed(h), func() bool { // the preset's end
 		s, _, _ := c.List()
 		return len(s) == 2 && s[1].Done
 	})
@@ -287,7 +314,7 @@ func TestListAndCloseAll(t *testing.T) {
 	}
 	select {
 	case <-h.Done():
-	case <-time.After(time.Second):
+	default:
 		t.Fatal("Close All: the host goes on")
 	}
 	h.mu.Lock()
@@ -305,12 +332,25 @@ func TestPrefill(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	term, st := show(t, c, id)
-	st.Write([]byte("x\r"))
-	waitFor(t, "got x", func() bool { return strings.Contains(term.Text(), "got x") })
+	term := show(t, c, id, nil)
+	term.st.Write([]byte("x\r"))
+	term.waitText("got x")
 	text := term.Text()
 	if i, j := strings.Index(text, "cut off"), strings.Index(text, "got x"); i < 0 || j < i || !strings.HasPrefix(text, "before") {
 		t.Errorf("text: %q", text)
+	}
+
+	// Laid out wider than the terminal starts: a row as wide stays one.
+	wide := strings.Repeat("w", 70)
+	id, err = c.Create(CreateRequest{Argv: echo, Dir: "/", Cols: 100, Rows: 6, Prefill: []byte(wide + "\r\n")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	term = show(t, c, id, nil)
+	term.st.Write([]byte("y\r"))
+	term.waitText("got y")
+	if text := term.Text(); !strings.HasPrefix(text, wide+"\n") {
+		t.Errorf("wide: %q", text)
 	}
 }
 
@@ -334,24 +374,12 @@ func TestHostLost(t *testing.T) {
 		t.Fatal(err)
 	}
 	ended := make(chan struct{})
-	st, err := c.Attach(id)
-	if err != nil {
-		t.Fatal(err)
-	}
-	term, err := terminal.New(terminal.Options{Conn: st, ResizeByConn: true, NoExitMessage: true, OnExit: func(int) { close(ended) }})
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer term.Close()
-	st.Bind(func(cols, rows int) { term.Resize(cols, rows) })
+	term := show(t, c, id, func(int) { close(ended) })
+	st := term.st
 	st.Write([]byte("x\r"))
-	waitFor(t, "got x", func() bool { return strings.Contains(term.Text(), "got x") })
+	term.waitText("got x")
 	kill()
-	select {
-	case <-ended:
-	case <-time.After(10 * time.Second):
-		t.Fatal("not ended")
-	}
+	<-ended
 	if exited, _, lost := st.Ended(); exited || !lost {
 		t.Errorf("exited %v, lost %v", exited, lost)
 	}
@@ -408,40 +436,161 @@ func TestBundleOf(t *testing.T) {
 	}
 }
 
-// The socket is in the data folder, or in the temporary folder when that
-// path is too long for a socket; two data folders never share one.
-func TestSocketPath(t *testing.T) {
-	short := "/Users/a/Library/Application Support/com.hugo.gocast"
-	if got := SocketPath(short); got != short+"/terminal.sock" {
-		t.Errorf("short: %q", got)
+// The bundle's identifier comes from its Info.plist; a build not
+// packaged has none.
+func TestBundleID(t *testing.T) {
+	app := filepath.Join(t.TempDir(), "Gocast Dev.app")
+	if err := os.MkdirAll(filepath.Join(app, "Contents", "MacOS"), 0o700); err != nil {
+		t.Fatal(err)
 	}
-	long := "/Users/a/" + strings.Repeat("x", 100)
-	got := SocketPath(long)
-	if len(got) >= maxSocketPath || filepath.Dir(got) != filepath.Clean(os.TempDir()) || got == SocketPath(long+"y") {
-		t.Errorf("long: %q", got)
+	plist := "<plist><dict>\n\t<key>CFBundleName</key>\n\t<string>Gocast</string>\n\t<key>CFBundleIdentifier</key>\n\t<string>com.hugo.gocast.dev</string>\n</dict></plist>\n"
+	if err := os.WriteFile(filepath.Join(app, "Contents", "Info.plist"), []byte(plist), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if got := BundleID(filepath.Join(app, "Contents", "MacOS", "Gocast")); got != "com.hugo.gocast.dev" {
+		t.Errorf("bundle: %q", got)
+	}
+	if got := BundleID("/Users/a/src/gocast/build/gocast"); got != "" {
+		t.Errorf("go build: %q", got)
 	}
 }
 
+// The app gone from where it was is uninstalled only when Spotlight
+// knows of no other copy: one moved is followed; one in the Trash, in a
+// disk image or translocated doesn't count; Spotlight failing is not
+// knowing, never gone. An app run from a disk image or translocated
+// isn't watched at all.
+func TestBundleWatch(t *testing.T) {
+	t0 := time.Date(2026, 11, 14, 9, 0, 0, 0, time.UTC)
+	plists := map[string]bool{}
+	var found []string
+	var findErr error
+	w := bundleWatch{
+		bundle: "/Applications/Gocast.app",
+		id:     "com.hugo.gocast",
+		exists: func(p string) bool { return plists[p] },
+		find:   func(string) ([]string, error) { return found, findErr },
+	}
+	plist := func(b string) string { return b + "/Contents/Info.plist" }
+	look := func(at time.Duration) bool { return w.step(t0.Add(at), 0) }
+
+	plists[plist("/Applications/Gocast.app")] = true
+	if look(0) || look(time.Minute) || look(2*time.Minute) {
+		t.Fatal("there: gone")
+	}
+
+	// Moved to ~/Applications: followed.
+	delete(plists, plist("/Applications/Gocast.app"))
+	moved := "/Users/a/Applications/Gocast.app"
+	plists[plist(moved)] = true
+	found = []string{"/Users/a/.Trash/Gocast.app", moved}
+	if look(3*time.Minute) || look(4*time.Minute) || w.bundle != moved {
+		t.Fatalf("moved: gone, or not followed (%s)", w.bundle)
+	}
+
+	// Spotlight failing: not known, not gone.
+	delete(plists, plist(moved))
+	findErr = errors.New("mdfind: no")
+	if look(5*time.Minute) || look(7*time.Minute) {
+		t.Fatal("Spotlight failing: gone")
+	}
+
+	// In the Trash, in a disk image, translocated, or a stale entry: gone
+	// at the second look a minute after the first.
+	findErr = nil
+	found = []string{"/Users/a/.Trash/Gocast.app", "/Volumes/Gocast/Gocast.app", "/private/var/folders/x/AppTranslocation/y/d/Gocast.app", "/Applications/Old/Gocast.app"}
+	plists[plist("/Users/a/.Trash/Gocast.app")] = true
+	plists[plist("/Volumes/Gocast/Gocast.app")] = true
+	if look(8 * time.Minute) {
+		t.Fatal("gone at the first look")
+	}
+	if !look(9 * time.Minute) {
+		t.Fatal("uninstalled: not gone")
+	}
+
+	for b, want := range map[string]bool{
+		"/Applications/Gocast.app":                                        false,
+		"/Volumes/Gocast/Gocast.app":                                      true,
+		"/private/var/folders/ab/cd/T/AppTranslocation/0F1E/d/Gocast.app": true,
+	} {
+		if unsettled(b) != want {
+			t.Errorf("unsettled(%s) = %v", b, !want)
+		}
+	}
+}
+
+// The socket is in the data folder, or, when that path is too long for a
+// socket, in a folder of the user's alone in the temporary folder; two
+// data folders never share one. A folder others can write in, or a link,
+// is refused.
+func TestSocketPath(t *testing.T) {
+	short := "/Users/a/Library/Application Support/com.hugo.gocast"
+	if got, err := SocketPath(short); err != nil || got != short+"/terminal.sock" {
+		t.Errorf("short: %q %v", got, err)
+	}
+	tmp := t.TempDir()
+	long := "/Users/a/" + strings.Repeat("x", 100)
+	got, err := socketPathIn(long, tmp)
+	own := filepath.Join(tmp, fmt.Sprintf("gocast-%d", os.Getuid()))
+	if err != nil || filepath.Dir(got) != own {
+		t.Fatalf("long: %q %v", got, err)
+	}
+	if other, _ := socketPathIn(long+"y", tmp); other == got {
+		t.Errorf("two folders, one socket: %q", got)
+	}
+	if fi, err := os.Stat(own); err != nil || fi.Mode().Perm() != 0o700 {
+		t.Fatalf("the folder: %v %v", fi, err)
+	}
+
+	if err := os.Chmod(own, 0o777); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := socketPathIn(long, tmp); err == nil {
+		t.Error("a folder anyone writes in: taken")
+	}
+	tmp2 := t.TempDir()
+	if err := os.Symlink(own, filepath.Join(tmp2, fmt.Sprintf("gocast-%d", os.Getuid()))); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := socketPathIn(long, tmp2); err == nil {
+		t.Error("a link: taken")
+	}
+}
+
+// shortDir is a folder for a socket, whose path must be under 104 bytes:
+// t.TempDir's are longer on macOS.
+func shortDir(t *testing.T) string {
+	dir, err := os.MkdirTemp("", "th")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { os.RemoveAll(dir) })
+	return dir
+}
+
+// noTimer stands for the idle timer, which never runs out.
+func noTimer(time.Duration, func()) func() bool { return func() bool { return true } }
+
 // Over the Unix socket: a client finds the host Main would serve, and
-// none where no host runs.
+// none where no host runs, nor once that host is ending.
 func TestDial(t *testing.T) {
 	if err := terminal.Load(); err != nil {
 		t.Skip("no libghostty-vt:", err)
 	}
-	dir, err := os.MkdirTemp("", "th") // short: a socket's path is
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
+	dir := shortDir(t)
 	if _, err := Dial(dir); err == nil {
 		t.Fatal("dialed no host")
 	}
-	l, err := net.Listen("unix", SocketPath(dir))
+	sock, err := SocketPath(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	l, err := net.Listen("unix", sock)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer l.Close()
-	h := New(Options{Build: "x"})
+	h := New(Options{Build: "x", AfterFunc: noTimer})
 	go h.Serve(l)
 	c, err := Dial(dir)
 	if err != nil {
@@ -450,5 +599,190 @@ func TestDial(t *testing.T) {
 	defer c.Close()
 	if c.PID() != os.Getpid() || !c.Has(CapPaste) {
 		t.Errorf("hello: %+v", c.hello)
+	}
+	h.CloseAll()
+	if _, err := Dial(dir); err == nil {
+		t.Fatal("dialed a host that ends")
+	}
+}
+
+// The programs the host starts get the hangup and broken pipes as
+// programs do, by default, not ignored as the host would have them: else
+// a hangup, as a tab closes, ends none of them. (Regression: the host
+// ignored both, and every program with it.)
+func TestChildSignals(t *testing.T) {
+	if _, err := os.Stat("/usr/bin/perl"); err != nil {
+		t.Skip("no perl:", err)
+	}
+	stop := hostSignals()
+	defer stop()
+	_, c, _ := testHost(t)
+	id, err := c.Create(CreateRequest{Argv: []string{"/usr/bin/perl", "-e", `print "HUP=", ($SIG{HUP} // "default"), " PIPE=", ($SIG{PIPE} // "default"), " ok\n"; sleep 30`}, Dir: "/", Cols: 60, Rows: 5})
+	if err != nil {
+		t.Fatal(err)
+	}
+	term := show(t, c, id, nil)
+	term.waitText(" ok")
+	if text := term.Text(); !strings.Contains(text, "HUP=default PIPE=default ok") {
+		t.Errorf("the program's signals: %q", text)
+	}
+}
+
+// A terminal never starts in a host that is exiting: the idle time
+// running out as it was being made, or Close All, from this connection
+// or another, the client finds the host lost, for one started anew to
+// take it. (Regression: it got an ID, then the host exited under it; or
+// the error was taken for good, and the tab ran in Gocast.)
+func TestCreateWhileExiting(t *testing.T) {
+	h, c, clock := testHost(t)
+	h.beforeAdd = func() { clock.fire() } // the idle time runs out now
+	if _, err := c.Create(CreateRequest{Argv: echo, Dir: "/", Cols: 20, Rows: 5}); !errors.Is(err, ErrLost) || !c.Lost() {
+		t.Fatalf("created as the idle time ran out: %v, lost %v", err, c.Lost())
+	}
+	select {
+	case <-h.Done():
+	default:
+		t.Fatal("idle: not done")
+	}
+	if n := sessionsOf(h); n != 0 {
+		t.Fatalf("%d sessions in a host exiting", n)
+	}
+
+	h, c, _ = testHost(t)
+	other, err := NewClient(c.dial)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer other.Close()
+	h.beforeAdd = func() { _ = other.CloseAll() }
+	if _, err := c.Create(CreateRequest{Argv: echo, Dir: "/", Cols: 20, Rows: 5}); !errors.Is(err, ErrLost) {
+		t.Fatalf("created during Close All: %v", err)
+	}
+	if !other.Lost() {
+		t.Error("after Close All: the client's host not lost")
+	}
+
+	h, c, _ = testHost(t)
+	if err := c.CloseAll(); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := c.Create(CreateRequest{Argv: echo, Dir: "/", Cols: 20, Rows: 5}); !errors.Is(err, ErrLost) {
+		t.Fatalf("created after Close All: %v", err)
+	}
+	if n := sessionsOf(h); n != 0 {
+		t.Fatalf("%d sessions after Close All", n)
+	}
+}
+
+func sessionsOf(h *Host) int {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return len(h.sessions)
+}
+
+// flakyListener fails its first Accepts, then gives conns, until closed.
+type flakyListener struct {
+	fails  int
+	conns  chan net.Conn
+	closed chan struct{}
+	once   sync.Once
+}
+
+func (l *flakyListener) Accept() (net.Conn, error) {
+	if l.fails > 0 {
+		l.fails--
+		return nil, syscall.EMFILE
+	}
+	select {
+	case c := <-l.conns:
+		return c, nil
+	case <-l.closed:
+		return nil, net.ErrClosed
+	}
+}
+
+func (l *flakyListener) Close() error   { l.once.Do(func() { close(l.closed) }); return nil }
+func (l *flakyListener) Addr() net.Addr { return &net.UnixAddr{Name: "flaky", Net: "unix"} }
+
+// Accept failing (too many files open) is waited out, longer each time,
+// and the host serves again after; it stops once closed. (Regression:
+// one failure and no Gocast could reach the host again.)
+func TestServeAcceptFails(t *testing.T) {
+	var waits []time.Duration
+	h := New(Options{AfterFunc: noTimer, Sleep: func(d time.Duration) { waits = append(waits, d) }})
+	l := &flakyListener{fails: 3, conns: make(chan net.Conn), closed: make(chan struct{})}
+	served := make(chan error)
+	go func() { served <- h.Serve(l) }()
+	a, b := net.Pipe()
+	l.conns <- b
+	c, err := NewClient(func() (net.Conn, error) { return a, nil })
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer c.Close()
+	if want := []time.Duration{5 * time.Millisecond, 10 * time.Millisecond, 20 * time.Millisecond}; !slices.Equal(waits, want) {
+		t.Errorf("waited %v, want %v", waits, want)
+	}
+	h.CloseAll()
+	if err := <-served; !errors.Is(err, net.ErrClosed) {
+		t.Errorf("served until %v", err)
+	}
+}
+
+// A connection that never says hello is closed, and not counted as a
+// Gocast connected, which would keep the host from noticing it was
+// uninstalled.
+func TestHelloWait(t *testing.T) {
+	h := New(Options{AfterFunc: noTimer, HelloWait: time.Millisecond})
+	a, b := net.Pipe()
+	defer a.Close()
+	done := make(chan struct{})
+	go func() {
+		h.ServeConn(b)
+		close(done)
+	}()
+	<-done
+	if n := h.Clients(); n != 0 {
+		t.Errorf("%d clients", n)
+	}
+}
+
+// A stream that reads something that is not a frame ends as cut off from
+// the host, not as the program's end: the tab looks for its terminal
+// again, rather than closing it.
+func TestMalformedFrame(t *testing.T) {
+	a, b := net.Pipe()
+	defer b.Close()
+	st := &Stream{conn: a, r: bufio.NewReader(a), ready: make(chan struct{})}
+	st.Bind(nil)
+	go writeMsg(b, msgFrame, []byte{1})
+	if n, err := st.Read(make([]byte, 8)); n != 0 || err != io.EOF {
+		t.Fatalf("read %d, %v", n, err)
+	}
+	if exited, _, lost := st.Ended(); exited || !lost {
+		t.Errorf("exited %v, lost %v", exited, lost)
+	}
+}
+
+// The host closes the descriptors it got without close-on-exec, which
+// its programs would get too, and keeps its own.
+func TestCloseInherited(t *testing.T) {
+	inherited, err := syscall.Open("/dev/null", syscall.O_RDONLY, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	own, err := os.Open("/dev/null")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer own.Close()
+	closeInherited(inherited, inherited+1)
+	closeInherited(int(own.Fd()), int(own.Fd())+1)
+	if _, err := fcntl(inherited, syscall.F_GETFD, 0); err != syscall.EBADF {
+		syscall.Close(inherited)
+		t.Errorf("inherited: %v, want closed", err)
+	}
+	if _, err := fcntl(int(own.Fd()), syscall.F_GETFD, 0); err != nil {
+		t.Errorf("own: %v", err)
 	}
 }

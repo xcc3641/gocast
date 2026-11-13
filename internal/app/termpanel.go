@@ -519,7 +519,7 @@ func (p *termPanel) activate(i int) {
 		s.focus.Focus()
 		if s.id != "" {
 			id := s.id
-			p.request("set active", func(c *termhost.Client) error { return c.SetActive(id) })
+			p.request("set active", "active", func(c *termhost.Client) error { return c.SetActive(id) })
 		}
 	}
 	p.syncVisible()
@@ -537,10 +537,11 @@ func (p *termPanel) syncVisible() {
 	}
 }
 
-// request sends the host a request whose answer nothing waits for.
-func (p *termPanel) request(what string, fn func(c *termhost.Client) error) {
+// request sends the host a request whose answer nothing waits for; one
+// with a key replaces the one with that key not sent yet.
+func (p *termPanel) request(what, key string, fn func(c *termhost.Client) error) {
 	if p.g.host != nil {
-		p.g.host.request(what, fn)
+		p.g.host.request(what, key, fn)
 	}
 }
 
@@ -551,7 +552,7 @@ func (p *termPanel) saveMeta(s *session) {
 		return
 	}
 	id, meta := s.id, s.meta()
-	p.request("set meta", func(c *termhost.Client) error { return c.SetMeta(id, meta) })
+	p.request("set meta", "meta "+id, func(c *termhost.Client) error { return c.SetMeta(id, meta) })
 }
 
 // closeTab ends a tab's program and shows the tab after it, or the one
@@ -564,7 +565,7 @@ func (p *termPanel) closeTab(s *session) {
 	}
 	if s.id != "" {
 		id := s.id
-		p.request("close", func(c *termhost.Client) error { return c.CloseTerminal(id) })
+		p.request("close", "", func(c *termhost.Client) error { return c.CloseTerminal(id) })
 	}
 	p.removeTab(s)
 }
@@ -606,7 +607,7 @@ func (p *termPanel) closeAll() {
 	p.menu = false
 	p.g.updateTray()
 	p.hide()
-	p.request("close all", func(c *termhost.Client) error { return c.CloseAll() })
+	p.request("close all", "", func(c *termhost.Client) error { return c.CloseAll() })
 	if p.win != nil {
 		p.win.Invalidate()
 	}
@@ -740,22 +741,8 @@ func (p *termPanel) connect(s *session, term *terminal.Terminal, conn *hostConn,
 	h := p.g.host
 	restored := id != ""
 	req.Meta = s.meta()
-	h.run(func() {
-		var st *termhost.Stream
-		created := ""
-		err := h.do(!restored, func(c *termhost.Client) error {
-			tid := id
-			if !restored {
-				var err error
-				if tid, err = c.Create(req); err != nil {
-					return err
-				}
-				created = tid
-			}
-			var err error
-			st, err = c.Attach(tid)
-			return err
-		})
+	h.run("", func() {
+		st, created, err := h.open(req, id)
 		p.win.Update(func() {
 			switch {
 			case s.term != term: // closed meanwhile
@@ -763,7 +750,7 @@ func (p *termPanel) connect(s *session, term *terminal.Terminal, conn *hostConn,
 					st.Close()
 				}
 				if created != "" {
-					p.request("close", func(c *termhost.Client) error { return c.CloseTerminal(created) })
+					p.request("close", "", func(c *termhost.Client) error { return c.CloseTerminal(created) })
 				}
 			case err != nil && restored:
 				log.Printf("terminal host: attach: %v", err)
@@ -787,29 +774,46 @@ func (p *termPanel) connect(s *session, term *terminal.Terminal, conn *hostConn,
 				conn.bind(st, term.Resize)
 				if s == p.current() {
 					sid := s.id
-					p.request("set active", func(c *termhost.Client) error { return c.SetActive(sid) })
+					p.request("set active", "active", func(c *termhost.Client) error { return c.SetActive(sid) })
 				}
 			}
 		})
 	})
 }
 
-// lost follows a tab whose host went away (design.md 3.6): what it showed
-// stays, with a dim line under it, over a new shell in its folder, a
-// plain terminal now, in a host started anew.
+// lost follows a tab whose stream ended without its program. The host
+// still has its terminal (the stream alone broke): the tab shows it
+// again. The host went away (design.md 3.6): what it showed stays, with a
+// dim line under it, over a new shell in its folder, a plain terminal
+// now, in a host started anew.
 func (p *termPanel) lost(s *session) {
 	old := s.term
 	cols, rows := old.Size()
 	prefill := disconnected(old.History())
-	old.Close()
-	s.term, s.conn, s.id = nil, nil, ""
-	s.done = true
-	dir := s.dir
-	if !isDir(dir) {
-		dir = presets.ExpandHome("~")
-	}
-	p.run(s, termhost.CreateRequest{Dir: dir, Prefill: prefill, Cols: cols, Rows: rows}, "", p.g.host != nil)
-	p.win.Invalidate()
+	h, id := p.g.host, s.id
+	h.run("", func() {
+		alive := id != "" && h.has(id)
+		p.win.Update(func() {
+			if s.term != old || !slices.Contains(p.tabs, s) { // closed meanwhile
+				return
+			}
+			old.Close()
+			s.term, s.conn = nil, nil
+			if alive {
+				p.run(s, termhost.CreateRequest{}, id, true)
+				p.win.Invalidate()
+				return
+			}
+			s.id = ""
+			s.done = true
+			dir := s.dir
+			if !isDir(dir) {
+				dir = presets.ExpandHome("~")
+			}
+			p.run(s, termhost.CreateRequest{Dir: dir, Prefill: prefill, Cols: cols, Rows: rows}, "", true)
+			p.win.Invalidate()
+		})
+	})
 }
 
 // restore brings back the tabs of the host's terminals, which a Gocast
@@ -820,7 +824,7 @@ func (p *termPanel) restore() {
 	if h == nil {
 		return
 	}
-	h.run(func() {
+	h.run("", func() {
 		var list []termhost.Session
 		var active string
 		err := h.do(false, func(c *termhost.Client) error {

@@ -348,15 +348,18 @@ macos_uninstall() {
 
 # stop_terminal_host ends the terminals of the floating terminal, which go
 # on after Gocast quits, in their own process: the one terminal-host.pid in
-# the data folder names, once it is that process (Gocast --terminal-host).
+# the data folder names, once it is that process, the host of that very
+# folder (Gocast --terminal-host <folder>), not another build's nor a
+# process that took its number.
 # Added to the script mygo build writes: keep it when copying a new one.
 stop_terminal_host() {
-	pidfile="$HOME/Library/Application Support/$bundle_id/terminal-host.pid"
+	data="$HOME/Library/Application Support/$bundle_id"
+	pidfile="$data/terminal-host.pid"
 	[ -f "$pidfile" ] || return 0
 	pid="$(tr -cd 0-9 <"$pidfile")"
 	[ -n "$pid" ] || return 0
-	case "$(ps -o command= -p "$pid" 2>/dev/null)" in
-	*--terminal-host*) ;;
+	case "$(ps -ww -o command= -p "$pid" 2>/dev/null)" in
+	*"/Contents/MacOS/$app_name --terminal-host $data") ;;
 	*) return 0 ;;
 	esac
 	echo "Closing the terminals of $app_name"

@@ -328,7 +328,7 @@ func (g *gocast) ready() {
 	g.clip = newClipService(g)
 	g.calc = newCalcService(g)
 	g.launcher = newLauncher(g)
-	g.host = newTermHost(termHostDir(g.dir, mygo.App.Version() == ""))
+	g.host = newTermHost(termHostDir(g.dir, sysBundleID(), sysDevBuild()))
 	g.term = newTermPanel(g)
 	g.term.restore() // the tabs of the terminals that went on as Gocast quit
 	g.prefs = newPrefsWindow(g)

@@ -33,6 +33,7 @@ const (
 	streamGrace = 2 * time.Second         // for a stream to take its last frame
 	goneFor     = 60 * time.Second        // the app missing this long is uninstalled
 	goneEvery   = 30 * time.Second        // how often the host looks
+	helloWait   = 5 * time.Second         // for a connection's hello
 	maxPaste    = 32 << 20                // the most a paste carries
 	errNoTerm   = "termhost: no such terminal"
 	errExiting  = "termhost: the host is exiting"
@@ -49,6 +50,11 @@ type Options struct {
 	// AfterFunc runs f after d, as time.AfterFunc does, and returns what
 	// stops it: a fake clock in tests.
 	AfterFunc func(d time.Duration, f func()) (stop func() bool)
+	// Sleep waits between Accept's failures: time.Sleep when nil.
+	Sleep func(time.Duration)
+	// HelloWait is how long a connection has to say hello: 5 seconds
+	// when zero.
+	HelloWait time.Duration
 }
 
 // Host runs terminals for clients: Gocast, which shows them, as many
@@ -63,9 +69,16 @@ type Host struct {
 	idleStop func() bool
 	idleGen  int
 	exiting  bool
+	ls       []net.Listener
 
 	done     chan struct{}
 	doneOnce sync.Once
+
+	// Tests': changed is told, when set, that the sessions changed
+	// (one ended, its preset's command ended); beforeAdd runs as create
+	// is about to add a session.
+	changed   func()
+	beforeAdd func()
 }
 
 // New returns a host with no terminals, whose idle time starts now.
@@ -75,6 +88,12 @@ func New(opts Options) *Host {
 	}
 	if opts.AfterFunc == nil {
 		opts.AfterFunc = func(d time.Duration, f func()) func() bool { return time.AfterFunc(d, f).Stop }
+	}
+	if opts.Sleep == nil {
+		opts.Sleep = time.Sleep
+	}
+	if opts.HelloWait <= 0 {
+		opts.HelloWait = helloWait
 	}
 	h := &Host{opts: opts, done: make(chan struct{})}
 	h.mu.Lock()
@@ -87,11 +106,28 @@ func New(opts Options) *Host {
 // terminal ended, or after CloseAll.
 func (h *Host) Done() <-chan struct{} { return h.done }
 
+// stopTaking has the host take no new terminal nor connection, as it is
+// about to exit: create fails, and the socket goes, for a host started
+// meanwhile to take its place once it exited. With h.mu held.
+func (h *Host) stopTaking() {
+	h.exiting = true
+	for _, l := range h.ls {
+		l.Close()
+	}
+	h.ls = nil
+}
+
 func (h *Host) exit() {
 	h.mu.Lock()
-	h.exiting = true
+	h.stopTaking()
 	h.mu.Unlock()
 	h.doneOnce.Do(func() { close(h.done) })
+}
+
+func (h *Host) tell() {
+	if h.changed != nil {
+		h.changed()
+	}
 }
 
 // Clients is how many connections are open.
@@ -116,6 +152,9 @@ func (h *Host) armIdle() {
 		}
 		h.idleStop = nil
 		idle := len(h.sessions) == 0
+		if idle {
+			h.stopTaking() // with the look: no terminal gets in between
+		}
 		h.mu.Unlock()
 		if idle {
 			h.exit()
@@ -132,13 +171,32 @@ func (h *Host) disarmIdle() {
 	h.idleGen++
 }
 
-// Serve serves the connections l accepts until it is closed.
+// Serve serves the connections l accepts until it is closed, or the host
+// exits. Failures (too many files open) are waited out, longer and longer.
 func (h *Host) Serve(l net.Listener) error {
+	h.mu.Lock()
+	if h.exiting {
+		h.mu.Unlock()
+		l.Close()
+		return net.ErrClosed
+	}
+	h.ls = append(h.ls, l)
+	h.mu.Unlock()
+	var wait time.Duration
 	for {
 		c, err := l.Accept()
 		if err != nil {
-			return err
+			h.mu.Lock()
+			exiting := h.exiting
+			h.mu.Unlock()
+			if exiting || errors.Is(err, net.ErrClosed) {
+				return err
+			}
+			wait = min(max(2*wait, 5*time.Millisecond), time.Second)
+			h.opts.Sleep(wait)
+			continue
 		}
+		wait = 0
 		go h.ServeConn(c)
 	}
 }
@@ -156,10 +214,13 @@ func (h *Host) ServeConn(c net.Conn) {
 		h.mu.Unlock()
 	}()
 	r := bufio.NewReader(c)
+	// A connection that says nothing is no client.
+	_ = c.SetReadDeadline(time.Now().Add(h.opts.HelloWait))
 	typ, _, err := readMsg(r)
 	if err != nil || typ != msgHello {
 		return
 	}
+	_ = c.SetReadDeadline(time.Time{})
 	// Any version: later ones only add (see Proto).
 	if writeJSON(c, msgReply, reply{Hello: &hello{Proto: Proto, Build: h.opts.Build, PID: os.Getpid(), Caps: caps}}) != nil {
 		return
@@ -177,8 +238,8 @@ func (h *Host) ServeConn(c net.Conn) {
 		if writeJSON(c, msgReply, rep) != nil {
 			return
 		}
-		if typ == msgCloseAll && rep.Error == "" {
-			h.exit() // its programs ended: so does the host (design.md 5)
+		if typ == msgCloseAll {
+			return // the host exits (design.md 5)
 		}
 	}
 }
@@ -251,7 +312,8 @@ func newID() string {
 	return hex.EncodeToString(b[:])
 }
 
-// create starts a terminal.
+// create starts a terminal: the program starts once the session is the
+// host's, unless the host exits meanwhile.
 func (h *Host) create(req CreateRequest) (string, error) {
 	h.mu.Lock()
 	exiting := h.exiting
@@ -272,6 +334,7 @@ func (h *Host) create(req CreateRequest) (string, error) {
 				h.mu.Lock()
 				s.done = true
 				h.mu.Unlock()
+				h.tell()
 			}
 		},
 	})
@@ -279,42 +342,58 @@ func (h *Host) create(req CreateRequest) (string, error) {
 		return "", err
 	}
 	s.t = t
-	if req.Cols > 0 && req.Rows > 0 {
-		s.mu.Lock()
-		t.ResizePixels(req.Cols, req.Rows, req.CellW, req.CellH) // starts the program
-		s.mu.Unlock()
-	}
-	if len(req.Prefill) > 0 {
-		t.Feed(req.Prefill)
+	if h.beforeAdd != nil {
+		h.beforeAdd()
 	}
 	h.mu.Lock()
+	if h.exiting { // since the look above: the idle time ran out, or Close All
+		h.mu.Unlock()
+		t.Close() // its program never started
+		return "", errors.New(errExiting)
+	}
 	h.sessions = append(h.sessions, s)
 	h.disarmIdle()
 	h.mu.Unlock()
+	// What the terminal showed goes first, at the width it was laid out at
+	// (History), then the program starts, under it: a size starts it, else
+	// the first stream's.
+	if req.Cols > 0 && req.Rows > 0 {
+		if len(req.Prefill) > 0 {
+			t.Feed(req.Prefill)
+		}
+		s.mu.Lock()
+		t.ResizePixels(req.Cols, req.Rows, req.CellW, req.CellH) // starts the program
+		s.mu.Unlock()
+	} else if len(req.Prefill) > 0 {
+		t.Feed(req.Prefill)
+	}
 	go s.watch()
 	return s.id, nil
 }
 
-// CloseAll ends every terminal, and waits for their programs to end:
-// those that ignore the hangup are killed after 2 seconds.
+// CloseAll ends every terminal, waits for their programs to end (those
+// that ignore the hangup are killed after 2 seconds), and has the host
+// exit: from the start, it takes no new terminal nor connection.
 func (h *Host) CloseAll() {
 	h.mu.Lock()
+	h.stopTaking()
 	ss := h.sessions
 	h.sessions = nil
 	h.active = ""
-	h.armIdle()
 	h.mu.Unlock()
 	for _, s := range ss {
 		s.close()
 	}
 	deadline := time.After(closeGrace)
+wait:
 	for _, s := range ss {
 		select {
 		case <-s.t.Done():
 		case <-deadline:
-			return
+			break wait
 		}
 	}
+	h.exit()
 }
 
 // attach makes the connection a stream of the session the payload names,
@@ -386,6 +465,7 @@ func (s *session) watch() {
 		streams = append(streams, st)
 	}
 	h.mu.Unlock()
+	h.tell()
 	close(s.exited)
 	deadline := time.After(streamGrace)
 	for _, st := range streams {
@@ -539,6 +619,7 @@ func (st *stream) pump() {
 		switch {
 		case len(frame) > 0:
 			if writeMsg(st.c, msgFrame, frameMsg(cols, rows, frame)) != nil {
+				st.c.Close() // the client sees it end, not a terminal that stopped
 				return
 			}
 			delay = frameFast
