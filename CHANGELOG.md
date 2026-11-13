@@ -8,6 +8,18 @@ The section of each version is the release notes that the update window
 shows (MyGo reads `## [version]`), so write it for users, in Chinese and
 English.
 
+## [0.1.6] - 2026-11-13
+
+- 预设的命令结束后（包括按 ⌃C），这个标签直接变回普通终端，停在预设的文件夹里，可以接着敲。正常结束不留字，出错才留一行灰字。
+- 可以给悬浮终端设一个默认文件夹，新开的终端从这里开始；没填文件夹的预设也用它。
+- 设置里有了单独的「悬浮终端」页：默认文件夹、字号、大小这些终端设置和预设都在这里，通用页更清爽了。
+- 搜索结果里应用图标下面不再有表示正在运行的小点。
+
+- When a preset’s command ends, including with ⌃C, the tab turns into a plain terminal in the preset’s folder, so you can keep typing. Nothing is printed when it ends normally; a grey line appears only if it fails.
+- Set a default folder for the floating terminal: new terminals start there, and so do presets without a folder.
+- The floating terminal has its own page in Settings, with the default folder, font size, size and presets together. General is shorter.
+- App icons in search results no longer have a dot showing they are running.
+
 ## [0.1.5] - 2026-11-13
 
 修好了剪贴板历史里看图时会先撑到原尺寸再缩回去的问题，现在一选中就是原本该有的大小。
