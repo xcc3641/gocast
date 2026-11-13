@@ -1,6 +1,6 @@
 ---
 import { otherLocale, t, url, type Locale } from "../i18n";
-import { ICON_SVG, LICENSE, REPO } from "../lib/site";
+import { ICON_SVG, LICENSE, REPO, SITE_CSS } from "../lib/site";
 
 interface Props {
   locale: Locale;
@@ -33,7 +33,7 @@ const wide = path === "";
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
 <link rel="alternate" hreflang={t("en").lang} href={url("en", path)}>
 <link rel="alternate" hreflang={t("zh").lang} href={url("zh", path)}>
-<link rel="stylesheet" href="/assets/site.css">
+<link rel="stylesheet" href={SITE_CSS}>
 </head>
 <body class:list={[wide && "wide"]}>
 <header class="nav">
