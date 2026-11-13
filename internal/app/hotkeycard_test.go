@@ -28,7 +28,7 @@ func hotkeyPanel(t *testing.T, locale string) (*launcher, *ui.Tester, *fakeShort
 	f := useFakeShortcuts(t)
 	u := usage.New()
 	g := &gocast{dir: t.TempDir(), usage: u, presets: []presets.Preset{{ID: "p", Name: "gocast", Dir: "~/Projects/gocast", Command: "go test"}}}
-	l := &launcher{g: g, icons: map[string]*ui.Bitmap{}, running: map[string]bool{}, filtered: noQuery}
+	l := &launcher{g: g, icons: map[string]*ui.Bitmap{}, filtered: noQuery}
 	g.launcher = l
 	zh := strings.HasPrefix(locale, "zh")
 	name := func(en, cn string) string {
@@ -65,9 +65,6 @@ func hotkeyPanel(t *testing.T, locale string) (*launcher, *ui.Tester, *fakeShort
 	l.rebuild()
 	tt := ui.NewTester(l.view, windowWidth, windowHeight)
 	l.enterSearch(clipNow)
-	for _, a := range l.apps {
-		l.running[a.ID] = a.ID == "com.apple.Terminal"
-	}
 	tt.Frame()
 	return l, tt, f
 }
@@ -246,7 +243,7 @@ func TestHotkeyRowLabels(t *testing.T) {
 	typeQuery(l, "")
 	for i := range l.rows {
 		if r := l.rows[i]; r.own < 0 && !r.calc && r.title == "" && l.items[r.item].ID == "app:com.apple.Terminal" {
-			if got := l.rowLabel(i); got != "Terminal, App, Running, shortcut Option Command T" {
+			if got := l.rowLabel(i); got != "Terminal, App, shortcut Option Command T" {
 				t.Errorf("Terminal: %q", got)
 			}
 		}

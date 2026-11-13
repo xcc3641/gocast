@@ -94,7 +94,6 @@ type launcher struct {
 	input    ui.Handle
 	scroll   bool                  // show the choice in the next frame
 	icons    map[string]*ui.Bitmap // by app path; nil where the app has none
-	running  map[string]bool       // by bundle ID, as isRunning found it
 
 	loading, loaded bool // listing the apps; listed them once
 
@@ -155,7 +154,7 @@ type launcher struct {
 }
 
 func newLauncher(g *gocast) *launcher {
-	l := &launcher{g: g, icons: map[string]*ui.Bitmap{}, running: map[string]bool{}, filtered: noQuery}
+	l := &launcher{g: g, icons: map[string]*ui.Bitmap{}, filtered: noQuery}
 	l.clip = newClipView(l)
 	l.win = mygo.NewWindow(mygo.WindowOptions{
 		Title:         appName,
@@ -518,11 +517,6 @@ func (l *launcher) itemRow(c *ui.Context, k tokens, item int, chosen bool) {
 				} else {
 					ui.Avatar(c, it.Title, nil).Size(iconSize, iconSize) // its initial
 				}
-				if l.isRunning(app.ID) {
-					// A dot under the icon, as the Dock's and Raycast's:
-					// centered at the row's y 35, the cell spanning 7–33.
-					ui.Box(c).Absolute().Left(iconCell/2-2).Bottom(-4).Size(4, 4).Radius(2).Background(k.textSecondary)
-				}
 			})
 		}
 		// The subtitle at most 40% of the row, cut in its middle; the
@@ -593,9 +587,6 @@ func (l *launcher) itemLabel(item int) string {
 			s += sep + e.place
 		}
 		s += sep + locales.SearchTagApp()
-		if l.isRunning(e.app.ID) {
-			s += sep + locales.SearchRunning()
-		}
 		return s + hotkeySpoken(l.entryAccel(e))
 	}
 	if j := presets.Find(l.g.presets, e.preset); j >= 0 {
@@ -706,17 +697,6 @@ func primaryName(e entry) string {
 		return locales.FooterOpenInTerminal()
 	}
 	return locales.FooterOpen()
-}
-
-// isRunning reports whether the app with the bundle ID runs, as it did
-// when the panel showed.
-func (l *launcher) isRunning(id string) bool {
-	on, ok := l.running[id]
-	if !ok {
-		on = sysIsRunning(id)
-		l.running[id] = on
-	}
-	return on
 }
 
 // chosenRow returns the row chosen, while the panel shows rows.
@@ -1247,7 +1227,6 @@ func (l *launcher) enterSearch(now time.Time) {
 	}
 	l.filter() // afresh; as they were, if restored
 	l.selectAll = restore && l.query != ""
-	clear(l.running) // apps started or quit meanwhile
 	l.menuOpen = false
 	l.stopRecorder()
 	l.gen++ // appears at its size, without animating to it

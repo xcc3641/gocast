@@ -1,4 +1,6 @@
-# Gocast 界面文案 v1.23（搜索面板 · 悬浮终端 · 设置）
+# Gocast 界面文案 v1.24（搜索面板 · 悬浮终端 · 设置）
+
+v1.24 改动：搜索结果和推荐里的应用行不再放运行中的小圆点，读屏也不再读「正在运行」（第 2、9 节）；终端标签前那个小圆点一起去掉。
 
 v1.23 改动：预设的命令结束后，标签直接变回普通终端（第 3 节）。原来的「命令已结束」大提示、「重新运行」「关闭标签」两个按钮都不要了；成功就什么都不留，失败只留一行暗色字。
 
@@ -139,20 +141,18 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 
 ### 2.3 读屏（VoiceOver）
 
-图标下的小圆点只给看得见的人看。读屏用下面这句，不要读「圆点」。
 
 | 位置 | 中文 | English |
 |---|---|---|
 | 应用行 | {名称}，应用 | {name}, App |
-| 应用行（正在运行） | {名称}，应用，正在运行 | {name}, App, Running |
-| 同名应用行（有副标题时） | {名称}，{副标题}，应用[，正在运行] | {name}, {subtitle}, App[, Running] |
+| 同名应用行（有副标题时） | {名称}，{副标题}，应用 | {name}, {subtitle}, App |
 | 预设行 | {名称}，预设，{文件夹} | {name}, Preset, {folder} |
 | 推荐组小标题 | 推荐，标题 | Suggestions, heading |
 | Gocast 组小标题 | Gocast，标题 | Gocast, heading |
 | Gocast 组的行 | 就用可见的名称，如「剪贴板历史」 | The visible name, e.g. “Clipboard History” |
 | 推荐组的行 | 同上面应用行、预设行 | Same as app and preset rows above |
 
-「正在运行」只加在应用上，预设不加（预设开着时是悬浮终端里的标签，不在搜索结果里标运行）。
+不放运行中的标记，也不读「正在运行」：行里不区分开没开，开着和没开一样按回车打开。
 
 ## 3. 悬浮终端
 
@@ -223,7 +223,7 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 | 保存 / 取消 | 保存 / 取消 | Save / Cancel |
 | 删除 | 删除预设 | Delete Preset |
 | 删除确认标题 | 删除“{名称}”？ | Delete “{name}”? |
-| 删除确认说明 | 正在运行的标签不会受影响，但之后搜不到这个预设了。 | Tabs already running stay open, but you won’t find this preset in search anymore. |
+| 删除确认说明 | 已经开着的标签不会受影响，但之后搜不到这个预设了。 | Tabs you already have open stay open, but you won’t find this preset in search anymore. |
 | 名称为空 | 给预设起个名字。 | Give this preset a name. |
 | 名称重复 | 已经有叫“{名称}”的预设了。 | A preset named “{name}” already exists. |
 | 文件夹为空 | 请选择一个文件夹。 | Choose a folder. |
@@ -698,7 +698,7 @@ English: Gocast only goes online to check for updates and to fetch exchange rate
 
 | 位置 | 中文 | English |
 |---|---|---|
-| 应用行 | {名称}，应用[，正在运行]，快捷键 {按键} | {name}, App[, Running], shortcut {keys} |
+| 应用行 | {名称}，应用，快捷键 {按键} | {name}, App, shortcut {keys} |
 | 预设行 | {名称}，预设，{文件夹}，快捷键 {按键} | {name}, Preset, {folder}, shortcut {keys} |
 | {按键} 的读法 | Control Option Command Shift 加键名，如「Option Command T」 | e.g. “Option Command T” |
 

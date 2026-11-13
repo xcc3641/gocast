@@ -237,7 +237,7 @@ func TestRestoring(t *testing.T) {
 func testLauncher(t *testing.T, u *usage.Store, ps []presets.Preset) *launcher {
 	t.Helper()
 	g := &gocast{usage: u, presets: ps}
-	l := &launcher{g: g, icons: map[string]*ui.Bitmap{}, running: map[string]bool{}, filtered: noQuery}
+	l := &launcher{g: g, icons: map[string]*ui.Bitmap{}, filtered: noQuery}
 	for _, a := range []mygo.InstalledApp{
 		{Name: "Finder", ID: "com.apple.finder", Path: "/System/Library/CoreServices/Finder.app"},
 		{Name: "Notes", ID: "com.apple.Notes", Path: "/System/Applications/Notes.app"},

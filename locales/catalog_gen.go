@@ -266,22 +266,6 @@ func (msgs Messages) SearchHeading(name string) string {
 	return Catalog.Format(msgs.locale, "searchHeading", map[string]any{"name": name})
 }
 
-// SearchRunning says "Running"
-// in the language the app shows.
-//
-// Search panel: read out after a running app's name and type (copy.md 2.3:
-// “Safari, App, Running”).
-func SearchRunning() string { return In(i18n.Locale()).SearchRunning() }
-
-// SearchRunning says "Running"
-// in the language of msgs.
-//
-// Search panel: read out after a running app's name and type (copy.md 2.3:
-// “Safari, App, Running”).
-func (msgs Messages) SearchRunning() string {
-	return Catalog.Format(msgs.locale, "searchRunning", nil)
-}
-
 // SearchOpenFailed says "Couldn’t open “{name}”. It may have been moved or deleted."
 // in the language the app shows.
 //
@@ -1106,13 +1090,13 @@ func (msgs Messages) PresetDeleteTitle(name string) string {
 	return Catalog.Format(msgs.locale, "presetDeleteTitle", map[string]any{"name": name})
 }
 
-// PresetDeleteMessage says "Tabs already running stay open, but you won’t find this preset in search anymore."
+// PresetDeleteMessage says "Tabs you already have open stay open, but you won’t find this preset in search anymore."
 // in the language the app shows.
 //
 // Delete confirmation message.
 func PresetDeleteMessage() string { return In(i18n.Locale()).PresetDeleteMessage() }
 
-// PresetDeleteMessage says "Tabs already running stay open, but you won’t find this preset in search anymore."
+// PresetDeleteMessage says "Tabs you already have open stay open, but you won’t find this preset in search anymore."
 // in the language of msgs.
 //
 // Delete confirmation message.
