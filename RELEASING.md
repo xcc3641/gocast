@@ -99,18 +99,6 @@ builds made before it never update themselves.
 
 ## Signing
 
-Releases are signed with the maintainers' Developer ID Application
-certificate under the hardened runtime, and the disk
-image is notarized by Apple, so it opens with a double-click. macOS
-identifies the app by its Team ID and bundle identifier, so what users
-allowed Gocast (Accessibility, to paste from clipboard history) carries
-over to the next version. The terminal library in Resources is signed with
-the same Team ID, so library validation stays on and `entitlements.plist`
-grants nothing. The certificate's private key stays with the maintainers,
-like the update key; CI never gets it. Builds from source without the
-certificate (`mygo build -sign -`) are ad-hoc signed and work the same,
-but macOS asks for their permissions again after each build.
-
-Updates and the install script download with no quarantine flag; both
-check the Ed25519 signature of what they install against the public key
-in mygo.json.
+Releases are signed with the maintainers' Developer ID certificate and
+notarized by Apple. Its private key, like the update key, never leaves the
+maintainers' Mac. Builds from source can use `mygo build -sign -` instead.
