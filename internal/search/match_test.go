@@ -141,3 +141,38 @@ func TestFilterTier(t *testing.T) {
 		t.Fatalf("an action opened more: %v", got)
 	}
 }
+
+func TestFilterKind(t *testing.T) {
+	// One kind of match is one score (design.md 2.9): the actions keep
+	// their order whatever the match's place, title or length; the apps
+	// still go by the first words before a later one, then shorter.
+	names := []string{"左三分之一", "中间三分之一", "右三分之一", "左三分之二", "右三分之二"}
+	var items []Item
+	for _, n := range names {
+		it := NewItem("action:"+n, n)
+		it.Tier = 2
+		items = append(items, it)
+	}
+	if got := titles(items, Filter(items, "三分之", "")); !slices.Equal(got, names) {
+		t.Errorf("三分之: %v", got)
+	}
+	if got := titles(items, Filter(items, "sanfenzhi", "")); !slices.Equal(got, names) {
+		t.Errorf("sanfenzhi: %v", got)
+	}
+	// Spelled from the first syllable or a later one: one kind.
+	both := []Item{NewItem("action:center", "居中"), NewItem("action:c3", "中间三分之一")}
+	both[0].Tier, both[1].Tier = 2, 2
+	if got := titles(both, Filter(both, "zhong", "")); !slices.Equal(got, []string{"居中", "中间三分之一"}) {
+		t.Errorf("zhong: %v", got)
+	}
+	// The apps: the first words before a later one, then shorter.
+	apps := []Item{NewItem("app:a", "Studio Code Helper"), NewItem("app:b", "Visual Studio Code"), NewItem("app:c", "Code")}
+	if got := titles(apps, Filter(apps, "code", "")); !slices.Equal(got, []string{"Code", "Studio Code Helper", "Visual Studio Code"}) {
+		t.Errorf("apps: %v", got)
+	}
+	// An app of the same kind before an action, though from a later word.
+	mixed := []Item{{ID: "action:left", Title: "左三分之一", Keys: []Key{NewKey("左三分之一")}, Tier: 2}, NewItem("app:x", "Xin Sanfen")}
+	if got := titles(mixed, Filter(mixed, "san", "")); !slices.Equal(got, []string{"Xin Sanfen", "左三分之一"}) {
+		t.Errorf("mixed: %v", got)
+	}
+}

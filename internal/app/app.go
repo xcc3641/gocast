@@ -406,6 +406,12 @@ func Run() {
 	case "light":
 		mygo.Theme.SetSource(mygo.ThemeLight)
 	}
+	// GOCAST_ACTIONS_DRY=1 runs the system actions dry: their
+	// confirmations and notices show, the Mac stays as it is.
+	if os.Getenv("GOCAST_ACTIONS_DRY") == "1" {
+		sysActions = sysact.DryRun(log.Printf)
+		log.Print("system actions: dry run")
+	}
 	// No Dock icon or app switcher entry; a bundle says so from the start
 	// with LSUIElement (mygo.config.ts).
 	mygo.App.SetActivationPolicy(mygo.ActivationPolicyAccessory)

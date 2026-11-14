@@ -25,6 +25,17 @@ const (
 	NoMatch         = -1
 )
 
+// Kind is the kind of match of a rank, which scores it (design.md 2.9):
+// one score for the name spelled by its words or syllables, whether from
+// the first (RankTokens) or a later one (RankWord); a match's place
+// doesn't split it further.
+func Kind(rank int) int {
+	if rank == RankWord {
+		return RankTokens
+	}
+	return rank
+}
+
 // Key is a name prepared for matching: its lower-case text and its tokens
 // (words, and for each Chinese character the character and its readings).
 type Key struct {
@@ -179,8 +190,9 @@ type Item struct {
 	// Score is how often and lately it was opened (frecency): higher
 	// shows first among matches of one rank.
 	Score float64
-	// Tier orders items of one rank and Score: lower first. The apps,
-	// presets and Gocast's own items are 0, its actions after them.
+	// Tier orders items of one kind of match and Score: lower first. The
+	// apps, presets and Gocast's own items are 0, its actions after them
+	// (system 1, window 2), which keep their order on a tie.
 	Tier int
 }
 
@@ -213,7 +225,10 @@ func (it Item) Rank(query string) (rank int, byTitle bool) {
 
 // Filter returns the indexes of the items matching query, best first:
 // the item the same query opened last (chosen, "" for none) when it
-// matches, then by rank, then the highest Score, then the lowest Tier,
+// matches, then by the kind of match (Kind), then the highest Score,
+// then the lowest Tier. Items of one tier above 0 (the actions) then
+// keep their order, copy.md's table (design.md 2.9); the others go by
+// rank (the query from the name's first words before a later one),
 // then a match of the title over one of another name, then shorter
 // titles, then in their order.
 func Filter(items []Item, query, chosen string) []int {
@@ -234,13 +249,19 @@ func Filter(items []Item, query, chosen string) []int {
 			}
 			return 1
 		}
-		if c := cmp.Compare(a.rank, b.rank); c != 0 {
+		if c := cmp.Compare(Kind(a.rank), Kind(b.rank)); c != 0 {
 			return c
 		}
 		if c := cmp.Compare(items[b.i].Score, items[a.i].Score); c != 0 {
 			return c
 		}
 		if c := cmp.Compare(items[a.i].Tier, items[b.i].Tier); c != 0 {
+			return c
+		}
+		if items[a.i].Tier > 0 {
+			return 0 // the actions' order (design.md 2.9)
+		}
+		if c := cmp.Compare(a.rank, b.rank); c != 0 {
 			return c
 		}
 		if a.byTitle != b.byTitle {

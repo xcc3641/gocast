@@ -91,6 +91,16 @@ func themed(c *ui.Context) *ui.Theme {
 	return t.WithPreferences(c.Preferences())
 }
 
+// segmentTheme is the theme of Settings › Shortcuts' filter: the window's,
+// its spacing 2.4 for 4, which pads the segments' labels 7 at each side
+// for 12, nearer AppKit's segmented control, so that in English (System &
+// Window the longest) the search field keeps its 200 (design.md 4.4).
+func segmentTheme(c *ui.Context) *ui.Theme {
+	t := *c.Theme()
+	t.Spacing = 2.4
+	return &t
+}
+
 // listTheme is the theme of lists in the selection gray: rows chosen in
 // the neutral selection color with their text unchanged, as Raycast's,
 // and no hover; the search results and Settings' sidebar.

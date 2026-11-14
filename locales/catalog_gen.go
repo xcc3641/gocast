@@ -182,13 +182,13 @@ func (msgs Messages) TermDisconnected() string {
 	return Catalog.Format(msgs.locale, "termDisconnected", nil)
 }
 
-// SearchPlaceholder says "Search apps, presets or actions"
+// SearchPlaceholder says "Search apps, presets or system actions"
 // in the language the app shows.
 //
 // The search field's placeholder.
 func SearchPlaceholder() string { return In(i18n.Locale()).SearchPlaceholder() }
 
-// SearchPlaceholder says "Search apps, presets or actions"
+// SearchPlaceholder says "Search apps, presets or system actions"
 // in the language of msgs.
 //
 // The search field's placeholder.
@@ -7614,13 +7614,13 @@ func (msgs Messages) HotkeysIntro() string {
 	return Catalog.Format(msgs.locale, "hotkeysIntro", nil)
 }
 
-// HotkeysSearch says "Search apps, presets or actions"
+// HotkeysSearch says "Search apps, presets or system actions"
 // in the language the app shows.
 //
 // Settings › Shortcuts: placeholder of the search field (copy.md 11.3).
 func HotkeysSearch() string { return In(i18n.Locale()).HotkeysSearch() }
 
-// HotkeysSearch says "Search apps, presets or actions"
+// HotkeysSearch says "Search apps, presets or system actions"
 // in the language of msgs.
 //
 // Settings › Shortcuts: placeholder of the search field (copy.md 11.3).
@@ -9054,14 +9054,14 @@ func (msgs Messages) WinAXReady() string {
 	return Catalog.Format(msgs.locale, "winAXReady", nil)
 }
 
-// HotkeysFilterActions says "Actions"
+// HotkeysFilterActions says "System & Window"
 // in the language the app shows.
 //
 // Settings › Shortcuts: the filter of the system and window actions
 // (copy.md 15.7).
 func HotkeysFilterActions() string { return In(i18n.Locale()).HotkeysFilterActions() }
 
-// HotkeysFilterActions says "Actions"
+// HotkeysFilterActions says "System & Window"
 // in the language of msgs.
 //
 // Settings › Shortcuts: the filter of the system and window actions

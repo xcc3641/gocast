@@ -273,6 +273,83 @@ func TestActionOrder(t *testing.T) {
 	}
 }
 
+// With System & Window, the longest of the filter in English, the search
+// field beside it keeps 200 at least (design.md 4.4): from its left edge
+// (8 + 12 + 6 before the text) to 10 short of the filter.
+func TestHotkeyPrefsSearchWidth(t *testing.T) {
+	for _, loc := range []string{"en", "zh-Hans"} {
+		useFakeActions(t)
+		_, tt, _ := hotkeyPrefs(t, loc)
+		field, ok := tt.AccessByRole(ui.RoleTextField, locales.HotkeysSearch())
+		filter, ok2 := tt.AccessByRole(ui.RoleRadioGroup, locales.HotkeysFilter())
+		if !ok || !ok2 {
+			t.Fatalf("%s: no field (%v) or filter (%v)", loc, ok, ok2)
+		}
+		if w := filter.Bounds.X - 10 - (field.Bounds.X - 26); w < 200 {
+			t.Errorf("%s: the search field is %.1f wide", loc, w)
+		}
+		if !has(tt, locales.HotkeysFilterActions()) {
+			t.Errorf("%s: no %q", loc, locales.HotkeysFilterActions())
+		}
+		// The placeholder drawn over the field, cut with "…": gone
+		// while it holds any.
+		// (The field is labeled with the same words.)
+		count := func() int {
+			return len(slices.DeleteFunc(tt.Texts(), func(s string) bool { return s != locales.HotkeysSearch() }))
+		}
+		if n := count(); n != 2 {
+			t.Errorf("%s: the placeholder %d times", loc, n-1)
+		}
+		tt.Type("x")
+		tt.Frame()
+		if n := count(); n != 1 {
+			t.Errorf("%s: the placeholder over %q", loc, "x")
+		}
+	}
+}
+
+// One kind of match is one score (design.md 2.9): the actions it finds
+// keep copy.md 15's order, in the search panel and in Settings ›
+// Shortcuts, whatever the match's place or the names' lengths.
+func TestActionTieOrder(t *testing.T) {
+	thirds := []string{sysact.LeftThird, sysact.CenterThird, sysact.RightThird, sysact.LeftTwoThirds, sysact.RightTwoThirds}
+	halves := []string{sysact.LeftHalf, sysact.RightHalf, sysact.TopHalf, sysact.BottomHalf}
+	ids := func(acts []string) []string {
+		var out []string
+		for _, a := range acts {
+			out = append(out, actionPrefix+a)
+		}
+		return out
+	}
+	only := func(rows []string) []string {
+		return slices.DeleteFunc(rows, func(r string) bool { return !strings.Contains(r, actionPrefix) })
+	}
+	for _, c := range []struct {
+		locale, query string
+		want          []string
+	}{
+		{"zh-Hans", "三分之", thirds},
+		{"zh-Hans", "sanfenzhi", thirds},
+		{"en", "third", thirds},
+		{"zh-Hans", "半屏", halves},
+		{"en", "half", halves},
+	} {
+		inLocale(t, c.locale)
+		l := testLauncher(t, usage.New(), nil)
+		typeQuery(l, c.query)
+		if got := only(rowIDs(l)); !slices.Equal(got, ids(c.want)) {
+			t.Errorf("%s %q: %q", c.locale, c.query, got)
+		}
+	}
+	useFakeActions(t)
+	p, tt, _ := hotkeyPrefs(t, "zh-Hans")
+	tt.Type("三分之")
+	tt.Frame()
+	if got := only(shownIDs(p)); !slices.Equal(got, ids(thirds)) {
+		t.Errorf("Settings 三分之: %q", got)
+	}
+}
+
 // A row: the icon, the name, its tag; Run in the capsule; Cmd-K: Run and
 // its shortcut alone; read as "Lock Screen, System" (design.md 2.9).
 func TestActionRow(t *testing.T) {
@@ -640,7 +717,7 @@ func TestHotkeyPrefsActions(t *testing.T) {
 	if got := shownIDs(p); !slices.Equal(got, want) {
 		t.Errorf("Actions: %q", got)
 	}
-	for _, s := range []string{"Actions", "Lock Screen", "System"} {
+	for _, s := range []string{"System & Window", "Lock Screen", "System"} {
 		if !has(tt, s) {
 			t.Errorf("no %q in %q", s, tt.Texts())
 		}
@@ -708,14 +785,32 @@ func TestScreensActions(t *testing.T) {
 			l.showForAction()
 		})
 
-		p, tt, _ := hotkeyPrefs(t, "zh-Hans")
-		tt.SetScale(2)
-		tt.SetDark(dark)
-		p.hk.filter = hkFilterActions
-		p.filterHotkeys(true)
-		_ = p.g.setHotkey(actionHotkey(sysact.LeftHalf), "Ctrl+Alt+Left")
-		saveScreen(t, tt, dir, "settings-actions-"+mode, image.Rect(0, 0, prefsWidth, prefsHeight))
-		p.hk.list.ScrollTo(len(p.hk.shown)-1, ui.End)
-		saveScreen(t, tt, dir, "settings-actions-window-"+mode, image.Rect(0, 0, prefsWidth, prefsHeight))
+		// The placeholder, in both languages.
+		for _, loc := range []string{"zh-Hans", "en"} {
+			l, tt, _ := actionPanel(t, loc)
+			tt.SetScale(2)
+			tt.SetDark(dark)
+			typeQuery(l, "")
+			saveScreen(t, tt, dir, "actions-placeholder-"+loc+"-"+mode, panelRect)
+		}
+
+		for _, loc := range []string{"zh-Hans", "en"} {
+			p, tt, _ := hotkeyPrefs(t, loc)
+			tt.SetScale(2)
+			tt.SetDark(dark)
+			p.hk.filter = hkFilterActions
+			p.filterHotkeys(true)
+			_ = p.g.setHotkey(actionHotkey(sysact.LeftHalf), "Ctrl+Alt+Left")
+			name := "settings-actions-"
+			if loc == "en" {
+				name += "en-"
+			}
+			saveScreen(t, tt, dir, name+mode, image.Rect(0, 0, prefsWidth, prefsHeight))
+			if loc == "en" {
+				continue
+			}
+			p.hk.list.ScrollTo(len(p.hk.shown)-1, ui.End)
+			saveScreen(t, tt, dir, "settings-actions-window-"+mode, image.Rect(0, 0, prefsWidth, prefsHeight))
+		}
 	}
 }

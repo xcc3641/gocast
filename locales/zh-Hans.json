@@ -10,7 +10,7 @@
   "termCloseAllDetail": "正在跑的命令会停掉，标签全部关闭。",
   "termCloseAllConfirm": "结束",
   "termDisconnected": "这个终端断开了，之前的命令已经停了。",
-  "searchPlaceholder": "搜索应用、预设或操作",
+  "searchPlaceholder": "搜索应用、预设或系统操作",
   "searchTagApp": "应用",
   "searchTagPreset": "预设",
   "presetSubtitle": "{folder} · {command}",
@@ -496,8 +496,8 @@
   "hotkeySetTo": "已设为 {shortcut}",
   "hotkeyRemoved": "已移除快捷键",
   "hotkeySpoken": "快捷键 {keys}",
-  "hotkeysIntro": "给任意一项设快捷键。应用和预设按一下打开，在最前面时再按一下隐藏；系统和窗口的操作按一下就执行。",
-  "hotkeysSearch": "搜索应用、预设或操作",
+  "hotkeysIntro": "给任意一项设快捷键。应用和预设按一下打开，再按一下隐藏；系统和窗口按一下就执行。",
+  "hotkeysSearch": "搜索应用、预设或系统操作",
   "hotkeysFilterAll": "全部",
   "hotkeysFilterSet": "已设快捷键",
   "hotkeysFilterApps": "应用",
@@ -592,6 +592,6 @@
   "winAXTitle": "摆放窗口需要你允许一次",
   "winAXBody": "Gocast 要替你移动别的应用的窗口，系统要求先在“辅助功能”里打开 Gocast。只用来粘贴和摆放窗口。",
   "winAXReady": "现在可以摆放窗口了",
-  "hotkeysFilterActions": "操作",
+  "hotkeysFilterActions": "系统与窗口",
   "appFinder": "访达"
 }

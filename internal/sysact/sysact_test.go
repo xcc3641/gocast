@@ -394,3 +394,17 @@ func TestRestoreRemembersAtMost(t *testing.T) {
 		t.Fatalf("remembers %d windows, at most %d", len(a.moved), most)
 	}
 }
+
+func TestDryRun(t *testing.T) {
+	var said []string
+	d := DryRun(func(f string, a ...any) { said = append(said, fmt.Sprintf(f, a...)) })
+	if err := d.Restart(); err != nil {
+		t.Fatal(err)
+	}
+	if empty, err := d.TrashEmpty(); empty || err != nil {
+		t.Errorf("TrashEmpty: %v, %v", empty, err)
+	}
+	if len(said) != 1 || said[0] != "sysact (dry run): restart" {
+		t.Errorf("said %q", said)
+	}
+}

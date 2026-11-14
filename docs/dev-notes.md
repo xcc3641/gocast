@@ -302,11 +302,76 @@ The floating terminal's programs run in a process of their own, so they go on wh
 
 46 search rows: 24 system actions and 22 window actions, in `sysact.Actions` (copy.md's order, which Settings › 快捷键 keeps). Item IDs are `action:<id>` (usage.json scores them like apps); hotkeys are in `settings.json` under `actionHotkeys`, none by default.
 
-- **Search.** Each row is found by its name in both languages (pinyin too) and `sysact.Aliases`. `search.Item.Tier` puts them after the apps, presets and Gocast's items of the same rank and score: system 1, window 2. Because of the Chinese names, short English queries also match some actions by subsequence ("saf" → 左三分之一), always below the apps.
+- **Search.** Each row is found by its name in both languages (pinyin too) and `sysact.Aliases`. The score is the kind of match (`search.Kind`, design.md 2.9): prefix; the name spelled by its words or syllables, from the first one or a later one alike (`RankTokens` and `RankWord` are one kind); contains; letters in order. Then frecency, then `search.Item.Tier`: apps, presets and Gocast's items 0, system 1, window 2. Actions tied there keep copy.md 15's table order (「三分之」: 左、中间、右、左二、右二; `TestActionTieOrder`, `TestFilterKind`); no split by title length or by which name matched. Apps tied there still go first-word match before later-word match, then title over other names, then shorter title, as before. The one change for apps: a first-word match no longer beats a more-used later-word match. Because of the Chinese names, short English queries also match some actions by subsequence ("saf" → 左三分之一), always below the apps.
 - **Running** (`gocast.runAction`): as design.md 2.9's table. Finder/System Events calls (`sysBackground`) run off the main thread. A hotkey runs the same code, with no notice; the five confirmations still ask (`confirmAction`: `mygo.Dialog.Message`, Cancel default, the action red). An Automation refusal (-1743, `sysact.AutomationError`) shows a notice with 打开系统设置 and ×, which stays until closed; other failures only go to the log.
 - **Window target.** From the panel: the app in front when the panel showed (`launcher.target`, its PID); from a hotkey: the app in front now, or the panel's target while it shows. `Arranger` sets the frame through AX (size, position, size), inside the screen's visible frame (MyGo's `WorkArea`, top-left coordinates like AX). It remembers the first frame of each window it moved (64 at most) for Restore, until the user moves the window.
 - **Permissions.** Window actions (and ⌃⌘Q for Lock Screen) need Accessibility, the one the clipboard uses. Without it, the banner shows over the list; from a hotkey the panel opens empty to show it. It is checked again on each show, then 现在可以摆放窗口了 shows for 3 s. Without Accessibility, Lock Screen falls back to `pmset displaysleepnow`. Restart, shut down, log out, appearance, quit all (System Events), and the Trash, eject and hidden files (Finder) ask the system's Automation prompt once. That needs `com.apple.security.automation.apple-events` in `entitlements.plist` and `NSAppleEventsUsageDescription` (mygo.config.ts; the Chinese text is in `resources/darwin/zh-Hans.lproj/InfoPlist.strings`). The volume uses Core Audio and needs no permission.
-- **Tests.** `internal/sysact/sysact_test.go` covers the geometry and Arranger on fake windows. `internal/app/actions_test.go` covers the search, order, rows, ⌘K, running, confirms, notices, the banner, hotkeys and Settings, over `fakeSystem` / `fakeWindows`. `TestMain` puts fakes in place, so no test can lock, sleep, restart, change the volume or move a window. `GOCAST_SCREENS=… go test -run TestScreensActions ./internal/app` renders the rows, notices, banner and Settings › 快捷键 › 操作.
+- **Tests.** `internal/sysact/sysact_test.go` covers the geometry and Arranger on fake windows. `internal/app/actions_test.go` covers the search, order, rows, ⌘K, running, confirms, notices, the banner, hotkeys and Settings, over `fakeSystem` / `fakeWindows`. `TestMain` puts fakes in place, so no test can lock, sleep, restart, change the volume or move a window. `GOCAST_SCREENS=… go test -run TestScreensActions ./internal/app` renders the rows, notices, banner and Settings › 快捷键 › 系统与窗口 (zh and en), and the placeholders.
+- **Settings › 快捷键.** The filter's last segment is 系统与窗口 / System & Window (copy.md 15.0, 15.7). For the search field to keep design.md 4.4's 200 pt next to the English filter, the filter is built in `segmentTheme`: the window's theme with `Spacing` 2.4 instead of 4, which pads each label 7 pt per side instead of 12. The field is then 206.7 pt in English and 259 pt in Chinese (`TestHotkeyPrefsSearchWidth`). The English placeholder (238 pt of text at 13 pt) still can't fit at 200: design.md allows a tail ellipsis, but MyGo cuts an input's placeholder without one (`placeholderParams`). So the field draws its own placeholder, a `SingleLine` text that passes clicks through and is hidden from VoiceOver. The input's own placeholder is the same words, kept for VoiceOver and made transparent. The search panel's placeholder fits and is MyGo's.
+- **Dry run.** `GOCAST_ACTIONS_DRY=1` swaps the system actions for `sysact.DryRun`: it only logs `sysact (dry run): …`, the volume reads 50 %, and the Trash is never empty. Rows, confirmations and notices behave as usual and the Mac stays as it is. At start it logs `system actions: dry run`. Window actions are not covered and stay real. The captures of the five confirmations were made this way. Each run had its own `HOME` and `TMPDIR`. `GOCAST_CLIPBOARD_DIR` plus `GOCAST_CLIPBOARD_SEED=0` gave it an in-memory pasteboard, so the real one was never touched. For each confirmation: mygo-automation checked the panel's field had focus, filled in the name, checked that the action's row was chosen, and sent Return. The alert was then captured with `screencapture -o -l <its window>`, and the instance quit with SIGTERM while the alert was still up, so nothing was answered. In window captures a light alert looks gray, because its material has nothing behind it. An unbundled build shows a folder icon where a packaged build shows Gocast's.
+
+### The 24 system actions: how each one works
+
+| # | Action | Mechanism | Permission |
+|---|---|---|---|
+| 1 | Lock Screen | With Accessibility: posts ⌃⌘Q (`CGEventCreateKeyboardEvent` + `CGEventPost` to the HID tap), the system's own shortcut. Without it: `pmset displaysleepnow`, which locks only when "require password immediately" is on (the default) | Accessibility (falls back without it) |
+| 2 | Sleep | `/usr/bin/pmset sleepnow` | none |
+| 3 | Sleep Displays | `/usr/bin/pmset displaysleepnow` | none |
+| 4 | Start Screen Saver | `/usr/bin/open -a ScreenSaverEngine` | none |
+| 5 | Restart | `osascript`: `tell application "System Events" to restart` (asks apps politely, like the Apple menu without its dialog). Gocast asks first | Automation › System Events |
+| 6 | Shut Down | Same, `… to shut down`. Asks first | Automation › System Events |
+| 7 | Log Out | Same, `… to log out`. Asks first | Automation › System Events |
+| 8 | Toggle Mute | Core Audio `AudioObjectSet/GetPropertyData`, `kAudioDevicePropertyMute` (output scope) on the default output device | none |
+| 9–10 | Volume Up / Down | `AudioHardwareServiceGet/SetPropertyData` with `kAudioHardwareServiceDeviceProperty_VirtualMainVolume`, one of 16 steps like the volume keys (`StepVolume`) | none |
+| 11–15 | Volume 0 / 25 / 50 / 75 / 100 % | Same property, set to that level | none |
+| 16 | Toggle Appearance | `osascript`: System Events' `appearance preferences`, `set dark mode to not dark mode` | Automation › System Events |
+| 17 | Show Desktop | Runs `Mission Control.app/Contents/MacOS/Mission Control 1`, the same as F11; run again to bring windows back | none |
+| 18 | Hide Others | `NSWorkspace.runningApplications`: `hide` on each regular app except the target's pid (from a hotkey with no target, the frontmost app) and Gocast | none |
+| 19 | Unhide All | Same list, `unhide` on each hidden one | none |
+| 20 | Quit All | Same list, without Finder and Gocast: `terminate` (like ⌘Q; apps with unsaved documents ask). Asks first. System Events is not used | none |
+| 21 | Open Trash | `/usr/bin/open ~/.Trash` (Finder opens it) | none |
+| 22 | Empty Trash | Finder `count of items of trash` first: when 0, a notice and no confirmation. Otherwise asks, then Finder `empty trash` | Automation › Finder |
+| 23 | Eject All | Finder script: `eject` each `disk whose ejectable is true`, counting the ones ejected and naming the ones in use for the notice | Automation › Finder |
+| 24 | Toggle Hidden Files | `defaults write com.apple.finder AppleShowAllFiles -bool …` (flipped from `defaults read`), Finder `quit`, wait up to 3 s, then `open -g -b com.apple.finder` | Automation › Finder (for the quit) |
+
+All `osascript` runs have a 30 s limit and run off the main thread (`sysBackground`). Error −1743 becomes `sysact.AutomationError`, shown as the notice with 打开系统设置. The commands use absolute paths, so there are no PATH lookups.
+
+### Window actions measured (2026-11-14, one display)
+
+`_probe/winaccept` (not committed, and outside `./...`) opens a 700×500 window of its own and runs the 22 actions through `sysact.Arranger` on it. No other app's window is touched and no input is sent. Expected frames are computed independently in the probe from the main screen's visible frame (0, 33, 1512, 949, top-left coordinates). Two runs:
+
+- **Accessibility, no grant.** Built as `winaccept.app` (an identifier of its own, ad-hoc signed) and opened with `open -n`, so it is its own responsible process. `AXIsProcessTrusted` was false. Even so, `AXUIElementCreateApplication(getpid())` read and set its own window's `AXPosition`/`AXSize`. A process's AX calls on itself are answered inside the process, without TCC. This is the run in the table below: real `axWindows`, with `Trusted` forced true because the Arranger's caller checks it.
+- **Must run on the main thread.** The first attempt made these calls from a background goroutine and died with SIGTRAP inside `AXUIElementSetAttributeValue`, because AppKit answers the in-process AX request on the calling thread. Gocast is not affected: `runAction` runs on the main thread, and its target is never Gocast itself (`frontmostOther` and the panel's target exclude Gocast's pid). Other apps' windows go over IPC from any thread.
+- Run from the agent's shell it is trusted (TCC credits the responsible app) and the results are the same. An NSWindow `setFrame` seam (`WINACCEPT_SEAM=1`) also matches, except that `setFrame` ignores a minimum size: left-third measured 504 wide instead of 600. AX applies the app's own limits, as a real app's window would.
+
+| Action | Expected (x, y, w, h) | Measured |
+|---|---|---|
+| Left Half | 0, 33, 756, 949 | 0, 33, 756, 949 |
+| Right Half | 756, 33, 756, 949 | 756, 33, 756, 949 |
+| Top Half | 0, 33, 1512, 475 | 0, 33, 1512, 475 |
+| Bottom Half | 0, 508, 1512, 474 | 0, 508, 1512, 474 |
+| Top Left | 0, 33, 756, 475 | 0, 33, 756, 475 |
+| Top Right | 756, 33, 756, 475 | 756, 33, 756, 475 |
+| Bottom Left | 0, 508, 756, 474 | 0, 508, 756, 474 |
+| Bottom Right | 756, 508, 756, 474 | 756, 508, 756, 474 |
+| Left Third | 0, 33, 504, 949 | 0, 33, 504, 949 |
+| Center Third | 504, 33, 504, 949 | 504, 33, 504, 949 |
+| Right Third | 1008, 33, 504, 949 | 1008, 33, 504, 949 |
+| Left Two Thirds | 0, 33, 1008, 949 | 0, 33, 1008, 949 |
+| Right Two Thirds | 504, 33, 1008, 949 | 504, 33, 1008, 949 |
+| Maximize | 0, 33, 1512, 949 | 0, 33, 1512, 949 |
+| Almost Maximize | 76, 80, 1360, 855 | 76, 80, 1360, 855 |
+| Reasonable Size | 252, 152, 1008, 711 | 252, 152, 1008, 711 |
+| Center (from 200, 183, 700, 500) | 406, 258, 700, 500 | 406, 258, 700, 500 |
+| Make Larger (from the same) | 124, 136, 852, 594 | 124, 136, 852, 594 |
+| Make Smaller (from the same) | 276, 230, 548, 406 | 276, 230, 548, 406 |
+| Restore (after Left Half, then Bottom Right) | 200, 183, 700, 500 | 200, 183, 700, 500 |
+| Restore again | `ErrNotMoved` (notice) | `ErrNotMoved` |
+| Next / Previous Display, one screen | `ErrOneScreen` (notice) | `ErrOneScreen` |
+| Left Third, window min 600×400 | 0, 33, 600, 949 | 0, 33, 600, 949 |
+| Bottom Right, window min 600×400 | 756, 508, 756, 474 | 756, 508, 756, 474 |
+
+Moving between two displays was not measured, because there was only one. It is covered by unit tests over fake screens in `sysact_test.go`. Other apps' windows over IPC, enhanced-UI apps and full-screen windows are still manual tests.
 - **Never tried on the dev Mac:** lock, sleep, displays off, restart, shut down, log out, quit all, empty trash, eject, appearance. See Manual tests.
 
 ## Open issues
