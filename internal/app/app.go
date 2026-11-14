@@ -16,6 +16,7 @@ import (
 	"gocast/internal/presets"
 	"gocast/internal/settings"
 	"gocast/internal/shortcut"
+	"gocast/internal/sysact"
 	"gocast/internal/termhost"
 	"gocast/internal/usage"
 	"gocast/locales"
@@ -61,6 +62,9 @@ type gocast struct {
 	hotkeyStates map[settings.Hotkey]hotkeyState
 	// suspended: the shortcuts are let through to a recorder.
 	suspended bool
+	// arranger runs the window actions, remembering where each window
+	// was for Restore (windowsArranger).
+	arranger *sysact.Arranger
 
 	// quitting is set while the app quits: the panels, which hide rather
 	// than close, close then, or their OnClose would cancel the quit.

@@ -160,3 +160,26 @@ func TestPrunePresetHotkeys(t *testing.T) {
 		t.Errorf("all pruned, kept %v", s.PresetHotkeys)
 	}
 }
+
+func TestActionHotkeys(t *testing.T) {
+	var s Settings
+	s.SetHotkey(Hotkey{Action: "left-half"}, "Ctrl+Alt+Left")
+	s.SetHotkey(Hotkey{App: "com.apple.Safari"}, "Alt+Cmd+S")
+	if got := s.Hotkey(Hotkey{Action: "left-half"}); got != "Ctrl+Alt+Left" {
+		t.Fatalf("action hotkey = %q", got)
+	}
+	if s.AppHotkeys["left-half"] != "" || s.PresetHotkeys["left-half"] != "" {
+		t.Fatal("the action's hotkey went to another map")
+	}
+	hs := s.Hotkeys()
+	if len(hs) != 2 || hs[0] != (Hotkey{App: "com.apple.Safari"}) || hs[1] != (Hotkey{Action: "left-half"}) {
+		t.Fatalf("Hotkeys() = %v", hs)
+	}
+	if h, ok := s.HotkeyOwner("Alt+Ctrl+Left", Hotkey{App: "x"}); !ok || h.Action != "left-half" {
+		t.Fatalf("HotkeyOwner = %v, %v", h, ok)
+	}
+	s.RemoveHotkey(Hotkey{Action: "left-half"})
+	if s.ActionHotkeys != nil {
+		t.Fatalf("emptied map kept: %v", s.ActionHotkeys)
+	}
+}

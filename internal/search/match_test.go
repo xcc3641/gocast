@@ -122,3 +122,22 @@ func TestSuggestions(t *testing.T) {
 		t.Fatalf("Suggestions(10) = %v, want the 3 used items", got)
 	}
 }
+
+func TestFilterTier(t *testing.T) {
+	// Of one rank and score, a lower tier first, before the shorter title:
+	// an app before an action (design.md 2.9).
+	items := []Item{
+		{ID: "action:sleep", Title: "Sleep", Keys: []Key{NewKey("Sleep")}, Tier: 1},
+		{ID: "app:safari", Title: "Safari", Keys: []Key{NewKey("Safari")}},
+		{ID: "action:left", Title: "Left Half", Keys: []Key{NewKey("Left Half"), NewKey("S")}, Tier: 2},
+	}
+	got := Filter(items, "s", "")
+	if len(got) != 3 || items[got[0]].ID != "app:safari" || items[got[1]].ID != "action:sleep" || items[got[2]].ID != "action:left" {
+		t.Fatalf("order: %v", got)
+	}
+	// Opened more, an action comes first all the same.
+	items[0].Score = 1
+	if got := Filter(items, "s", ""); items[got[0]].ID != "action:sleep" {
+		t.Fatalf("an action opened more: %v", got)
+	}
+}

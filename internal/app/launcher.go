@@ -14,6 +14,7 @@ import (
 	"gocast/internal/presets"
 	"gocast/internal/search"
 	"gocast/internal/settings"
+	"gocast/internal/sysact"
 	"gocast/locales"
 )
 
@@ -54,13 +55,15 @@ const (
 )
 
 // entry is what a row opens: an app, a terminal preset, one of Gocast's
-// own items (the clipboard history, ...), or the calculator's card.
+// own items (the clipboard history, ...), one of its actions, or the
+// calculator's card.
 type entry struct {
 	calc   bool
 	app    *mygo.InstalledApp
 	place  string // what tells the app from another of its name: its file name or folder (apps.Places)
 	preset string // its ID, for a preset
 	own    string // the ID of Gocast's own item (clipItemID, ...)
+	action string // the ID of an action (sysact)
 }
 
 // action is an item of the actions menu (Cmd-K).
@@ -111,6 +114,15 @@ type launcher struct {
 	noticeDanger bool
 	noticeGen    int
 	announce     bool
+	// noticeAct is what an action said (design.md 2.9), which notice
+	// holds the text of: its symbol and color, and its button.
+	noticeAct *actionNotice
+
+	// askWindows: a window action found Gocast not allowed to arrange
+	// windows; the banner over the list asks (copy.md 15.5) until it is.
+	// windowsReady: allowed since, the banner says so for a while.
+	askWindows, windowsReady bool
+	windowsReadyN            int
 
 	menuOpen      bool
 	menuComposing bool
@@ -258,6 +270,7 @@ func (l *launcher) view(c *ui.Context) {
 		l.searchBar(c, k)
 		if body > barHeight {
 			ui.Column(c).Height(body - barHeight).Shrink(0).Children(func() {
+				l.windowsBanner(c, k)
 				switch {
 				case len(l.rows) > 0:
 					l.resultList(c, k)
@@ -497,6 +510,8 @@ func (l *launcher) itemRow(c *ui.Context, k tokens, item int, chosen bool) {
 	switch {
 	case e.own != "":
 		tag = locales.SearchTagGocast()
+	case e.action != "":
+		tag = actionTag(e.action)
 	case e.app == nil:
 		tag = locales.SearchTagPreset()
 		if j := presets.Find(l.g.presets, e.preset); j >= 0 {
@@ -507,6 +522,8 @@ func (l *launcher) itemRow(c *ui.Context, k tokens, item int, chosen bool) {
 		switch {
 		case e.own != "":
 			symbolSquare(c, k, ownSymbol(l.own, e.own))
+		case e.action != "":
+			listIcon(c, func() { actionSquare(c, k, e.action, iconSize, 6, 13, k.textOnGlass) })
 		case e.app == nil:
 			presetSquare(c, k)
 		default:
@@ -580,6 +597,9 @@ func (l *launcher) itemLabel(item int) string {
 	sep := listSep()
 	if e.own != "" {
 		return it.Title + sep + locales.SearchTagGocast()
+	}
+	if e.action != "" { // "Lock Screen, System" (copy.md 15.6)
+		return it.Title + sep + actionTag(e.action) + hotkeySpoken(l.entryAccel(e))
 	}
 	if e.app != nil {
 		s := it.Title
@@ -663,6 +683,9 @@ func (l *launcher) footer(c *ui.Context, k tokens, h float32) {
 		if l.noticeDanger {
 			n.icon, n.iconColor, n.color = "exclamationmark.triangle.fill", k.danger, k.danger
 		}
+		if a := l.noticeAct; a != nil {
+			n = l.actionNoticeOf(c, k, *a)
+		}
 		noticeCapsule(c, k, capsuleInset, bottom, room, n)
 	} else if v, relaunching := l.g.updates.pill(); v != "" {
 		l.updatePill(c, k, capsuleInset, bottom, room, v, relaunching)
@@ -693,6 +716,8 @@ func primaryName(e entry) string {
 		return locales.FooterQuit()
 	case e.own == updateItemID:
 		return locales.UpdateRelaunch()
+	case e.action != "":
+		return locales.FooterRun()
 	case e.own == "" && e.app == nil:
 		return locales.FooterOpenInTerminal()
 	}
@@ -783,6 +808,10 @@ func (l *launcher) actions() []action {
 	}
 	if e.own != "" { // its primary action alone (design.md 2.5a)
 		return []action{{ownSymbol(l.own, e.own), primaryName(e), []string{"↩"}, l.primary}}
+	}
+	if e.action != "" { // Run, and its hotkey (design.md 2.9)
+		as := []action{{"play", primaryName(e), []string{"↩"}, l.primary}}
+		return append(as, l.hotkeyActions(actionHotkey(e.action), actionName(e.action), e)...)
 	}
 	if e.app != nil {
 		app := *e.app
@@ -931,6 +960,13 @@ func (l *launcher) act(second bool) {
 		}
 		return
 	}
+	if e.action != "" {
+		if !second {
+			l.g.record(l.currentID(), l.query)
+			l.g.runAction(e.action, fromPanel, l.target.app.PID)
+		}
+		return
+	}
 	l.g.record(l.currentID(), l.query)
 	l.hide() // the keyboard goes back to the app the user was in first
 	if e.app == nil {
@@ -961,7 +997,27 @@ func (l *launcher) editPreset(id string) {
 // say shows a notice in the footer for a few seconds.
 func (l *launcher) say(text string, danger bool) {
 	l.notice, l.noticeDanger, l.announce = text, danger, true
+	l.noticeAct = nil
 	l.noticeGen++
+	l.fadeNotice()
+}
+
+// sayAction shows what an action says in the footer (design.md 2.9):
+// for a few seconds, but a notice with a button, until dismissed.
+// Each anew, as Return is pressed again and again on Volume Up.
+func (l *launcher) sayAction(n actionNotice) {
+	l.notice, l.noticeDanger, l.announce = n.text, false, true
+	l.noticeAct = &n
+	l.noticeGen++
+	if n.settings == "" {
+		l.fadeNotice()
+	} else {
+		l.redraw()
+	}
+}
+
+// fadeNotice clears the notice said last after a few seconds.
+func (l *launcher) fadeNotice() {
 	gen := l.noticeGen
 	if l.win == nil { // drawn in a test
 		return
@@ -969,7 +1025,7 @@ func (l *launcher) say(text string, danger bool) {
 	time.AfterFunc(noticeFor, func() {
 		l.win.Update(func() {
 			if l.noticeGen == gen {
-				l.notice = ""
+				l.notice, l.noticeAct = "", nil
 			}
 		})
 	})
@@ -1019,6 +1075,16 @@ func (l *launcher) rebuild() {
 		it.Score = l.g.usage.Score(o.id, now)
 		l.items = append(l.items, it)
 		l.entries = append(l.entries, entry{own: o.id})
+	}
+	// The actions, after the apps of the same match, by their names in
+	// both languages and the other words of copy.md 15.
+	for _, a := range sysact.Actions {
+		id := actionPrefix + a.ID
+		it := search.NewItem(id, actionName(a.ID), actionSearchNames(a.ID)...)
+		it.Score = l.g.usage.Score(id, now)
+		it.Tier = actionTier(a)
+		l.items = append(l.items, it)
+		l.entries = append(l.entries, entry{action: a.ID})
 	}
 	for i := range l.apps {
 		app := &l.apps[i]
@@ -1189,6 +1255,7 @@ func (l *launcher) show() {
 	// Where Cmd-Return pastes the calculator's answer, as the clipboard
 	// view's (design.md 2.3a, 2.8.6): known before Gocast comes forward.
 	l.target = pasteTarget{app: frontmostOther(), floating: l.g.term.focused()}
+	l.checkWindows()
 	l.g.calc.shown() // the region and number format, and the rates if due
 	l.enterSearch(time.Now())
 	l.calcChanged() // a query kept, in the region and with the rates as they are now
@@ -1222,7 +1289,7 @@ func (l *launcher) enterSearch(now time.Time) {
 	}
 	if !restore {
 		l.query, l.filtered, l.rows, l.moved, l.expanded = "", noQuery, nil, false, false
-		l.notice = ""
+		l.notice, l.noticeAct = "", nil
 		l.list = ui.ListState{}
 	}
 	l.filter() // afresh; as they were, if restored

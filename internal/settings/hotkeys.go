@@ -7,16 +7,20 @@ import (
 	"gocast/internal/shortcut"
 )
 
-// Hotkey names what a hotkey of AppHotkeys or PresetHotkeys opens: an app
-// by its bundle ID, or a terminal preset by its ID (one of the two).
+// Hotkey names what a hotkey of AppHotkeys, PresetHotkeys or
+// ActionHotkeys opens or runs: an app by its bundle ID, a terminal preset
+// by its ID, or one of Gocast's actions by its ID (one of the three).
 type Hotkey struct {
-	App, Preset string
+	App, Preset, Action string
 }
 
 // Hotkey is the hotkey of h, or "".
 func (s Settings) Hotkey(h Hotkey) string {
-	if h.App != "" {
+	switch {
+	case h.App != "":
 		return s.AppHotkeys[h.App]
+	case h.Action != "":
+		return s.ActionHotkeys[h.Action]
 	}
 	return s.PresetHotkeys[h.Preset]
 }
@@ -26,8 +30,11 @@ func (s Settings) Hotkey(h Hotkey) string {
 func (s *Settings) SetHotkey(h Hotkey, accel string) {
 	m := &s.PresetHotkeys
 	key := h.Preset
-	if h.App != "" {
+	switch {
+	case h.App != "":
 		m, key = &s.AppHotkeys, h.App
+	case h.Action != "":
+		m, key = &s.ActionHotkeys, h.Action
 	}
 	if key == "" {
 		return
@@ -75,9 +82,10 @@ func (s *Settings) SetAppHotkeyName(id, name string) {
 // with it.
 func (s *Settings) RemoveHotkey(h Hotkey) { s.SetHotkey(h, "") }
 
-// Hotkeys are the apps and presets with a hotkey, the apps first, each by
-// ID: always in the same order, for the first of two with the same hotkey
-// (settings.json edited by hand) to be the one that has it.
+// Hotkeys are the apps, presets and actions with a hotkey, in that
+// order, each by ID: always in the same order, for the first of two with
+// the same hotkey (settings.json edited by hand) to be the one that has
+// it.
 func (s Settings) Hotkeys() []Hotkey {
 	var hs []Hotkey
 	for _, id := range slices.Sorted(maps.Keys(s.AppHotkeys)) {
@@ -86,10 +94,13 @@ func (s Settings) Hotkeys() []Hotkey {
 	for _, id := range slices.Sorted(maps.Keys(s.PresetHotkeys)) {
 		hs = append(hs, Hotkey{Preset: id})
 	}
+	for _, id := range slices.Sorted(maps.Keys(s.ActionHotkeys)) {
+		hs = append(hs, Hotkey{Action: id})
+	}
 	return hs
 }
 
-// HotkeyOwner is the app or preset other than except whose hotkey is
+// HotkeyOwner is the app, preset or action other than except whose hotkey is
 // accel, however either is spelled ("Cmd+Alt+T" is "Alt+Cmd+T"); ok is
 // false for none.
 func (s Settings) HotkeyOwner(accel string, except Hotkey) (h Hotkey, ok bool) {

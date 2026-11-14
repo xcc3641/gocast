@@ -54,6 +54,14 @@ func TestMain(m *testing.M) {
 	// user's; the terminals run in Gocast. Nor asks before closing them.
 	sysTermHost = func(string, bool) (*termhost.Client, error) { return nil, errors.New("no terminal host in tests") }
 	sysConfirmCloseAll = func() bool { return false }
+	// Nor of the actions: no test locks, sleeps or restarts the Mac, sets
+	// its volume or moves a window (useFakeActions); none asks, and what
+	// they wait for runs at once.
+	sysActions = &fakeSystem{}
+	sysWindows = &fakeWindows{}
+	sysConfirmAction = func(string, bool) bool { return false }
+	sysOpenURL = func(string) error { return errors.New("no System Settings in tests") }
+	sysBackground = func(_ *gocast, work func() func()) { work()() }
 	os.Exit(m.Run())
 }
 

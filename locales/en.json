@@ -40,7 +40,7 @@
   "@termDisconnected": {
     "description": "Written dim into a terminal whose program stopped as the process keeping it went away, above the new prompt (copy.md 13, design.md 3.6)."
   },
-  "searchPlaceholder": "Search apps or terminal presets",
+  "searchPlaceholder": "Search apps, presets or actions",
   "@searchPlaceholder": {
     "description": "The search field's placeholder."
   },
@@ -930,7 +930,7 @@
   "@clipAXTitle": {
     "description": "Accessibility banner: title."
   },
-  "clipAXBody": "Gocast presses ⌘V for you. macOS asks you to turn on Gocast in Accessibility first. It’s only used to paste.",
+  "clipAXBody": "Gocast presses ⌘V for you. macOS asks you to turn on Gocast in Accessibility first. It’s only used to paste and arrange windows.",
   "@clipAXBody": {
     "description": "Accessibility banner: description."
   },
@@ -2302,11 +2302,11 @@
       }
     }
   },
-  "hotkeysIntro": "Give an app or preset a shortcut. Press it to open, and again while it’s in front to hide it.",
+  "hotkeysIntro": "Give anything a shortcut. Apps and presets open with one press and hide with another while in front. System and window actions just run.",
   "@hotkeysIntro": {
     "description": "Settings › Shortcuts: line over the list (copy.md 11.3)."
   },
-  "hotkeysSearch": "Search apps and presets",
+  "hotkeysSearch": "Search apps, presets or actions",
   "@hotkeysSearch": {
     "description": "Settings › Shortcuts: placeholder of the search field (copy.md 11.3)."
   },
@@ -2344,13 +2344,13 @@
       }
     }
   },
-  "hotkeysNoMatch": "No matching apps or presets",
+  "hotkeysNoMatch": "No matches",
   "@hotkeysNoMatch": {
     "description": "Settings › Shortcuts: nothing matches the search (copy.md 11.3)."
   },
-  "hotkeysNoneSet": "No app or preset shortcuts yet. In All, click the right side of any row to set one.",
+  "hotkeysNoneSet": "No shortcuts yet. In All, click the right side of any row to set one.",
   "@hotkeysNoneSet": {
-    "description": "Settings › Shortcuts, With Shortcut filter: no app or preset has one (copy.md 11.3)."
+    "description": "Settings › Shortcuts, With Shortcut filter: nothing but Gocast's own has one (copy.md 15.7)."
   },
   "hotkeysAppMissing": "Can’t find this app",
   "@hotkeysAppMissing": {
@@ -2395,5 +2395,351 @@
         "example": "Safari"
       }
     }
+  },
+  "actLockScreen": "Lock Screen",
+  "@actLockScreen": {
+    "description": "The name of a system action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "actSleep": "Sleep",
+  "@actSleep": {
+    "description": "The name of a system action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "actSleepDisplays": "Sleep Displays",
+  "@actSleepDisplays": {
+    "description": "The name of a system action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "actScreenSaver": "Start Screen Saver",
+  "@actScreenSaver": {
+    "description": "The name of a system action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "actRestart": "Restart",
+  "@actRestart": {
+    "description": "The name of a system action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "actShutDown": "Shut Down",
+  "@actShutDown": {
+    "description": "The name of a system action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "actLogOut": "Log Out",
+  "@actLogOut": {
+    "description": "The name of a system action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "actToggleMute": "Toggle Mute",
+  "@actToggleMute": {
+    "description": "The name of a system action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "actVolumeUp": "Volume Up",
+  "@actVolumeUp": {
+    "description": "The name of a system action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "actVolumeDown": "Volume Down",
+  "@actVolumeDown": {
+    "description": "The name of a system action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "actToggleAppearance": "Toggle Appearance",
+  "@actToggleAppearance": {
+    "description": "The name of a system action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "actShowDesktop": "Show Desktop",
+  "@actShowDesktop": {
+    "description": "The name of a system action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "actHideOthers": "Hide Other Apps",
+  "@actHideOthers": {
+    "description": "The name of a system action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "actUnhideAll": "Show All Hidden Apps",
+  "@actUnhideAll": {
+    "description": "The name of a system action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "actQuitAll": "Quit All Apps",
+  "@actQuitAll": {
+    "description": "The name of a system action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "actOpenTrash": "Open Trash",
+  "@actOpenTrash": {
+    "description": "The name of a system action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "actEmptyTrash": "Empty Trash",
+  "@actEmptyTrash": {
+    "description": "The name of a system action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "actEjectAll": "Eject All Disks",
+  "@actEjectAll": {
+    "description": "The name of a system action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "actToggleHiddenFiles": "Toggle Hidden Files",
+  "@actToggleHiddenFiles": {
+    "description": "The name of a system action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "winLeftHalf": "Left Half",
+  "@winLeftHalf": {
+    "description": "The name of a window action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "winRightHalf": "Right Half",
+  "@winRightHalf": {
+    "description": "The name of a window action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "winTopHalf": "Top Half",
+  "@winTopHalf": {
+    "description": "The name of a window action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "winBottomHalf": "Bottom Half",
+  "@winBottomHalf": {
+    "description": "The name of a window action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "winTopLeft": "Top Left Quarter",
+  "@winTopLeft": {
+    "description": "The name of a window action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "winTopRight": "Top Right Quarter",
+  "@winTopRight": {
+    "description": "The name of a window action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "winBottomLeft": "Bottom Left Quarter",
+  "@winBottomLeft": {
+    "description": "The name of a window action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "winBottomRight": "Bottom Right Quarter",
+  "@winBottomRight": {
+    "description": "The name of a window action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "winLeftThird": "Left Third",
+  "@winLeftThird": {
+    "description": "The name of a window action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "winCenterThird": "Center Third",
+  "@winCenterThird": {
+    "description": "The name of a window action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "winRightThird": "Right Third",
+  "@winRightThird": {
+    "description": "The name of a window action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "winLeftTwoThirds": "Left Two Thirds",
+  "@winLeftTwoThirds": {
+    "description": "The name of a window action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "winRightTwoThirds": "Right Two Thirds",
+  "@winRightTwoThirds": {
+    "description": "The name of a window action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "winMaximize": "Maximize",
+  "@winMaximize": {
+    "description": "The name of a window action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "winAlmostMaximize": "Almost Maximize",
+  "@winAlmostMaximize": {
+    "description": "The name of a window action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "winReasonableSize": "Reasonable Size",
+  "@winReasonableSize": {
+    "description": "The name of a window action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "winCenter": "Center",
+  "@winCenter": {
+    "description": "The name of a window action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "winMakeLarger": "Make Larger",
+  "@winMakeLarger": {
+    "description": "The name of a window action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "winMakeSmaller": "Make Smaller",
+  "@winMakeSmaller": {
+    "description": "The name of a window action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "winRestore": "Restore",
+  "@winRestore": {
+    "description": "The name of a window action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "winNextDisplay": "Move to Next Display",
+  "@winNextDisplay": {
+    "description": "The name of a window action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "winPreviousDisplay": "Move to Previous Display",
+  "@winPreviousDisplay": {
+    "description": "The name of a window action, in search and Settings › Shortcuts (copy.md 15)."
+  },
+  "actVolumeSet": "Set Volume to {n}%",
+  "@actVolumeSet": {
+    "description": "The name of the system actions setting the volume to 0, 25, 50, 75 or 100% (copy.md 15.1).",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "50"
+      }
+    }
+  },
+  "searchTagSystem": "System",
+  "@searchTagSystem": {
+    "description": "Tag at the right of a system action's row, and its type in Settings › Shortcuts (copy.md 15.0)."
+  },
+  "searchTagWindow": "Window",
+  "@searchTagWindow": {
+    "description": "Tag at the right of a window action's row, and its type in Settings › Shortcuts (copy.md 15.0)."
+  },
+  "footerRun": "Run",
+  "@footerRun": {
+    "description": "Footer and Cmd-K: the primary action of the system and window actions (copy.md 15.6)."
+  },
+  "noticeVolume": "Volume {n}%",
+  "@noticeVolume": {
+    "description": "Notice after the volume changed (copy.md 15.4).",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "50"
+      }
+    }
+  },
+  "noticeMuted": "Muted",
+  "@noticeMuted": {
+    "description": "Notice after Toggle Mute muted (copy.md 15.4)."
+  },
+  "noticeUnmuted": "Unmuted",
+  "@noticeUnmuted": {
+    "description": "Notice after Toggle Mute unmuted (copy.md 15.4)."
+  },
+  "noticeHiddenShown": "Showing hidden files",
+  "@noticeHiddenShown": {
+    "description": "Notice after Toggle Hidden Files showed them (copy.md 15.4)."
+  },
+  "noticeHiddenHidden": "Hidden files are hidden again",
+  "@noticeHiddenHidden": {
+    "description": "Notice after Toggle Hidden Files hid them (copy.md 15.4)."
+  },
+  "noticeTrashEmpty": "The Trash is already empty",
+  "@noticeTrashEmpty": {
+    "description": "Notice of Empty Trash with nothing in the Trash (copy.md 15.4)."
+  },
+  "noticeNoDisks": "No disks to eject",
+  "@noticeNoDisks": {
+    "description": "Notice of Eject All Disks with none (copy.md 15.4)."
+  },
+  "noticeDiskBusy": "“{disk}” is in use and wasn’t ejected",
+  "@noticeDiskBusy": {
+    "description": "Notice of Eject All Disks when one is in use (copy.md 15.4).",
+    "placeholders": {
+      "disk": {
+        "type": "String",
+        "example": "Backup"
+      }
+    }
+  },
+  "noticeEjected": "{n, plural, one {Ejected 1 disk} other {Ejected # disks}}",
+  "@noticeEjected": {
+    "description": "Notice of Eject All Disks: how many it ejected (copy.md 15.4).",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "noticeNoWindow": "No window to arrange",
+  "@noticeNoWindow": {
+    "description": "Notice of a window action with no window in front (copy.md 15.4)."
+  },
+  "noticeOneDisplay": "Only one display is connected",
+  "@noticeOneDisplay": {
+    "description": "Notice of Move to Next/Previous Display with one display (copy.md 15.4)."
+  },
+  "noticeNotMoved": "This window hasn’t been moved yet",
+  "@noticeNotMoved": {
+    "description": "Notice of Restore on a window Gocast has not moved (copy.md 15.4)."
+  },
+  "noticeFullScreen": "Can’t arrange a full-screen window. Exit full screen first.",
+  "@noticeFullScreen": {
+    "description": "Notice of a window action on a full-screen window (copy.md 15.4)."
+  },
+  "noticeNoAutomation": "Gocast isn’t allowed to control “{app}”",
+  "@noticeNoAutomation": {
+    "description": "Notice when the user did not allow Gocast to control Finder or System Events (copy.md 15.4).",
+    "placeholders": {
+      "app": {
+        "type": "String",
+        "example": "Finder"
+      }
+    }
+  },
+  "confirmRestartTitle": "Restart this Mac?",
+  "@confirmRestartTitle": {
+    "description": "Title of the alert Restart asks first (copy.md 15.3)."
+  },
+  "confirmShutDownTitle": "Shut down this Mac?",
+  "@confirmShutDownTitle": {
+    "description": "Title of the alert Shut Down asks first (copy.md 15.3)."
+  },
+  "confirmLogOutTitle": "Log out?",
+  "@confirmLogOutTitle": {
+    "description": "Title of the alert Log Out asks first (copy.md 15.3)."
+  },
+  "confirmQuitAllTitle": "Quit all apps?",
+  "@confirmQuitAllTitle": {
+    "description": "Title of the alert Quit All Apps asks first (copy.md 15.3)."
+  },
+  "confirmEmptyTrashTitle": "Empty the Trash?",
+  "@confirmEmptyTrashTitle": {
+    "description": "Title of the alert Empty Trash asks first (copy.md 15.3)."
+  },
+  "confirmTerminalsStop": "Commands running in the floating terminal will stop.",
+  "@confirmTerminalsStop": {
+    "description": "Alert of Restart and Shut Down, only when terminals run (copy.md 15.3)."
+  },
+  "confirmLogOutDetail": "All apps will quit.",
+  "@confirmLogOutDetail": {
+    "description": "Alert of Log Out (copy.md 15.3)."
+  },
+  "confirmLogOutTerminals": "Commands running in the floating terminal will stop too.",
+  "@confirmLogOutTerminals": {
+    "description": "Alert of Log Out, after its first sentence, when terminals run (copy.md 15.3)."
+  },
+  "confirmQuitAllDetail": "Gocast and Finder stay open. Apps with unsaved documents will ask you first.",
+  "@confirmQuitAllDetail": {
+    "description": "Alert of Quit All Apps (copy.md 15.3)."
+  },
+  "confirmEmptyTrashDetail": "Everything in it will be deleted for good. This can’t be undone.",
+  "@confirmEmptyTrashDetail": {
+    "description": "Alert of Empty Trash (copy.md 15.3)."
+  },
+  "confirmRestart": "Restart",
+  "@confirmRestart": {
+    "description": "The button of the Restart alert (copy.md 15.3)."
+  },
+  "confirmShutDown": "Shut Down",
+  "@confirmShutDown": {
+    "description": "The button of the Shut Down alert (copy.md 15.3)."
+  },
+  "confirmLogOut": "Log Out",
+  "@confirmLogOut": {
+    "description": "The button of the Log Out alert (copy.md 15.3)."
+  },
+  "confirmQuitAll": "Quit All",
+  "@confirmQuitAll": {
+    "description": "The button of the Quit All Apps alert (copy.md 15.3)."
+  },
+  "confirmEmptyTrash": "Empty",
+  "@confirmEmptyTrash": {
+    "description": "The button of the Empty Trash alert (copy.md 15.3)."
+  },
+  "winAXTitle": "Allow Gocast to arrange windows",
+  "@winAXTitle": {
+    "description": "Banner over the search panel the first time a window action runs without Accessibility (copy.md 15.5)."
+  },
+  "winAXBody": "Gocast moves other apps’ windows for you. macOS asks you to turn on Gocast in Accessibility first. It’s only used to paste and arrange windows.",
+  "@winAXBody": {
+    "description": "The window actions' Accessibility banner: description (copy.md 15.5)."
+  },
+  "winAXReady": "Ready to arrange windows",
+  "@winAXReady": {
+    "description": "The banner once Accessibility is allowed (copy.md 15.5)."
+  },
+  "hotkeysFilterActions": "Actions",
+  "@hotkeysFilterActions": {
+    "description": "Settings › Shortcuts: the filter of the system and window actions (copy.md 15.7)."
+  },
+  "appFinder": "Finder",
+  "@appFinder": {
+    "description": "Finder, as the notice that Gocast may not control it names it (copy.md 15.4)."
   }
 }

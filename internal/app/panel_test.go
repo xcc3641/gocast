@@ -109,7 +109,7 @@ func TestPanelRestoredAfterHiding(t *testing.T) {
 	tt.SetWindowHidden(true)
 
 	l.enterSearch(now.Add(30 * time.Second))
-	if l.query != "saf" || !slices.Equal(shown(l), []string{"> app:com.apple.Safari"}) || !l.selectAll {
+	if l.query != "saf" || !slices.Equal(withoutActions(shown(l)), []string{"> app:com.apple.Safari"}) || !l.selectAll {
 		t.Errorf("restored: %q %q, select all %v", l.query, shown(l), l.selectAll)
 	}
 	tt.SetWindowHidden(false)

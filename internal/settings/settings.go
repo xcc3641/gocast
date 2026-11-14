@@ -104,6 +104,9 @@ type Settings struct {
 	// its hotkey, for when it comes back.
 	AppHotkeys    map[string]string `json:"appHotkeys,omitempty"`
 	PresetHotkeys map[string]string `json:"presetHotkeys,omitempty"`
+	// ActionHotkeys run Gocast's actions (the system's and the window's,
+	// package sysact), by their IDs; none by default (copy.md 15).
+	ActionHotkeys map[string]string `json:"actionHotkeys,omitempty"`
 
 	// AppHotkeyNames are the names of the apps of AppHotkeys, by bundle
 	// ID, as they were when the hotkey was set: what Settings shows for

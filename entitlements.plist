@@ -5,5 +5,11 @@
 	<!-- Release builds are signed with a Developer ID under the hardened
 	     runtime and notarized. The terminal library in Resources is signed
 	     with the same Team ID, so library validation stays on. -->
+	<!-- The system actions ask Finder and System Events (empty the
+	     Trash, eject the disks, restart, ...): the hardened runtime
+	     sends no Apple Events without it. The user still allows each app
+	     once (NSAppleEventsUsageDescription, copy.md 5). -->
+	<key>com.apple.security.automation.apple-events</key>
+	<true/>
 </dict>
 </plist>

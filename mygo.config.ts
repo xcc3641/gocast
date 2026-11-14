@@ -15,6 +15,10 @@ export default {
     icon: "icon/AppIcon.icon",
     infoPlist: {
       LSUIElement: true,
+      // Why Gocast controls Finder and System Events, as the system asks
+      // (copy.md 5); in Chinese in resources/darwin/zh-Hans.lproj.
+      NSAppleEventsUsageDescription:
+        "Gocast uses it to run the system actions you choose, like emptying the Trash, ejecting disks, or switching appearance.",
     },
     entitlements: "entitlements.plist",
   },

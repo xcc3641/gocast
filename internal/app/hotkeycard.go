@@ -39,8 +39,8 @@ type hotkeyRecorder struct {
 	say string
 }
 
-// entryHotkey is the item of the hotkey of what a row opens: an app or a
-// preset; ok is false for the others.
+// entryHotkey is the item of the hotkey of what a row opens: an app, a
+// preset or an action; ok is false for the others.
 func entryHotkey(e entry) (h settings.Hotkey, ok bool) {
 	switch {
 	case e.calc || e.own != "":
@@ -49,6 +49,8 @@ func entryHotkey(e entry) (h settings.Hotkey, ok bool) {
 		return settings.Hotkey{App: e.app.ID}, true
 	case e.preset != "":
 		return settings.Hotkey{Preset: e.preset}, true
+	case e.action != "":
+		return actionHotkey(e.action), true
 	}
 	return h, false
 }
@@ -200,10 +202,14 @@ func (l *launcher) recorderCard(c *ui.Context, k tokens) {
 	}
 }
 
-// recorderIcon is the icon of the item recording, 16: the app's, or a
-// preset's square.
+// recorderIcon is the icon of the item recording, 16: the app's, a
+// preset's square, or an action's.
 func (l *launcher) recorderIcon(c *ui.Context, k tokens) {
 	e := l.rec.entry
+	if e.action != "" {
+		actionSquare(c, k, e.action, 16, 4, 10, k.textOnGlass)
+		return
+	}
 	if e.app != nil {
 		if b := l.icon(*e.app); b != nil {
 			ui.Image(c, b).Size(16, 16).Shrink(0)

@@ -182,13 +182,13 @@ func (msgs Messages) TermDisconnected() string {
 	return Catalog.Format(msgs.locale, "termDisconnected", nil)
 }
 
-// SearchPlaceholder says "Search apps or terminal presets"
+// SearchPlaceholder says "Search apps, presets or actions"
 // in the language the app shows.
 //
 // The search field's placeholder.
 func SearchPlaceholder() string { return In(i18n.Locale()).SearchPlaceholder() }
 
-// SearchPlaceholder says "Search apps or terminal presets"
+// SearchPlaceholder says "Search apps, presets or actions"
 // in the language of msgs.
 //
 // The search field's placeholder.
@@ -2786,13 +2786,13 @@ func (msgs Messages) ClipAXTitle() string {
 	return Catalog.Format(msgs.locale, "clipAXTitle", nil)
 }
 
-// ClipAXBody says "Gocast presses ⌘V for you. macOS asks you to turn on Gocast in Accessibility first. It’s only used to paste."
+// ClipAXBody says "Gocast presses ⌘V for you. macOS asks you to turn on Gocast in Accessibility first. It’s only used to paste and a…"
 // in the language the app shows.
 //
 // Accessibility banner: description.
 func ClipAXBody() string { return In(i18n.Locale()).ClipAXBody() }
 
-// ClipAXBody says "Gocast presses ⌘V for you. macOS asks you to turn on Gocast in Accessibility first. It’s only used to paste."
+// ClipAXBody says "Gocast presses ⌘V for you. macOS asks you to turn on Gocast in Accessibility first. It’s only used to paste and a…"
 // in the language of msgs.
 //
 // Accessibility banner: description.
@@ -7600,13 +7600,13 @@ func (msgs Messages) HotkeySpoken(keys string) string {
 	return Catalog.Format(msgs.locale, "hotkeySpoken", map[string]any{"keys": keys})
 }
 
-// HotkeysIntro says "Give an app or preset a shortcut. Press it to open, and again while it’s in front to hide it."
+// HotkeysIntro says "Give anything a shortcut. Apps and presets open with one press and hide with another while in front. System and windo…"
 // in the language the app shows.
 //
 // Settings › Shortcuts: line over the list (copy.md 11.3).
 func HotkeysIntro() string { return In(i18n.Locale()).HotkeysIntro() }
 
-// HotkeysIntro says "Give an app or preset a shortcut. Press it to open, and again while it’s in front to hide it."
+// HotkeysIntro says "Give anything a shortcut. Apps and presets open with one press and hide with another while in front. System and windo…"
 // in the language of msgs.
 //
 // Settings › Shortcuts: line over the list (copy.md 11.3).
@@ -7614,13 +7614,13 @@ func (msgs Messages) HotkeysIntro() string {
 	return Catalog.Format(msgs.locale, "hotkeysIntro", nil)
 }
 
-// HotkeysSearch says "Search apps and presets"
+// HotkeysSearch says "Search apps, presets or actions"
 // in the language the app shows.
 //
 // Settings › Shortcuts: placeholder of the search field (copy.md 11.3).
 func HotkeysSearch() string { return In(i18n.Locale()).HotkeysSearch() }
 
-// HotkeysSearch says "Search apps and presets"
+// HotkeysSearch says "Search apps, presets or actions"
 // in the language of msgs.
 //
 // Settings › Shortcuts: placeholder of the search field (copy.md 11.3).
@@ -7730,13 +7730,13 @@ func (msgs Messages) HotkeysRemoveFor(name string) string {
 	return Catalog.Format(msgs.locale, "hotkeysRemoveFor", map[string]any{"name": name})
 }
 
-// HotkeysNoMatch says "No matching apps or presets"
+// HotkeysNoMatch says "No matches"
 // in the language the app shows.
 //
 // Settings › Shortcuts: nothing matches the search (copy.md 11.3).
 func HotkeysNoMatch() string { return In(i18n.Locale()).HotkeysNoMatch() }
 
-// HotkeysNoMatch says "No matching apps or presets"
+// HotkeysNoMatch says "No matches"
 // in the language of msgs.
 //
 // Settings › Shortcuts: nothing matches the search (copy.md 11.3).
@@ -7744,18 +7744,18 @@ func (msgs Messages) HotkeysNoMatch() string {
 	return Catalog.Format(msgs.locale, "hotkeysNoMatch", nil)
 }
 
-// HotkeysNoneSet says "No app or preset shortcuts yet. In All, click the right side of any row to set one."
+// HotkeysNoneSet says "No shortcuts yet. In All, click the right side of any row to set one."
 // in the language the app shows.
 //
-// Settings › Shortcuts, With Shortcut filter: no app or preset has one
-// (copy.md 11.3).
+// Settings › Shortcuts, With Shortcut filter: nothing but Gocast's own
+// has one (copy.md 15.7).
 func HotkeysNoneSet() string { return In(i18n.Locale()).HotkeysNoneSet() }
 
-// HotkeysNoneSet says "No app or preset shortcuts yet. In All, click the right side of any row to set one."
+// HotkeysNoneSet says "No shortcuts yet. In All, click the right side of any row to set one."
 // in the language of msgs.
 //
-// Settings › Shortcuts, With Shortcut filter: no app or preset has one
-// (copy.md 11.3).
+// Settings › Shortcuts, With Shortcut filter: nothing but Gocast's own
+// has one (copy.md 15.7).
 func (msgs Messages) HotkeysNoneSet() string {
 	return Catalog.Format(msgs.locale, "hotkeysNoneSet", nil)
 }
@@ -7878,4 +7878,1210 @@ func HotkeysUsedForSpoken(other string) string { return In(i18n.Locale()).Hotkey
 // Screen reader: a row in conflict (copy.md 11.4).
 func (msgs Messages) HotkeysUsedForSpoken(other string) string {
 	return Catalog.Format(msgs.locale, "hotkeysUsedForSpoken", map[string]any{"other": other})
+}
+
+// ActLockScreen says "Lock Screen"
+// in the language the app shows.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func ActLockScreen() string { return In(i18n.Locale()).ActLockScreen() }
+
+// ActLockScreen says "Lock Screen"
+// in the language of msgs.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) ActLockScreen() string {
+	return Catalog.Format(msgs.locale, "actLockScreen", nil)
+}
+
+// ActSleep says "Sleep"
+// in the language the app shows.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func ActSleep() string { return In(i18n.Locale()).ActSleep() }
+
+// ActSleep says "Sleep"
+// in the language of msgs.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) ActSleep() string {
+	return Catalog.Format(msgs.locale, "actSleep", nil)
+}
+
+// ActSleepDisplays says "Sleep Displays"
+// in the language the app shows.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func ActSleepDisplays() string { return In(i18n.Locale()).ActSleepDisplays() }
+
+// ActSleepDisplays says "Sleep Displays"
+// in the language of msgs.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) ActSleepDisplays() string {
+	return Catalog.Format(msgs.locale, "actSleepDisplays", nil)
+}
+
+// ActScreenSaver says "Start Screen Saver"
+// in the language the app shows.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func ActScreenSaver() string { return In(i18n.Locale()).ActScreenSaver() }
+
+// ActScreenSaver says "Start Screen Saver"
+// in the language of msgs.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) ActScreenSaver() string {
+	return Catalog.Format(msgs.locale, "actScreenSaver", nil)
+}
+
+// ActRestart says "Restart"
+// in the language the app shows.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func ActRestart() string { return In(i18n.Locale()).ActRestart() }
+
+// ActRestart says "Restart"
+// in the language of msgs.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) ActRestart() string {
+	return Catalog.Format(msgs.locale, "actRestart", nil)
+}
+
+// ActShutDown says "Shut Down"
+// in the language the app shows.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func ActShutDown() string { return In(i18n.Locale()).ActShutDown() }
+
+// ActShutDown says "Shut Down"
+// in the language of msgs.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) ActShutDown() string {
+	return Catalog.Format(msgs.locale, "actShutDown", nil)
+}
+
+// ActLogOut says "Log Out"
+// in the language the app shows.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func ActLogOut() string { return In(i18n.Locale()).ActLogOut() }
+
+// ActLogOut says "Log Out"
+// in the language of msgs.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) ActLogOut() string {
+	return Catalog.Format(msgs.locale, "actLogOut", nil)
+}
+
+// ActToggleMute says "Toggle Mute"
+// in the language the app shows.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func ActToggleMute() string { return In(i18n.Locale()).ActToggleMute() }
+
+// ActToggleMute says "Toggle Mute"
+// in the language of msgs.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) ActToggleMute() string {
+	return Catalog.Format(msgs.locale, "actToggleMute", nil)
+}
+
+// ActVolumeUp says "Volume Up"
+// in the language the app shows.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func ActVolumeUp() string { return In(i18n.Locale()).ActVolumeUp() }
+
+// ActVolumeUp says "Volume Up"
+// in the language of msgs.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) ActVolumeUp() string {
+	return Catalog.Format(msgs.locale, "actVolumeUp", nil)
+}
+
+// ActVolumeDown says "Volume Down"
+// in the language the app shows.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func ActVolumeDown() string { return In(i18n.Locale()).ActVolumeDown() }
+
+// ActVolumeDown says "Volume Down"
+// in the language of msgs.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) ActVolumeDown() string {
+	return Catalog.Format(msgs.locale, "actVolumeDown", nil)
+}
+
+// ActToggleAppearance says "Toggle Appearance"
+// in the language the app shows.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func ActToggleAppearance() string { return In(i18n.Locale()).ActToggleAppearance() }
+
+// ActToggleAppearance says "Toggle Appearance"
+// in the language of msgs.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) ActToggleAppearance() string {
+	return Catalog.Format(msgs.locale, "actToggleAppearance", nil)
+}
+
+// ActShowDesktop says "Show Desktop"
+// in the language the app shows.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func ActShowDesktop() string { return In(i18n.Locale()).ActShowDesktop() }
+
+// ActShowDesktop says "Show Desktop"
+// in the language of msgs.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) ActShowDesktop() string {
+	return Catalog.Format(msgs.locale, "actShowDesktop", nil)
+}
+
+// ActHideOthers says "Hide Other Apps"
+// in the language the app shows.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func ActHideOthers() string { return In(i18n.Locale()).ActHideOthers() }
+
+// ActHideOthers says "Hide Other Apps"
+// in the language of msgs.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) ActHideOthers() string {
+	return Catalog.Format(msgs.locale, "actHideOthers", nil)
+}
+
+// ActUnhideAll says "Show All Hidden Apps"
+// in the language the app shows.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func ActUnhideAll() string { return In(i18n.Locale()).ActUnhideAll() }
+
+// ActUnhideAll says "Show All Hidden Apps"
+// in the language of msgs.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) ActUnhideAll() string {
+	return Catalog.Format(msgs.locale, "actUnhideAll", nil)
+}
+
+// ActQuitAll says "Quit All Apps"
+// in the language the app shows.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func ActQuitAll() string { return In(i18n.Locale()).ActQuitAll() }
+
+// ActQuitAll says "Quit All Apps"
+// in the language of msgs.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) ActQuitAll() string {
+	return Catalog.Format(msgs.locale, "actQuitAll", nil)
+}
+
+// ActOpenTrash says "Open Trash"
+// in the language the app shows.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func ActOpenTrash() string { return In(i18n.Locale()).ActOpenTrash() }
+
+// ActOpenTrash says "Open Trash"
+// in the language of msgs.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) ActOpenTrash() string {
+	return Catalog.Format(msgs.locale, "actOpenTrash", nil)
+}
+
+// ActEmptyTrash says "Empty Trash"
+// in the language the app shows.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func ActEmptyTrash() string { return In(i18n.Locale()).ActEmptyTrash() }
+
+// ActEmptyTrash says "Empty Trash"
+// in the language of msgs.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) ActEmptyTrash() string {
+	return Catalog.Format(msgs.locale, "actEmptyTrash", nil)
+}
+
+// ActEjectAll says "Eject All Disks"
+// in the language the app shows.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func ActEjectAll() string { return In(i18n.Locale()).ActEjectAll() }
+
+// ActEjectAll says "Eject All Disks"
+// in the language of msgs.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) ActEjectAll() string {
+	return Catalog.Format(msgs.locale, "actEjectAll", nil)
+}
+
+// ActToggleHiddenFiles says "Toggle Hidden Files"
+// in the language the app shows.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func ActToggleHiddenFiles() string { return In(i18n.Locale()).ActToggleHiddenFiles() }
+
+// ActToggleHiddenFiles says "Toggle Hidden Files"
+// in the language of msgs.
+//
+// The name of a system action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) ActToggleHiddenFiles() string {
+	return Catalog.Format(msgs.locale, "actToggleHiddenFiles", nil)
+}
+
+// WinLeftHalf says "Left Half"
+// in the language the app shows.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func WinLeftHalf() string { return In(i18n.Locale()).WinLeftHalf() }
+
+// WinLeftHalf says "Left Half"
+// in the language of msgs.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) WinLeftHalf() string {
+	return Catalog.Format(msgs.locale, "winLeftHalf", nil)
+}
+
+// WinRightHalf says "Right Half"
+// in the language the app shows.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func WinRightHalf() string { return In(i18n.Locale()).WinRightHalf() }
+
+// WinRightHalf says "Right Half"
+// in the language of msgs.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) WinRightHalf() string {
+	return Catalog.Format(msgs.locale, "winRightHalf", nil)
+}
+
+// WinTopHalf says "Top Half"
+// in the language the app shows.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func WinTopHalf() string { return In(i18n.Locale()).WinTopHalf() }
+
+// WinTopHalf says "Top Half"
+// in the language of msgs.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) WinTopHalf() string {
+	return Catalog.Format(msgs.locale, "winTopHalf", nil)
+}
+
+// WinBottomHalf says "Bottom Half"
+// in the language the app shows.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func WinBottomHalf() string { return In(i18n.Locale()).WinBottomHalf() }
+
+// WinBottomHalf says "Bottom Half"
+// in the language of msgs.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) WinBottomHalf() string {
+	return Catalog.Format(msgs.locale, "winBottomHalf", nil)
+}
+
+// WinTopLeft says "Top Left Quarter"
+// in the language the app shows.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func WinTopLeft() string { return In(i18n.Locale()).WinTopLeft() }
+
+// WinTopLeft says "Top Left Quarter"
+// in the language of msgs.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) WinTopLeft() string {
+	return Catalog.Format(msgs.locale, "winTopLeft", nil)
+}
+
+// WinTopRight says "Top Right Quarter"
+// in the language the app shows.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func WinTopRight() string { return In(i18n.Locale()).WinTopRight() }
+
+// WinTopRight says "Top Right Quarter"
+// in the language of msgs.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) WinTopRight() string {
+	return Catalog.Format(msgs.locale, "winTopRight", nil)
+}
+
+// WinBottomLeft says "Bottom Left Quarter"
+// in the language the app shows.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func WinBottomLeft() string { return In(i18n.Locale()).WinBottomLeft() }
+
+// WinBottomLeft says "Bottom Left Quarter"
+// in the language of msgs.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) WinBottomLeft() string {
+	return Catalog.Format(msgs.locale, "winBottomLeft", nil)
+}
+
+// WinBottomRight says "Bottom Right Quarter"
+// in the language the app shows.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func WinBottomRight() string { return In(i18n.Locale()).WinBottomRight() }
+
+// WinBottomRight says "Bottom Right Quarter"
+// in the language of msgs.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) WinBottomRight() string {
+	return Catalog.Format(msgs.locale, "winBottomRight", nil)
+}
+
+// WinLeftThird says "Left Third"
+// in the language the app shows.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func WinLeftThird() string { return In(i18n.Locale()).WinLeftThird() }
+
+// WinLeftThird says "Left Third"
+// in the language of msgs.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) WinLeftThird() string {
+	return Catalog.Format(msgs.locale, "winLeftThird", nil)
+}
+
+// WinCenterThird says "Center Third"
+// in the language the app shows.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func WinCenterThird() string { return In(i18n.Locale()).WinCenterThird() }
+
+// WinCenterThird says "Center Third"
+// in the language of msgs.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) WinCenterThird() string {
+	return Catalog.Format(msgs.locale, "winCenterThird", nil)
+}
+
+// WinRightThird says "Right Third"
+// in the language the app shows.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func WinRightThird() string { return In(i18n.Locale()).WinRightThird() }
+
+// WinRightThird says "Right Third"
+// in the language of msgs.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) WinRightThird() string {
+	return Catalog.Format(msgs.locale, "winRightThird", nil)
+}
+
+// WinLeftTwoThirds says "Left Two Thirds"
+// in the language the app shows.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func WinLeftTwoThirds() string { return In(i18n.Locale()).WinLeftTwoThirds() }
+
+// WinLeftTwoThirds says "Left Two Thirds"
+// in the language of msgs.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) WinLeftTwoThirds() string {
+	return Catalog.Format(msgs.locale, "winLeftTwoThirds", nil)
+}
+
+// WinRightTwoThirds says "Right Two Thirds"
+// in the language the app shows.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func WinRightTwoThirds() string { return In(i18n.Locale()).WinRightTwoThirds() }
+
+// WinRightTwoThirds says "Right Two Thirds"
+// in the language of msgs.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) WinRightTwoThirds() string {
+	return Catalog.Format(msgs.locale, "winRightTwoThirds", nil)
+}
+
+// WinMaximize says "Maximize"
+// in the language the app shows.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func WinMaximize() string { return In(i18n.Locale()).WinMaximize() }
+
+// WinMaximize says "Maximize"
+// in the language of msgs.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) WinMaximize() string {
+	return Catalog.Format(msgs.locale, "winMaximize", nil)
+}
+
+// WinAlmostMaximize says "Almost Maximize"
+// in the language the app shows.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func WinAlmostMaximize() string { return In(i18n.Locale()).WinAlmostMaximize() }
+
+// WinAlmostMaximize says "Almost Maximize"
+// in the language of msgs.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) WinAlmostMaximize() string {
+	return Catalog.Format(msgs.locale, "winAlmostMaximize", nil)
+}
+
+// WinReasonableSize says "Reasonable Size"
+// in the language the app shows.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func WinReasonableSize() string { return In(i18n.Locale()).WinReasonableSize() }
+
+// WinReasonableSize says "Reasonable Size"
+// in the language of msgs.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) WinReasonableSize() string {
+	return Catalog.Format(msgs.locale, "winReasonableSize", nil)
+}
+
+// WinCenter says "Center"
+// in the language the app shows.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func WinCenter() string { return In(i18n.Locale()).WinCenter() }
+
+// WinCenter says "Center"
+// in the language of msgs.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) WinCenter() string {
+	return Catalog.Format(msgs.locale, "winCenter", nil)
+}
+
+// WinMakeLarger says "Make Larger"
+// in the language the app shows.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func WinMakeLarger() string { return In(i18n.Locale()).WinMakeLarger() }
+
+// WinMakeLarger says "Make Larger"
+// in the language of msgs.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) WinMakeLarger() string {
+	return Catalog.Format(msgs.locale, "winMakeLarger", nil)
+}
+
+// WinMakeSmaller says "Make Smaller"
+// in the language the app shows.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func WinMakeSmaller() string { return In(i18n.Locale()).WinMakeSmaller() }
+
+// WinMakeSmaller says "Make Smaller"
+// in the language of msgs.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) WinMakeSmaller() string {
+	return Catalog.Format(msgs.locale, "winMakeSmaller", nil)
+}
+
+// WinRestore says "Restore"
+// in the language the app shows.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func WinRestore() string { return In(i18n.Locale()).WinRestore() }
+
+// WinRestore says "Restore"
+// in the language of msgs.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) WinRestore() string {
+	return Catalog.Format(msgs.locale, "winRestore", nil)
+}
+
+// WinNextDisplay says "Move to Next Display"
+// in the language the app shows.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func WinNextDisplay() string { return In(i18n.Locale()).WinNextDisplay() }
+
+// WinNextDisplay says "Move to Next Display"
+// in the language of msgs.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) WinNextDisplay() string {
+	return Catalog.Format(msgs.locale, "winNextDisplay", nil)
+}
+
+// WinPreviousDisplay says "Move to Previous Display"
+// in the language the app shows.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func WinPreviousDisplay() string { return In(i18n.Locale()).WinPreviousDisplay() }
+
+// WinPreviousDisplay says "Move to Previous Display"
+// in the language of msgs.
+//
+// The name of a window action, in search and Settings › Shortcuts
+// (copy.md 15).
+func (msgs Messages) WinPreviousDisplay() string {
+	return Catalog.Format(msgs.locale, "winPreviousDisplay", nil)
+}
+
+// ActVolumeSet says "Set Volume to {n}%"
+// in the language the app shows.
+//
+// The name of the system actions setting the volume to 0, 25, 50, 75 or
+// 100% (copy.md 15.1).
+func ActVolumeSet(n int) string { return In(i18n.Locale()).ActVolumeSet(n) }
+
+// ActVolumeSet says "Set Volume to {n}%"
+// in the language of msgs.
+//
+// The name of the system actions setting the volume to 0, 25, 50, 75 or
+// 100% (copy.md 15.1).
+func (msgs Messages) ActVolumeSet(n int) string {
+	return Catalog.Format(msgs.locale, "actVolumeSet", map[string]any{"n": n})
+}
+
+// SearchTagSystem says "System"
+// in the language the app shows.
+//
+// Tag at the right of a system action's row, and its type in Settings ›
+// Shortcuts (copy.md 15.0).
+func SearchTagSystem() string { return In(i18n.Locale()).SearchTagSystem() }
+
+// SearchTagSystem says "System"
+// in the language of msgs.
+//
+// Tag at the right of a system action's row, and its type in Settings ›
+// Shortcuts (copy.md 15.0).
+func (msgs Messages) SearchTagSystem() string {
+	return Catalog.Format(msgs.locale, "searchTagSystem", nil)
+}
+
+// SearchTagWindow says "Window"
+// in the language the app shows.
+//
+// Tag at the right of a window action's row, and its type in Settings ›
+// Shortcuts (copy.md 15.0).
+func SearchTagWindow() string { return In(i18n.Locale()).SearchTagWindow() }
+
+// SearchTagWindow says "Window"
+// in the language of msgs.
+//
+// Tag at the right of a window action's row, and its type in Settings ›
+// Shortcuts (copy.md 15.0).
+func (msgs Messages) SearchTagWindow() string {
+	return Catalog.Format(msgs.locale, "searchTagWindow", nil)
+}
+
+// FooterRun says "Run"
+// in the language the app shows.
+//
+// Footer and Cmd-K: the primary action of the system and window actions
+// (copy.md 15.6).
+func FooterRun() string { return In(i18n.Locale()).FooterRun() }
+
+// FooterRun says "Run"
+// in the language of msgs.
+//
+// Footer and Cmd-K: the primary action of the system and window actions
+// (copy.md 15.6).
+func (msgs Messages) FooterRun() string {
+	return Catalog.Format(msgs.locale, "footerRun", nil)
+}
+
+// NoticeVolume says "Volume {n}%"
+// in the language the app shows.
+//
+// Notice after the volume changed (copy.md 15.4).
+func NoticeVolume(n int) string { return In(i18n.Locale()).NoticeVolume(n) }
+
+// NoticeVolume says "Volume {n}%"
+// in the language of msgs.
+//
+// Notice after the volume changed (copy.md 15.4).
+func (msgs Messages) NoticeVolume(n int) string {
+	return Catalog.Format(msgs.locale, "noticeVolume", map[string]any{"n": n})
+}
+
+// NoticeMuted says "Muted"
+// in the language the app shows.
+//
+// Notice after Toggle Mute muted (copy.md 15.4).
+func NoticeMuted() string { return In(i18n.Locale()).NoticeMuted() }
+
+// NoticeMuted says "Muted"
+// in the language of msgs.
+//
+// Notice after Toggle Mute muted (copy.md 15.4).
+func (msgs Messages) NoticeMuted() string {
+	return Catalog.Format(msgs.locale, "noticeMuted", nil)
+}
+
+// NoticeUnmuted says "Unmuted"
+// in the language the app shows.
+//
+// Notice after Toggle Mute unmuted (copy.md 15.4).
+func NoticeUnmuted() string { return In(i18n.Locale()).NoticeUnmuted() }
+
+// NoticeUnmuted says "Unmuted"
+// in the language of msgs.
+//
+// Notice after Toggle Mute unmuted (copy.md 15.4).
+func (msgs Messages) NoticeUnmuted() string {
+	return Catalog.Format(msgs.locale, "noticeUnmuted", nil)
+}
+
+// NoticeHiddenShown says "Showing hidden files"
+// in the language the app shows.
+//
+// Notice after Toggle Hidden Files showed them (copy.md 15.4).
+func NoticeHiddenShown() string { return In(i18n.Locale()).NoticeHiddenShown() }
+
+// NoticeHiddenShown says "Showing hidden files"
+// in the language of msgs.
+//
+// Notice after Toggle Hidden Files showed them (copy.md 15.4).
+func (msgs Messages) NoticeHiddenShown() string {
+	return Catalog.Format(msgs.locale, "noticeHiddenShown", nil)
+}
+
+// NoticeHiddenHidden says "Hidden files are hidden again"
+// in the language the app shows.
+//
+// Notice after Toggle Hidden Files hid them (copy.md 15.4).
+func NoticeHiddenHidden() string { return In(i18n.Locale()).NoticeHiddenHidden() }
+
+// NoticeHiddenHidden says "Hidden files are hidden again"
+// in the language of msgs.
+//
+// Notice after Toggle Hidden Files hid them (copy.md 15.4).
+func (msgs Messages) NoticeHiddenHidden() string {
+	return Catalog.Format(msgs.locale, "noticeHiddenHidden", nil)
+}
+
+// NoticeTrashEmpty says "The Trash is already empty"
+// in the language the app shows.
+//
+// Notice of Empty Trash with nothing in the Trash (copy.md 15.4).
+func NoticeTrashEmpty() string { return In(i18n.Locale()).NoticeTrashEmpty() }
+
+// NoticeTrashEmpty says "The Trash is already empty"
+// in the language of msgs.
+//
+// Notice of Empty Trash with nothing in the Trash (copy.md 15.4).
+func (msgs Messages) NoticeTrashEmpty() string {
+	return Catalog.Format(msgs.locale, "noticeTrashEmpty", nil)
+}
+
+// NoticeNoDisks says "No disks to eject"
+// in the language the app shows.
+//
+// Notice of Eject All Disks with none (copy.md 15.4).
+func NoticeNoDisks() string { return In(i18n.Locale()).NoticeNoDisks() }
+
+// NoticeNoDisks says "No disks to eject"
+// in the language of msgs.
+//
+// Notice of Eject All Disks with none (copy.md 15.4).
+func (msgs Messages) NoticeNoDisks() string {
+	return Catalog.Format(msgs.locale, "noticeNoDisks", nil)
+}
+
+// NoticeDiskBusy says "“{disk}” is in use and wasn’t ejected"
+// in the language the app shows.
+//
+// Notice of Eject All Disks when one is in use (copy.md 15.4).
+func NoticeDiskBusy(disk string) string { return In(i18n.Locale()).NoticeDiskBusy(disk) }
+
+// NoticeDiskBusy says "“{disk}” is in use and wasn’t ejected"
+// in the language of msgs.
+//
+// Notice of Eject All Disks when one is in use (copy.md 15.4).
+func (msgs Messages) NoticeDiskBusy(disk string) string {
+	return Catalog.Format(msgs.locale, "noticeDiskBusy", map[string]any{"disk": disk})
+}
+
+// NoticeEjected says "{n, plural, one {Ejected 1 disk} other {Ejected # disks}}"
+// in the language the app shows.
+//
+// Notice of Eject All Disks: how many it ejected (copy.md 15.4).
+func NoticeEjected(n int) string { return In(i18n.Locale()).NoticeEjected(n) }
+
+// NoticeEjected says "{n, plural, one {Ejected 1 disk} other {Ejected # disks}}"
+// in the language of msgs.
+//
+// Notice of Eject All Disks: how many it ejected (copy.md 15.4).
+func (msgs Messages) NoticeEjected(n int) string {
+	return Catalog.Format(msgs.locale, "noticeEjected", map[string]any{"n": n})
+}
+
+// NoticeNoWindow says "No window to arrange"
+// in the language the app shows.
+//
+// Notice of a window action with no window in front (copy.md 15.4).
+func NoticeNoWindow() string { return In(i18n.Locale()).NoticeNoWindow() }
+
+// NoticeNoWindow says "No window to arrange"
+// in the language of msgs.
+//
+// Notice of a window action with no window in front (copy.md 15.4).
+func (msgs Messages) NoticeNoWindow() string {
+	return Catalog.Format(msgs.locale, "noticeNoWindow", nil)
+}
+
+// NoticeOneDisplay says "Only one display is connected"
+// in the language the app shows.
+//
+// Notice of Move to Next/Previous Display with one display (copy.md 15.4).
+func NoticeOneDisplay() string { return In(i18n.Locale()).NoticeOneDisplay() }
+
+// NoticeOneDisplay says "Only one display is connected"
+// in the language of msgs.
+//
+// Notice of Move to Next/Previous Display with one display (copy.md 15.4).
+func (msgs Messages) NoticeOneDisplay() string {
+	return Catalog.Format(msgs.locale, "noticeOneDisplay", nil)
+}
+
+// NoticeNotMoved says "This window hasn’t been moved yet"
+// in the language the app shows.
+//
+// Notice of Restore on a window Gocast has not moved (copy.md 15.4).
+func NoticeNotMoved() string { return In(i18n.Locale()).NoticeNotMoved() }
+
+// NoticeNotMoved says "This window hasn’t been moved yet"
+// in the language of msgs.
+//
+// Notice of Restore on a window Gocast has not moved (copy.md 15.4).
+func (msgs Messages) NoticeNotMoved() string {
+	return Catalog.Format(msgs.locale, "noticeNotMoved", nil)
+}
+
+// NoticeFullScreen says "Can’t arrange a full-screen window. Exit full screen first."
+// in the language the app shows.
+//
+// Notice of a window action on a full-screen window (copy.md 15.4).
+func NoticeFullScreen() string { return In(i18n.Locale()).NoticeFullScreen() }
+
+// NoticeFullScreen says "Can’t arrange a full-screen window. Exit full screen first."
+// in the language of msgs.
+//
+// Notice of a window action on a full-screen window (copy.md 15.4).
+func (msgs Messages) NoticeFullScreen() string {
+	return Catalog.Format(msgs.locale, "noticeFullScreen", nil)
+}
+
+// NoticeNoAutomation says "Gocast isn’t allowed to control “{app}”"
+// in the language the app shows.
+//
+// Notice when the user did not allow Gocast to control Finder or System
+// Events (copy.md 15.4).
+func NoticeNoAutomation(app string) string { return In(i18n.Locale()).NoticeNoAutomation(app) }
+
+// NoticeNoAutomation says "Gocast isn’t allowed to control “{app}”"
+// in the language of msgs.
+//
+// Notice when the user did not allow Gocast to control Finder or System
+// Events (copy.md 15.4).
+func (msgs Messages) NoticeNoAutomation(app string) string {
+	return Catalog.Format(msgs.locale, "noticeNoAutomation", map[string]any{"app": app})
+}
+
+// ConfirmRestartTitle says "Restart this Mac?"
+// in the language the app shows.
+//
+// Title of the alert Restart asks first (copy.md 15.3).
+func ConfirmRestartTitle() string { return In(i18n.Locale()).ConfirmRestartTitle() }
+
+// ConfirmRestartTitle says "Restart this Mac?"
+// in the language of msgs.
+//
+// Title of the alert Restart asks first (copy.md 15.3).
+func (msgs Messages) ConfirmRestartTitle() string {
+	return Catalog.Format(msgs.locale, "confirmRestartTitle", nil)
+}
+
+// ConfirmShutDownTitle says "Shut down this Mac?"
+// in the language the app shows.
+//
+// Title of the alert Shut Down asks first (copy.md 15.3).
+func ConfirmShutDownTitle() string { return In(i18n.Locale()).ConfirmShutDownTitle() }
+
+// ConfirmShutDownTitle says "Shut down this Mac?"
+// in the language of msgs.
+//
+// Title of the alert Shut Down asks first (copy.md 15.3).
+func (msgs Messages) ConfirmShutDownTitle() string {
+	return Catalog.Format(msgs.locale, "confirmShutDownTitle", nil)
+}
+
+// ConfirmLogOutTitle says "Log out?"
+// in the language the app shows.
+//
+// Title of the alert Log Out asks first (copy.md 15.3).
+func ConfirmLogOutTitle() string { return In(i18n.Locale()).ConfirmLogOutTitle() }
+
+// ConfirmLogOutTitle says "Log out?"
+// in the language of msgs.
+//
+// Title of the alert Log Out asks first (copy.md 15.3).
+func (msgs Messages) ConfirmLogOutTitle() string {
+	return Catalog.Format(msgs.locale, "confirmLogOutTitle", nil)
+}
+
+// ConfirmQuitAllTitle says "Quit all apps?"
+// in the language the app shows.
+//
+// Title of the alert Quit All Apps asks first (copy.md 15.3).
+func ConfirmQuitAllTitle() string { return In(i18n.Locale()).ConfirmQuitAllTitle() }
+
+// ConfirmQuitAllTitle says "Quit all apps?"
+// in the language of msgs.
+//
+// Title of the alert Quit All Apps asks first (copy.md 15.3).
+func (msgs Messages) ConfirmQuitAllTitle() string {
+	return Catalog.Format(msgs.locale, "confirmQuitAllTitle", nil)
+}
+
+// ConfirmEmptyTrashTitle says "Empty the Trash?"
+// in the language the app shows.
+//
+// Title of the alert Empty Trash asks first (copy.md 15.3).
+func ConfirmEmptyTrashTitle() string { return In(i18n.Locale()).ConfirmEmptyTrashTitle() }
+
+// ConfirmEmptyTrashTitle says "Empty the Trash?"
+// in the language of msgs.
+//
+// Title of the alert Empty Trash asks first (copy.md 15.3).
+func (msgs Messages) ConfirmEmptyTrashTitle() string {
+	return Catalog.Format(msgs.locale, "confirmEmptyTrashTitle", nil)
+}
+
+// ConfirmTerminalsStop says "Commands running in the floating terminal will stop."
+// in the language the app shows.
+//
+// Alert of Restart and Shut Down, only when terminals run (copy.md 15.3).
+func ConfirmTerminalsStop() string { return In(i18n.Locale()).ConfirmTerminalsStop() }
+
+// ConfirmTerminalsStop says "Commands running in the floating terminal will stop."
+// in the language of msgs.
+//
+// Alert of Restart and Shut Down, only when terminals run (copy.md 15.3).
+func (msgs Messages) ConfirmTerminalsStop() string {
+	return Catalog.Format(msgs.locale, "confirmTerminalsStop", nil)
+}
+
+// ConfirmLogOutDetail says "All apps will quit."
+// in the language the app shows.
+//
+// Alert of Log Out (copy.md 15.3).
+func ConfirmLogOutDetail() string { return In(i18n.Locale()).ConfirmLogOutDetail() }
+
+// ConfirmLogOutDetail says "All apps will quit."
+// in the language of msgs.
+//
+// Alert of Log Out (copy.md 15.3).
+func (msgs Messages) ConfirmLogOutDetail() string {
+	return Catalog.Format(msgs.locale, "confirmLogOutDetail", nil)
+}
+
+// ConfirmLogOutTerminals says "Commands running in the floating terminal will stop too."
+// in the language the app shows.
+//
+// Alert of Log Out, after its first sentence, when terminals run (copy.md
+// 15.3).
+func ConfirmLogOutTerminals() string { return In(i18n.Locale()).ConfirmLogOutTerminals() }
+
+// ConfirmLogOutTerminals says "Commands running in the floating terminal will stop too."
+// in the language of msgs.
+//
+// Alert of Log Out, after its first sentence, when terminals run (copy.md
+// 15.3).
+func (msgs Messages) ConfirmLogOutTerminals() string {
+	return Catalog.Format(msgs.locale, "confirmLogOutTerminals", nil)
+}
+
+// ConfirmQuitAllDetail says "Gocast and Finder stay open. Apps with unsaved documents will ask you first."
+// in the language the app shows.
+//
+// Alert of Quit All Apps (copy.md 15.3).
+func ConfirmQuitAllDetail() string { return In(i18n.Locale()).ConfirmQuitAllDetail() }
+
+// ConfirmQuitAllDetail says "Gocast and Finder stay open. Apps with unsaved documents will ask you first."
+// in the language of msgs.
+//
+// Alert of Quit All Apps (copy.md 15.3).
+func (msgs Messages) ConfirmQuitAllDetail() string {
+	return Catalog.Format(msgs.locale, "confirmQuitAllDetail", nil)
+}
+
+// ConfirmEmptyTrashDetail says "Everything in it will be deleted for good. This can’t be undone."
+// in the language the app shows.
+//
+// Alert of Empty Trash (copy.md 15.3).
+func ConfirmEmptyTrashDetail() string { return In(i18n.Locale()).ConfirmEmptyTrashDetail() }
+
+// ConfirmEmptyTrashDetail says "Everything in it will be deleted for good. This can’t be undone."
+// in the language of msgs.
+//
+// Alert of Empty Trash (copy.md 15.3).
+func (msgs Messages) ConfirmEmptyTrashDetail() string {
+	return Catalog.Format(msgs.locale, "confirmEmptyTrashDetail", nil)
+}
+
+// ConfirmRestart says "Restart"
+// in the language the app shows.
+//
+// The button of the Restart alert (copy.md 15.3).
+func ConfirmRestart() string { return In(i18n.Locale()).ConfirmRestart() }
+
+// ConfirmRestart says "Restart"
+// in the language of msgs.
+//
+// The button of the Restart alert (copy.md 15.3).
+func (msgs Messages) ConfirmRestart() string {
+	return Catalog.Format(msgs.locale, "confirmRestart", nil)
+}
+
+// ConfirmShutDown says "Shut Down"
+// in the language the app shows.
+//
+// The button of the Shut Down alert (copy.md 15.3).
+func ConfirmShutDown() string { return In(i18n.Locale()).ConfirmShutDown() }
+
+// ConfirmShutDown says "Shut Down"
+// in the language of msgs.
+//
+// The button of the Shut Down alert (copy.md 15.3).
+func (msgs Messages) ConfirmShutDown() string {
+	return Catalog.Format(msgs.locale, "confirmShutDown", nil)
+}
+
+// ConfirmLogOut says "Log Out"
+// in the language the app shows.
+//
+// The button of the Log Out alert (copy.md 15.3).
+func ConfirmLogOut() string { return In(i18n.Locale()).ConfirmLogOut() }
+
+// ConfirmLogOut says "Log Out"
+// in the language of msgs.
+//
+// The button of the Log Out alert (copy.md 15.3).
+func (msgs Messages) ConfirmLogOut() string {
+	return Catalog.Format(msgs.locale, "confirmLogOut", nil)
+}
+
+// ConfirmQuitAll says "Quit All"
+// in the language the app shows.
+//
+// The button of the Quit All Apps alert (copy.md 15.3).
+func ConfirmQuitAll() string { return In(i18n.Locale()).ConfirmQuitAll() }
+
+// ConfirmQuitAll says "Quit All"
+// in the language of msgs.
+//
+// The button of the Quit All Apps alert (copy.md 15.3).
+func (msgs Messages) ConfirmQuitAll() string {
+	return Catalog.Format(msgs.locale, "confirmQuitAll", nil)
+}
+
+// ConfirmEmptyTrash says "Empty"
+// in the language the app shows.
+//
+// The button of the Empty Trash alert (copy.md 15.3).
+func ConfirmEmptyTrash() string { return In(i18n.Locale()).ConfirmEmptyTrash() }
+
+// ConfirmEmptyTrash says "Empty"
+// in the language of msgs.
+//
+// The button of the Empty Trash alert (copy.md 15.3).
+func (msgs Messages) ConfirmEmptyTrash() string {
+	return Catalog.Format(msgs.locale, "confirmEmptyTrash", nil)
+}
+
+// WinAXTitle says "Allow Gocast to arrange windows"
+// in the language the app shows.
+//
+// Banner over the search panel the first time a window action runs without
+// Accessibility (copy.md 15.5).
+func WinAXTitle() string { return In(i18n.Locale()).WinAXTitle() }
+
+// WinAXTitle says "Allow Gocast to arrange windows"
+// in the language of msgs.
+//
+// Banner over the search panel the first time a window action runs without
+// Accessibility (copy.md 15.5).
+func (msgs Messages) WinAXTitle() string {
+	return Catalog.Format(msgs.locale, "winAXTitle", nil)
+}
+
+// WinAXBody says "Gocast moves other apps’ windows for you. macOS asks you to turn on Gocast in Accessibility first. It’s only used…"
+// in the language the app shows.
+//
+// The window actions' Accessibility banner: description (copy.md 15.5).
+func WinAXBody() string { return In(i18n.Locale()).WinAXBody() }
+
+// WinAXBody says "Gocast moves other apps’ windows for you. macOS asks you to turn on Gocast in Accessibility first. It’s only used…"
+// in the language of msgs.
+//
+// The window actions' Accessibility banner: description (copy.md 15.5).
+func (msgs Messages) WinAXBody() string {
+	return Catalog.Format(msgs.locale, "winAXBody", nil)
+}
+
+// WinAXReady says "Ready to arrange windows"
+// in the language the app shows.
+//
+// The banner once Accessibility is allowed (copy.md 15.5).
+func WinAXReady() string { return In(i18n.Locale()).WinAXReady() }
+
+// WinAXReady says "Ready to arrange windows"
+// in the language of msgs.
+//
+// The banner once Accessibility is allowed (copy.md 15.5).
+func (msgs Messages) WinAXReady() string {
+	return Catalog.Format(msgs.locale, "winAXReady", nil)
+}
+
+// HotkeysFilterActions says "Actions"
+// in the language the app shows.
+//
+// Settings › Shortcuts: the filter of the system and window actions
+// (copy.md 15.7).
+func HotkeysFilterActions() string { return In(i18n.Locale()).HotkeysFilterActions() }
+
+// HotkeysFilterActions says "Actions"
+// in the language of msgs.
+//
+// Settings › Shortcuts: the filter of the system and window actions
+// (copy.md 15.7).
+func (msgs Messages) HotkeysFilterActions() string {
+	return Catalog.Format(msgs.locale, "hotkeysFilterActions", nil)
+}
+
+// AppFinder says "Finder"
+// in the language the app shows.
+//
+// Finder, as the notice that Gocast may not control it names it (copy.md
+// 15.4).
+func AppFinder() string { return In(i18n.Locale()).AppFinder() }
+
+// AppFinder says "Finder"
+// in the language of msgs.
+//
+// Finder, as the notice that Gocast may not control it names it (copy.md
+// 15.4).
+func (msgs Messages) AppFinder() string {
+	return Catalog.Format(msgs.locale, "appFinder", nil)
 }

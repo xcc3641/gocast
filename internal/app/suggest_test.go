@@ -316,7 +316,7 @@ func TestLauncherSuggestions(t *testing.T) {
 	// Typing: the results, no titles, the first chosen; the height stays.
 	l.query = "saf"
 	l.filter()
-	if got := shown(l); !slices.Equal(got, []string{"> app:com.apple.Safari"}) {
+	if got := withoutActions(shown(l)); !slices.Equal(got, []string{"> app:com.apple.Safari"}) {
 		t.Errorf("typing: %q", got)
 	}
 	// Cleared: the suggestions again, as ranked when it showed, the

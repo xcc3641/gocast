@@ -179,6 +179,9 @@ type Item struct {
 	// Score is how often and lately it was opened (frecency): higher
 	// shows first among matches of one rank.
 	Score float64
+	// Tier orders items of one rank and Score: lower first. The apps,
+	// presets and Gocast's own items are 0, its actions after them.
+	Tier int
 }
 
 // NewItem makes an item found by title and the other names.
@@ -210,9 +213,9 @@ func (it Item) Rank(query string) (rank int, byTitle bool) {
 
 // Filter returns the indexes of the items matching query, best first:
 // the item the same query opened last (chosen, "" for none) when it
-// matches, then by rank, then the highest Score, then a match of the
-// title over one of another name, then shorter titles, then in their
-// order.
+// matches, then by rank, then the highest Score, then the lowest Tier,
+// then a match of the title over one of another name, then shorter
+// titles, then in their order.
 func Filter(items []Item, query, chosen string) []int {
 	type found struct {
 		i, rank int
@@ -235,6 +238,9 @@ func Filter(items []Item, query, chosen string) []int {
 			return c
 		}
 		if c := cmp.Compare(items[b.i].Score, items[a.i].Score); c != 0 {
+			return c
+		}
+		if c := cmp.Compare(items[a.i].Tier, items[b.i].Tier); c != 0 {
 			return c
 		}
 		if a.byTitle != b.byTitle {

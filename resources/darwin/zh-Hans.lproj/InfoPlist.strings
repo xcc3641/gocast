@@ -1,0 +1,2 @@
+/* Why Gocast controls Finder and System Events (copy.md 5). */
+"NSAppleEventsUsageDescription" = "Gocast 用它来执行你选的系统操作，比如清倒废纸篓、推出磁盘、切换深浅色外观。";

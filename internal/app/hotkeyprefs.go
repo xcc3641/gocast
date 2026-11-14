@@ -19,6 +19,7 @@ import (
 	"gocast/internal/search"
 	"gocast/internal/settings"
 	"gocast/internal/shortcut"
+	"gocast/internal/sysact"
 	"gocast/locales"
 )
 
@@ -59,6 +60,7 @@ const (
 	hkFilterSet
 	hkFilterApps
 	hkFilterPresets
+	hkFilterActions
 )
 
 // The kinds of row, which its type label says.
@@ -66,6 +68,8 @@ const (
 	hkGocast = iota
 	hkApp
 	hkPreset
+	hkSystem
+	hkWindow
 )
 
 // errSpotlightBusy: ⌘Space for the search panel while Spotlight has it,
@@ -74,9 +78,9 @@ var errSpotlightBusy = errors.New("spotlight has Cmd-Space")
 
 // hkRow is a row of the list.
 type hkRow struct {
-	id      string          // "own:1", "app:" + bundle ID, "preset:" + ID
+	id      string          // "own:1", "app:" + bundle ID, "preset:" + ID, "action:" + ID
 	own     int             // 1 to 3 for Gocast's own, by its row; else 0
-	item    settings.Hotkey // an app's or preset's
+	item    settings.Hotkey // an app's, preset's or action's
 	kind    int
 	name    string
 	path    string // an app's bundle, "" for a preset or an app missing
@@ -148,10 +152,12 @@ func (p *prefsWindow) hotkeyRowsOf() string {
 
 // makeHotkeyRows makes the rows: Gocast's own, then the presets, the apps
 // the search panel knows and the apps with a hotkey it does not, by name
-// (Chinese names by their pinyin), as the search panel sorts them.
+// (Chinese names by their pinyin), as the search panel sorts them; last
+// the system's actions, then the window's, in copy.md's order (design.md
+// 4.4: Left Half, Right Half... together).
 func (p *prefsWindow) makeHotkeyRows() []hkRow {
 	g, l := p.g, p.g.launcher
-	rows := make([]hkRow, 0, 3+len(g.presets)+len(l.apps))
+	rows := make([]hkRow, 0, 3+len(g.presets)+len(l.apps)+len(sysact.Actions))
 	for r := 1; r <= 3; r++ {
 		id := "own:" + strconv.Itoa(r)
 		rows = append(rows, hkRow{id: id, own: r, kind: hkGocast, name: shortcutLabel(r), match: search.NewItem(id, shortcutLabel(r))})
@@ -195,6 +201,14 @@ func (p *prefsWindow) makeHotkeyRows() []hkRow {
 	slices.SortStableFunc(items, func(a, b keyed) int { return strings.Compare(a.key, b.key) })
 	for _, it := range items {
 		rows = append(rows, it.row)
+	}
+	for _, a := range sysact.Actions {
+		id, name, kind := actionPrefix+a.ID, actionName(a.ID), hkSystem
+		if a.Kind == sysact.KindWindow {
+			kind = hkWindow
+		}
+		rows = append(rows, hkRow{id: id, item: actionHotkey(a.ID), kind: kind, name: name,
+			match: search.NewItem(id, name, actionSearchNames(a.ID)...)})
 	}
 	return rows
 }
@@ -251,6 +265,10 @@ func (p *prefsWindow) filterHotkeys(top bool) {
 			if r.kind != hkPreset {
 				continue
 			}
+		case hkFilterActions:
+			if r.kind != hkSystem && r.kind != hkWindow {
+				continue
+			}
 		}
 		if q != "" {
 			if rank, _ := r.match.Rank(q); rank < 0 {
@@ -299,13 +317,18 @@ func (p *prefsWindow) ownDefault(row int) string {
 	return settings.DefaultClipboardShortcut
 }
 
-// typeLabel is the label of a row's kind: App, Preset or Gocast.
+// typeLabel is the label of a row's kind: App, Preset, System, Window or
+// Gocast.
 func typeLabel(kind int) string {
 	switch kind {
 	case hkApp:
 		return locales.SearchTagApp()
 	case hkPreset:
 		return locales.SearchTagPreset()
+	case hkSystem:
+		return locales.SearchTagSystem()
+	case hkWindow:
+		return locales.SearchTagWindow()
 	}
 	return locales.SearchTagGocast()
 }
@@ -550,7 +573,7 @@ func (p *prefsWindow) shortcutsPage(c *ui.Context, k tokens) {
 	ui.Row(c).Height(28).Shrink(0).Gap(10).AlignItems(ui.Center).Margin(0, 0, 10, 0).Children(func() {
 		p.hotkeySearch(c, k)
 		seg := ui.Segmented(c, &h.filter, locales.HotkeysFilterAll(), locales.HotkeysFilterSet(),
-			locales.HotkeysFilterApps(), locales.HotkeysFilterPresets()).Height(28).FontSize(12).Shrink(0).Label(locales.HotkeysFilter())
+			locales.HotkeysFilterApps(), locales.HotkeysFilterPresets(), locales.HotkeysFilterActions()).Height(28).FontSize(12).Shrink(0).Label(locales.HotkeysFilter())
 		if seg.Changed() {
 			p.stopRecording(false)
 			p.filterHotkeys(true)
@@ -793,7 +816,8 @@ func (p *prefsWindow) descHeight(c *ui.Context, desc string, movable bool) float
 
 // rowIcon is a row's icon, 20: the app's, else the system's generic
 // application icon, faded for an app missing; a symbol on a square for
-// a preset and Gocast's own.
+// a preset and Gocast's own; an action's, as the search panel's, scaled
+// to 20 (design.md 4.4).
 func (p *prefsWindow) rowIcon(c *ui.Context, k tokens, r *hkRow) {
 	square := func(symbol string, size float32) {
 		ui.Box(c).Size(hkIcon, hkIcon).Radius(5).Background(k.keycap).Center().Shrink(0).AccessHidden(true).
@@ -805,6 +829,9 @@ func (p *prefsWindow) rowIcon(c *ui.Context, k tokens, r *hkRow) {
 		return
 	case r.kind == hkPreset:
 		square("apple.terminal.fill", 11)
+		return
+	case r.kind == hkSystem || r.kind == hkWindow:
+		actionSquare(c, k, r.item.Action, hkIcon, 5, 11, k.textSecondary)
 		return
 	}
 	b := p.g.launcher.clip.genericAppIcon(hkIcon)

@@ -18,6 +18,7 @@ import (
 	"gocast/internal/running"
 	"gocast/internal/settings"
 	"gocast/internal/shortcut"
+	"gocast/internal/sysact"
 	"gocast/locales"
 )
 
@@ -100,22 +101,23 @@ func (g *gocast) hotkeyStatus(h settings.Hotkey) (state hotkeyState, ok bool) {
 	return state, ok
 }
 
-// hotkeyItem is an app or preset that may have a hotkey, as a list of
-// them shows it.
+// hotkeyItem is an app, preset or action that may have a hotkey, as a
+// list of them shows it.
 type hotkeyItem struct {
 	item  settings.Hotkey
 	name  string
-	app   *mygo.InstalledApp // nil for a preset, or an app not installed
+	app   *mygo.InstalledApp // nil for a preset or an action, or an app not installed
 	accel string             // its hotkey, "" for none
 	state hotkeyState        // how accel stands
 }
 
 // hotkeyItems are all the items that may have a hotkey: the presets, the
-// apps the search panel knows, and the apps not installed that have one.
+// apps the search panel knows, the apps not installed that have one, and
+// Gocast's actions.
 // Cheap enough to call as a list shows (the settings' maps, no lookups
 // but for the names of apps not installed).
 func (g *gocast) hotkeyItems() []hotkeyItem {
-	items := make([]hotkeyItem, 0, len(g.presets)+len(g.launcher.apps))
+	items := make([]hotkeyItem, 0, len(g.presets)+len(g.launcher.apps)+len(sysact.Actions))
 	add := func(h settings.Hotkey, name string, app *mygo.InstalledApp) {
 		it := hotkeyItem{item: h, name: name, app: app, accel: g.settings.Hotkey(h)}
 		it.state = g.hotkeyStates[h]
@@ -134,6 +136,9 @@ func (g *gocast) hotkeyItems() []hotkeyItem {
 		if h.App != "" && !known[h.App] {
 			add(h, g.hotkeyLabel(h), nil)
 		}
+	}
+	for _, a := range sysact.Actions {
+		add(actionHotkey(a.ID), actionName(a.ID), nil)
 	}
 	return items
 }
@@ -165,10 +170,13 @@ func shortcutLabel(row int) string {
 	return locales.ShortcutClipboard()
 }
 
-// hotkeyLabel names the app or preset of h, as a conflict says it: the
-// app's name, else its bundle's, else (not installed) the name stored
-// when its hotkey was set, else its bundle ID.
+// hotkeyLabel names the app, preset or action of h, as a conflict says
+// it: the app's name, else its bundle's, else (not installed) the name
+// stored when its hotkey was set, else its bundle ID.
 func (g *gocast) hotkeyLabel(h settings.Hotkey) string {
+	if h.Action != "" {
+		return actionName(h.Action)
+	}
 	if h.App == "" {
 		if i := presets.Find(g.presets, h.Preset); i >= 0 {
 			return presetTitle(g.presets[i])
@@ -305,8 +313,11 @@ func (g *gocast) registeredOwner(accel string, self settings.Hotkey) bool {
 
 // hotkeyFunc is what the hotkey of h does.
 func (g *gocast) hotkeyFunc(h settings.Hotkey) func() {
-	if h.App != "" {
+	switch {
+	case h.App != "":
 		return func() { g.appHotkeyPressed(h.App) }
+	case h.Action != "":
+		return func() { g.actionHotkeyPressed(h.Action) }
 	}
 	return func() { g.presetHotkeyPressed(h.Preset) }
 }

@@ -16,6 +16,7 @@ import (
 
 	"gocast/internal/presets"
 	"gocast/internal/settings"
+	"gocast/internal/sysact"
 	"gocast/locales"
 )
 
@@ -69,6 +70,9 @@ func rowIndex(t *testing.T, p *prefsWindow, id string) int {
 func TestHotkeyPrefsRows(t *testing.T) {
 	p, tt, _ := hotkeyPrefs(t, "en")
 	want := []string{"own:1", "own:2", "own:3", "app:com.apple.finder", "preset:p", "app:com.apple.Notes", "app:com.apple.Safari", "app:com.apple.Terminal"}
+	for _, a := range sysact.Actions { // last (TestHotkeyPrefsActions)
+		want = append(want, actionPrefix+a.ID)
+	}
 	if got := shownIDs(p); !slices.Equal(got, want) {
 		t.Fatalf("rows:\n%q\nwant\n%q", got, want)
 	}
@@ -84,7 +88,7 @@ func TestHotkeyPrefsRows(t *testing.T) {
 	// Searching: by name, Gocast's own by their labels; the first chosen.
 	tt.Type("saf")
 	tt.Frame()
-	if got := shownIDs(p); !slices.Equal(got, []string{"app:com.apple.Safari"}) {
+	if got := withoutActions(shownIDs(p)); !slices.Equal(got, []string{"app:com.apple.Safari"}) {
 		t.Errorf("searching saf: %q", got)
 	}
 	tt.Key(ui.Cmd, ui.KeyA)
