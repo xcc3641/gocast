@@ -291,21 +291,22 @@ func TestHotkeyPrefsSearchWidth(t *testing.T) {
 		if !has(tt, locales.HotkeysFilterActions()) {
 			t.Errorf("%s: no %q", loc, locales.HotkeysFilterActions())
 		}
-		// The placeholder drawn over the field, cut with "…": gone
-		// while it holds any.
-		// (The field is labeled with the same words.)
-		count := func() int {
-			return len(slices.DeleteFunc(tt.Texts(), func(s string) bool { return s != locales.HotkeysSearch() }))
-		}
-		if n := count(); n != 2 {
-			t.Errorf("%s: the placeholder %d times", loc, n-1)
-		}
-		tt.Type("x")
-		tt.Frame()
-		if n := count(); n != 1 {
-			t.Errorf("%s: the placeholder over %q", loc, "x")
+		// The placeholder whole in the field's text box: MyGo cuts it
+		// without an ellipsis.
+		if w := textWidth(locales.HotkeysSearch(), 13); w > field.Bounds.W {
+			t.Errorf("%s: the placeholder is %.1f wide, the field's text %.1f", loc, w, field.Bounds.W)
 		}
 	}
+}
+
+// textWidth is the width of s on one line at size.
+func textWidth(s string, size float32) float32 {
+	tt := ui.NewTester(func(c *ui.Context) {
+		ui.Column(c).AlignItems(ui.Start).Children(func() { ui.Text(c, s).FontSize(size) })
+	}, 800, 100)
+	tt.Frame()
+	r, _ := tt.Find(s)
+	return r.W
 }
 
 // One kind of match is one score (design.md 2.9): the actions it finds
@@ -339,6 +340,20 @@ func TestActionTieOrder(t *testing.T) {
 		typeQuery(l, c.query)
 		if got := only(rowIDs(l)); !slices.Equal(got, ids(c.want)) {
 			t.Errorf("%s %q: %q", c.locale, c.query, got)
+		}
+	}
+	// "saf" is Safari's: no syllable cut before the query's end ("sa"
+	// of san, then "f" of fen) finds the thirds. (Sleep Displays'
+	// "display off" has its letters in order, as any English name.)
+	for _, loc := range []string{"zh-Hans", "en"} {
+		inLocale(t, loc)
+		l := testLauncher(t, usage.New(), nil)
+		typeQuery(l, "saf")
+		for _, id := range rowIDs(l) {
+			if slices.Contains(ids(thirds), id) {
+				t.Errorf("%s saf: %q", loc, rowIDs(l))
+				break
+			}
 		}
 	}
 	useFakeActions(t)
@@ -459,6 +474,20 @@ func TestActionConfirmText(t *testing.T) {
 	}
 	if _, _, button := confirmText(sysact.EmptyTrash, false); button != locales.ConfirmEmptyTrash() {
 		t.Errorf("Empty Trash: %q", button)
+	}
+	// The five titles end with the full-width question mark (copy.md
+	// 15.3); the English ones with "?".
+	confirms := []string{sysact.Restart, sysact.ShutDown, sysact.LogOut, sysact.QuitAll, sysact.EmptyTrash}
+	for _, id := range confirms {
+		if title, _, _ := confirmText(id, false); !strings.HasSuffix(title, "？") {
+			t.Errorf("%s in Chinese: %q", id, title)
+		}
+	}
+	inLocale(t, "en")
+	for _, id := range confirms {
+		if title, _, _ := confirmText(id, false); !strings.HasSuffix(title, "?") {
+			t.Errorf("%s in English: %q", id, title)
+		}
 	}
 }
 

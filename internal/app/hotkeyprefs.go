@@ -602,17 +602,8 @@ func (p *prefsWindow) hotkeySearch(c *ui.Context, k tokens) {
 	ui.Row(c).Grow(1).Shrink(1).Height(28).Radius(7).Background(k.groupFill).Padding(0, 6, 0, 8).Gap(6).AlignItems(ui.Center).Children(func() {
 		sfsymbols.Symbol(c, "magnifyingglass").Size(12).Color(k.textSecondary)
 		field := ui.TextInputBase(c, &h.query).Bind(&h.search).Grow(1).Shrink(1).FontSize(13).
-			Placeholder(locales.HotkeysSearch()).PlaceholderColor(ui.Transparent).Label(locales.HotkeysSearch()).OnTextKey(p.searchKey)
+			Placeholder(locales.HotkeysSearch()).Label(locales.HotkeysSearch()).OnTextKey(p.searchKey)
 		h.composing = field.Composing()
-		if h.query == "" && !h.composing {
-			// The placeholder, drawn here to end with "…" where it is
-			// cut (design.md 4.4: the English one is longer than the
-			// field's 200); the input's own, the same words, is
-			// transparent and only told to assistive technology.
-			ui.Row(c).Absolute().Left(26).Right(6).Top(0).Bottom(0).AlignItems(ui.Center).PassThrough().AccessHidden(true).Children(func() {
-				ui.Text(c, locales.HotkeysSearch()).FontSize(13).TextColor(k.textSecondary).SingleLine().Shrink(1)
-			})
-		}
 		if field.Changed() {
 			p.stopRecording(false)
 			p.filterHotkeys(true)

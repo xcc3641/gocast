@@ -85,6 +85,14 @@ func TestRanks(t *testing.T) {
 		{"微信", "weixin", RankTokens},
 		{"微信", "xin", RankWord},
 		{"计算器", "jsq", RankTokens},
+		{"微信", "weix", RankTokens},
+		{"QQ音乐", "qqyy", RankTokens},
+		// A syllable cut before the query's end: only to its initial.
+		{"左三分之一", "saf", NoMatch},
+		{"左三分之一", "sanf", RankWord},
+		{"左三分之一", "sf", RankWord},
+		{"左三分之一", "zuosanf", RankTokens},
+		{"左三分之一", "zuos", RankTokens},
 		{"计算器", "jq", NoMatch},
 		{"计算器", "xyz", NoMatch},
 	} {

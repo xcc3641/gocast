@@ -40,7 +40,7 @@
   "@termDisconnected": {
     "description": "Written dim into a terminal whose program stopped as the process keeping it went away, above the new prompt (copy.md 13, design.md 3.6)."
   },
-  "searchPlaceholder": "Search apps, presets or system actions",
+  "searchPlaceholder": "Search apps, presets or actions",
   "@searchPlaceholder": {
     "description": "The search field's placeholder."
   },
@@ -2306,7 +2306,7 @@
   "@hotkeysIntro": {
     "description": "Settings › Shortcuts: line over the list (copy.md 11.3)."
   },
-  "hotkeysSearch": "Search apps, presets or system actions",
+  "hotkeysSearch": "Search apps or presets",
   "@hotkeysSearch": {
     "description": "Settings › Shortcuts: placeholder of the search field (copy.md 11.3)."
   },

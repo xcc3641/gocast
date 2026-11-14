@@ -128,7 +128,8 @@ func (k Key) Rank(query string) int {
 
 // tokenRun returns the first token from which q is spelled by consecutive
 // tokens, each taken whole or by a start of one of its alternatives (the
-// last may be cut anywhere), or -1.
+// last may be cut anywhere; a Chinese character's pinyin before it only
+// whole or by its initial), or -1.
 func (k Key) tokenRun(q string) int {
 	if q == "" {
 		return 0
@@ -148,11 +149,19 @@ func spells(q string, tokens [][]string) bool {
 	if len(tokens) == 0 {
 		return false
 	}
+	r, _ := utf8.DecodeRuneInString(tokens[0][0])
+	han := unicode.Is(unicode.Han, r)
 	for _, alt := range tokens[0] {
 		n := commonPrefix(q, alt)
 		for ; n > 0; n-- {
 			if n < len(q) && !utf8.RuneStart(q[n]) {
 				continue // not at a character's start
+			}
+			if han && n > 1 && n < len(alt) && n < len(q) {
+				// A Chinese character's syllable before the query's end
+				// is typed whole or by its initial, as pinyin input has
+				// it ("weix", "wx"): not "sa" of san then "f" of fen.
+				continue
 			}
 			if spells(q[n:], tokens[1:]) {
 				return true
