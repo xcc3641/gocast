@@ -8,6 +8,20 @@ The section of each version is the release notes that the update window
 shows (MyGo reads `## [version]`), so write it for users, in Chinese and
 English.
 
+## [0.1.7] - 2026-11-16
+
+- 悬浮终端不再跟着 Gocast 停：退出、崩溃或更新以后，终端里正在跑的命令接着跑，标签和输出都还在。想全部停掉，在菜单栏点「结束所有终端」。
+- 在悬浮终端里按住 ⌘，会浮出终端里能用的快捷键，标签上也标出 1 到 9。
+- 搜索里能直接做系统操作：锁定屏幕、睡眠、关闭显示器、调音量、切换深浅色、清倒废纸篓、推出磁盘等 24 条。重新启动、关机这类会先问一句。
+- 也能摆窗口：左右半屏、四分之一、三分之一、最大化、居中、移到另一块屏幕等 22 条。第一次用要在“辅助功能”里打开 Gocast。
+- 这些都能在设置 › 快捷键的「系统与窗口」里设快捷键。
+
+- The floating terminal no longer stops with Gocast: after a quit, crash or update, running commands keep going, and your tabs and output are still there. To stop them all, choose Close All Terminals from the menu bar.
+- Hold ⌘ in the floating terminal to see its shortcuts, with tabs numbered 1 to 9.
+- Run system actions from search: lock the screen, sleep, sleep displays, change the volume, switch between light and dark, empty the Trash, eject disks and more, 24 in all. Restart, Shut Down and the like ask first.
+- Arrange windows too: halves, quarters, thirds, maximize, center, move to another display and more, 22 in all. The first time, turn on Gocast in Accessibility.
+- Give any of them a shortcut under System & Window in Settings › Shortcuts.
+
 ## [0.1.6] - 2026-11-13
 
 - 预设的命令结束后（包括按 ⌃C），这个标签直接变回普通终端，停在预设的文件夹里，可以接着敲。正常结束不留字，出错才留一行灰字。
