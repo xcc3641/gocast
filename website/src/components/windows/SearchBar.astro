@@ -13,7 +13,7 @@ const { text = "", placeholder = "", caret = false, cjk = false } = Astro.props;
   <span class="gw-logo"></span>
   <span class="gw-input">
     {caret && <span class="gw-caret"></span>}
-    <span class:list={["gw-t", { "gw-ph-text": !text, "gw-cjk20": cjk }]}>{text || placeholder}</span>
+    <span class:list={["gw-t", { "gw-ph-text": !text, "gw-cjk20i": cjk }]}>{text || placeholder}</span>
   </span>
   <slot />
 </div>

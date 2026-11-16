@@ -19,12 +19,12 @@ const releases = parseChangelog(readFileSync(__CHANGELOG_PATH__, "utf8"));
 <section class="release" id={`v${r.version}`}>
 <h2>{r.version}</h2>
 {r.date && <p class="released"><time datetime={r.date}>{formatDate(r.date, locale)}</time></p>}
-{r.intro.map((p) => <p set:html={p[locale]} />)}
+{r.intro.filter((p) => p[locale]).map((p) => <p set:html={p[locale]} />)}
 {r.groups.map((g) => (
 <Fragment>
 {g.heading && <h3 set:html={g.heading[locale]} />}
-{g.items.length > 0 && <ul>{g.items.map((i) => <li set:html={i[locale]} />)}</ul>}
-{g.paragraphs.map((p) => <p set:html={p[locale]} />)}
+{g.items.some((i) => i[locale]) && <ul>{g.items.filter((i) => i[locale]).map((i) => <li set:html={i[locale]} />)}</ul>}
+{g.paragraphs.filter((p) => p[locale]).map((p) => <p set:html={p[locale]} />)}
 </Fragment>
 ))}
 </section>

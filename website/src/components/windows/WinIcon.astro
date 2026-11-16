@@ -1,0 +1,10 @@
+---
+// A window command's icon (app spec 2.9): the preset tile with a drawn window in it, a
+// 16×12 outline whose 12×8 inner area has the target region filled in.
+// l / r: left / right half (6×8); t / b: top / bottom half (12×4).
+interface Props {
+  region: "l" | "r" | "t" | "b";
+}
+const { region } = Astro.props;
+---
+<span class="gw-tile"><span class="gw-win"><span class:list={["gw-win-fill", `gw-win-${region}`]}></span></span></span>

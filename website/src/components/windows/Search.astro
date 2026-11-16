@@ -1,6 +1,8 @@
 ---
 // The search panel, 640×475: `hero` is the suggestions list with an empty search field,
-// `apps` is the results for a typed query. Spec: handoff/landing-drawn-windows.md 4.1, 4.2.
+// `apps` is the results for a typed query, `actions` the window commands for 「半」 / "half"
+// (app spec 2.9; the panel stays full height, as in the app).
+// Spec: handoff/landing-drawn-windows.md 4.1, 4.2.
 import Window from "./Window.astro";
 import SearchBar from "./SearchBar.astro";
 import Row from "./Row.astro";
@@ -9,7 +11,7 @@ import type { IconKey } from "./assets";
 import type { Locale } from "../../i18n";
 
 interface Props {
-  variant: "hero" | "apps";
+  variant: "hero" | "apps" | "actions";
   locale: Locale;
   alt: string;
 }
@@ -18,7 +20,7 @@ const zh = locale === "zh";
 const app = zh ? "应用" : "App";
 const wechatKeys = ["⌃", "⌥", "W"];
 
-type R = { title: string; sub?: string; icon?: IconKey; sym?: string; keys?: string[]; type?: string; selected?: boolean };
+type R = { title: string; sub?: string; icon?: IconKey; sym?: string; win?: "l" | "r" | "t" | "b"; keys?: string[]; type?: string; selected?: boolean };
 
 const suggestions: R[] = [
   { title: zh ? "微信" : "WeChat", icon: "wechat", keys: wechatKeys, type: app, selected: true },
@@ -43,11 +45,19 @@ const results: R[] = zh
       { title: "WeChat", icon: "wechat", keys: wechatKeys, type: app, selected: true },
       { title: "ChatGPT", icon: "chatgpt", type: app },
     ];
+const win = zh ? "窗口" : "Window";
+const halves: R[] = [
+  { title: zh ? "左半屏" : "Left Half", win: "l", type: win, selected: true },
+  { title: zh ? "右半屏" : "Right Half", win: "r", type: win },
+  { title: zh ? "上半屏" : "Top Half", win: "t", type: win },
+  { title: zh ? "下半屏" : "Bottom Half", win: "b", type: win },
+];
+const action = variant === "actions" ? (zh ? "执行" : "Run") : zh ? "打开" : "Open";
 ---
-<Window w={640} alt={alt} h={variant === "apps" ? 260 : undefined}>
+<Window w={640} alt={alt} h={variant === "apps" ? 260 : variant === "actions" ? 280 : undefined}>
   {variant === "hero" ? (
     <>
-      <SearchBar placeholder={zh ? "搜索应用或终端预设" : "Search apps or terminal presets"} cjk={zh} />
+      <SearchBar placeholder={zh ? "搜索应用、预设或系统操作" : "Search apps, presets or actions"} cjk={zh} />
       <div class="gw-list">
         <div class="gw-sec"><span class="gw-t">{zh ? "推荐" : "Suggestions"}</span></div>
         {suggestions.map((r) => <Row {...r} />)}
@@ -55,11 +65,16 @@ const results: R[] = zh
         {gocast.map((r) => <Row {...r} />)}
       </div>
     </>
+  ) : variant === "actions" ? (
+    <>
+      <SearchBar text={zh ? "半" : "half"} cjk={zh} />
+      <div class="gw-list">{halves.map((r) => <Row {...r} />)}</div>
+    </>
   ) : (
     <>
       <SearchBar text={zh ? "wx" : "chat"} />
       <div class="gw-list">{results.map((r) => <Row {...r} />)}</div>
     </>
   )}
-  <Capsule action={zh ? "打开" : "Open"} locale={locale} />
+  <Capsule action={action} locale={locale} />
 </Window>

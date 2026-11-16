@@ -11,8 +11,10 @@
 //     The English line.
 //
 // A bullet's lines are split where the lines with Chinese in them end; a heading
-// or one-line paragraph is split after its last Chinese character. Text that
-// can't be split (only one language) is shown in both languages.
+// or one-line paragraph is split after its last Chinese character. A bullet or
+// paragraph in one language only (newer versions list the Chinese bullets, then
+// the English ones) goes to that language alone; a heading in one language is
+// shown in both.
 // All strings in the result are HTML: escaped, with minimal inline markdown.
 
 export type Lang = "en" | "zh";
@@ -119,7 +121,9 @@ function splitLines(lines: string[], strict: boolean): Bilingual {
   }
   const text = joinLines(trimmed);
   const split = splitText(text, strict);
-  return split ? { zh: inline(split.zh), en: inline(split.en) } : both(inline(text));
+  if (split) return { zh: inline(split.zh), en: inline(split.en) };
+  // One language only: it belongs to that language's page.
+  return isChinese(text) ? { zh: inline(text), en: "" } : { zh: "", en: inline(text) };
 }
 
 export function parseChangelog(markdown: string): Release[] {

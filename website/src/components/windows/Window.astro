@@ -12,7 +12,7 @@ interface Props {
   /** Extra class on the inner window, e.g. gw-terminal. */
   kind?: string;
   /** The app's short panel height (apps search, calculator); otherwise the full height for w. */
-  h?: 260;
+  h?: 260 | 280;
 }
 const { w, alt, kind, h } = Astro.props;
 ---

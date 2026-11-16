@@ -32,13 +32,14 @@ const c = t(locale);
 
 {c.features.map((f) => (
 <section class="feature">
-<h2>{f.title}</h2>
+<h2 set:html={f.title} />
 <p set:html={f.text} />
 {/* the app window each feature shows, drawn in HTML and CSS (components/windows) */}
 {f.shot === "apps" && <Search variant="apps" locale={locale} alt={f.alt} />}
 {f.shot === "terminal" && <Terminal locale={locale} alt={f.alt} />}
 {f.shot === "clipboard" && <Clipboard locale={locale} alt={f.alt} />}
 {f.shot === "calculator" && <Calculator locale={locale} alt={f.alt} />}
+{f.shot === "actions" && <Search variant="actions" locale={locale} alt={f.alt} />}
 {f.shot === "shortcuts" && <Settings locale={locale} alt={f.alt} />}
 </section>
 ))}

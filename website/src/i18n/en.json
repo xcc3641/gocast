@@ -20,7 +20,7 @@
     },
     {
       "title": "A terminal drops down from the top.",
-      "text": "It floats above every app, and hiding it stops nothing. A preset remembers which command to run in which folder, like <code>pi</code> in my-app. When the command ends, the tab becomes a plain terminal and you keep typing.",
+      "text": "It floats above every app. Hide it, quit Gocast or update it: your commands keep running. A preset remembers which command to run in which folder, like <code>pi</code> in my-app. When the command ends, the tab becomes a plain terminal and you keep typing.",
       "shot": "terminal",
       "alt": "The floating terminal dropped down from the top, with two tabs, one of them a preset"
     },
@@ -37,8 +37,14 @@
       "alt": "Typing 100 usd in jpy in search, with the converted answer on top"
     },
     {
+      "title": "Lock, mute and arrange windows from here too.",
+      "text": "Type <code>lock</code> to lock the screen, or <code>left half</code> to put the window you were in on the left. Sleep, sleep displays, volume, light or dark, Empty Trash, Eject, plus halves, thirds, maximize and moving to another display: 46 in all, and each can have a shortcut. Restart, Shut Down and the like ask first.",
+      "shot": "actions",
+      "alt": "Typing half in search lists Left Half, Right Half, Top Half and Bottom Half, each marked Window"
+    },
+    {
       "title": "Give each favorite app its own shortcut.",
-      "text": "Set a shortcut for any app or preset and press it anywhere: it opens the app, brings it forward, or hides it if it’s already in front. Find it in Settings › Shortcuts, or select it in the search panel and press ⌘K.",
+      "text": "Set a shortcut for any app, preset or action and press it anywhere: an app opens, comes forward, or hides if it’s already in front; actions like locking the screen or arranging a window just run. Find it in Settings › Shortcuts, or select it in the search panel and press ⌘K.",
       "shot": "shortcuts",
       "alt": "Settings › Shortcuts: Gocast’s own three shortcuts on top, then every app and preset, a few already set"
     }
@@ -76,7 +82,11 @@
     },
     {
       "q": "Return copies but doesn’t paste.",
-      "a": "To paste into another app, Gocast presses ⌘V for you, and macOS asks you to turn on Gocast in System Settings › Privacy &amp; Security › Accessibility first. Until then, Return copies and you press ⌘V yourself."
+      "a": "To paste into another app, Gocast presses ⌘V for you, and macOS asks you to turn on Gocast in System Settings › Privacy &amp; Security › Accessibility first. Until then, Return copies and you press ⌘V yourself. Arranging windows uses the same permission, so turning it on once covers both."
+    },
+    {
+      "q": "Why does Gocast want to control Finder or System Events?",
+      "a": "Emptying the Trash, ejecting disks, restarting, shutting down, logging out, switching appearance and showing hidden files are done by asking Finder or System Events, so macOS asks once the first time. If you say no, only those actions won’t work. To allow them later, go to System Settings › Privacy & Security › Automation."
     },
     {
       "q": "Which Macs does it run on?",
@@ -109,7 +119,7 @@
     },
     {
       "h": "Keeping and deleting your data",
-      "text": "Clipboard history is kept for one month by default; change it in Settings › Clipboard (1 day to forever). Pinned items don’t expire. Clear History removes it at once. To delete everything, quit Gocast and delete <code>~/Library/Application Support/com.hugo.gocast/</code>."
+      "text": "Clipboard history is kept for one month by default; change it in Settings › Clipboard (1 day to forever). Pinned items don’t expire. Clear History removes it at once. To delete everything, choose Close All Terminals from the menu bar, quit Gocast, then delete <code>~/Library/Application Support/com.hugo.gocast/</code>."
     },
     {
       "h": "Changing your mind",
@@ -120,7 +130,7 @@
       "text": "Ask in <a href=\"https://github.com/xcc3641/gocast/issues\">GitHub Issues</a>."
     }
   ],
-  "p_date": "Effective November 13, 2026.",
+  "p_date": "Effective November 16, 2026.",
   "back": "← Gocast",
   "c_title": "Gocast Changelog",
   "c_lede": "What’s new in each version of Gocast."

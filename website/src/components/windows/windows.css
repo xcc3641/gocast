@@ -13,12 +13,16 @@
    the 12–14 point sizes and 94% at 20 points. These faces are the Mac's own PingFang
    (local(), nothing downloaded), scaled, and only for CJK characters; where PingFang
    isn't installed the browser just falls back to its usual Chinese font. The middle dot
-   (U+00B7) is in the set because the app draws it from PingFang too, wider than SF's. */
+   (U+00B7) is in the set because the app draws it from PingFang too, wider than SF's.
+   Measured on the 0.1.7 shots: the search panel's 20-point field draws Chinese at about
+   96% (GW CJK 20 input), and Settings' 12-point description and segmented control at
+   full size (they skip these faces, see .gw-desc and .gw-seg). */
 @font-face { font-family: "GW CJK"; font-weight: 400; size-adjust: 98%; unicode-range: U+00B7, U+2E80-2FFF, U+3000-303F, U+3040-30FF, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FE30-FE4F, U+FF00-FFEF; src: local("PingFangSC-Regular"), local("PingFang SC Regular"), local("PingFang SC"); }
 @font-face { font-family: "GW CJK"; font-weight: 500; size-adjust: 98%; unicode-range: U+00B7, U+2E80-2FFF, U+3000-303F, U+3040-30FF, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FE30-FE4F, U+FF00-FFEF; src: local("PingFangSC-Medium"), local("PingFang SC Medium"); }
 @font-face { font-family: "GW CJK"; font-weight: 600; size-adjust: 98%; unicode-range: U+00B7, U+2E80-2FFF, U+3000-303F, U+3040-30FF, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FE30-FE4F, U+FF00-FFEF; src: local("PingFangSC-Semibold"), local("PingFang SC Semibold"); }
 @font-face { font-family: "GW CJK 20"; font-weight: 400; size-adjust: 94%; unicode-range: U+00B7, U+2E80-2FFF, U+3000-303F, U+3040-30FF, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FE30-FE4F, U+FF00-FFEF; src: local("PingFangSC-Regular"), local("PingFang SC Regular"), local("PingFang SC"); }
 @font-face { font-family: "GW CJK 20"; font-weight: 500; size-adjust: 94%; unicode-range: U+00B7, U+2E80-2FFF, U+3000-303F, U+3040-30FF, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FE30-FE4F, U+FF00-FFEF; src: local("PingFangSC-Medium"), local("PingFang SC Medium"); }
+@font-face { font-family: "GW CJK 20 input"; font-weight: 400; size-adjust: 96%; unicode-range: U+00B7, U+2E80-2FFF, U+3000-303F, U+3040-30FF, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FE30-FE4F, U+FF00-FFEF; src: local("PingFangSC-Regular"), local("PingFang SC Regular"), local("PingFang SC"); }
 @font-face { font-family: "GW CJK 20"; font-weight: 600; size-adjust: 94%; unicode-range: U+00B7, U+2E80-2FFF, U+3000-303F, U+3040-30FF, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FE30-FE4F, U+FF00-FFEF; src: local("PingFangSC-Semibold"), local("PingFang SC Semibold"); }
 
 /* the outer box: page placement, width and shadow come from site.css's .shot */
@@ -33,6 +37,8 @@
 .gw-w820 > .gw { --u: min(1px, 100cqw / 820); width: calc(var(--u) * 820); height: calc(var(--u) * 580); }
 /* the app's short panel (apps search, calculator): 260 tall, action capsule still 8/8 */
 .gw-frame.gw-h260 > .gw { height: calc(var(--u) * 260); }
+/* actions search: four rows end at 226, then 52 for the capsule */
+.gw-frame.gw-h280 > .gw { height: calc(var(--u) * 280); }
 
 .gw {
   --panel: #202022;
@@ -96,6 +102,7 @@
   font-size: calc(var(--u) * 20); line-height: calc(var(--u) * 24);
 }
 .gw-ph-text { color: var(--t2g); }
+.gw-cjk20i { font-family: "GW CJK 20 input", -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", sans-serif; }
 .gw-cjk20 { font-family: "GW CJK 20", -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", sans-serif; }
 .gw-caret {
   position: absolute; left: calc(var(--u) * 0.25); top: 50%;
@@ -349,9 +356,16 @@
   color: var(--t2);
   max-width: none;
 }
+.gw-desc, .gw-seg { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", sans-serif; }
+/* English wraps to two lines, set tighter (14) like the app's SF Pro lines; the first
+   line stays where the one-line Chinese sits */
+.gw-desc-en { margin: calc(var(--u) * 4) 0 calc(var(--u) * 13.5); line-height: calc(var(--u) * 14); }
 .gw-tools { display: flex; height: calc(var(--u) * 28); margin-bottom: calc(var(--u) * 10); }
+/* The field takes what the segmented control leaves, but never less than its placeholder:
+   the app shows it whole. (At phone widths the browser draws this tiny text a little
+   wider, so the field may be narrower than the control's leftover.) */
 .gw-search {
-  flex: 1 1 0; min-width: 0;
+  flex: 1 0 auto; min-width: 0;
   display: flex; align-items: center;
   margin-right: calc(var(--u) * 10);
   padding: 0 calc(var(--u) * 8);
@@ -361,10 +375,10 @@
   font-size: calc(var(--u) * 12); line-height: calc(var(--u) * 16);
 }
 .gw-search .gw-sym { margin-right: calc(var(--u) * 6); }
-.gw-input-s { position: relative; top: calc(var(--u) * -0.5); display: block; flex: 1 1 0; min-width: 0; font-size: calc(var(--u) * 13); }
+.gw-input-s { position: relative; top: calc(var(--u) * -0.5); display: block; flex: 1 0 auto; min-width: 0; font-size: calc(var(--u) * 13); }
 .gw-input-s .gw-caret { height: calc(var(--u) * 16); margin-top: calc(var(--u) * -8); }
 .gw-seg {
-  display: flex; flex: none;
+  display: flex; flex: none; gap: calc(var(--u) * 1); /* the native control's segment dividers */
   padding: calc(var(--u) * 2);
   border: calc(var(--u) * 1) solid var(--hair);
   border-radius: calc(var(--u) * 7);
@@ -374,10 +388,10 @@
 }
 .gw-seg span {
   display: flex; align-items: center;
-  padding: 0 calc(var(--u) * 13);
+  padding: 0 calc(var(--u) * 7);
   border-radius: calc(var(--u) * 5);
 }
-.gw-seg .is-sel { padding: 0 calc(var(--u) * 12); background: #3C3C41; }
+.gw-seg .is-sel { background: #3C3C41; }
 .gw-group {
   flex: 1 1 0; min-height: 0;
   padding: calc(var(--u) * 4);
@@ -424,3 +438,19 @@
   background: var(--sel);
   color: var(--text);
 }
+
+/* window command icon (WinIcon): a 16×12 outline centred in the 22 tile, 1-point stroke;
+   the target region sits in the 12×8 area 2 in from the outline's outer edge */
+.gw-win {
+  position: relative; display: block;
+  width: calc(var(--u) * 16); height: calc(var(--u) * 12);
+  border: calc(var(--u) * 1) solid var(--t2g);
+  border-radius: calc(var(--u) * 2);
+}
+.gw-win-fill { position: absolute; border-radius: calc(var(--u) * 1); background: var(--text); }
+.gw-win-l, .gw-win-r { top: calc(var(--u) * 1); width: calc(var(--u) * 6); height: calc(var(--u) * 8); }
+.gw-win-l { left: calc(var(--u) * 1); }
+.gw-win-r { right: calc(var(--u) * 1); }
+.gw-win-t, .gw-win-b { left: calc(var(--u) * 1); width: calc(var(--u) * 12); height: calc(var(--u) * 4); }
+.gw-win-t { top: calc(var(--u) * 1); }
+.gw-win-b { bottom: calc(var(--u) * 1); }
