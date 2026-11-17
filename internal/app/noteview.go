@@ -22,7 +22,7 @@ const (
 	noteTextMax    = 680
 	notePadX       = 24
 	notePadTop     = 4
-	notePadBottom  = 24
+	notePadBottom  = 20
 	findBarHeight  = 40
 	findButtonSize = 24
 	noteNoticeIn   = 8
@@ -188,7 +188,7 @@ func (n *notesWindow) editorArea(c *ui.Context, k tokens) {
 	w, _ := c.Size()
 	th := n.design.theme()
 	th.Padding = [2]float32{max(notePadX-panelBorderWidth, (w-2*panelBorderWidth-noteTextMax)/2), notePadTop}
-	ui.Column(c).Grow(1).Shrink(1).Padding(0, 0, notePadBottom-notePadTop, 0).Children(func() {
+	ui.Column(c).Grow(1).Shrink(1).Padding(0, 0, notePadBottom-notePadTop-panelBorderWidth, 0).Children(func() {
 		opts := richtext.EditorOptions{
 			Label:        locales.NotesEditorLabel(n.title()),
 			Placeholder:  locales.NotesPlaceholder(),
@@ -243,7 +243,8 @@ func (n *notesWindow) onCommand(name string) bool {
 func (n *notesWindow) findBar(c *ui.Context, k tokens) {
 	f := &n.find
 	c.Key("findBar")
-	ui.Row(c).Height(findBarHeight).Shrink(0).Padding(0, 12).Gap(8).AlignItems(ui.Center).Children(func() {
+	// 12 from the window's edges, the outline's width in them.
+	ui.Row(c).Height(findBarHeight).Shrink(0).Padding(0, 12-panelBorderWidth).Gap(8).AlignItems(ui.Center).Children(func() {
 		ui.Row(c).Height(26).Radius(7).Background(k.keycap).Grow(1).Shrink(1).Padding(0, 8).Gap(6).AlignItems(ui.Center).Children(func() {
 			sfsymbols.Symbol(c, "magnifyingglass").Size(12).Color(k.textOnGlass)
 			in := ui.TextInputBase(c, &f.query).Bind(&f.input).Grow(1).FontSize(13).
@@ -269,11 +270,12 @@ func (n *notesWindow) findBar(c *ui.Context, k tokens) {
 					SingleLine().Shrink(0).Label(locales.NotesFindCountSpoken(i, all))
 			}
 		}
+		// ↑ 2 ↓, then 4 to ✕: in a row of their own, out of the bar's 8.
 		ui.Row(c).Gap(2).Shrink(0).Children(func() {
 			findButton(c, k, "chevron.up", locales.NotesFindPrevious()).OnClick(func() { n.stepFind(-1) })
 			findButton(c, k, "chevron.down", locales.NotesFindNext()).OnClick(func() { n.stepFind(1) })
+			findButton(c, k, "xmark", locales.NotesFindClose()).Margin(0, 0, 0, 2).OnClick(n.closeFind)
 		})
-		findButton(c, k, "xmark", locales.NotesFindClose()).Margin(0, 0, 0, 4).OnClick(n.closeFind)
 	})
 }
 

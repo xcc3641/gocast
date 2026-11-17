@@ -590,6 +590,97 @@ func TestNotesFind(t *testing.T) {
 	}
 }
 
+// systemBlue is the desktop's settings with macOS's default accent, as
+// the app reads it (NSColor.controlAccentColor, blue): the tester's
+// default theme has MyGo's own accent.
+func systemBlue(dark bool) ui.Preferences {
+	if dark {
+		return ui.Preferences{Accent: ui.Hex("#0A84FF")}
+	}
+	return ui.Preferences{Accent: ui.Hex("#007AFF")}
+}
+
+func TestNotesFindBarLayout(t *testing.T) {
+	// design.md 11.4: 12 from the window's edges, the field, 8, the
+	// count, 8, ↑ and ↓ 24 wide 2 apart, 4, ✕.
+	nt := notesTester(t, "Apple pie\nan apple a day\n")
+	nt.key(ui.Cmd, ui.KeyF)
+	nt.typ("apple")
+	box := func(name string) ui.Rect {
+		t.Helper()
+		a, ok := nt.tt.Access(name)
+		if !ok {
+			t.Fatalf("no %q", name)
+		}
+		return a.Bounds
+	}
+	field, count := box(locales.NotesFindPlaceholder()), box(locales.NotesFindCountSpoken("1", "2"))
+	prev, next, cls := box(locales.NotesFindPrevious()), box(locales.NotesFindNext()), box(locales.NotesFindClose())
+	near := func(what string, got, want float32) {
+		t.Helper()
+		if abs32(got-want) > 0.01 {
+			t.Errorf("%s: %v, want %v", what, got, want)
+		}
+	}
+	near("✕ from the right", notesWidth-(cls.X+cls.W), 12)
+	near("↓ to ✕", cls.X-(next.X+next.W), 4)
+	near("↑ to ↓", next.X-(prev.X+prev.W), 2)
+	near("↓'s middle", next.X+next.W/2, notesWidth-12-24-4-12)
+	near("count to ↑", prev.X-(count.X+count.W), 8)
+	near("↑ ↓ ✕ wide", prev.W+next.W+cls.W, 3*24)
+	// The field's box is its text's, 8 + 12 + 6 inside the gray one.
+	near("field from the left", field.X-8-12-6, 12)
+}
+
+func TestNotesPrimaryButtons(t *testing.T) {
+	// 2.8.7's primary button: the accent fills all its 28, no border
+	// (design.md 11.5, 11.8), light and dark.
+	for _, dark := range []bool{false, true} {
+		nt := notesTester(t, "Groceries\n")
+		nt.tt.SetDark(dark)
+		nt.tt.SetPreferences(systemBlue(dark))
+		useFakeTrash(t)
+		nt.key(ui.Ctrl, ui.KeyX)
+		nt.fire()
+		a, ok := nt.tt.Access(locales.NotesNewItem())
+		if !ok {
+			t.Fatalf("no %q: %q", locales.NotesNewItem(), nt.tt.Texts())
+		}
+		b := a.Bounds
+		if b.H != 28 {
+			t.Errorf("dark %v: %v high", dark, b.H)
+		}
+		img := nt.tt.Image()
+		accent := systemBlue(dark).Accent
+		for _, y := range []float32{b.Y + 0.5, b.Y + b.H - 0.5} {
+			got := img.RGBAAt(int(b.X+b.W/2), int(y))
+			off := func(a, b uint8) bool { return int(a) > int(b)+2 || int(b) > int(a)+2 }
+			if off(got.R, accent.R) || off(got.G, accent.G) || off(got.B, accent.B) {
+				t.Errorf("dark %v: %v at its row %v, want the accent %v", dark, got, y, accent)
+			}
+		}
+		// The block, icon to button, centred on the whole window
+		// (design.md 11.8), not on what is under the top bar.
+		bg := img.RGBAAt(notesWidth/2, notesBarHeight+4)
+		top, bottom := -1, -1
+		for y := notesBarHeight + 4; y < notesHeight-4; y++ {
+			found := false
+			for x := 100; x < notesWidth-100 && !found; x++ {
+				found = img.RGBAAt(x, y) != bg
+			}
+			if found {
+				if top < 0 {
+					top = y
+				}
+				bottom = y + 1
+			}
+		}
+		if mid := float32(top+bottom) / 2; abs32(mid-notesHeight/2) > 1 {
+			t.Errorf("dark %v: the block %d to %d, its middle %v, want %v", dark, top, bottom, mid, notesHeight/2)
+		}
+	}
+}
+
 func TestNotesSaveFailed(t *testing.T) {
 	// A write that fails shows the banner and says it, the text kept;
 	// Try Again that succeeds takes it away and says Saved; quitting with
@@ -1040,6 +1131,7 @@ func TestScreensNotes(t *testing.T) {
 		tt.SetSize(w, h)
 		tt.SetScale(2)
 		tt.SetDark(dark)
+		tt.SetPreferences(systemBlue(dark))
 		tt.SetVibrancy(false)
 		nt.frame()
 		if setup != nil {

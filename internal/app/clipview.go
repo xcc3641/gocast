@@ -1028,7 +1028,9 @@ func (v *clipView) emptyState(c *ui.Context, k tokens, state clipState) {
 // clipButton is a button of the banners and the confirmation (design.md
 // 2.8.7): 28 high, the accent's for the main one, else keycap gray.
 func clipButton(c *ui.Context, k tokens, label string, primary bool, act func()) ui.Element {
-	b := ui.Button(c, label).Height(28).Radius(6).Padding(0, 12).FontSize(13).OnClick(act)
+	// No border: the theme's button has one, inside its 28, around a
+	// fill 26 high (design.md 2.8.7: the fill is the button).
+	b := ui.Button(c, label).Height(28).Radius(6).Padding(0, 12).FontSize(13).Border(0, ui.Transparent).OnClick(act)
 	if primary {
 		b.Background(c.Theme().Accent).TextColor(ui.Hex("#FFFFFF"))
 	} else {
