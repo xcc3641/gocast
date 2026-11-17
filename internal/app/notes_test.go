@@ -737,6 +737,35 @@ func TestNotesQuitWrites(t *testing.T) {
 	}
 }
 
+func TestNotesTaskAnnounced(t *testing.T) {
+	// ⌘↩ says what the task's box is now (design.md 11.10, copy.md
+	// 16.9): the editor is one text to a screen reader. Not on a line
+	// that is no task.
+	for _, c := range []struct{ locale, done, open string }{
+		{"en", "To-do, done", "To-do, not done"},
+		{"zh-Hans", "待办，已完成", "待办，未完成"},
+	} {
+		nt := notesTesterIn(t, c.locale, "Groceries\n- [ ] milk\n")
+		nt.tt.Announcements()
+		nt.cur.doc.SetSelection(13, 13)
+		nt.key(ui.Cmd, ui.KeyEnter)
+		if got := nt.tt.Announcements(); !slices.Contains(got, c.done) || !nt.cur.doc.Text().ParagraphStyleAt(13).Checked {
+			t.Errorf("%s: ticked, said %q", c.locale, got)
+		}
+		nt.key(ui.Cmd, ui.KeyEnter)
+		if got := nt.tt.Announcements(); !slices.Contains(got, c.open) || nt.cur.doc.Text().ParagraphStyleAt(13).Checked {
+			t.Errorf("%s: unticked, said %q", c.locale, got)
+		}
+		nt.cur.doc.SetSelection(2, 2)
+		nt.key(ui.Cmd, ui.KeyEnter)
+		for _, a := range nt.tt.Announcements() {
+			if a == c.done || a == c.open {
+				t.Errorf("%s: said %q on the title", c.locale, a)
+			}
+		}
+	}
+}
+
 func TestNotesFormatKeys(t *testing.T) {
 	// The formats' keys (design.md 11.9): ⌥⌘1 a heading and back, ⇧⌘7
 	// a numbered list, ⇧⌘9 tasks and ⌘↩ ticks one, ⌥⌘C code, ⇧⌘B a

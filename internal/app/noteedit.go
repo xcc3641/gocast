@@ -14,6 +14,7 @@ import (
 	"github.com/egoist/mygo/ui/richtext"
 
 	"gocast/internal/notes"
+	"gocast/locales"
 )
 
 // The find bar's highlights (design.md 11.4): every match, and the one
@@ -49,7 +50,18 @@ func (n *notesWindow) formatKey(d *richtext.Document, key ui.Key, mods ui.Modifi
 		case ui.KeyEnter:
 			return func() {
 				_, caret := d.Selection()
+				if d.Text().ParagraphStyleAt(caret).List != richtext.Tasks {
+					return
+				}
 				d.ToggleChecked(caret)
+				// The editor is one text to a screen reader, its boxes no
+				// check boxes: say what the box is now (design.md 11.10).
+				if d.Text().ParagraphStyleAt(caret).Checked {
+					n.say = locales.NotesTodoDone()
+				} else {
+					n.say = locales.NotesTodoOpen()
+				}
+				n.redraw()
 			}
 		case ui.KeyV:
 			if url := oneURL(n.services.ReadClipboard()); url != "" {
