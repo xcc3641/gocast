@@ -675,7 +675,11 @@ func TestNotesPrimaryButtons(t *testing.T) {
 				bottom = y + 1
 			}
 		}
-		if mid := float32(top+bottom) / 2; abs32(mid-notesHeight/2) > 1 {
+		// The block is found by its ink: the symbol's and the button's
+		// drawn edges, which move by a point or so with the system's
+		// version of SF Symbols (macOS 15 in CI draws the icon 1.5 off
+		// macOS 26), so allow 2 here; the layout itself is exact.
+		if mid := float32(top+bottom) / 2; abs32(mid-notesHeight/2) > 2 {
 			t.Errorf("dark %v: the block %d to %d, its middle %v, want %v", dark, top, bottom, mid, notesHeight/2)
 		}
 	}
