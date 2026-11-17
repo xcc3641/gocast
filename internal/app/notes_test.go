@@ -751,6 +751,42 @@ func TestNotesQuitKey(t *testing.T) {
 	}
 }
 
+func TestPanelQuitKey(t *testing.T) {
+	// The search panel takes no ⌘Q (design.md 2.5a): with it showing and
+	// having the keyboard, the menu's Quit does nothing, the panel staying
+	// as it is, even with the notes window showing behind it. The tray's
+	// Quit still quits.
+	nt := notesTester(t, "Groceries\n")
+	g := nt.g
+	g.notes = nt.notesWindow
+	l := &launcher{g: g, shown: true, query: "term"}
+	g.launcher = l
+	quits := 0
+	panelKey, notesKey := true, false
+	oldQuit, oldPanel, oldNotes := sysAppQuit, sysPanelKey, sysNotesKey
+	sysAppQuit = func() { quits++ }
+	sysPanelKey = func(*launcher) bool { return panelKey }
+	sysNotesKey = func(*notesWindow) bool { return notesKey }
+	t.Cleanup(func() { sysAppQuit, sysPanelKey, sysNotesKey = oldQuit, oldPanel, oldNotes })
+
+	quit := g.appMenu().ItemByID("quit")
+	quit.Click(quit, nil)
+	if quits != 0 || !l.shown || l.query != "term" || !nt.shown {
+		t.Fatalf("⌘Q in the panel: quit %d times, panel shown %v with %q, notes shown %v", quits, l.shown, l.query, nt.shown)
+	}
+	// The panel hidden, it has the keyboard no more: the notes window's
+	// ⌘Q hides it, then Gocast quits.
+	l.shown, panelKey, notesKey = false, false, true
+	quit.Click(quit, nil)
+	if quits != 0 || nt.shown {
+		t.Errorf("⌘Q in the notes window: quit %d times, notes shown %v", quits, nt.shown)
+	}
+	quit.Click(quit, nil)
+	if quits != 1 {
+		t.Errorf("⌘Q elsewhere: quit %d times", quits)
+	}
+}
+
 // The application menu leaves the notes' keys to the window: no item
 // takes ⌘=, ⌘- or ⌘0 (a View menu's zoom), and the Edit menu's Paste is
 // there, which the window takes as a command (onCommand).

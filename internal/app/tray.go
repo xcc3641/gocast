@@ -9,8 +9,13 @@ import (
 	"gocast/locales"
 )
 
-// sysAppQuit quits Gocast; the tests stand in for it.
-var sysAppQuit = func() { mygo.App.Quit() }
+var (
+	// sysAppQuit quits Gocast; the tests stand in for it.
+	sysAppQuit = func() { mygo.App.Quit() }
+	// sysPanelKey reports whether the search panel's window has the
+	// keyboard.
+	sysPanelKey = func(l *launcher) bool { return l.win != nil && l.win.IsFocused() }
+)
 
 // trayPNG is Gocast's mark, the search bar's shape, 18 DIP (36 px),
 // black on transparent for macOS to tint (design.md 1.6);
@@ -103,11 +108,16 @@ func (g *gocast) appMenu() *mygo.Menu {
 	})
 }
 
-// quitKey is ⌘Q, the application menu's Quit: with the notes window
-// showing and having the keyboard, it hides it, Gocast staying
-// (design.md 11.2); anywhere else Gocast quits, as with MyGo's menu. The
-// tray's Quit always quits.
+// quitKey is ⌘Q, the application menu's Quit: with the search panel
+// showing and having the keyboard, it does nothing, the panel staying as
+// it is (design.md 2.5a: no ⌘Q, so as not to quit Gocast by a slip); with
+// the notes window showing and having the keyboard, it hides it, Gocast
+// staying (design.md 11.2); anywhere else Gocast quits, as with MyGo's
+// menu. The tray's Quit always quits.
 func (g *gocast) quitKey() {
+	if l := g.launcher; l != nil && l.shown && sysPanelKey(l) {
+		return
+	}
 	if n := g.notes; n != nil && n.shown && sysNotesKey(n) {
 		n.hide()
 		return

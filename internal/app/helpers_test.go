@@ -69,6 +69,7 @@ func TestMain(m *testing.M) {
 	sysNotesBackground = func(_ *notesWindow, work func() func()) { work()() }
 	sysAppQuit = func() {} // no test quits the test binary's app
 	sysNotesKey = func(*notesWindow) bool { return false }
+	sysPanelKey = func(*launcher) bool { return false }
 	os.Exit(m.Run())
 }
 

@@ -182,7 +182,7 @@ With the search bar alone (66 high) the 「操作 ⌘K」 capsule is centred in 
 - The order is 打开悬浮终端 (the terminal shortcut's keycaps), then 用预设打开 with the presets, then 添加预设, a divider, 设置… (⌘,) and 退出 Gocast. If there are no presets, the section is left out.
 - The keyboard stays in the search field. ↑↓ / ⌃N⌃P / ⌃J⌃K move, ↵ or a click runs, and Esc or ⌘K folds the list back to 66. Typing a character ends the list and searches. The list has no filter field and no capsule.
 - Height: 66 + rows 40 + section 28 + divider 9 + 8, at most 475 (`ownListHeight`). That gives 351 with 2 presets and 243 with none, both measured on captures.
-- The panel no longer takes ⌘Q (design.md 2.5a). Quitting happens from the row or the tray menu.
+- The panel no longer takes ⌘Q (design.md 2.5a). Quitting happens from the row or the tray menu. AppKit offers ⌘Q to the application menu before any window, so the menu's Quit (`quitKey`, `tray.go`) does nothing while the panel shows and has the keyboard, hides the notes window while it has the keyboard, and quits otherwise.
 - With a result chosen, ⌘K still opens that result's popup.
 
 ## Verified (0.1.0, Apple silicon, zh-Hans, dev build driven by mygo-automation)
