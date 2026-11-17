@@ -1,4 +1,10 @@
-# Gocast 界面文案 v1.27（搜索面板 · 悬浮终端 · 设置）
+# Gocast 界面文案 v1.30（搜索面板 · 悬浮终端 · 笔记 · 设置）
+
+v1.30 改动：新增第 16 节「笔记」：三条命令的名字和别名、窗口、空状态、浏览列表、⌘K、查找条、提示、没能保存、读屏。跟 design.md 第 11 节对齐：删除用 ⌃X，浏览卡片不放提示条，推荐列表的 Gocast 组加「笔记」。
+
+v1.29 改动：新增第 15 节「系统操作和窗口管理」：46 条的中英名字、搜索别名、右侧标记、确认框、提示、权限的字；改 11.3 快捷键页说明和筛选、6.7 / 6.8 的「只用来粘贴」、第 5 节加一条系统弹窗用途。
+
+v1.28 改动：新增第 14 节「按住 ⌘ 时的快捷键提示」（悬浮终端）。
 
 v1.27 改动：新增第 13 节「Gocast 重启时终端不断」：菜单项「结束所有终端」、确认框、接不回时的一行字，以及卸载 / 删数据 / 首页终端那段的改法。
 
@@ -84,7 +90,7 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 
 | 位置 | 中文 | English |
 |---|---|---|
-| 输入框占位 | 搜索应用或终端预设 | Search apps or terminal presets |
+| 输入框占位 | 搜索应用、预设或系统操作 | Search apps, presets or actions |
 | 结果行右侧标记（应用） | 应用 | App |
 | 结果行右侧标记（预设） | 预设 | Preset |
 | 预设行副标题 | `{文件夹} · {命令}`，如 `~/Projects/my-app · pi`；命令为空写 `{文件夹} · 终端` | `{folder} · {command}`; if empty `{folder} · Terminal` |
@@ -353,7 +359,7 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 | 多个文件的行标题 | {第一个文件名} 等 {n} 个文件 | {first file} and {n−1} more |
 | 来源应用未知 | 未知应用 | Unknown app |
 
-搜索框占位不带「…」，和主搜索面板「搜索应用或终端预设」一致。文字行显示内容的第一行，空白行跳过，过长从末尾截断。链接行显示完整地址，过长从中间省略。
+搜索框占位不带「…」，和主搜索面板同一套写法（第 2 节「搜索应用、预设或系统操作」）。文字行显示内容的第一行，空白行跳过，过长从末尾截断。链接行显示完整地址，过长从中间省略。
 
 ### 6.3 预览下面的信息
 
@@ -425,7 +431,7 @@ English: No clipboard history yet / Copy something and it shows up here. · Clip
 | 位置 | 中文 | English |
 |---|---|---|
 | 标题 | 直接粘贴需要你允许一次 | Allow Gocast to paste for you |
-| 说明 | Gocast 会替你按一下 ⌘V，系统要求先在“辅助功能”里打开 Gocast。只用来粘贴。 | Gocast presses ⌘V for you. macOS asks you to turn on Gocast in Accessibility first. It’s only used to paste. |
+| 说明 | Gocast 会替你按一下 ⌘V，系统要求先在“辅助功能”里打开 Gocast。只用来粘贴和摆放窗口。 | Gocast presses ⌘V for you. macOS asks you to turn on Gocast in Accessibility first. It’s only used to paste and arrange windows. |
 | 主按钮 | 打开系统设置 | Open System Settings |
 | 次按钮 | 先只拷贝 | Just Copy |
 | 允许后 | 现在可以直接粘贴了 | Ready to paste |
@@ -505,7 +511,7 @@ English: Clipboard history stays on this Mac too, in the same folder, and is nev
 
 ## 7. 计算器
 
-范围以计算器需求 v1 为准，卡片的样子和位置以 design.md 为准。用词：算出来的叫「答案」，不叫「结果」：「结果」在 Gocast 里指搜索结果，卡片下面就是一列搜索结果，两个词放一起会混。搜索框占位「搜索应用或终端预设」不改，会算这件事靠 README 和用的人自己发现，跟 Raycast 一样。
+范围以计算器需求 v1 为准，卡片的样子和位置以 design.md 为准。用词：算出来的叫「答案」，不叫「结果」：「结果」在 Gocast 里指搜索结果，卡片下面就是一列搜索结果，两个词放一起会混。搜索框占位里不提计算器（会算这件事靠 README 和用的人自己发现，跟 Raycast 一样）；v1.29 起这句占位是「搜索应用、预设或系统操作」，见第 2 节。
 
 ### 7.1 卡片
 
@@ -684,8 +690,8 @@ English: Gocast only goes online to check for updates and to fetch exchange rate
 
 | 位置 | 中文 | English |
 |---|---|---|
-| 页面说明（列表上面一行） | 给应用或预设设一个快捷键，按一下打开，已在最前面时再按一下隐藏。 | Give an app or preset a shortcut. Press it to open, and again while it’s in front to hide it. |
-| 搜索框占位 | 搜索应用或预设 | Search apps and presets |
+| 页面说明（列表上面一行） | 给任意一项设快捷键。应用和预设按一下打开，再按一下隐藏；系统和窗口按一下就执行。 | Give anything a shortcut. Apps and presets open with one press and hide with another while in front. System and window actions just run. |
+| 搜索框占位 | 搜索应用、预设或系统操作 | Search apps or presets |
 | 筛选 · 1 | 全部 | All |
 | 筛选 · 2 | 已设快捷键 | With Shortcut |
 | 筛选 · 3 | 应用 | Apps |
@@ -817,3 +823,353 @@ English: Gocast only goes online to check for updates and to fetch exchange rate
 
 删数据那条要先结束终端：数据文件夹里有终端在用的东西，开着终端就删，终端会突然断。
 Mac 重启后终端不在了，这件事不写：本来所有终端都这样，不需要专门说。
+
+## 14. 悬浮终端里按住 ⌘ 时的快捷键提示（v1.28；样子和延迟以 design.md 为准）
+
+只列终端里真有的快捷键（design.md 3.5），左边是做什么，右边是按键。用词跟标签上的提示（「新标签（⌘T）」「关闭标签（⌘W）」）一致；拷贝不写「复制」。
+
+| 顺序 | 中文 | English | 按键 |
+|---|---|---|---|
+| 1 | 新标签 | New Tab | ⌘T |
+| 2 | 关闭标签 | Close Tab | ⌘W |
+| 3 | 上一个标签 | Previous Tab | ⌘⇧[ |
+| 4 | 下一个标签 | Next Tab | ⌘⇧] |
+| 5 | 跳到第几个标签 | Go to Tab | ⌘1–9 |
+| 6 | 拷贝 | Copy | ⌘C |
+| 7 | 粘贴 | Paste | ⌘V |
+| 8 | 放大 / 缩小字号 | Bigger / Smaller Text | ⌘+ / ⌘- |
+| 9 | 字号复原 | Actual Size | ⌘0 |
+
+- 不放标题：按住 ⌘ 冒出来的东西本来就是在说快捷键，再写「快捷键」三个字是多余的。
+- 标签上的编号就是 1–9 那个数字，只写数字，不写「标签 1」。第 10 个起不编号。
+- 第 5 行写「跳到第几个标签」，不写「跳到第 N 个标签」：N 用户看不懂。
+- 不把 ⌃`（收起）放进来：它不是 ⌘ 开头的，这块只说按住 ⌘ 能做的事。
+- 读屏：这块提示不读（一松手就没了，读不完）。标签上那个 1–9 的数字只是给眼睛看的，不进读屏标签的名字，读屏读的还是标签标题。
+
+## 15. 系统操作和窗口管理（v1.29；样子、图标、分组以 design.md 为准）
+
+### 15.0 用词
+
+- 这两类分开叫「系统操作」和「窗口管理」。要一个词把两类合起来说（只在快捷键页那一段、文档里用）时写「系统与窗口 / System & Window」。
+- **不叫「命令」**：「命令」在 Gocast 里专指预设里运行的那条命令（见 2.2a 的说明），快捷键页里预设行就挨着。
+- **也不叫「操作」**：「操作」已经用在右下角胶囊那个入口上（2.1「操作 ⌘K」、2.2「⌘K 操作菜单」「搜索操作…」），再拿它当这两类的名字，同一个词在两个地方指两样东西。搜索行右侧的标记因此写「系统」「窗口」两个词，合起来的段名写「系统与窗口」。
+- 搜索框占位里用「系统操作」泛指这一类（「搜索应用、预设或系统操作」）：那里只求短，用户心里把锁屏、调音量、摆窗口都归成系统的事；具体是系统还是窗口，看行右边的标记。
+- 两个框的英文不一样：搜索面板「Search apps, presets or actions」（框够宽），快捷键页「Search apps or presets」（框窄，扣掉放大镜只有 170 给字，26 个字母以内）。快捷键页不放 actions 不丢东西：旁边就是「System & Window」那一段，一眼看见。中文两处是同一句，中文宽度没问题。
+- 搜索结果行右侧标记：系统操作写「系统 / System」，窗口管理写「窗口 / Window」。快捷键页行右边的类型小字同样。
+- 名字用 macOS 菜单里的说法（锁定屏幕、清倒废纸篓、推出、隐藏其他），用户在苹果菜单和访达里见过；大家口头的叫法放进别名。
+- 中文名、英文名、拼音（全拼和首字母）都要能搜到，跟应用一样；下面「别名」列是额外要能搜到的词，中英混着写。
+- 「屏幕」指显示器那块屏（移到下一块屏幕），「半屏」「四分之一」都按当前屏幕扣掉菜单栏和程序坞以后的地方算，字里不提这些。
+
+### 15.1 系统操作（24 条）
+
+| # | 中文名 | English | 别名（额外能搜到） | 先确认 |
+|---|---|---|---|---|
+| 1 | 锁定屏幕 | Lock Screen | 锁屏、锁定、lock | |
+| 2 | 睡眠 | Sleep | 休眠、待机、电脑睡眠、sleep | |
+| 3 | 关闭显示器 | Sleep Displays | 息屏、熄屏、关屏、屏幕睡眠、显示器睡眠、关闭屏幕、display off | |
+| 4 | 开始屏幕保护程序 | Start Screen Saver | 屏保、屏幕保护、screensaver | |
+| 5 | 重新启动 | Restart | 重启、reboot | ✓ |
+| 6 | 关机 | Shut Down | 关电脑、shutdown、power off | ✓ |
+| 7 | 退出登录 | Log Out | 注销、登出、logout、sign out | ✓ |
+| 8 | 静音或取消静音 | Toggle Mute | 静音、取消静音、声音、mute、unmute | |
+| 9 | 调高音量 | Volume Up | 音量加、大声、声音大、volume up | |
+| 10 | 调低音量 | Volume Down | 音量减、小声、声音小、volume down | |
+| 11–15 | 音量调到 0% / 25% / 50% / 75% / 100% | Set Volume to 0% / 25% / 50% / 75% / 100% | 音量 0、音量 50、volume 50（数字都能搜） | |
+| 16 | 切换浅色或深色外观 | Toggle Appearance | 深色模式、浅色模式、暗黑模式、夜间模式、外观、dark mode、light mode | |
+| 17 | 显示桌面 | Show Desktop | 桌面、desktop | |
+| 18 | 隐藏其他应用 | Hide Other Apps | 隐藏其他、只留当前、hide others | |
+| 19 | 显示所有隐藏的应用 | Show All Hidden Apps | 全部显示、取消隐藏、unhide | |
+| 20 | 退出所有应用 | Quit All Apps | 全部退出、关掉所有应用、quit all | ✓ |
+| 21 | 打开废纸篓 | Open Trash | 废纸篓、回收站、垃圾桶、trash | |
+| 22 | 清倒废纸篓 | Empty Trash | 清空废纸篓、清空回收站、倒垃圾、empty trash | ✓ |
+| 23 | 推出所有磁盘 | Eject All Disks | 弹出、弹出磁盘、推出、U 盘、移动硬盘、eject | |
+| 24 | 显示或不显示隐藏文件 | Toggle Hidden Files | 隐藏文件、点文件、dotfiles、hidden files | |
+
+三条会来回切的（8、16、24）：名字固定，不跟着现在的状态变（design.md 2.9：打开面板时不去问系统，列表不跳字）。名字里把两头都说出来，按下去是哪一头看提示胶囊。别名把两边都列上，「静音」「深色模式」这些单说一头的也搜得到。
+
+### 15.2 窗口管理（22 条）
+
+作用于打开 Gocast 之前最前面的那个窗口；用快捷键时就是现在最前面的那个。
+
+| # | 中文名 | English | 别名（额外能搜到） |
+|---|---|---|---|
+| 1 | 左半屏 | Left Half | 左半、左边、窗口左、left |
+| 2 | 右半屏 | Right Half | 右半、右边、窗口右、right |
+| 3 | 上半屏 | Top Half | 上半、上边、top |
+| 4 | 下半屏 | Bottom Half | 下半、下边、bottom |
+| 5 | 左上四分之一 | Top Left Quarter | 左上、左上角、1/4 |
+| 6 | 右上四分之一 | Top Right Quarter | 右上、右上角、1/4 |
+| 7 | 左下四分之一 | Bottom Left Quarter | 左下、左下角、1/4 |
+| 8 | 右下四分之一 | Bottom Right Quarter | 右下、右下角、1/4 |
+| 9 | 左三分之一 | Left Third | 左 1/3、三分屏、third |
+| 10 | 中间三分之一 | Center Third | 中间 1/3、三分屏、third |
+| 11 | 右三分之一 | Right Third | 右 1/3、三分屏、third |
+| 12 | 左三分之二 | Left Two Thirds | 左 2/3、two thirds |
+| 13 | 右三分之二 | Right Two Thirds | 右 2/3、two thirds |
+| 14 | 最大化 | Maximize | 全屏、铺满、放到最大、max、full |
+| 15 | 几乎最大化 | Almost Maximize | 差不多最大、四周留边、almost |
+| 16 | 合适大小 | Reasonable Size | 适中、默认大小、正常大小、reasonable |
+| 17 | 居中 | Center | 窗口居中、放中间、center |
+| 18 | 放大窗口 | Make Larger | 变大、放大、larger、bigger |
+| 19 | 缩小窗口 | Make Smaller | 变小、缩小、smaller |
+| 20 | 还原窗口 | Restore | 恢复、撤销、回到原来、restore、undo |
+| 21 | 移到下一块屏幕 | Move to Next Display | 下一个屏幕、下一块显示器、换屏、外接屏、next display、next screen |
+| 22 | 移到上一块屏幕 | Move to Previous Display | 上一个屏幕、上一块显示器、换屏、previous display |
+
+- 「最大化」不叫「全屏」：macOS 的「全屏」是另开一个空间、藏掉菜单栏的那种，这里只是铺满屏幕。「全屏」放进别名，搜得到。
+- 「放大」「缩小」「还原」后面加「窗口」：单看「放大」，会以为是放大字号或画面（悬浮终端里就有「放大 / 缩小字号」）。其余几条看名字就知道说的是窗口，不加。
+- 只有一块屏幕时，21、22 两条照样在搜索里，按了出提示（15.4），不藏起来，免得接上外接屏以后才发现有这两条。
+
+### 15.3 确认框（系统提醒框，「取消」是默认按钮，↵ 和 Esc 都是取消）
+
+| 操作 | 标题 | 说明 | 按钮 |
+|---|---|---|---|
+| 重新启动 | 重新启动这台 Mac？ | （有终端在跑时才有这一句）悬浮终端里正在跑的命令会停掉。 | 重新启动 / 取消 |
+| 关机 | 关掉这台 Mac？ | 同上 | 关机 / 取消 |
+| 退出登录 | 退出登录？ | 所有应用都会退出。（有终端在跑时再加）悬浮终端里正在跑的命令也会停掉。 | 退出登录 / 取消 |
+| 退出所有应用 | 退出所有应用？ | Gocast 和访达不会退出。有文稿没存的应用会先问你。 | 全部退出 / 取消 |
+| 清倒废纸篓 | 清倒废纸篓？ | 里面的东西会永久删除，不能撤销。 | 清倒 / 取消 |
+
+English:
+
+| 操作 | Title | Message | Buttons |
+|---|---|---|---|
+| 重新启动 | Restart this Mac? | (only when terminals are running) Commands running in the floating terminal will stop. | Restart / Cancel |
+| 关机 | Shut down this Mac? | same as above | Shut Down / Cancel |
+| 退出登录 | Log out? | All apps will quit. (when terminals are running) Commands running in the floating terminal will stop too. | Log Out / Cancel |
+| 退出所有应用 | Quit all apps? | Gocast and Finder stay open. Apps with unsaved documents will ask you first. | Quit All / Cancel |
+| 清倒废纸篓 | Empty the Trash? | Everything in it will be deleted for good. This can’t be undone. | Empty / Cancel |
+
+「终端会停」那句只在真有终端开着时加：v1.27 以后用户习惯了退出 Gocast 终端也不停，重启和关机是少有会停掉终端的情况，值得提醒一句；没有终端时说了就是废话。
+
+### 15.4 提示（左下角胶囊，同 6.6，4 秒后淡出）
+
+做完就看得见的（锁屏、睡眠、显示桌面、窗口摆好了……）一律不出提示。哪些收起面板、哪些留着出胶囊以 design.md 2.9 为准；用全局快捷键执行时一句都不出。
+
+| 情况 | 中文 | English |
+|---|---|---|
+| 调了音量（调高、调低、调到 N%） | 音量 {n}% | Volume {n}% |
+| 静音 / 取消静音 | 已静音 / 已取消静音 | Muted / Unmuted |
+| 显示 / 不显示隐藏文件 | 已显示隐藏文件 / 已不显示隐藏文件 | Showing hidden files / Hidden files are hidden again |
+| 废纸篓本来就空（不弹确认框） | 废纸篓已经是空的 | The Trash is already empty |
+| 没有可推出的磁盘 | 没有可以推出的磁盘 | No disks to eject |
+| 有磁盘在用，没推出来 | “{磁盘名}”正在使用，没能推出 | “{disk}” is in use and wasn’t ejected |
+| 推出了几个 | 已推出 {n} 个磁盘 | Ejected 1 disk / Ejected {n} disks |
+| 没有可以摆放的窗口（最前面的是桌面，或者窗口最小化了） | 没有可以摆放的窗口 | No window to arrange |
+| 只有一块屏幕时按「移到下一 / 上一块屏幕」 | 只接了一块屏幕 | Only one display is connected |
+| 窗口还没被 Gocast 动过就按「还原窗口」 | 这个窗口还没被移动过 | This window hasn’t been moved yet |
+| 最前面的窗口是全屏的 | 全屏的窗口摆不了，先退出全屏 | Can’t arrange a full-screen window. Exit full screen first. |
+| 系统不让 Gocast 控制访达或系统事件（用户在系统弹窗里点了「不允许」）；胶囊里带按钮，不自动淡出 | Gocast 没有控制“{应用}”的权限 | Gocast isn’t allowed to control “{app}” |
+| 上面那行的按钮（打开 隐私与安全性 › 自动化） | 打开系统设置 | Open System Settings |
+
+窗口缩不到那么小时，摆到目标区域左上角就算完，不出提示：用户眼睛看着窗口，看得出它没完全缩进去，一句「有些应用的窗口不能调大小」只会让人去找哪里错了。
+
+### 15.5 辅助功能权限（第一次用窗口管理、还没给过权限时，在搜索面板顶上出现，样子同 6.7）
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 标题 | 摆放窗口需要你允许一次 | Allow Gocast to arrange windows |
+| 说明 | Gocast 要替你移动别的应用的窗口，系统要求先在“辅助功能”里打开 Gocast。只用来粘贴和摆放窗口。 | Gocast moves other apps’ windows for you. macOS asks you to turn on Gocast in Accessibility first. It’s only used to paste and arrange windows. |
+| 主按钮 | 打开系统设置 | Open System Settings |
+| 允许后 | 现在可以摆放窗口了 | Ready to arrange windows |
+
+只有一个主按钮（design.md 2.9），没有次按钮。用快捷键触发、面板没开着时：先把搜索面板打开，顶上出这块提示，跟从搜索里点一样。之前在剪贴板那边已经给过权限，这块就不出现。
+
+### 15.6 读屏（VoiceOver）
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 系统操作行 | {名称}，系统 | {name}, System |
+| 窗口管理行 | {名称}，窗口 | {name}, Window |
+| 有快捷键时再加 | ，快捷键 {快捷键} | , shortcut {shortcut} |
+
+主操作（操作胶囊、⌘K 第一行）：所有系统操作和窗口管理同一个词「执行 / Run」。⌘K 里其余几行（设置快捷键… / 更改快捷键… / 移除快捷键）照 11.1。
+
+### 15.7 别处跟着改的字
+
+- 6.7 说明的最后一句「只用来粘贴。」已改成「只用来粘贴和摆放窗口。」（英文 “It’s only used to paste and arrange windows.”），不然说的跟做的对不上。6.8 的字不用改。
+- 网站常见问题里讲辅助功能的那条（Leto）：同样加上「和摆放窗口」，跟这一版一起上。
+- 第 5 节加一条系统弹窗用途（见下）。
+- 11.3 快捷键页：说明、筛选、空状态改成下面这样。
+- 搜索框占位改了：「搜索应用或终端预设」→「搜索应用、预设或系统操作」（快捷键页同一句）。占位是说这框里能搜到什么，现在多了一整类新的东西，不提就没人数得出来能搜它；计算器仍不写，打个数字答案自己会出来，不用教。写「系统操作」不写「操作」，跟 15.0 同一个理由。
+- README 和网站首页加一句，Leto / 我在发版时一起写，先不动。
+
+11.3 改字：
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 页面说明 | 给任意一项设快捷键。应用和预设按一下打开，再按一下隐藏；系统和窗口按一下就执行。 | Give anything a shortcut. Apps and presets open with one press and hide with another while in front. System and window actions just run. |
+| 搜索框占位 | 搜索应用、预设或系统操作 | Search apps or presets |
+| 筛选（五段，最后一段同时含系统和窗口） | 全部 / 已设快捷键 / 应用 / 预设 / 系统与窗口 | All / With Shortcut / Apps / Presets / System & Window |
+| 行右边的类型小字 | 应用 / 预设 / Gocast / 系统 / 窗口 | App / Preset / Gocast / System / Window |
+| 搜不到 | 没有匹配的项 | No matches |
+| 「已设快捷键」下是空的 | 还没有给任何一项设快捷键。在「全部」里点任意一行右边就能设。 | No shortcuts yet. In All, click the right side of any row to set one. |
+
+第 5 节加一条：
+
+| 场景 | 中文 | English |
+|---|---|---|
+| 第一次用清倒废纸篓、推出磁盘、重新启动、关机、退出登录、切换外观、显示隐藏文件时，系统弹「“Gocast”想要控制“…”」 | Gocast 用它来执行你选的系统操作，比如清倒废纸篓、推出磁盘、切换深浅色外观。 | Gocast uses it to run the system actions you choose, like emptying the Trash, ejecting disks, or switching appearance. |
+
+### 给 Colo
+
+- design.md 4.4 分段写的「命令」，界面上用「系统与窗口」：「命令」在 Gocast 里专指预设里运行的那条命令，快捷键页里预设行就挨着，两样都叫命令会混。「操作」也不能用，胶囊那个「操作 ⌘K」已经占了它。设计稿里内部叫系统命令、窗口命令没关系，界面上不出现。
+- 2.9 的提示表里没有「只接了一块屏幕」这一种，我按同样的样子（不收起，`exclamationmark.triangle` + 一句）补了字，你看要不要加进表里。
+
+### 已定
+
+窗口管理 22 条、系统操作 24 条，一共 46 条（Ato 已确认，brief 里写的 23 是笔误）。
+
+## 16. 笔记（v1.30；需求见 notes-brief，样子和位置以 design.md 为准）
+
+### 16.0 用词
+
+- 这个功能叫「笔记 / Notes」，一篇叫「一篇笔记」，英文 a note。不叫便签、备忘录、记事本：备忘录是苹果自带应用的名字，叫一样的会以为打开的是它；便签、备忘放进别名。
+- 笔记的第一行就是「标题」。界面上不出现「文档」「文件」「页」。存成 .md 文件是给会去翻文件夹的人看的，界面不提。
+- 切换列表叫「浏览笔记 / Browse Notes」（Raycast 同名），搜索面板里的「搜索笔记」打开的就是它，光标已在搜索框里。
+- 「置顶」沿用剪贴板历史的词（统一用词表里已有），一样排在最上、一样叫「已置顶」。
+- 「拷贝为 Markdown」用「拷贝」不用「复制」，跟统一用词一致。
+- 删除：笔记进系统废纸篓，界面上说「删除笔记」（用户心里是删），删完的提示说清去哪了：「已移到废纸篓」。
+- 「标题」「粗体」「列表」这些格式名只在 README 和帮助里出现；v1 没有格式工具栏和 / 菜单，界面上不用写。任务列表在中文里叫「待办」，README 写「待办清单」。
+
+### 16.1 搜索面板里的三条（右侧标记「Gocast」，跟剪贴板历史、打开悬浮终端同一组）
+
+| 中文 | English | 别名（额外能搜到） | 主操作 |
+|---|---|---|---|
+| 笔记 | Notes | 便签、备忘、记事本、note、notes、memo、scratchpad、jot | 打开 / Open |
+| 新建笔记 | New Note | 写笔记、记一下、新便签、create note、quick note、new memo | 新建 / Create |
+| 搜索笔记 | Search Notes | 找笔记、浏览笔记、所有笔记、find note、browse notes | 打开 / Open |
+
+- 中文名、英文名、拼音全拼和首字母都要能搜到，跟其他行一样。
+- 撞名：英文搜「notes」时苹果的「备忘录」（英文名 Notes）也会出来。两条都留，排序按平常的用得多就靠前；不要把「备忘录」放进别名，那样中文用户找苹果备忘录时会先撞上我们的。
+- 笔记窗口开着时，「笔记」这行的主操作仍写「打开」：选它会把窗口叫到前面，再按快捷键才是收起，跟应用快捷键一样（11.3）。
+- 搜索框空着时的 Gocast 组（2.2a）加一行「笔记」，在剪贴板历史后面（design.md 11）。主操作「打开」。
+
+### 16.2 笔记窗口
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 顶栏标题（取第一行，去掉 # 之类的符号） | {标题} | {title} |
+| 第一行还是空的时候的顶栏标题 | 未命名 | Untitled |
+| 顶栏按钮「新建」· 鼠标停留 | 新建笔记 ⌘N | New Note ⌘N |
+| 顶栏按钮「浏览」· 鼠标停留 | 浏览笔记 ⌘P | Browse Notes ⌘P |
+| 已置顶时顶栏的小图钉 · 鼠标停留 | 已置顶，按 ⇧⌘P 取消 | Pinned. Press ⇧⌘P to unpin. |
+| 空笔记的占位（灰字，在第一行） | 写点什么，第一行就是标题 | Start writing. The first line is the title. |
+
+占位只在整篇都空时出现，打了一个字就消失。它顺带把「第一行是标题」这条规则教了，别处不用再解释。
+顶栏标题太长时在末尾用省略号截断，不换行。
+
+### 16.3 没有笔记时（第一次打开，或者删完了）
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 标题 | 还没有笔记 | No notes yet |
+| 说明 | 随手记点什么，会自动保存在这台 Mac 上。 | Jot something down. It’s saved automatically on this Mac. |
+| 按钮 | 新建笔记 | New Note |
+
+第一次在搜索面板选「笔记」时，如果一篇都没有，直接给一篇空笔记、光标在第一行，不先出这一屏（选「笔记」的人就是想写）。这一屏只在删完最后一篇时出现。
+
+### 16.4 浏览笔记（⌘P）
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 搜索框占位 | 搜索笔记 | Search notes |
+| 分组标题 | 已置顶 / 最近 | Pinned / Recent |
+| 行：第一行 | {标题}（空的写「未命名」） | {title} (Untitled if empty) |
+| 行：小字 | {修改时间}，写法同剪贴板 6.3：今天 14:05 / 昨天 09:12 / 11月10日 | {modified}, same as 6.3 |
+| 行：置顶的快捷键（只在前 9 篇置顶上） | ⌘1 … ⌘9 | ⌘1 … ⌘9 |
+| 搜不到 | 没有匹配的笔记 | No matching notes |
+| 回车 | 打开 | Open |
+
+卡片里不放提示条，删除、置顶靠快捷键和 ⌘K。
+搜索按标题和正文找。命中在正文里时，小字换成命中那一句的片段（前后截断加省略号），时间挪到行的右边。
+
+### 16.5 ⌘K 菜单（笔记窗口里）
+
+| 顺序 | 中文 | English | 快捷键 |
+|---|---|---|---|
+| 1 | 新建笔记 | New Note | ⌘N |
+| 2 | 浏览笔记 | Browse Notes | ⌘P |
+| 3 | 置顶 / 取消置顶 | Pin / Unpin | ⇧⌘P |
+| 4 | 拷贝为 Markdown | Copy as Markdown | ⇧⌘C |
+| 5 | 删除笔记 | Delete Note | ⌃X |
+
+菜单搜索框占位沿用 2.2 的「搜索操作…」。删除用 ⌃X，跟剪贴板历史的删除同一个键；⌘⌫ 在编辑区里是系统的「删到行首」，不能占。当前是空笔记时，置顶、拷贝、删除三行灰掉。
+删除不弹确认：进废纸篓能找回，提示里也说了去哪。
+
+### 16.5a 查找条（⌘F，只找当前这篇）
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 查找框占位 | 在这篇笔记里查找 | Find in this note |
+| 计数 | {第几} / {共几} | {n} / {total} |
+| 没找到（计数的位置） | 没有找到 | Not found |
+| 按钮（鼠标停留和读屏） | 上一个 / 下一个 / 关闭 | Previous / Next / Close |
+
+计数只有数字，不加「第」「个」，跟访达和 Safari 一样。找所有笔记用 ⌘P，查找条里不提。
+
+### 16.6 提示（窗口左下角胶囊，同 6.6，4 秒后淡出）
+
+| 情况 | 中文 | English |
+|---|---|---|
+| 拷贝为 Markdown | 已拷贝 Markdown | Markdown copied |
+| 置顶 / 取消置顶 | 已置顶 / 已取消置顶 | Pinned / Unpinned |
+| 删除 | 已移到废纸篓 | Moved to Trash |
+| 调字号（⌘+ / ⌘- / ⌘0） | 字号 {n}% | Zoom {n}% |
+| 按了 ⌘{n} 但没有第 {n} 篇置顶笔记 | 没有第 {n} 篇置顶的笔记 | No pinned note {n} |
+
+「已移到废纸篓」的前提：用户在访达里把它「放回原处」后，这篇笔记要回到列表里（Gocast 下次看文件夹时认出来）。做不到的话这句要改，告诉我。
+
+### 16.7 没能保存
+
+写盘失败时，在窗口顶栏下面出一条横幅，不自动消失，文字留在编辑器里照常能写：
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 横幅 | 这篇笔记没能保存。文字还在这里，先别退出 Gocast。 | This note couldn’t be saved. Your text is still here, so don’t quit Gocast yet. |
+| 横幅按钮 | 再试一次 | Try Again |
+| 再试成功（横幅收起，左下角胶囊） | 已保存 | Saved |
+
+还没存上就要退出 Gocast（⌘Q 在菜单栏、更新重启）时，弹系统提醒框，「取消」是默认按钮：
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 标题 | 有笔记还没保存 | A note hasn’t been saved |
+| 说明 | 现在退出，最近写的字会丢。 | If you quit now, your latest changes will be lost. |
+| 按钮 | 仍然退出 / 取消 | Quit Anyway / Cancel |
+
+不写失败原因（磁盘满、权限）：用户能做的都是同一件事，再试一次。原因写进日志给开发看。
+正常保存不出任何字（不要「已保存」「保存中…」），跟 Raycast 一样。
+
+### 16.8 设置 › 快捷键
+
+三条跟 Gocast 自己的几项排在一起，类型小字「Gocast」，名字同 16.1。默认都不设。
+
+### 16.9 读屏（VoiceOver）
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 搜索面板三条 | {名称}，Gocast | {name}, Gocast |
+| 顶栏新建 / 浏览按钮 | 新建笔记，按钮 / 浏览笔记，按钮 | New Note, button / Browse Notes, button |
+| 查找条 | 在这篇笔记里查找，搜索框；{第几} / {共几}；上一个，按钮 / 下一个，按钮 / 关闭，按钮 | Find in this note, search field; {n} of {total}; Previous / Next / Close, button |
+| 浏览列表的行 | {标题}，{已置顶，}{修改时间} | {title}, {Pinned, }{modified} |
+| 编辑区 | 笔记，{标题} | Note, {title} |
+| 任务框 | 待办，已完成 / 待办，未完成 | To-do, done / To-do, not done |
+
+### 16.10 别处跟着改的字（发版时再动）
+
+- README「你的数据」（第 10 节）：列表里加「笔记」：「预设、设置、剪贴板历史、笔记，还有……」/ “Your presets, settings, clipboard history, notes, and …”。笔记跟剪贴板一样是明文，不加密，不额外说明。
+- 网站隐私页同一句：Hugo 说过网站等他开口再改，发版前问他。
+- CHANGELOG 和 README 功能介绍发版时我写。
+
+### 已定（Colo）
+
+- 顶栏只放图标，字放鼠标停留里（16.2）。
+- 正文命中的片段放在小字那行，时间挪到右边（16.4）。
+- 拷贝为 Markdown 用 ⇧⌘C，删除用 ⌃X（16.5）。
+- 推荐列表 Gocast 组加「笔记」，在剪贴板历史后面（Ato 不同意会拿掉）。
+
+### 给 Pluso
+
+- 16.6 删除提示：放回原处后会回到列表，已确认（回来时不再置顶，不用另写字）。
+- 顶栏标题去掉开头的 #、- [ ]、> 这些符号，只留字。
