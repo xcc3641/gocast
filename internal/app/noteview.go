@@ -176,18 +176,24 @@ func roundButtonSized(c *ui.Context, k tokens, symbol, tip string, on bool, size
 }
 
 // editorArea draws the note's text (design.md 11.4): 24 from the sides,
-// at most 680 wide in the middle.
+// at most 680 wide in the middle. The editor goes from edge to edge, the
+// room around the text inside it (its theme's Padding), for the text to
+// scroll under the top bar and the scroll bar to be at the window's
+// edge; only the bottom's room is outside it, as Padding's is the same
+// above and below.
 func (n *notesWindow) editorArea(c *ui.Context, k tokens) {
 	d := n.cur
 	// The window's outline insets what is in it by its width: the text is
 	// 24 from the window's edge, not the outline's.
-	padX := float32(notePadX - panelBorderWidth)
-	ui.Column(c).Grow(1).Shrink(1).AlignItems(ui.Center).Padding(notePadTop, padX, notePadBottom, padX).Children(func() {
+	w, _ := c.Size()
+	th := n.design.theme()
+	th.Padding = [2]float32{max(notePadX-panelBorderWidth, (w-2*panelBorderWidth-noteTextMax)/2), notePadTop}
+	ui.Column(c).Grow(1).Shrink(1).Padding(0, 0, notePadBottom-notePadTop, 0).Children(func() {
 		opts := richtext.EditorOptions{
 			Label:        locales.NotesEditorLabel(n.title()),
 			Placeholder:  locales.NotesPlaceholder(),
 			Font:         n.design.font(),
-			Theme:        n.design.theme(),
+			Theme:        th,
 			OnKey:        n.onKey,
 			OnCommand:    n.onCommand,
 			OnLink:       n.openLink,
@@ -196,7 +202,9 @@ func (n *notesWindow) editorArea(c *ui.Context, k tokens) {
 			Space:        n.space,
 		}
 		c.Key(d) // a view a note: each keeps its scroll
-		e := richtext.EditorBase(c, d.doc, opts).Bind(&n.editor).Grow(1).WidthPercent(100).MaxWidth(noteTextMax)
+		// Editor, for Padding, without its field's look.
+		e := richtext.Editor(c, d.doc, opts).Bind(&n.editor).Grow(1).
+			Background(ui.Transparent).Border(0, ui.Transparent).Radius(0).MinHeight(0)
 		if n.focusText && !n.browse.open && !n.menu.open && !n.find.focus {
 			n.focusText = false
 			e.Focus(ui.FocusOptions{PreventScroll: true})
@@ -212,7 +220,7 @@ func (n *notesWindow) editorArea(c *ui.Context, k tokens) {
 			n.seenDoc, n.seenVer = d, d.doc.Version()
 		}
 		vis := d.doc.VisibleParagraphs()
-		n.scrolled = len(vis) > 0 && (vis[0].Index > 0 || vis[0].Top < -0.5)
+		n.scrolled = len(vis) > 0 && (vis[0].Index > 0 || vis[0].Top < notePadTop-0.5)
 	})
 }
 

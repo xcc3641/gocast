@@ -484,7 +484,7 @@ func (n *notesWindow) leave() {
 	a, c := d.doc.Selection()
 	p := &notePlace{anchor: a, caret: c}
 	if vis := d.doc.VisibleParagraphs(); len(vis) > 0 {
-		p.para, p.top = vis[0].Index, vis[0].Top
+		p.para, p.top = vis[0].Index, vis[0].Top-notePadTop // from the text's top
 	}
 	d.place = p
 	if d.doc.Text().Len() == 0 {

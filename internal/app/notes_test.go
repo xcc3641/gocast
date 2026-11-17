@@ -940,8 +940,10 @@ func TestNotesTypography(t *testing.T) {
 	if !ok {
 		t.Fatal("no editor")
 	}
-	if a.Bounds.X != notePadX {
-		t.Errorf("text at %v from the left, want %v", a.Bounds.X, notePadX)
+	nt.cur.doc.SetSelection(0, 0)
+	nt.frame()
+	if caret, _ := nt.cur.doc.CaretRect(); a.Bounds.X+caret.X != notePadX {
+		t.Errorf("text at %v from the left, want %v", a.Bounds.X+caret.X, notePadX)
 	}
 	ps := nt.cur.doc.VisibleParagraphs()
 	if len(ps) != 20 {
@@ -959,8 +961,9 @@ func TestNotesTypography(t *testing.T) {
 	}
 	for i, w := range want {
 		p := ps[i]
-		above := p.Top
+		above := p.Top - notePadTop // the editor's room above its text
 		if i > 0 {
+			above = p.Top
 			above -= ps[i-1].Top + ps[i-1].Height
 		}
 		if abs32(p.Height-w.line) > 1 || abs32(above-w.above) > 1 {
