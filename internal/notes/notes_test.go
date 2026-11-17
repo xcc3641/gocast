@@ -5,15 +5,18 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 	"time"
+
+	"github.com/egoist/mygo/ui/richtext"
 )
 
 // Notes as people write them come back byte for byte.
 func TestCodecKeepsNotes(t *testing.T) {
 	for _, in := range []string{
 		"Title\nline two\n\nafter a blank\n\n\n\nthree blanks\n",
-		"a\n---\nb\n",
+		"a\n***\nb\n",
 		"#tag line\n#tag #other #标签\n",
 		"use * and _ and snake_case and 2*3 and **real bold**\n",
 		"see https://example.com/a_b?x=1 ok\n",
@@ -40,7 +43,7 @@ func TestCodecNormalizes(t *testing.T) {
 	for _, c := range []struct{ in, out string }{
 		{"* star\n+ plus\n", "- star\n- plus\n"},
 		{"3. three\n4. four\n", "1. three\n2. four\n"},
-		{"___\n* * *\n", "---\n---\n"},
+		{"___\n* * *\n---\n- - -\n", "***\n***\n***\n***\n"},
 		{"__b__ _i_\n", "**b** *i*\n"},
 		{"```go\ncode\n```\n", "```\ncode\n```\n"},
 		{"no newline at the end", "no newline at the end\n"},
@@ -52,6 +55,49 @@ func TestCodecNormalizes(t *testing.T) {
 			t.Errorf("%q is not stable: %q", c.out, got)
 		}
 	}
+}
+
+// A rule under a line of text is written ***, which no Markdown reader
+// takes for a setext heading as it would ---, and reads back a rule.
+func TestCodecRuleUnderText(t *testing.T) {
+	for _, in := range []string{"text\n---\nmore\n", "text\n***\nmore\n", "text\n___\nmore\n", "> text\n> ---\n"} {
+		t1 := Decode(in, nil)
+		ps := paras(t1)
+		if len(ps) < 2 || IsRuleParagraph(ps[0]) || !IsRuleParagraph(ps[1]) {
+			t.Fatalf("%q: not text then a rule: %+v", in, ps)
+		}
+		md := Encode(t1)
+		for _, l := range strings.Split(md, "\n") {
+			if strings.Contains(l, "---") || strings.Contains(l, "___") {
+				t.Errorf("%q written %q: a line a reader may take for a setext heading", in, md)
+			}
+		}
+		if !strings.Contains(md, "text\n"+strings.Repeat("> ", strings.Count(in, "> ")/2)+"***\n") {
+			t.Errorf("%q written %q, want the rule as ***", in, md)
+		}
+		if again := Encode(Decode(md, nil)); again != md {
+			t.Errorf("%q: %q came back %q", in, md, again)
+		}
+		if got := paras(Decode(md, nil)); len(got) != len(ps) || plain(got[0]) != plain(ps[0]) || !IsRuleParagraph(got[1]) {
+			t.Errorf("%q: read back %+v", in, got)
+		}
+	}
+	// Text that is *** and not a rule keeps its escapes.
+	text := Decode("\\*\\*\\*\n", nil)
+	if IsRuleParagraph(paras(text)[0]) {
+		t.Fatal("escaped stars read as a rule")
+	}
+	if md := Encode(text); IsRuleParagraph(paras(Decode(md, nil))[0]) {
+		t.Errorf("text *** written %q, which reads as a rule", md)
+	}
+}
+
+func paras(t richtext.Text) []richtext.Paragraph {
+	var ps []richtext.Paragraph
+	for _, p := range t.Paragraphs() {
+		ps = append(ps, p)
+	}
+	return ps
 }
 
 // The title and the text a note is listed and searched by have none of

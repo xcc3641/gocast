@@ -14,6 +14,11 @@ import (
 	"github.com/egoist/mygo/ui/richtext"
 )
 
+// ruleMark is how a rule is written. Not ---: under a line of text, as
+// a note's rules often are, --- makes that line a heading in any other
+// Markdown reader (a setext heading), where *** is a rule wherever it is.
+const ruleMark = "***"
+
 // ruleData marks the attachment that stands for a horizontal rule.
 type ruleData struct{}
 
@@ -26,7 +31,7 @@ type Ink func() ui.Color
 // across its middle in ink's color (Spans give it its height).
 func Rule(ink Ink) *richtext.Attachment {
 	return &richtext.Attachment{
-		Width: 4000, Height: 120, Name: "---", Data: ruleData{},
+		Width: 4000, Height: 120, Name: ruleMark, Data: ruleData{},
 		Draw: func(p *ui.Painter, r ui.Rect) {
 			color := ui.RGBA(128, 128, 128, 0.4)
 			if ink != nil {
@@ -86,7 +91,7 @@ func Encode(t richtext.Text) string {
 			numbers = numbers[:0]
 		}
 		if IsRuleParagraph(p) {
-			lines = append(lines, q+"---")
+			lines = append(lines, q+ruleMark)
 			continue
 		}
 		prefix := ""

@@ -649,7 +649,8 @@ func TestNotesTypedShortcuts(t *testing.T) {
 		t.Errorf("＃ then a space: %+v, %q", st, nt.text())
 	}
 	nt.fire()
-	if got := nt.files(t)[nt.cur.id]; got != "a\n---\nsee [docs](https://x.y)\n# Title\n" {
+	// The rule typed --- is written ***, not a setext heading's underline.
+	if got := nt.files(t)[nt.cur.id]; got != "a\n***\nsee [docs](https://x.y)\n# Title\n" {
 		t.Errorf("written %q", got)
 	}
 }
