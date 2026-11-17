@@ -23,8 +23,7 @@ func TestRelativeDay(t *testing.T) {
 }
 
 func TestDate(t *testing.T) {
-	// macOS words 今天 and Yesterday against the real date, not now, so
-	// the relative cases sit on today's date.
+	// The relative cases on today's date, as the app has them.
 	y, m, d := time.Now().Date()
 	now := time.Date(y, m, d, 15, 0, 0, 0, time.Local)
 	today := time.Date(y, m, d, 14, 5, 0, 0, time.Local)
@@ -41,6 +40,25 @@ func TestDate(t *testing.T) {
 	}
 	if got := Date(earlier.AddDate(-1, 0, 0), now, "en"); !strings.Contains(got, "2025") {
 		t.Errorf("last year in English: %q", got)
+	}
+}
+
+func TestRelativeWordsOfNow(t *testing.T) {
+	// The words are of now, not of the system's clock: today and
+	// yesterday as of a day long past, at their time of day.
+	now := time.Date(2020, 3, 9, 15, 0, 0, 0, time.Local)
+	if got := Day(now.Add(-time.Hour), now, "en", false); got != "Today" {
+		t.Errorf("today as of now: %q", got)
+	}
+	if got := Date(time.Date(2020, 3, 8, 14, 5, 0, 0, time.Local), now, "en"); !strings.HasPrefix(got, "Yesterday") || !strings.Contains(got, "05") {
+		t.Errorf("yesterday as of now: %q", got)
+	}
+	// onSystemDay keeps the days between and the time of day.
+	sysNow = func() time.Time { return time.Date(2026, 11, 17, 8, 0, 0, 0, time.Local) }
+	t.Cleanup(func() { sysNow = time.Now })
+	got := onSystemDay(time.Date(2020, 3, 8, 23, 30, 0, 0, time.Local), now)
+	if want := time.Date(2026, 11, 16, 23, 30, 0, 0, time.Local); !got.Equal(want) {
+		t.Errorf("onSystemDay = %v, want %v", got, want)
 	}
 }
 

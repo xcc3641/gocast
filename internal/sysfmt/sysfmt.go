@@ -19,3 +19,22 @@ func relativeDay(t, now time.Time) bool {
 	today, then := day(now), day(t)
 	return !then.Before(today.AddDate(0, 0, -1)) && !then.After(today)
 }
+
+// sysNow is the system's clock, which Foundation's relative words are of.
+var sysNow = time.Now
+
+// onSystemDay is t moved by whole days to be as many days from the
+// system's today as it is from now's, at the same time of day: Foundation
+// says "Today" and "Yesterday" of the system's clock, whatever now is. In
+// the app, now is the system's clock, and t stays as it is.
+func onSystemDay(t, now time.Time) time.Time {
+	loc := now.Location()
+	date := func(t time.Time) time.Time {
+		y, m, d := t.In(loc).Date()
+		return time.Date(y, m, d, 0, 0, 0, 0, time.UTC) // UTC: no day 23 or 25 hours long
+	}
+	days := int(date(t).Sub(date(now)).Hours() / 24)
+	y, m, d := sysNow().In(loc).Date()
+	lt := t.In(loc)
+	return time.Date(y, m, d+days, lt.Hour(), lt.Minute(), lt.Second(), lt.Nanosecond(), loc)
+}

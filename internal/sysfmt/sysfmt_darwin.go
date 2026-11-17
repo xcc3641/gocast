@@ -98,6 +98,7 @@ func Date(t, now time.Time, locale string) string {
 		f.Send(selRelative, true)
 		f.Send(selSetDate, styleMedium)
 		f.Send(selSetTime, styleShort)
+		t = onSystemDay(t, now)
 	} else {
 		tmpl := "MMMdjmm"
 		if t.In(now.Location()).Year() != now.Year() {
@@ -147,6 +148,7 @@ func Day(t, now time.Time, locale string, long bool) string {
 		f.Send(selRelative, true)
 		f.Send(selSetDate, styleMedium)
 		f.Send(selSetTime, styleNone)
+		t = onSystemDay(t, now)
 	} else {
 		tmpl := "MMMd"
 		if long {
