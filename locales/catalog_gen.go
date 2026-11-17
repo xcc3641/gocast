@@ -9085,3 +9085,651 @@ func AppFinder() string { return In(i18n.Locale()).AppFinder() }
 func (msgs Messages) AppFinder() string {
 	return Catalog.Format(msgs.locale, "appFinder", nil)
 }
+
+// NotesItem says "Notes"
+// in the language the app shows.
+//
+// The search panel's row that shows the notes window, and its name in
+// Settings › Shortcuts (copy.md 16.1, 16.8).
+func NotesItem() string { return In(i18n.Locale()).NotesItem() }
+
+// NotesItem says "Notes"
+// in the language of msgs.
+//
+// The search panel's row that shows the notes window, and its name in
+// Settings › Shortcuts (copy.md 16.1, 16.8).
+func (msgs Messages) NotesItem() string {
+	return Catalog.Format(msgs.locale, "notesItem", nil)
+}
+
+// NotesNewItem says "New Note"
+// in the language the app shows.
+//
+// The search panel's row that opens a new note; the notes window's ⌘K row
+// and the empty state's button (copy.md 16.1, 16.3, 16.5).
+func NotesNewItem() string { return In(i18n.Locale()).NotesNewItem() }
+
+// NotesNewItem says "New Note"
+// in the language of msgs.
+//
+// The search panel's row that opens a new note; the notes window's ⌘K row
+// and the empty state's button (copy.md 16.1, 16.3, 16.5).
+func (msgs Messages) NotesNewItem() string {
+	return Catalog.Format(msgs.locale, "notesNewItem", nil)
+}
+
+// NotesSearchItem says "Search Notes"
+// in the language the app shows.
+//
+// The search panel's row that opens the notes window with Browse Notes
+// (copy.md 16.1).
+func NotesSearchItem() string { return In(i18n.Locale()).NotesSearchItem() }
+
+// NotesSearchItem says "Search Notes"
+// in the language of msgs.
+//
+// The search panel's row that opens the notes window with Browse Notes
+// (copy.md 16.1).
+func (msgs Messages) NotesSearchItem() string {
+	return Catalog.Format(msgs.locale, "notesSearchItem", nil)
+}
+
+// FooterCreate says "Create"
+// in the language the app shows.
+//
+// Search panel: the primary action of New Note (copy.md 16.1).
+func FooterCreate() string { return In(i18n.Locale()).FooterCreate() }
+
+// FooterCreate says "Create"
+// in the language of msgs.
+//
+// Search panel: the primary action of New Note (copy.md 16.1).
+func (msgs Messages) FooterCreate() string {
+	return Catalog.Format(msgs.locale, "footerCreate", nil)
+}
+
+// NotesUntitled says "Untitled"
+// in the language the app shows.
+//
+// Notes: the title of a note whose first line is empty, in the top bar and
+// Browse Notes (copy.md 16.2, 16.4).
+func NotesUntitled() string { return In(i18n.Locale()).NotesUntitled() }
+
+// NotesUntitled says "Untitled"
+// in the language of msgs.
+//
+// Notes: the title of a note whose first line is empty, in the top bar and
+// Browse Notes (copy.md 16.2, 16.4).
+func (msgs Messages) NotesUntitled() string {
+	return Catalog.Format(msgs.locale, "notesUntitled", nil)
+}
+
+// NotesNewTip says "New Note ⌘N"
+// in the language the app shows.
+//
+// Notes: the tooltip of the top bar's New button (copy.md 16.2).
+func NotesNewTip() string { return In(i18n.Locale()).NotesNewTip() }
+
+// NotesNewTip says "New Note ⌘N"
+// in the language of msgs.
+//
+// Notes: the tooltip of the top bar's New button (copy.md 16.2).
+func (msgs Messages) NotesNewTip() string {
+	return Catalog.Format(msgs.locale, "notesNewTip", nil)
+}
+
+// NotesBrowseTip says "Browse Notes ⌘P"
+// in the language the app shows.
+//
+// Notes: the tooltip of the top bar's Browse button (copy.md 16.2).
+func NotesBrowseTip() string { return In(i18n.Locale()).NotesBrowseTip() }
+
+// NotesBrowseTip says "Browse Notes ⌘P"
+// in the language of msgs.
+//
+// Notes: the tooltip of the top bar's Browse button (copy.md 16.2).
+func (msgs Messages) NotesBrowseTip() string {
+	return Catalog.Format(msgs.locale, "notesBrowseTip", nil)
+}
+
+// NotesBrowse says "Browse Notes"
+// in the language the app shows.
+//
+// Notes: the Browse button's label, and the ⌘K row (copy.md 16.5, 16.9).
+func NotesBrowse() string { return In(i18n.Locale()).NotesBrowse() }
+
+// NotesBrowse says "Browse Notes"
+// in the language of msgs.
+//
+// Notes: the Browse button's label, and the ⌘K row (copy.md 16.5, 16.9).
+func (msgs Messages) NotesBrowse() string {
+	return Catalog.Format(msgs.locale, "notesBrowse", nil)
+}
+
+// NotesPinnedTip says "Pinned. Press ⇧⌘P to unpin."
+// in the language the app shows.
+//
+// Notes: the tooltip of the pin before the title of a pinned note (copy.md
+// 16.2).
+func NotesPinnedTip() string { return In(i18n.Locale()).NotesPinnedTip() }
+
+// NotesPinnedTip says "Pinned. Press ⇧⌘P to unpin."
+// in the language of msgs.
+//
+// Notes: the tooltip of the pin before the title of a pinned note (copy.md
+// 16.2).
+func (msgs Messages) NotesPinnedTip() string {
+	return Catalog.Format(msgs.locale, "notesPinnedTip", nil)
+}
+
+// NotesPlaceholder says "Start writing. The first line is the title."
+// in the language the app shows.
+//
+// Notes: the placeholder of an empty note (copy.md 16.2).
+func NotesPlaceholder() string { return In(i18n.Locale()).NotesPlaceholder() }
+
+// NotesPlaceholder says "Start writing. The first line is the title."
+// in the language of msgs.
+//
+// Notes: the placeholder of an empty note (copy.md 16.2).
+func (msgs Messages) NotesPlaceholder() string {
+	return Catalog.Format(msgs.locale, "notesPlaceholder", nil)
+}
+
+// NotesEmptyTitle says "No notes yet"
+// in the language the app shows.
+//
+// Notes: the title of the empty state, once the last note is deleted
+// (copy.md 16.3).
+func NotesEmptyTitle() string { return In(i18n.Locale()).NotesEmptyTitle() }
+
+// NotesEmptyTitle says "No notes yet"
+// in the language of msgs.
+//
+// Notes: the title of the empty state, once the last note is deleted
+// (copy.md 16.3).
+func (msgs Messages) NotesEmptyTitle() string {
+	return Catalog.Format(msgs.locale, "notesEmptyTitle", nil)
+}
+
+// NotesEmptyBody says "Jot something down. It’s saved automatically on this Mac."
+// in the language the app shows.
+//
+// Notes: the empty state's line (copy.md 16.3).
+func NotesEmptyBody() string { return In(i18n.Locale()).NotesEmptyBody() }
+
+// NotesEmptyBody says "Jot something down. It’s saved automatically on this Mac."
+// in the language of msgs.
+//
+// Notes: the empty state's line (copy.md 16.3).
+func (msgs Messages) NotesEmptyBody() string {
+	return Catalog.Format(msgs.locale, "notesEmptyBody", nil)
+}
+
+// NotesSearchPlaceholder says "Search notes"
+// in the language the app shows.
+//
+// Notes: the placeholder of Browse Notes' search field (copy.md 16.4).
+func NotesSearchPlaceholder() string { return In(i18n.Locale()).NotesSearchPlaceholder() }
+
+// NotesSearchPlaceholder says "Search notes"
+// in the language of msgs.
+//
+// Notes: the placeholder of Browse Notes' search field (copy.md 16.4).
+func (msgs Messages) NotesSearchPlaceholder() string {
+	return Catalog.Format(msgs.locale, "notesSearchPlaceholder", nil)
+}
+
+// NotesSectionPinned says "Pinned"
+// in the language the app shows.
+//
+// Browse Notes: the title over the notes pinned (copy.md 16.4).
+func NotesSectionPinned() string { return In(i18n.Locale()).NotesSectionPinned() }
+
+// NotesSectionPinned says "Pinned"
+// in the language of msgs.
+//
+// Browse Notes: the title over the notes pinned (copy.md 16.4).
+func (msgs Messages) NotesSectionPinned() string {
+	return Catalog.Format(msgs.locale, "notesSectionPinned", nil)
+}
+
+// NotesSectionRecent says "Recent"
+// in the language the app shows.
+//
+// Browse Notes: the title over the other notes, while some are pinned
+// (copy.md 16.4).
+func NotesSectionRecent() string { return In(i18n.Locale()).NotesSectionRecent() }
+
+// NotesSectionRecent says "Recent"
+// in the language of msgs.
+//
+// Browse Notes: the title over the other notes, while some are pinned
+// (copy.md 16.4).
+func (msgs Messages) NotesSectionRecent() string {
+	return Catalog.Format(msgs.locale, "notesSectionRecent", nil)
+}
+
+// NotesNoMatch says "No matching notes"
+// in the language the app shows.
+//
+// Browse Notes: the line when the search finds nothing (copy.md 16.4).
+func NotesNoMatch() string { return In(i18n.Locale()).NotesNoMatch() }
+
+// NotesNoMatch says "No matching notes"
+// in the language of msgs.
+//
+// Browse Notes: the line when the search finds nothing (copy.md 16.4).
+func (msgs Messages) NotesNoMatch() string {
+	return Catalog.Format(msgs.locale, "notesNoMatch", nil)
+}
+
+// NotesPin says "Pin"
+// in the language the app shows.
+//
+// Notes: the ⌘K row that pins the note (copy.md 16.5).
+func NotesPin() string { return In(i18n.Locale()).NotesPin() }
+
+// NotesPin says "Pin"
+// in the language of msgs.
+//
+// Notes: the ⌘K row that pins the note (copy.md 16.5).
+func (msgs Messages) NotesPin() string {
+	return Catalog.Format(msgs.locale, "notesPin", nil)
+}
+
+// NotesUnpin says "Unpin"
+// in the language the app shows.
+//
+// Notes: the ⌘K row that unpins the note (copy.md 16.5).
+func NotesUnpin() string { return In(i18n.Locale()).NotesUnpin() }
+
+// NotesUnpin says "Unpin"
+// in the language of msgs.
+//
+// Notes: the ⌘K row that unpins the note (copy.md 16.5).
+func (msgs Messages) NotesUnpin() string {
+	return Catalog.Format(msgs.locale, "notesUnpin", nil)
+}
+
+// NotesCopyMarkdown says "Copy as Markdown"
+// in the language the app shows.
+//
+// Notes: the ⌘K row that copies the note as Markdown (copy.md 16.5).
+func NotesCopyMarkdown() string { return In(i18n.Locale()).NotesCopyMarkdown() }
+
+// NotesCopyMarkdown says "Copy as Markdown"
+// in the language of msgs.
+//
+// Notes: the ⌘K row that copies the note as Markdown (copy.md 16.5).
+func (msgs Messages) NotesCopyMarkdown() string {
+	return Catalog.Format(msgs.locale, "notesCopyMarkdown", nil)
+}
+
+// NotesDelete says "Delete Note"
+// in the language the app shows.
+//
+// Notes: the ⌘K row that moves the note to the Trash (copy.md 16.5).
+func NotesDelete() string { return In(i18n.Locale()).NotesDelete() }
+
+// NotesDelete says "Delete Note"
+// in the language of msgs.
+//
+// Notes: the ⌘K row that moves the note to the Trash (copy.md 16.5).
+func (msgs Messages) NotesDelete() string {
+	return Catalog.Format(msgs.locale, "notesDelete", nil)
+}
+
+// NotesFindPlaceholder says "Find in this note"
+// in the language the app shows.
+//
+// Notes: the find bar's placeholder and label (copy.md 16.5a).
+func NotesFindPlaceholder() string { return In(i18n.Locale()).NotesFindPlaceholder() }
+
+// NotesFindPlaceholder says "Find in this note"
+// in the language of msgs.
+//
+// Notes: the find bar's placeholder and label (copy.md 16.5a).
+func (msgs Messages) NotesFindPlaceholder() string {
+	return Catalog.Format(msgs.locale, "notesFindPlaceholder", nil)
+}
+
+// NotesFindCount says "{n} / {total}"
+// in the language the app shows.
+//
+// Notes: the find bar's count, the match shown of the matches (copy.md
+// 16.5a).
+func NotesFindCount(n string, total string) string { return In(i18n.Locale()).NotesFindCount(n, total) }
+
+// NotesFindCount says "{n} / {total}"
+// in the language of msgs.
+//
+// Notes: the find bar's count, the match shown of the matches (copy.md
+// 16.5a).
+func (msgs Messages) NotesFindCount(n string, total string) string {
+	return Catalog.Format(msgs.locale, "notesFindCount", map[string]any{"n": n, "total": total})
+}
+
+// NotesFindCountSpoken says "{n} of {total}"
+// in the language the app shows.
+//
+// Notes: the find bar's count as assistive technology reads it (copy.md
+// 16.9).
+func NotesFindCountSpoken(n string, total string) string {
+	return In(i18n.Locale()).NotesFindCountSpoken(n, total)
+}
+
+// NotesFindCountSpoken says "{n} of {total}"
+// in the language of msgs.
+//
+// Notes: the find bar's count as assistive technology reads it (copy.md
+// 16.9).
+func (msgs Messages) NotesFindCountSpoken(n string, total string) string {
+	return Catalog.Format(msgs.locale, "notesFindCountSpoken", map[string]any{"n": n, "total": total})
+}
+
+// NotesFindNone says "Not found"
+// in the language the app shows.
+//
+// Notes: the find bar's count when nothing is found (copy.md 16.5a).
+func NotesFindNone() string { return In(i18n.Locale()).NotesFindNone() }
+
+// NotesFindNone says "Not found"
+// in the language of msgs.
+//
+// Notes: the find bar's count when nothing is found (copy.md 16.5a).
+func (msgs Messages) NotesFindNone() string {
+	return Catalog.Format(msgs.locale, "notesFindNone", nil)
+}
+
+// NotesFindPrevious says "Previous"
+// in the language the app shows.
+//
+// Notes: the find bar's previous button (copy.md 16.5a).
+func NotesFindPrevious() string { return In(i18n.Locale()).NotesFindPrevious() }
+
+// NotesFindPrevious says "Previous"
+// in the language of msgs.
+//
+// Notes: the find bar's previous button (copy.md 16.5a).
+func (msgs Messages) NotesFindPrevious() string {
+	return Catalog.Format(msgs.locale, "notesFindPrevious", nil)
+}
+
+// NotesFindNext says "Next"
+// in the language the app shows.
+//
+// Notes: the find bar's next button (copy.md 16.5a).
+func NotesFindNext() string { return In(i18n.Locale()).NotesFindNext() }
+
+// NotesFindNext says "Next"
+// in the language of msgs.
+//
+// Notes: the find bar's next button (copy.md 16.5a).
+func (msgs Messages) NotesFindNext() string {
+	return Catalog.Format(msgs.locale, "notesFindNext", nil)
+}
+
+// NotesFindClose says "Close"
+// in the language the app shows.
+//
+// Notes: the find bar's close button (copy.md 16.5a).
+func NotesFindClose() string { return In(i18n.Locale()).NotesFindClose() }
+
+// NotesFindClose says "Close"
+// in the language of msgs.
+//
+// Notes: the find bar's close button (copy.md 16.5a).
+func (msgs Messages) NotesFindClose() string {
+	return Catalog.Format(msgs.locale, "notesFindClose", nil)
+}
+
+// NotesCopied says "Markdown copied"
+// in the language the app shows.
+//
+// Notes: the notice once the note is copied as Markdown (copy.md 16.6).
+func NotesCopied() string { return In(i18n.Locale()).NotesCopied() }
+
+// NotesCopied says "Markdown copied"
+// in the language of msgs.
+//
+// Notes: the notice once the note is copied as Markdown (copy.md 16.6).
+func (msgs Messages) NotesCopied() string {
+	return Catalog.Format(msgs.locale, "notesCopied", nil)
+}
+
+// NotesPinned says "Pinned"
+// in the language the app shows.
+//
+// Notes: the notice once the note is pinned (copy.md 16.6).
+func NotesPinned() string { return In(i18n.Locale()).NotesPinned() }
+
+// NotesPinned says "Pinned"
+// in the language of msgs.
+//
+// Notes: the notice once the note is pinned (copy.md 16.6).
+func (msgs Messages) NotesPinned() string {
+	return Catalog.Format(msgs.locale, "notesPinned", nil)
+}
+
+// NotesUnpinned says "Unpinned"
+// in the language the app shows.
+//
+// Notes: the notice once the note is unpinned (copy.md 16.6).
+func NotesUnpinned() string { return In(i18n.Locale()).NotesUnpinned() }
+
+// NotesUnpinned says "Unpinned"
+// in the language of msgs.
+//
+// Notes: the notice once the note is unpinned (copy.md 16.6).
+func (msgs Messages) NotesUnpinned() string {
+	return Catalog.Format(msgs.locale, "notesUnpinned", nil)
+}
+
+// NotesTrashed says "Moved to Trash"
+// in the language the app shows.
+//
+// Notes: the notice once a note is deleted (copy.md 16.6).
+func NotesTrashed() string { return In(i18n.Locale()).NotesTrashed() }
+
+// NotesTrashed says "Moved to Trash"
+// in the language of msgs.
+//
+// Notes: the notice once a note is deleted (copy.md 16.6).
+func (msgs Messages) NotesTrashed() string {
+	return Catalog.Format(msgs.locale, "notesTrashed", nil)
+}
+
+// NotesZoom says "Zoom {n}%"
+// in the language the app shows.
+//
+// Notes: the notice as ⌘+, ⌘- or ⌘0 changes the text size (copy.md
+// 16.6).
+func NotesZoom(n string) string { return In(i18n.Locale()).NotesZoom(n) }
+
+// NotesZoom says "Zoom {n}%"
+// in the language of msgs.
+//
+// Notes: the notice as ⌘+, ⌘- or ⌘0 changes the text size (copy.md
+// 16.6).
+func (msgs Messages) NotesZoom(n string) string {
+	return Catalog.Format(msgs.locale, "notesZoom", map[string]any{"n": n})
+}
+
+// NotesNoPinned says "No pinned note {n}"
+// in the language the app shows.
+//
+// Notes: the notice when ⌘n has no nth pinned note (copy.md 16.6).
+func NotesNoPinned(n string) string { return In(i18n.Locale()).NotesNoPinned(n) }
+
+// NotesNoPinned says "No pinned note {n}"
+// in the language of msgs.
+//
+// Notes: the notice when ⌘n has no nth pinned note (copy.md 16.6).
+func (msgs Messages) NotesNoPinned(n string) string {
+	return Catalog.Format(msgs.locale, "notesNoPinned", map[string]any{"n": n})
+}
+
+// NotesSaveFailed says "This note couldn’t be saved. Your text is still here, so don’t quit Gocast yet."
+// in the language the app shows.
+//
+// Notes: the banner when the note could not be written (copy.md 16.7).
+func NotesSaveFailed() string { return In(i18n.Locale()).NotesSaveFailed() }
+
+// NotesSaveFailed says "This note couldn’t be saved. Your text is still here, so don’t quit Gocast yet."
+// in the language of msgs.
+//
+// Notes: the banner when the note could not be written (copy.md 16.7).
+func (msgs Messages) NotesSaveFailed() string {
+	return Catalog.Format(msgs.locale, "notesSaveFailed", nil)
+}
+
+// NotesTryAgain says "Try Again"
+// in the language the app shows.
+//
+// Notes: the save banner's button (copy.md 16.7).
+func NotesTryAgain() string { return In(i18n.Locale()).NotesTryAgain() }
+
+// NotesTryAgain says "Try Again"
+// in the language of msgs.
+//
+// Notes: the save banner's button (copy.md 16.7).
+func (msgs Messages) NotesTryAgain() string {
+	return Catalog.Format(msgs.locale, "notesTryAgain", nil)
+}
+
+// NotesSaved says "Saved"
+// in the language the app shows.
+//
+// Notes: the notice once a save that failed succeeds (copy.md 16.7).
+func NotesSaved() string { return In(i18n.Locale()).NotesSaved() }
+
+// NotesSaved says "Saved"
+// in the language of msgs.
+//
+// Notes: the notice once a save that failed succeeds (copy.md 16.7).
+func (msgs Messages) NotesSaved() string {
+	return Catalog.Format(msgs.locale, "notesSaved", nil)
+}
+
+// NotesQuitTitle says "A note hasn’t been saved"
+// in the language the app shows.
+//
+// The alert when Gocast quits with a note not saved (copy.md 16.7).
+func NotesQuitTitle() string { return In(i18n.Locale()).NotesQuitTitle() }
+
+// NotesQuitTitle says "A note hasn’t been saved"
+// in the language of msgs.
+//
+// The alert when Gocast quits with a note not saved (copy.md 16.7).
+func (msgs Messages) NotesQuitTitle() string {
+	return Catalog.Format(msgs.locale, "notesQuitTitle", nil)
+}
+
+// NotesQuitDetail says "If you quit now, your latest changes will be lost."
+// in the language the app shows.
+//
+// The quit alert's line (copy.md 16.7).
+func NotesQuitDetail() string { return In(i18n.Locale()).NotesQuitDetail() }
+
+// NotesQuitDetail says "If you quit now, your latest changes will be lost."
+// in the language of msgs.
+//
+// The quit alert's line (copy.md 16.7).
+func (msgs Messages) NotesQuitDetail() string {
+	return Catalog.Format(msgs.locale, "notesQuitDetail", nil)
+}
+
+// NotesQuitAnyway says "Quit Anyway"
+// in the language the app shows.
+//
+// The quit alert's button that quits (copy.md 16.7).
+func NotesQuitAnyway() string { return In(i18n.Locale()).NotesQuitAnyway() }
+
+// NotesQuitAnyway says "Quit Anyway"
+// in the language of msgs.
+//
+// The quit alert's button that quits (copy.md 16.7).
+func (msgs Messages) NotesQuitAnyway() string {
+	return Catalog.Format(msgs.locale, "notesQuitAnyway", nil)
+}
+
+// NotesEditorLabel says "Note, {title}"
+// in the language the app shows.
+//
+// Notes: the editor as assistive technology reads it (copy.md 16.9).
+func NotesEditorLabel(title string) string { return In(i18n.Locale()).NotesEditorLabel(title) }
+
+// NotesEditorLabel says "Note, {title}"
+// in the language of msgs.
+//
+// Notes: the editor as assistive technology reads it (copy.md 16.9).
+func (msgs Messages) NotesEditorLabel(title string) string {
+	return Catalog.Format(msgs.locale, "notesEditorLabel", map[string]any{"title": title})
+}
+
+// NotesTodoDone says "To-do, done"
+// in the language the app shows.
+//
+// Notes: a ticked task's box as assistive technology reads it (copy.md
+// 16.9).
+func NotesTodoDone() string { return In(i18n.Locale()).NotesTodoDone() }
+
+// NotesTodoDone says "To-do, done"
+// in the language of msgs.
+//
+// Notes: a ticked task's box as assistive technology reads it (copy.md
+// 16.9).
+func (msgs Messages) NotesTodoDone() string {
+	return Catalog.Format(msgs.locale, "notesTodoDone", nil)
+}
+
+// NotesTodoOpen says "To-do, not done"
+// in the language the app shows.
+//
+// Notes: an unticked task's box as assistive technology reads it (copy.md
+// 16.9).
+func NotesTodoOpen() string { return In(i18n.Locale()).NotesTodoOpen() }
+
+// NotesTodoOpen says "To-do, not done"
+// in the language of msgs.
+//
+// Notes: an unticked task's box as assistive technology reads it (copy.md
+// 16.9).
+func (msgs Messages) NotesTodoOpen() string {
+	return Catalog.Format(msgs.locale, "notesTodoOpen", nil)
+}
+
+// NotesRowLabel says "{title}, {modified}"
+// in the language the app shows.
+//
+// Browse Notes: a row as assistive technology reads it (copy.md 16.9).
+func NotesRowLabel(title string, modified string) string {
+	return In(i18n.Locale()).NotesRowLabel(title, modified)
+}
+
+// NotesRowLabel says "{title}, {modified}"
+// in the language of msgs.
+//
+// Browse Notes: a row as assistive technology reads it (copy.md 16.9).
+func (msgs Messages) NotesRowLabel(title string, modified string) string {
+	return Catalog.Format(msgs.locale, "notesRowLabel", map[string]any{"title": title, "modified": modified})
+}
+
+// NotesRowLabelPinned says "{title}, Pinned, {modified}"
+// in the language the app shows.
+//
+// Browse Notes: a pinned note's row as assistive technology reads it
+// (copy.md 16.9).
+func NotesRowLabelPinned(title string, modified string) string {
+	return In(i18n.Locale()).NotesRowLabelPinned(title, modified)
+}
+
+// NotesRowLabelPinned says "{title}, Pinned, {modified}"
+// in the language of msgs.
+//
+// Browse Notes: a pinned note's row as assistive technology reads it
+// (copy.md 16.9).
+func (msgs Messages) NotesRowLabelPinned(title string, modified string) string {
+	return Catalog.Format(msgs.locale, "notesRowLabelPinned", map[string]any{"title": title, "modified": modified})
+}

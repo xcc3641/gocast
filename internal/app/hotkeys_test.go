@@ -270,15 +270,17 @@ func TestHotkeyItems(t *testing.T) {
 		got = append(got, fmt.Sprintf("%v %s %q %v %v", it.item, it.name, it.accel, it.state, it.app != nil))
 	}
 	want := []string{
-		`{ a } A "Ctrl+Alt+1" 0 false`,
-		`{ b } B "Ctrl+Alt+2" 0 false`,
-		`{ c } C "" 0 false`,
-		`{com.apple.Safari  } Safari "" 0 true`,
-		`{com.example.gone  } com.example.gone "Alt+Cmd+G" 2 false`,
+		`{ a  } A "Ctrl+Alt+1" 0 false`,
+		`{ b  } B "Ctrl+Alt+2" 0 false`,
+		`{ c  } C "" 0 false`,
+		`{com.apple.Safari   } Safari "" 0 true`,
+		`{com.example.gone   } com.example.gone "Alt+Cmd+G" 2 false`,
 	}
-	for _, a := range sysact.Actions { // last, none set
-		want = append(want, fmt.Sprintf(`{  %s} %s "" 0 false`, a.ID, actionName(a.ID)))
+	for _, a := range sysact.Actions { // then, none set
+		want = append(want, fmt.Sprintf(`{  %s } %s "" 0 false`, a.ID, actionName(a.ID)))
 	}
+	// The notes' last, none set (copy.md 16.8).
+	want = append(want, `{   open} Notes "" 0 false`, `{   new} New Note "" 0 false`, `{   search} Search Notes "" 0 false`)
 	if !slices.Equal(got, want) {
 		t.Errorf("hotkeyItems:\n%s\nwant\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))
 	}

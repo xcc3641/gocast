@@ -7,12 +7,25 @@ import (
 	"gocast/internal/shortcut"
 )
 
-// Hotkey names what a hotkey of AppHotkeys, PresetHotkeys or
-// ActionHotkeys opens or runs: an app by its bundle ID, a terminal preset
-// by its ID, or one of Gocast's actions by its ID (one of the three).
+// Hotkey names what a hotkey of AppHotkeys, PresetHotkeys, ActionHotkeys
+// or NoteHotkeys opens or runs: an app by its bundle ID, a terminal
+// preset by its ID, one of Gocast's actions by its ID, or the notes
+// window (NoteOpen, NoteNew, NoteSearch): one of the four.
 type Hotkey struct {
-	App, Preset, Action string
+	App, Preset, Action, Note string
 }
+
+// What the hotkeys of the notes open (design.md 11.1): the notes window,
+// a new note in it, and it with Browse Notes open.
+const (
+	NoteOpen   = "open"
+	NoteNew    = "new"
+	NoteSearch = "search"
+)
+
+// NoteItems are the notes' items that may have a hotkey, in the order of
+// Settings › Shortcuts.
+var NoteItems = []string{NoteOpen, NoteNew, NoteSearch}
 
 // Hotkey is the hotkey of h, or "".
 func (s Settings) Hotkey(h Hotkey) string {
@@ -21,6 +34,8 @@ func (s Settings) Hotkey(h Hotkey) string {
 		return s.AppHotkeys[h.App]
 	case h.Action != "":
 		return s.ActionHotkeys[h.Action]
+	case h.Note != "":
+		return s.NoteHotkeys[h.Note]
 	}
 	return s.PresetHotkeys[h.Preset]
 }
@@ -35,6 +50,8 @@ func (s *Settings) SetHotkey(h Hotkey, accel string) {
 		m, key = &s.AppHotkeys, h.App
 	case h.Action != "":
 		m, key = &s.ActionHotkeys, h.Action
+	case h.Note != "":
+		m, key = &s.NoteHotkeys, h.Note
 	}
 	if key == "" {
 		return
@@ -82,8 +99,8 @@ func (s *Settings) SetAppHotkeyName(id, name string) {
 // with it.
 func (s *Settings) RemoveHotkey(h Hotkey) { s.SetHotkey(h, "") }
 
-// Hotkeys are the apps, presets and actions with a hotkey, in that
-// order, each by ID: always in the same order, for the first of two with
+// Hotkeys are the apps, presets, actions and notes' items with a hotkey,
+// in that order, each by ID: always in the same order, for the first of two with
 // the same hotkey (settings.json edited by hand) to be the one that has
 // it.
 func (s Settings) Hotkeys() []Hotkey {
@@ -96,6 +113,11 @@ func (s Settings) Hotkeys() []Hotkey {
 	}
 	for _, id := range slices.Sorted(maps.Keys(s.ActionHotkeys)) {
 		hs = append(hs, Hotkey{Action: id})
+	}
+	for _, id := range NoteItems {
+		if s.NoteHotkeys[id] != "" {
+			hs = append(hs, Hotkey{Note: id})
+		}
 	}
 	return hs
 }

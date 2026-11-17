@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"gocast/internal/presets"
+	"gocast/internal/settings"
 	"gocast/internal/shortcut"
 	"gocast/locales"
 )
@@ -16,8 +17,13 @@ import (
 // The IDs of Gocast's own items, which usage.json scores as it does apps
 // and presets, and the search finds as it does them.
 const (
-	clipItemID      = "gocast:clipboard"
-	termItemID      = "gocast:terminal"
+	clipItemID = "gocast:clipboard"
+	termItemID = "gocast:terminal"
+	// The notes' items (design.md 11.1): the notes window, a new note,
+	// Browse Notes. The Gocast group has the first alone.
+	notesItemID     = "gocast:notes"
+	newNoteItemID   = "gocast:new-note"
+	searchNotesID   = "gocast:search-notes"
 	addPresetItemID = "gocast:add-preset"
 	settingsItemID  = "gocast:settings"
 	quitItemID      = "gocast:quit"
@@ -35,6 +41,9 @@ type ownItem struct {
 	id, symbol, label string
 	caps              []string // its shortcut, at the right of its row in the Gocast group
 	run               func()
+	// searched: found by the search alone, not a row of the Gocast group
+	// (New Note, Search Notes: design.md 11.1).
+	searched bool
 }
 
 // gocastDo is what Gocast's own items do; update is the version ready,
@@ -43,25 +52,87 @@ type gocastDo struct {
 	clipboard, terminal, addPreset, settings, quit func()
 	update                                         string
 	relaunch                                       func()
+	// The notes' items and their hotkeys (design.md 11.1).
+	notes, newNote, searchNotes func()
+	notesKey, newNoteKey        string
+	searchNotesKey              string
 }
 
 // gocastItems are the rows of the Gocast group, in copy.md 2.2a's order:
-// the clipboard history and the floating terminal with their shortcuts,
-// Add Preset, Settings… with ⌘, and Quit Gocast, without ⌘Q; first,
-// while a new version is ready, Relaunch to Update to it, without keys
-// (design.md 4.5).
+// the clipboard history, Notes and the floating terminal with their
+// shortcuts, Add Preset, Settings… with ⌘, and Quit Gocast, without ⌘Q;
+// first, while a new version is ready, Relaunch to Update to it, without
+// keys (design.md 4.5); then New Note and Search Notes, which the search
+// finds but the group has not (design.md 11.1).
 func gocastItems(terminalKey, clipKey string, do gocastDo) []ownItem {
 	var own []ownItem
+	for _, fn := range []*func(){&do.clipboard, &do.terminal, &do.addPreset, &do.settings, &do.quit, &do.relaunch, &do.notes, &do.newNote, &do.searchNotes} {
+		if *fn == nil {
+			*fn = func() {} // a caller with no notes window (the tests')
+		}
+	}
 	if do.update != "" {
-		own = append(own, ownItem{updateItemID, "arrow.down.circle", locales.UpdateRelaunchTo(do.update), nil, do.relaunch})
+		own = append(own, ownItem{id: updateItemID, symbol: "arrow.down.circle", label: locales.UpdateRelaunchTo(do.update), run: do.relaunch})
 	}
 	return append(own, []ownItem{
-		{clipItemID, "doc.on.clipboard", locales.ClipboardHistory(), shortcut.Caps(clipKey), do.clipboard},
-		{termItemID, "apple.terminal", locales.MenuTerminal(), shortcut.Caps(terminalKey), do.terminal},
-		{addPresetItemID, "plus", locales.PresetsAdd(), nil, do.addPreset},
-		{settingsItemID, "gearshape", locales.TraySettings(), []string{"⌘", ","}, do.settings},
-		{quitItemID, "power", locales.TrayQuit(), nil, do.quit},
+		{id: clipItemID, symbol: "doc.on.clipboard", label: locales.ClipboardHistory(), caps: shortcut.Caps(clipKey), run: do.clipboard},
+		{id: notesItemID, symbol: ownSymbolOf(notesItemID), label: locales.NotesItem(), caps: shortcut.Caps(do.notesKey), run: do.notes},
+		{id: termItemID, symbol: "apple.terminal", label: locales.MenuTerminal(), caps: shortcut.Caps(terminalKey), run: do.terminal},
+		{id: addPresetItemID, symbol: "plus", label: locales.PresetsAdd(), run: do.addPreset},
+		{id: settingsItemID, symbol: "gearshape", label: locales.TraySettings(), caps: []string{"⌘", ","}, run: do.settings},
+		{id: quitItemID, symbol: "power", label: locales.TrayQuit(), run: do.quit},
+		{id: newNoteItemID, symbol: ownSymbolOf(newNoteItemID), label: locales.NotesNewItem(), caps: shortcut.Caps(do.newNoteKey), run: do.newNote, searched: true},
+		{id: searchNotesID, symbol: ownSymbolOf(searchNotesID), label: locales.NotesSearchItem(), caps: shortcut.Caps(do.searchNotesKey), run: do.searchNotes, searched: true},
 	}...)
+}
+
+// noteOwnID is the own item of the notes' hotkey item: noteItem's
+// reverse.
+func noteOwnID(item string) string {
+	switch item {
+	case settings.NoteNew:
+		return newNoteItemID
+	case settings.NoteSearch:
+		return searchNotesID
+	}
+	return notesItemID
+}
+
+// ownSymbolOf is the symbol of the notes' own item id (design.md 11.1).
+func ownSymbolOf(id string) string {
+	switch id {
+	case newNoteItemID:
+		return "square.and.pencil"
+	case searchNotesID:
+		return "doc.text.magnifyingglass"
+	}
+	return "note.text"
+}
+
+// noteItemName is the name of the notes' hotkey item (settings.NoteOpen,
+// ...), as the search panel's row has it (copy.md 16.8).
+func noteItemName(item string) string {
+	switch item {
+	case settings.NoteNew:
+		return locales.NotesNewItem()
+	case settings.NoteSearch:
+		return locales.NotesSearchItem()
+	}
+	return locales.NotesItem()
+}
+
+// noteItem is the hotkey's item of a notes' own item (design.md 11.1),
+// "" for another.
+func noteItem(id string) string {
+	switch id {
+	case notesItemID:
+		return settings.NoteOpen
+	case newNoteItemID:
+		return settings.NoteNew
+	case searchNotesID:
+		return settings.NoteSearch
+	}
+	return ""
 }
 
 // ownTitle is the title of Gocast's own item in the language of m.
@@ -77,6 +148,12 @@ func ownTitle(m locales.Messages, id string) string {
 		return m.TraySettings()
 	case quitItemID:
 		return m.TrayQuit()
+	case notesItemID:
+		return m.NotesItem()
+	case newNoteItemID:
+		return m.NotesNewItem()
+	case searchNotesID:
+		return m.NotesSearchItem()
 	}
 	return ""
 }
@@ -92,10 +169,22 @@ func ownSearchNames(id, update string) []string {
 		return append([]string{locales.In("en").UpdateRelaunchTo(update), locales.In("zh-Hans").UpdateRelaunchTo(update)}, updateSearchWords...)
 	}
 	names := []string{ownTitle(locales.In("en"), id), ownTitle(locales.In("zh-Hans"), id)}
-	if id == clipItemID {
+	switch id {
+	case clipItemID:
 		names = append(names, clipSearchWords...)
+	case notesItemID, newNoteItemID, searchNotesID:
+		names = append(names, noteSearchWords[id]...)
 	}
 	return names
+}
+
+// noteSearchWords are the other words the notes' items are found by
+// (copy.md 16.1); not 备忘录, Apple Notes' name, which those looking for
+// it would find ours first by.
+var noteSearchWords = map[string][]string{
+	notesItemID:   {"便签", "备忘", "记事本", "note", "notes", "memo", "scratchpad", "jot"},
+	newNoteItemID: {"写笔记", "记一下", "新便签", "create note", "quick note", "new memo"},
+	searchNotesID: {"找笔记", "浏览笔记", "所有笔记", "find note", "browse notes"},
 }
 
 // updateSearchWords find Relaunch to Update by its first letters, in
@@ -213,7 +302,9 @@ func suggestionRows(suggestions []string, item func(id string) int, own []ownIte
 		rows = append(rows, panelRow{title: locales.SearchGocastGroup(), item: -1, own: -1})
 	}
 	for i, o := range own {
-		rows = append(rows, panelRow{item: -1, own: i, group: true, later: o.id == updateItemID})
+		if !o.searched {
+			rows = append(rows, panelRow{item: -1, own: i, group: true, later: o.id == updateItemID})
+		}
 	}
 	return rows
 }

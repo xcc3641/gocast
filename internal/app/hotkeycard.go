@@ -43,6 +43,8 @@ type hotkeyRecorder struct {
 // preset or an action; ok is false for the others.
 func entryHotkey(e entry) (h settings.Hotkey, ok bool) {
 	switch {
+	case noteItem(e.own) != "":
+		return settings.Hotkey{Note: noteItem(e.own)}, true
 	case e.calc || e.own != "":
 		return h, false
 	case e.app != nil:
@@ -216,8 +218,12 @@ func (l *launcher) recorderIcon(c *ui.Context, k tokens) {
 			return
 		}
 	}
+	symbol := "apple.terminal.fill"
+	if noteItem(e.own) != "" {
+		symbol = ownSymbolOf(e.own)
+	}
 	ui.Box(c).Size(16, 16).Radius(4).Background(k.keycap).Center().Shrink(0).Children(func() {
-		sfsymbols.Symbol(c, "apple.terminal.fill").Size(10).Color(k.text)
+		sfsymbols.Symbol(c, symbol).Size(10).Color(k.text)
 	})
 }
 

@@ -2741,5 +2741,239 @@
   "appFinder": "Finder",
   "@appFinder": {
     "description": "Finder, as the notice that Gocast may not control it names it (copy.md 15.4)."
+  },
+  "notesItem": "Notes",
+  "@notesItem": {
+    "description": "The search panel's row that shows the notes window, and its name in Settings › Shortcuts (copy.md 16.1, 16.8)."
+  },
+  "notesNewItem": "New Note",
+  "@notesNewItem": {
+    "description": "The search panel's row that opens a new note; the notes window's ⌘K row and the empty state's button (copy.md 16.1, 16.3, 16.5)."
+  },
+  "notesSearchItem": "Search Notes",
+  "@notesSearchItem": {
+    "description": "The search panel's row that opens the notes window with Browse Notes (copy.md 16.1)."
+  },
+  "footerCreate": "Create",
+  "@footerCreate": {
+    "description": "Search panel: the primary action of New Note (copy.md 16.1)."
+  },
+  "notesUntitled": "Untitled",
+  "@notesUntitled": {
+    "description": "Notes: the title of a note whose first line is empty, in the top bar and Browse Notes (copy.md 16.2, 16.4)."
+  },
+  "notesNewTip": "New Note ⌘N",
+  "@notesNewTip": {
+    "description": "Notes: the tooltip of the top bar's New button (copy.md 16.2)."
+  },
+  "notesBrowseTip": "Browse Notes ⌘P",
+  "@notesBrowseTip": {
+    "description": "Notes: the tooltip of the top bar's Browse button (copy.md 16.2)."
+  },
+  "notesBrowse": "Browse Notes",
+  "@notesBrowse": {
+    "description": "Notes: the Browse button's label, and the ⌘K row (copy.md 16.5, 16.9)."
+  },
+  "notesPinnedTip": "Pinned. Press ⇧⌘P to unpin.",
+  "@notesPinnedTip": {
+    "description": "Notes: the tooltip of the pin before the title of a pinned note (copy.md 16.2)."
+  },
+  "notesPlaceholder": "Start writing. The first line is the title.",
+  "@notesPlaceholder": {
+    "description": "Notes: the placeholder of an empty note (copy.md 16.2)."
+  },
+  "notesEmptyTitle": "No notes yet",
+  "@notesEmptyTitle": {
+    "description": "Notes: the title of the empty state, once the last note is deleted (copy.md 16.3)."
+  },
+  "notesEmptyBody": "Jot something down. It’s saved automatically on this Mac.",
+  "@notesEmptyBody": {
+    "description": "Notes: the empty state's line (copy.md 16.3)."
+  },
+  "notesSearchPlaceholder": "Search notes",
+  "@notesSearchPlaceholder": {
+    "description": "Notes: the placeholder of Browse Notes' search field (copy.md 16.4)."
+  },
+  "notesSectionPinned": "Pinned",
+  "@notesSectionPinned": {
+    "description": "Browse Notes: the title over the notes pinned (copy.md 16.4)."
+  },
+  "notesSectionRecent": "Recent",
+  "@notesSectionRecent": {
+    "description": "Browse Notes: the title over the other notes, while some are pinned (copy.md 16.4)."
+  },
+  "notesNoMatch": "No matching notes",
+  "@notesNoMatch": {
+    "description": "Browse Notes: the line when the search finds nothing (copy.md 16.4)."
+  },
+  "notesPin": "Pin",
+  "@notesPin": {
+    "description": "Notes: the ⌘K row that pins the note (copy.md 16.5)."
+  },
+  "notesUnpin": "Unpin",
+  "@notesUnpin": {
+    "description": "Notes: the ⌘K row that unpins the note (copy.md 16.5)."
+  },
+  "notesCopyMarkdown": "Copy as Markdown",
+  "@notesCopyMarkdown": {
+    "description": "Notes: the ⌘K row that copies the note as Markdown (copy.md 16.5)."
+  },
+  "notesDelete": "Delete Note",
+  "@notesDelete": {
+    "description": "Notes: the ⌘K row that moves the note to the Trash (copy.md 16.5)."
+  },
+  "notesFindPlaceholder": "Find in this note",
+  "@notesFindPlaceholder": {
+    "description": "Notes: the find bar's placeholder and label (copy.md 16.5a)."
+  },
+  "notesFindCount": "{n} / {total}",
+  "@notesFindCount": {
+    "description": "Notes: the find bar's count, the match shown of the matches (copy.md 16.5a).",
+    "placeholders": {
+      "n": {
+        "type": "String",
+        "example": "2"
+      },
+      "total": {
+        "type": "String",
+        "example": "5"
+      }
+    }
+  },
+  "notesFindCountSpoken": "{n} of {total}",
+  "@notesFindCountSpoken": {
+    "description": "Notes: the find bar's count as assistive technology reads it (copy.md 16.9).",
+    "placeholders": {
+      "n": {
+        "type": "String",
+        "example": "2"
+      },
+      "total": {
+        "type": "String",
+        "example": "5"
+      }
+    }
+  },
+  "notesFindNone": "Not found",
+  "@notesFindNone": {
+    "description": "Notes: the find bar's count when nothing is found (copy.md 16.5a)."
+  },
+  "notesFindPrevious": "Previous",
+  "@notesFindPrevious": {
+    "description": "Notes: the find bar's previous button (copy.md 16.5a)."
+  },
+  "notesFindNext": "Next",
+  "@notesFindNext": {
+    "description": "Notes: the find bar's next button (copy.md 16.5a)."
+  },
+  "notesFindClose": "Close",
+  "@notesFindClose": {
+    "description": "Notes: the find bar's close button (copy.md 16.5a)."
+  },
+  "notesCopied": "Markdown copied",
+  "@notesCopied": {
+    "description": "Notes: the notice once the note is copied as Markdown (copy.md 16.6)."
+  },
+  "notesPinned": "Pinned",
+  "@notesPinned": {
+    "description": "Notes: the notice once the note is pinned (copy.md 16.6)."
+  },
+  "notesUnpinned": "Unpinned",
+  "@notesUnpinned": {
+    "description": "Notes: the notice once the note is unpinned (copy.md 16.6)."
+  },
+  "notesTrashed": "Moved to Trash",
+  "@notesTrashed": {
+    "description": "Notes: the notice once a note is deleted (copy.md 16.6)."
+  },
+  "notesZoom": "Zoom {n}%",
+  "@notesZoom": {
+    "description": "Notes: the notice as ⌘+, ⌘- or ⌘0 changes the text size (copy.md 16.6).",
+    "placeholders": {
+      "n": {
+        "type": "String",
+        "example": "115"
+      }
+    }
+  },
+  "notesNoPinned": "No pinned note {n}",
+  "@notesNoPinned": {
+    "description": "Notes: the notice when ⌘n has no nth pinned note (copy.md 16.6).",
+    "placeholders": {
+      "n": {
+        "type": "String",
+        "example": "3"
+      }
+    }
+  },
+  "notesSaveFailed": "This note couldn’t be saved. Your text is still here, so don’t quit Gocast yet.",
+  "@notesSaveFailed": {
+    "description": "Notes: the banner when the note could not be written (copy.md 16.7)."
+  },
+  "notesTryAgain": "Try Again",
+  "@notesTryAgain": {
+    "description": "Notes: the save banner's button (copy.md 16.7)."
+  },
+  "notesSaved": "Saved",
+  "@notesSaved": {
+    "description": "Notes: the notice once a save that failed succeeds (copy.md 16.7)."
+  },
+  "notesQuitTitle": "A note hasn’t been saved",
+  "@notesQuitTitle": {
+    "description": "The alert when Gocast quits with a note not saved (copy.md 16.7)."
+  },
+  "notesQuitDetail": "If you quit now, your latest changes will be lost.",
+  "@notesQuitDetail": {
+    "description": "The quit alert's line (copy.md 16.7)."
+  },
+  "notesQuitAnyway": "Quit Anyway",
+  "@notesQuitAnyway": {
+    "description": "The quit alert's button that quits (copy.md 16.7)."
+  },
+  "notesEditorLabel": "Note, {title}",
+  "@notesEditorLabel": {
+    "description": "Notes: the editor as assistive technology reads it (copy.md 16.9).",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Groceries"
+      }
+    }
+  },
+  "notesTodoDone": "To-do, done",
+  "@notesTodoDone": {
+    "description": "Notes: a ticked task's box as assistive technology reads it (copy.md 16.9)."
+  },
+  "notesTodoOpen": "To-do, not done",
+  "@notesTodoOpen": {
+    "description": "Notes: an unticked task's box as assistive technology reads it (copy.md 16.9)."
+  },
+  "notesRowLabel": "{title}, {modified}",
+  "@notesRowLabel": {
+    "description": "Browse Notes: a row as assistive technology reads it (copy.md 16.9).",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Groceries"
+      },
+      "modified": {
+        "type": "String",
+        "example": "Today 14:05"
+      }
+    }
+  },
+  "notesRowLabelPinned": "{title}, Pinned, {modified}",
+  "@notesRowLabelPinned": {
+    "description": "Browse Notes: a pinned note's row as assistive technology reads it (copy.md 16.9).",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Groceries"
+      },
+      "modified": {
+        "type": "String",
+        "example": "Today 14:05"
+      }
+    }
   }
 }

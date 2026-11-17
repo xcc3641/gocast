@@ -162,6 +162,13 @@ func (p *prefsWindow) makeHotkeyRows() []hkRow {
 		id := "own:" + strconv.Itoa(r)
 		rows = append(rows, hkRow{id: id, own: r, kind: hkGocast, name: shortcutLabel(r), match: search.NewItem(id, shortcutLabel(r))})
 	}
+	// The notes' three after them, Gocast's too, with no default
+	// (design.md 11.1, copy.md 16.8).
+	for _, item := range settings.NoteItems {
+		id, name := "note:"+item, noteItemName(item)
+		rows = append(rows, hkRow{id: id, item: settings.Hotkey{Note: item}, kind: hkGocast, name: name,
+			match: search.NewItem(id, name, ownSearchNames(noteOwnID(item), "")...)})
+	}
 	type keyed struct {
 		row hkRow
 		key string
@@ -828,6 +835,9 @@ func (p *prefsWindow) rowIcon(c *ui.Context, k tokens, r *hkRow) {
 	switch {
 	case r.own > 0:
 		square([4]string{"", "magnifyingglass", "apple.terminal", "doc.on.clipboard"}[r.own], 11)
+		return
+	case r.item.Note != "":
+		square(ownSymbolOf(noteOwnID(r.item.Note)), 11)
 		return
 	case r.kind == hkPreset:
 		square("apple.terminal.fill", 11)

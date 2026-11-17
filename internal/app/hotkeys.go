@@ -140,6 +140,10 @@ func (g *gocast) hotkeyItems() []hotkeyItem {
 	for _, a := range sysact.Actions {
 		add(actionHotkey(a.ID), actionName(a.ID), nil)
 	}
+	for _, id := range settings.NoteItems {
+		h := settings.Hotkey{Note: id}
+		add(h, g.hotkeyLabel(h), nil)
+	}
 	return items
 }
 
@@ -176,6 +180,9 @@ func shortcutLabel(row int) string {
 func (g *gocast) hotkeyLabel(h settings.Hotkey) string {
 	if h.Action != "" {
 		return actionName(h.Action)
+	}
+	if h.Note != "" {
+		return noteItemName(h.Note)
 	}
 	if h.App == "" {
 		if i := presets.Find(g.presets, h.Preset); i >= 0 {
@@ -318,6 +325,8 @@ func (g *gocast) hotkeyFunc(h settings.Hotkey) func() {
 		return func() { g.appHotkeyPressed(h.App) }
 	case h.Action != "":
 		return func() { g.actionHotkeyPressed(h.Action) }
+	case h.Note != "":
+		return func() { g.notes.hotkey(h.Note) }
 	}
 	return func() { g.presetHotkeyPressed(h.Preset) }
 }

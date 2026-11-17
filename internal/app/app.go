@@ -44,6 +44,7 @@ type gocast struct {
 	term     *termPanel
 	host     *termHost // where the floating terminal's programs run
 	prefs    *prefsWindow
+	notes    *notesWindow
 	tray     *mygo.Tray
 	clip     *clipService
 	calc     *calcService
@@ -336,6 +337,7 @@ func (g *gocast) ready() {
 	g.term = newTermPanel(g)
 	g.term.restore() // the tabs of the terminals that went on as Gocast quit
 	g.prefs = newPrefsWindow(g)
+	g.notes = newNotesWindow(g)
 	g.updates = newUpdateService(g, time.Now())
 	g.registerShortcuts()
 	g.setUpTray()

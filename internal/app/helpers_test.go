@@ -62,6 +62,11 @@ func TestMain(m *testing.M) {
 	sysConfirmAction = func(string, bool) bool { return false }
 	sysOpenURL = func(string) error { return errors.New("no System Settings in tests") }
 	sysBackground = func(_ *gocast, work func() func()) { work()() }
+	// Nor of the notes: no note goes to the user's Trash (useFakeTrash),
+	// no alert asks before quitting, and a note is written at once.
+	sysTrash = func(string) error { return errors.New("no Trash in tests") }
+	sysConfirmQuitUnsaved = func() bool { return false }
+	sysNotesBackground = func(_ *notesWindow, work func() func()) { work()() }
 	os.Exit(m.Run())
 }
 

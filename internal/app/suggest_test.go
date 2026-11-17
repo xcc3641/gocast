@@ -23,6 +23,9 @@ func TestGocastItems(t *testing.T) {
 		addPreset: func() { did = append(did, "add") },
 		settings:  func() { did = append(did, "settings") },
 		quit:      func() { did = append(did, "quit") },
+		notes:     func() { did = append(did, "notes") },
+		newNote:   func() { did = append(did, "new-note") },
+		notesKey:  "Alt+Cmd+N",
 	}
 	// copy.md 2.2a: the order; design.md 2.5a: the symbols and the keys,
 	// none for Add Preset and Quit Gocast (no ⌘Q).
@@ -33,23 +36,26 @@ func TestGocastItems(t *testing.T) {
 	}
 	want := []string{
 		"gocast:clipboard doc.on.clipboard 剪贴板历史 ⌃⌘V",
+		"gocast:notes note.text 笔记 ⌥⌘N",
 		"gocast:terminal apple.terminal 打开悬浮终端 ⌃`",
 		"gocast:add-preset plus 添加预设 ",
 		"gocast:settings gearshape 设置… ⌘,",
 		"gocast:quit power 退出 Gocast ",
+		"gocast:new-note square.and.pencil 新建笔记 ",
+		"gocast:search-notes doc.text.magnifyingglass 搜索笔记 ",
 	}
 	if !slices.Equal(got, want) {
 		t.Errorf("items:\n got %q\nwant %q", got, want)
 	}
-	if want := []string{"clipboard", "terminal", "add", "settings", "quit"}; !slices.Equal(did, want) {
+	if want := []string{"clipboard", "notes", "terminal", "add", "settings", "quit", "new-note"}; !slices.Equal(did, want) {
 		t.Errorf("ran %q, want %q", did, want)
 	}
 	// The shortcuts as the user set them; none registered, no keys.
-	if o := gocastItems("Cmd+Alt+T", "Cmd+Shift+V", do); strings.Join(o[0].caps, "") != "⇧⌘V" || strings.Join(o[1].caps, "") != "⌥⌘T" {
-		t.Errorf("caps %q, %q", o[0].caps, o[1].caps)
+	if o := gocastItems("Cmd+Alt+T", "Cmd+Shift+V", do); strings.Join(o[0].caps, "") != "⇧⌘V" || strings.Join(o[2].caps, "") != "⌥⌘T" {
+		t.Errorf("caps %q, %q", o[0].caps, o[2].caps)
 	}
-	if o := gocastItems("", "", do); len(o[0].caps) != 0 || len(o[1].caps) != 0 {
-		t.Errorf("caps without a shortcut: %q, %q", o[0].caps, o[1].caps)
+	if o := gocastItems("", "", do); len(o[0].caps) != 0 || len(o[2].caps) != 0 {
+		t.Errorf("caps without a shortcut: %q, %q", o[0].caps, o[2].caps)
 	}
 }
 
@@ -166,7 +172,7 @@ func TestSuggestionRows(t *testing.T) {
 	own := gocastItems("", "", gocastDo{})
 	items := []string{"preset:p", clipItemID, "app:a"}
 	item := func(id string) int { return slices.Index(items, id) }
-	group := []string{"[Gocast]", "+gocast:clipboard", "+gocast:terminal", "+gocast:add-preset", "+gocast:settings", "+gocast:quit"}
+	group := []string{"[Gocast]", "+gocast:clipboard", "+gocast:notes", "+gocast:terminal", "+gocast:add-preset", "+gocast:settings", "+gocast:quit"}
 
 	// Gocast's own items show as theirs, the clipboard history too, and
 	// again in the Gocast group; what isn't there is skipped.
@@ -194,9 +200,9 @@ func TestStepRow(t *testing.T) {
 	inLocale(t, "en")
 	own := gocastItems("", "", gocastDo{})
 	rows := suggestionRows([]string{"gocast:terminal", "gocast:settings"}, func(string) int { return -1 }, own)
-	// [Suggestions] terminal settings [Gocast] clipboard terminal add settings quit
+	// [Suggestions] terminal settings [Gocast] clipboard notes terminal add settings quit
 	for _, c := range []struct{ from, step, want int }{
-		{1, 1, 2}, {2, 1, 4}, {4, -1, 2}, {1, -1, 1}, {8, 1, 8}, {8, 3, 8},
+		{1, 1, 2}, {2, 1, 4}, {4, -1, 2}, {1, -1, 1}, {9, 1, 9}, {9, 3, 9},
 		{1, 3, 5}, {-1, 1, 1}, {99, -1, 1},
 	} {
 		if got := stepRow(rows, c.from, c.step); got != c.want {
@@ -280,7 +286,7 @@ func TestLauncherSuggestions(t *testing.T) {
 	l.ranked = u.Ranked(now)
 	l.filtered = noQuery
 	l.filter()
-	group := []string{"title:Gocast", "group:gocast:clipboard", "group:gocast:terminal", "group:gocast:add-preset", "group:gocast:settings", "group:gocast:quit"}
+	group := []string{"title:Gocast", "group:gocast:clipboard", "group:gocast:notes", "group:gocast:terminal", "group:gocast:add-preset", "group:gocast:settings", "group:gocast:quit"}
 	want := append([]string{"title:Suggestions", "> app:dev.zed.Zed", "gocast:terminal", "preset:p", "app:com.apple.finder", "app:com.apple.Safari"}, group...)
 	if got := shown(l); !slices.Equal(got, want) {
 		t.Errorf("as it shows:\n got %q\nwant %q", got, want)

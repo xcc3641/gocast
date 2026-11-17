@@ -69,7 +69,8 @@ func rowIndex(t *testing.T, p *prefsWindow, id string) int {
 
 func TestHotkeyPrefsRows(t *testing.T) {
 	p, tt, _ := hotkeyPrefs(t, "en")
-	want := []string{"own:1", "own:2", "own:3", "app:com.apple.finder", "preset:p", "app:com.apple.Notes", "app:com.apple.Safari", "app:com.apple.Terminal"}
+	// The notes' three after Gocast's own (design.md 11.1).
+	want := []string{"own:1", "own:2", "own:3", "note:open", "note:new", "note:search", "app:com.apple.finder", "preset:p", "app:com.apple.Notes", "app:com.apple.Safari", "app:com.apple.Terminal"}
 	for _, a := range sysact.Actions { // last (TestHotkeyPrefsActions)
 		want = append(want, actionPrefix+a.ID)
 	}
@@ -241,14 +242,14 @@ func TestHotkeyPrefsRecording(t *testing.T) {
 	if p.hk.rec.id != "app:com.apple.finder" || p.hk.rec.problem != locales.HotkeyNeedsModifier() {
 		t.Errorf("Down while recording: %q %q", p.hk.rec.id, p.hk.rec.problem)
 	}
-	if err := tt.Click("Notes"); err != nil {
+	if err := tt.Click("Safari"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Frame()
 	if p.isRecording() || p.g.suspended {
 		t.Errorf("a click on another row: recording %q", p.hk.rec.id)
 	}
-	if r := p.hkRowAt(p.hk.chosen); r == nil || r.id != "app:com.apple.Notes" {
+	if r := p.hkRowAt(p.hk.chosen); r == nil || r.id != "app:com.apple.Safari" {
 		t.Errorf("chosen after the click: %v", r)
 	}
 

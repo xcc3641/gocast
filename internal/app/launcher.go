@@ -716,6 +716,8 @@ func primaryName(e entry) string {
 		return locales.FooterQuit()
 	case e.own == updateItemID:
 		return locales.UpdateRelaunch()
+	case e.own == newNoteItemID:
+		return locales.FooterCreate()
 	case e.action != "":
 		return locales.FooterRun()
 	case e.own == "" && e.app == nil:
@@ -807,7 +809,11 @@ func (l *launcher) actions() []action {
 		return l.calcActions()
 	}
 	if e.own != "" { // its primary action alone (design.md 2.5a)
-		return []action{{ownSymbol(l.own, e.own), primaryName(e), []string{"↩"}, l.primary}}
+		as := []action{{ownSymbol(l.own, e.own), primaryName(e), []string{"↩"}, l.primary}}
+		if h, ok := entryHotkey(e); ok { // a note's item: and its hotkey (design.md 11.1)
+			as = append(as, l.hotkeyActions(h, l.g.hotkeyLabel(h), e)...)
+		}
+		return as
 	}
 	if e.action != "" { // Run, and its hotkey (design.md 2.9)
 		as := []action{{"play", primaryName(e), []string{"↩"}, l.primary}}
@@ -1044,6 +1050,13 @@ func (l *launcher) ownItems() []ownItem {
 		quit:      mygo.App.Quit,
 		update:    l.g.updates.readyVersion(),
 		relaunch:  func() { l.g.updates.relaunch() }, // the panel stays, saying so (design.md 4.5)
+		// The panel hides, the notes window shows (design.md 11.1).
+		notes:          func() { l.hide(); l.g.notes.open(notesShow) },
+		newNote:        func() { l.hide(); l.g.notes.open(notesNew) },
+		searchNotes:    func() { l.hide(); l.g.notes.open(notesBrowse) },
+		notesKey:       l.g.settings.Hotkey(settings.Hotkey{Note: settings.NoteOpen}),
+		newNoteKey:     l.g.settings.Hotkey(settings.Hotkey{Note: settings.NoteNew}),
+		searchNotesKey: l.g.settings.Hotkey(settings.Hotkey{Note: settings.NoteSearch}),
 	})
 }
 

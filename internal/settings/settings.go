@@ -113,6 +113,46 @@ type Settings struct {
 	// an app no longer installed, rather than its bundle ID. Gone with
 	// the hotkey; files of before have none.
 	AppHotkeyNames map[string]string `json:"appHotkeyNames,omitempty"`
+
+	// NoteHotkeys open the notes window, by what they open: NoteOpen,
+	// NoteNew, NoteSearch; none by default (copy.md 16.8).
+	NoteHotkeys map[string]string `json:"noteHotkeys,omitempty"`
+
+	// NotesZoom is the notes' text size in percent, 0 for 100 (design.md
+	// 11.4: one of NotesZooms, for every note).
+	NotesZoom int `json:"notesZoomPercent,omitempty"`
+	// NotesFrame is where the user left the notes window, and its size;
+	// nil until it first shows (design.md 11.2).
+	NotesFrame *Frame `json:"notesWindow,omitempty"`
+}
+
+// Frame is a window's place and size, in DIPs of the desktop.
+type Frame struct {
+	X      int `json:"x"`
+	Y      int `json:"y"`
+	Width  int `json:"width"`
+	Height int `json:"height"`
+}
+
+// NotesZooms are the steps of the notes' text size, in percent (design.md
+// 11.4).
+var NotesZooms = []int{75, 85, 100, 115, 130, 150, 175, 200}
+
+// Zoom is the notes' text size in percent: one of NotesZooms, 100 for
+// any other (settings.json edited by hand).
+func (s Settings) Zoom() int {
+	if slices.Contains(NotesZooms, s.NotesZoom) {
+		return s.NotesZoom
+	}
+	return 100
+}
+
+// SetZoom makes pct the notes' text size, 100 the default.
+func (s *Settings) SetZoom(pct int) {
+	s.NotesZoom = pct
+	if pct == 100 {
+		s.NotesZoom = 0
+	}
 }
 
 // Calculator reports whether the search panel calculates.
