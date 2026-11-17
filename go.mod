@@ -4,7 +4,7 @@ go 1.27.3
 
 require (
 	github.com/ebitengine/purego v0.11.1
-	github.com/egoist/mygo v0.9.1-0.20261112135621-87b823988f48
+	github.com/egoist/mygo v0.9.3-0.20261117165500-6fd33ee0b7b0
 	github.com/mozillazg/go-pinyin v0.21.0
 	golang.org/x/image v0.46.0
 	howett.net/plist v1.0.1
@@ -15,5 +15,3 @@ require (
 	golang.org/x/net v0.59.0 // indirect
 	golang.org/x/text v0.43.0 // indirect
 )
-
-replace github.com/egoist/mygo => github.com/xcc3641/mygo v0.9.1-0.20261117073342-dd8832229b30

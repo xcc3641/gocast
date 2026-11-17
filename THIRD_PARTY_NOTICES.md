@@ -7,7 +7,7 @@ Gocast is licensed under the Apache License, Version 2.0 (see LICENSE and NOTICE
 | Component | Version | License |
 | --- | --- | --- |
 | github.com/ebitengine/purego | v0.11.1 | Apache-2.0 |
-| github.com/egoist/mygo | v0.9.1-0.20261117073342-dd8832229b30 | MIT; Apache-2.0 |
+| github.com/egoist/mygo | v0.9.3-0.20261117165500-6fd33ee0b7b0 | MIT; Apache-2.0 |
 | github.com/go-text/typesetting | v0.3.5 | Unlicense OR BSD-3-Clause |
 | github.com/mozillazg/go-pinyin | v0.21.0 | MIT |
 | golang.org/x/image | v0.46.0 | BSD-3-Clause |
@@ -237,7 +237,7 @@ Compiled into the Gocast executable (`Contents/MacOS/Gocast`).
    limitations under the License.
 ```
 
-### github.com/egoist/mygo v0.9.1-0.20261117073342-dd8832229b30
+### github.com/egoist/mygo v0.9.3-0.20261117165500-6fd33ee0b7b0
 
 `LICENSE` (MIT):
 
