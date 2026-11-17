@@ -708,6 +708,77 @@ func TestNotesFormatKeys(t *testing.T) {
 	}
 }
 
+func TestNotesQuitKey(t *testing.T) {
+	// ⌘Q is the application menu's Quit, which has the key before any
+	// window: in the notes window it hides it, Gocast staying; anywhere
+	// else Gocast quits (design.md 11.2).
+	nt := notesTester(t, "Groceries\n")
+	g := nt.g
+	g.notes = nt.notesWindow
+	quits := 0
+	key := true
+	oldQuit, oldKey := sysAppQuit, sysNotesKey
+	sysAppQuit = func() { quits++ }
+	sysNotesKey = func(*notesWindow) bool { return key }
+	t.Cleanup(func() { sysAppQuit, sysNotesKey = oldQuit, oldKey })
+
+	quit := g.appMenu().ItemByID("quit")
+	if quit == nil || quit.Accelerator != "Cmd+Q" {
+		t.Fatalf("no ⌘Q in the application menu: %+v", quit)
+	}
+	nt.typ("x")
+	quit.Click(quit, nil)
+	if nt.shown || quits != 0 {
+		t.Fatalf("⌘Q in the notes window: shown %v, quit %d times", nt.shown, quits)
+	}
+	if got := nt.files(t)[noteID(0)]; got != "Groceriesx\n" {
+		t.Errorf("not written as it hid: %q", got)
+	}
+	// Another window has the keyboard, the notes showing behind it.
+	nt.open(notesShow)
+	nt.frame()
+	key = false
+	quit.Click(quit, nil)
+	if quits != 1 || !nt.shown {
+		t.Errorf("⌘Q elsewhere: quit %d times, notes shown %v", quits, nt.shown)
+	}
+	// The notes hidden: whatever had the keyboard last, Gocast quits.
+	nt.hide()
+	key = true
+	quit.Click(quit, nil)
+	if quits != 2 {
+		t.Errorf("⌘Q with the notes hidden: quit %d times", quits)
+	}
+}
+
+// The application menu leaves the notes' keys to the window: no item
+// takes ⌘=, ⌘- or ⌘0 (a View menu's zoom), and the Edit menu's Paste is
+// there, which the window takes as a command (onCommand).
+func TestAppMenuKeys(t *testing.T) {
+	g := &gocast{}
+	var accels []string
+	var walk func(items []*mygo.MenuItem)
+	walk = func(items []*mygo.MenuItem) {
+		for _, it := range items {
+			if it.Accelerator != "" {
+				accels = append(accels, it.Accelerator)
+			}
+			walk(it.Submenu)
+		}
+	}
+	walk(g.appMenu().Items())
+	for _, taken := range []string{"Cmd+Plus", "CmdOrCtrl+Plus", "CmdOrCtrl+=", "Cmd+=", "CmdOrCtrl+-", "Cmd+-", "CmdOrCtrl+0", "Cmd+0"} {
+		if slices.Contains(accels, taken) {
+			t.Errorf("the menu takes %s: %q", taken, accels)
+		}
+	}
+	for _, kept := range []string{"Cmd+Q", "CmdOrCtrl+V", "CmdOrCtrl+C", "CmdOrCtrl+Z", "CmdOrCtrl+W"} {
+		if !slices.Contains(accels, kept) {
+			t.Errorf("no %s: %q", kept, accels)
+		}
+	}
+}
+
 func TestNotesTypedShortcuts(t *testing.T) {
 	// --- alone on a line makes a rule; [text](url) a link; a full-width
 	// ＃ of an input method at the start of a line a heading's mark.

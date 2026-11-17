@@ -67,6 +67,8 @@ func TestMain(m *testing.M) {
 	sysTrash = func(string) error { return errors.New("no Trash in tests") }
 	sysConfirmQuitUnsaved = func() bool { return false }
 	sysNotesBackground = func(_ *notesWindow, work func() func()) { work()() }
+	sysAppQuit = func() {} // no test quits the test binary's app
+	sysNotesKey = func(*notesWindow) bool { return false }
 	os.Exit(m.Run())
 }
 

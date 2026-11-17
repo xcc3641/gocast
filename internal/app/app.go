@@ -341,6 +341,7 @@ func (g *gocast) ready() {
 	g.updates = newUpdateService(g, time.Now())
 	g.registerShortcuts()
 	g.setUpTray()
+	g.setUpAppMenu()
 	g.clip.start()
 	g.calc.start()
 	g.updates.start()

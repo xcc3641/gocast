@@ -68,6 +68,8 @@ var (
 		data, err := os.ReadFile(path)
 		return string(data), err
 	}
+	// sysNotesKey reports whether the notes window has the keyboard.
+	sysNotesKey = func(n *notesWindow) bool { return n.win != nil && n.win.IsFocused() }
 	// sysNotesBackground runs work off the main thread, then what it
 	// returns on it, in the notes window's frame: the writing of a note.
 	// Tests run both at once.
