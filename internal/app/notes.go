@@ -666,7 +666,7 @@ func (n *notesWindow) togglePin(id string) {
 	} else {
 		n.tell(notice{icon: "pin.slash", text: locales.NotesUnpinned()})
 	}
-	n.browse.refilter(n)
+	n.browse.regroup(n)
 }
 
 // pinCurrent pins or unpins the note showing, written first if new.

@@ -7,6 +7,8 @@ package app
 import (
 	"slices"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/egoist/mygo/plugins/sfsymbols"
 	"github.com/egoist/mygo/ui"
@@ -36,9 +38,18 @@ type noteBrowse struct {
 	composing bool
 	focus     bool // focus the field in the next frame
 	rows      []browseRow
-	list      ui.ListState
-	chosen    int
-	scroll    bool // show the choice in the next frame
+	found     []notes.Match // what the query found, rows laid out from it
+	// searches counts the searches started: a search's results are shown
+	// only while it is the last one started (design.md 11.6).
+	searches uint64
+	list     ui.ListState
+	chosen   int
+	scroll   bool // show the choice in the next frame
+	// whens says when the notes listed changed, by note (a note changed
+	// is another), as of whensDay: the system's formatter is slow for
+	// rows built many times a frame.
+	whens    map[*notes.Note]string
+	whensDay string
 }
 
 // browseRow is a row of Browse Notes: a section's title, or a note found.
@@ -58,7 +69,8 @@ func (n *notesWindow) openBrowse() {
 	b := &n.browse
 	n.menu.open = false
 	b.open, b.query, b.focus = true, "", true
-	b.refilter(n)
+	b.whens = nil // the system's language or clock may have changed
+	b.refilter(n, false)
 	b.chooseNote(n.curID())
 	n.redraw()
 }
@@ -91,22 +103,70 @@ func (n *notesWindow) closeCards() {
 	n.menu.open = false
 }
 
-// refilter finds the rows again for the query, the choice on the note it
-// was on, else the first (design.md 11.6).
-func (b *noteBrowse) refilter(n *notesWindow) {
+// refilter finds the notes again for the query, the choice then on the
+// first if first, else on the note it was on (design.md 11.6). The query
+// empty lists them all at once; else the search runs off the main
+// thread, for typing never to wait for it, the rows as they were until
+// it is done, and of the searches typing starts, only the last is shown.
+func (b *noteBrowse) refilter(n *notesWindow, first bool) {
 	if !b.open {
 		return
 	}
-	was := b.chosenID()
-	b.rows = browseRows(n.store, b.query)
+	b.searches++
+	query, list := b.query, n.store.List()
+	if strings.TrimSpace(query) == "" {
+		b.show(n, notes.Search(list, query), first)
+		return
+	}
+	at := b.searches
+	sysNotesBackground(n, func() func() {
+		found := notes.Search(list, query)
+		return func() {
+			if b.open && b.searches == at {
+				b.show(n, found, first)
+				n.redraw()
+			}
+		}
+	})
+}
+
+// show shows the notes found, the choice on the first if first, else on
+// the note it was on.
+func (b *noteBrowse) show(n *notesWindow, found []notes.Match, first bool) {
+	was := ""
+	if !first {
+		was = b.chosenID()
+	}
+	b.found = found
+	b.rows = browseRows(n.store, found)
 	b.chooseNote(was)
 }
 
-// browseRows lays out the notes the query finds: the pinned under their
-// title, then the others under theirs, the titles only while some are
-// pinned.
-func browseRows(s *notes.Store, query string) []browseRow {
-	found := notes.Search(s.List(), query)
+// regroup lays the notes found out again, as pinning moves them, without
+// searching again: pinning changes no note's text.
+func (b *noteBrowse) regroup(n *notesWindow) {
+	if b.open {
+		was := b.chosenID()
+		b.rows = browseRows(n.store, b.found)
+		b.chooseNote(was)
+	}
+}
+
+// browseRows lays out the notes found: the pinned under their title, in
+// the order the store lists them, then the others under theirs, the
+// titles only while some are pinned. Notes no longer there are left out.
+func browseRows(s *notes.Store, matches []notes.Match) []browseRow {
+	order := map[string]int{}
+	for i, note := range s.List() {
+		order[note.ID] = i
+	}
+	found := make([]notes.Match, 0, len(matches))
+	for _, m := range matches {
+		if _, ok := order[m.Note.ID]; ok {
+			found = append(found, m)
+		}
+	}
+	slices.SortStableFunc(found, func(a, b notes.Match) int { return order[a.Note.ID] - order[b.Note.ID] })
 	pinned := s.PinnedIDs()
 	var rows []browseRow
 	titled := len(found) > 0 && s.Pinned(found[0].Note.ID) // some pinned found
@@ -155,8 +215,12 @@ func (b *noteBrowse) chooseNote(id string) {
 	b.choose(at)
 }
 
+// choose chooses row i, and tells the list the app chose it: else, the
+// rows changed under the choice's index, the list would keep the choice
+// on the item it had, or on none, that note no longer found.
 func (b *noteBrowse) choose(i int) {
-	b.chosen = i
+	b.list.Selected = &b.chosen
+	b.list.Choose(i)
 	b.scroll = true
 }
 
@@ -188,7 +252,8 @@ func (b *noteBrowse) removed(n *notesWindow, id string) {
 		return
 	}
 	at := b.chosen
-	b.rows = browseRows(n.store, b.query)
+	b.found = slices.DeleteFunc(b.found, func(m notes.Match) bool { return m.Note.ID == id })
+	b.rows = browseRows(n.store, b.found)
 	for at < len(b.rows) && at >= 0 && b.rows[at].title != "" {
 		at++
 	}
@@ -226,8 +291,7 @@ func (n *notesWindow) browseKey(key ui.TextKey) bool {
 	if q := key.Text(); q != b.query {
 		bound := b.query
 		b.query = q
-		b.refilter(n)
-		b.chooseNote("")
+		b.refilter(n, true)
 		defer func() { b.query = bound }()
 	}
 	mods := key.Mods
@@ -472,7 +536,8 @@ func (n *notesWindow) browseCard(c *ui.Context, k tokens, w, h float32) {
 	b := &n.browse
 	c.Key("browse")
 	width := min(w-16, browseWidth)
-	card := popupMenu(c, k, 0.5, 0).Top(notesBarHeight + 4).Left((w - width) / 2).Width(width).MaxHeight(h - 56)
+	maxH := h - 56
+	card := popupMenu(c, k, 0.5, 0).Top(notesBarHeight + 4).Left((w - width) / 2).Width(width).MaxHeight(maxH)
 	card.Children(func() {
 		menuField(c, k, func() {
 			f := ui.TextInputBase(c, &b.query).Bind(&b.input).Grow(1).FontSize(13).
@@ -480,8 +545,7 @@ func (n *notesWindow) browseCard(c *ui.Context, k tokens, w, h float32) {
 				OnTextKey(n.browseKey)
 			b.composing = f.Composing()
 			if f.Changed() {
-				b.refilter(n)
-				b.chooseNote("")
+				b.refilter(n, true)
 			}
 			if b.focus {
 				b.focus = false
@@ -504,7 +568,11 @@ func (n *notesWindow) browseCard(c *ui.Context, k tokens, w, h float32) {
 		b.list.Label = func(i int) string { return n.browseLabel(b.rows[i]) }
 		var list ui.Element
 		ui.Themed(c, searchListTheme(c, k)).Background(ui.Transparent).Shrink(1).Children(func() {
-			list = ui.List(c, &b.list, len(b.rows)).Padding(browsePad).
+			// As high as its rows, up to the card's height less the field's
+			// and the borders': a list sized by its content would build
+			// every row, a thousand notes' each frame.
+			listH := min(browseRowsHeight(b.rows), maxH-menuFieldH-2)
+			list = ui.List(c, &b.list, len(b.rows)).Padding(browsePad).Height(listH).
 				Rows(func(r ui.ListRow) { n.browseRow(c, k, r.Index, r.Selected()) })
 		})
 		if b.scroll && b.chosen >= 0 {
@@ -523,6 +591,19 @@ func (n *notesWindow) browseCard(c *ui.Context, k tokens, w, h float32) {
 	})
 }
 
+// browseRowsHeight is the height of the rows, padded as the list pads them.
+func browseRowsHeight(rows []browseRow) float32 {
+	h := float32(2 * browsePad)
+	for _, r := range rows {
+		if r.title != "" {
+			h += browseTitleH
+		} else {
+			h += browseRowH
+		}
+	}
+	return h
+}
+
 // browseRow draws a row of Browse Notes: a section's title, or a note's
 // title over when it changed (or the line found), its keys at the right
 // (design.md 11.6).
@@ -539,7 +620,7 @@ func (n *notesWindow) browseRow(c *ui.Context, k tokens, i int, chosen bool) {
 	if title == "" {
 		title, titleColor = locales.NotesUntitled(), k.textOnGlass
 	}
-	when := sysfmt.Date(note.Modified, n.now(), sysLocale())
+	when := n.noteWhen(note)
 	sub := when
 	if r.m.Snippet != "" {
 		sub = r.m.Snippet
@@ -564,6 +645,22 @@ func (n *notesWindow) browseRow(c *ui.Context, k tokens, i int, chosen bool) {
 	})
 }
 
+// noteWhen says when note changed, as Browse Notes lists it: "Today
+// at 14:05".
+func (n *notesWindow) noteWhen(note *notes.Note) string {
+	b := &n.browse
+	now := n.now()
+	if day := now.Format(time.DateOnly); b.whens == nil || day != b.whensDay {
+		b.whens, b.whensDay = map[*notes.Note]string{}, day
+	}
+	when, ok := b.whens[note]
+	if !ok {
+		when = sysfmt.Date(note.Modified, now, sysLocale())
+		b.whens[note] = when
+	}
+	return when
+}
+
 // browseLabel is what assistive technology reads of a row (copy.md 16.9):
 // "Groceries, Pinned, Today 14:05".
 func (n *notesWindow) browseLabel(r browseRow) string {
@@ -574,7 +671,7 @@ func (n *notesWindow) browseLabel(r browseRow) string {
 	if title == "" {
 		title = locales.NotesUntitled()
 	}
-	when := sysfmt.Date(r.m.Note.Modified, n.now(), sysLocale())
+	when := n.noteWhen(r.m.Note)
 	if n.store.Pinned(r.m.Note.ID) {
 		return locales.NotesRowLabelPinned(title, when)
 	}

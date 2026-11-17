@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"image"
 	"os"
 	"path/filepath"
@@ -432,6 +433,88 @@ func TestNotesBrowse(t *testing.T) {
 	nt.key(0, ui.KeyEscape)
 	if nt.cur == nil || nt.cur.id != noteID(0) {
 		t.Errorf("closed after deleting the note showing: %+v", nt.cur)
+	}
+}
+
+func TestNotesBrowseSearchesInBackground(t *testing.T) {
+	// Over 1000 notes, typing in Browse Notes never waits for the search:
+	// each runs off the main thread, the rows as they were until it is
+	// done, and only the last query typed is shown, whatever order the
+	// searches end in (design.md 11.6).
+	var jobs []func() func()
+	old := sysNotesBackground
+	sysNotesBackground = func(_ *notesWindow, work func() func()) { jobs = append(jobs, work) }
+	t.Cleanup(func() { sysNotesBackground = old })
+	// run runs a search on a goroutine of its own, then its results on
+	// the main thread, as the window does.
+	run := func(work func() func()) {
+		ch := make(chan func())
+		go func() { ch <- work() }()
+		(<-ch)()
+	}
+
+	nt := notesTester(t)
+	dir := nt.store.Dir()
+	written := time.Now()
+	defer func() { t.Logf("1000 notes written in %v", time.Since(written)) }()
+	for i := range 1000 {
+		body := fmt.Sprintf("Note %04d\n%s needle-%04d %s\n", i, strings.Repeat("filler text 文字 ", 60), i, strings.Repeat("more 更多 ", 40))
+		writeNote(t, dir, fmt.Sprintf("2026-10-01-%06d", i), body, notesNow.Add(-time.Duration(i+1)*time.Second))
+	}
+	nt.key(ui.Cmd, ui.KeyP)
+	if !nt.browse.open || len(nt.browse.rows) != 1000 || len(jobs) != 0 {
+		t.Fatalf("open %v, %d rows, %d searches: the query empty lists them at once", nt.browse.open, len(nt.browse.rows), len(jobs))
+	}
+	// The list builds the rows it shows, not all 1000 a frame.
+	if !nt.tt.HasText("Note 0000") || nt.tt.HasText("Note 0100") {
+		t.Errorf("rows built: %d texts", len(nt.tt.Texts()))
+	}
+	query := "needle-0777"
+	typing := time.Now()
+	nt.typ(query)
+	t.Logf("typed %d characters in %v", len(query), time.Since(typing))
+	if nt.browse.query != query || len(jobs) != len(query) {
+		t.Fatalf("query %q, %d searches started", nt.browse.query, len(jobs))
+	}
+	if len(nt.browse.rows) != 1000 {
+		t.Fatalf("%d rows before any search was done: searched on the main thread", len(nt.browse.rows))
+	}
+	start := time.Now()
+	run(jobs[len(jobs)-1]) // the last ends first
+	t.Logf("searched 1000 notes in %v", time.Since(start))
+	nt.frame()
+	rows := nt.browse.rows
+	if len(rows) != 1 || rows[0].m.Note.Title() != "Note 0777" || !strings.Contains(rows[0].m.Snippet, query) || nt.browse.chosenID() != rows[0].m.Note.ID {
+		t.Fatalf("found %d rows, chosen %q", len(rows), nt.browse.chosenID())
+	}
+	for _, work := range jobs[:len(jobs)-1] { // the earlier, slower ones
+		run(work)
+	}
+	nt.frame()
+	if len(nt.browse.rows) != 1 || nt.browse.rows[0].m.Note.Title() != "Note 0777" {
+		t.Errorf("an earlier query's results shown: %d rows", len(nt.browse.rows))
+	}
+	if !nt.tt.HasText("Note 0777") {
+		t.Errorf("not drawn: %q", nt.tt.Texts())
+	}
+	// Back to fewer characters: a new search, its results the latest.
+	jobs = jobs[:0]
+	nt.key(0, ui.KeyBackspace)
+	if len(jobs) != 1 {
+		t.Fatalf("%d searches for one key", len(jobs))
+	}
+	run(jobs[0])
+	nt.frame()
+	if len(nt.browse.rows) != 10 { // needle-0770 to needle-0779
+		t.Errorf("needle-077: %d rows", len(nt.browse.rows))
+	}
+	// A search ending after the card closed shows nothing.
+	jobs = jobs[:0]
+	nt.typ("9")
+	nt.key(0, ui.KeyEscape)
+	run(jobs[0])
+	if nt.browse.open {
+		t.Error("a late search opened the card")
 	}
 }
 

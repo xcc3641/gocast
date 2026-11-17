@@ -407,11 +407,14 @@ func popupMenu(c *ui.Context, k tokens, originX, originY float32) ui.Element {
 		TransformOrigin(originX, originY).Transition(tr)
 }
 
+// menuFieldH is the height of a popup menu's field with its hairline.
+const menuFieldH = 37
+
 // menuField is the top of a popup menu, 36 high, over a hairline, for its
 // filter field, which starts where the rows' icons do and ends where their
 // keys do (design.md 2.5).
 func menuField(c *ui.Context, k tokens, field func()) {
-	ui.Row(c).Height(36).Shrink(0).Padding(0, menuTextInsetR, 0, menuTextInset).AlignItems(ui.Center).Children(field)
+	ui.Row(c).Height(menuFieldH-1).Shrink(0).Padding(0, menuTextInsetR, 0, menuTextInset).AlignItems(ui.Center).Children(field)
 	ui.Box(c).Height(1).Background(k.hairline).Shrink(0)
 }
 
