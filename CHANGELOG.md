@@ -8,6 +8,20 @@ The section of each version is the release notes that the update window
 shows (MyGo reads `## [version]`), so write it for users, in Chinese and
 English.
 
+## [0.1.8] - 2026-11-17
+
+- 新增笔记：在搜索里选「笔记」，会浮出一个笔记窗口，随手就能记。第一行就是标题，一次看一篇。
+- 写 Markdown 边写边排版：标题、粗体、列表、待办、引用、代码、链接都直接显示成排好的样子，⌘B、⌘I、⇧⌘9 这些快捷键和 Raycast 一样。
+- 按 ⌘P 浏览和搜索所有笔记，标题和正文都能搜到。常看的按 ⇧⌘P 置顶，再用 ⌘1 到 ⌘9 直接打开。
+- 停笔就自动保存，每篇一个 Markdown 文件，只存在这台 Mac 上。删掉的笔记进废纸篓，能找回来。
+- 「笔记」「新建笔记」「搜索笔记」都能在设置 › 快捷键里设快捷键。
+
+- New: Notes. Choose Notes in search and a notes window floats up, ready to write in. The first line is the title, and you see one note at a time.
+- Markdown formats as you type: headings, bold, lists, to-dos, quotes, code and links show up formatted right away, and shortcuts like ⌘B, ⌘I and ⇧⌘9 match Raycast.
+- Press ⌘P to browse and search all your notes by title or text. Pin the ones you use with ⇧⌘P, then open them with ⌘1 to ⌘9.
+- Notes save as soon as you stop typing, one Markdown file each, and stay on this Mac. Deleted notes go to the Trash, so you can get them back.
+- Notes, New Note and Search Notes can each have a shortcut in Settings › Shortcuts.
+
 ## [0.1.7] - 2026-11-16
 
 - 悬浮终端不再跟着 Gocast 停：退出、崩溃或更新以后，终端里正在跑的命令接着跑，标签和输出都还在。想全部停掉，在菜单栏点「结束所有终端」。

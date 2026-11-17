@@ -30,7 +30,7 @@
   <img src="docs/images/search-panel-en.png" alt="The Gocast search panel, listing the apps and presets used most" width="720">
 </p>
 
-Gocast is a small, native launcher for the Mac. Press ⌘Space to open any app, ⌃\` for a terminal that drops down from the top of the screen, and ⌃⌘V for everything you copied. Lock the screen, change the volume or snap a window to the left half from the same search field. Give any app, preset or action its own shortcut, and type math, units or currencies to get the answer right there.
+Gocast is a small, native launcher for the Mac. Press ⌘Space to open any app, ⌃\` for a terminal that drops down from the top of the screen, and ⌃⌘V for everything you copied. Lock the screen, change the volume, snap a window to the left half or jot down a note from the same search field. Give any app, preset or action its own shortcut, and type math, units or currencies to get the answer right there.
 
 No account, no data collected, free and open source.
 
@@ -58,7 +58,7 @@ Requires macOS 13 or later on Apple silicon. Spotlight uses ⌘Space by default,
 
 ## Your data
 
-Gocast only goes online to check for updates (and download them when there is one) and to fetch exchange rates once a day, and both can be turned off. Your presets, settings, clipboard history, and a record of what you open from search and the words you typed to find it (so your usual picks come first; the words are kept for 17 days) all stay in `~/Library/Application Support/com.hugo.gocast/` and are never uploaded. [Privacy policy →](https://gocast.yichenlab.com/privacy/)
+Gocast only goes online to check for updates (and download them when there is one) and to fetch exchange rates once a day, and both can be turned off. Your presets, settings, notes, clipboard history, and a record of what you open from search and the words you typed to find it (so your usual picks come first; the words are kept for 17 days) all stay in `~/Library/Application Support/com.hugo.gocast/` and are never uploaded. [Privacy policy →](https://gocast.yichenlab.com/privacy/)
 
 ## Contributing
 

@@ -30,7 +30,7 @@
   <img src="docs/images/search-panel-zh-Hans.png" alt="Gocast 的搜索面板，列出最常用的应用和预设" width="720">
 </p>
 
-Gocast 是一个 Mac 上的原生小启动器。按 ⌘Space 打开任何应用，按 ⌃\` 让终端从屏幕上方落下来，按 ⌃⌘V 找回拷贝过的东西。锁屏、调音量、把窗口摆到左半屏，也在同一个搜索框里。任意应用、预设或操作都能设一个快捷键；打算式、单位或汇率，答案直接就在。
+Gocast 是一个 Mac 上的原生小启动器。按 ⌘Space 打开任何应用，按 ⌃\` 让终端从屏幕上方落下来，按 ⌃⌘V 找回拷贝过的东西。锁屏、调音量、把窗口摆到左半屏、随手记一篇笔记，也在同一个搜索框里。任意应用、预设或操作都能设一个快捷键；打算式、单位或汇率，答案直接就在。
 
 没有账号，不收集数据，免费开源。
 
@@ -58,7 +58,7 @@ curl -fsSL https://github.com/xcc3641/gocast/releases/latest/download/install.sh
 
 ## 你的数据
 
-Gocast 只在检查更新（有新版本时会下载）和每天取一次汇率时联网，两样都能关。预设、设置、剪贴板历史，还有你从搜索里打开过什么、用哪个词打开的（用来把常用的排前面，搜索词只留 17 天），都在 `~/Library/Application Support/com.hugo.gocast/`，不会上传。[隐私政策 →](https://gocast.yichenlab.com/zh/privacy/)
+Gocast 只在检查更新（有新版本时会下载）和每天取一次汇率时联网，两样都能关。预设、设置、笔记、剪贴板历史，还有你从搜索里打开过什么、用哪个词打开的（用来把常用的排前面，搜索词只留 17 天），都在 `~/Library/Application Support/com.hugo.gocast/`，不会上传。[隐私政策 →](https://gocast.yichenlab.com/zh/privacy/)
 
 ## 参与
 
