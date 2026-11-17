@@ -107,7 +107,7 @@
     },
     {
       "h": "What stays on your Mac",
-      "text": "Your presets, settings and clipboard history are files in <code>~/Library/Application Support/com.hugo.gocast/</code>, readable only by your Mac user. They are never uploaded. Clipboard history is kept as plain files, not encrypted. Gocast also keeps a record of what you open from search and which search led to it, so the things you use come first. That record is a plain file in the same folder; each search is kept for 17 days, and turning clipboard history off does not touch it. Passwords copied from password managers are never kept, and you can choose apps whose copies are never kept."
+      "text": "Your presets, settings, notes and clipboard history are files in <code>~/Library/Application Support/com.hugo.gocast/</code>, readable only by your Mac user. They are never uploaded. Clipboard history is kept as plain files, not encrypted. Gocast also keeps a record of what you open from search and which search led to it, so the things you use come first. That record is a plain file in the same folder; each search is kept for 17 days, and turning clipboard history off does not touch it. Passwords copied from password managers are never kept, and you can choose apps whose copies are never kept.\n\nNotes are Markdown files in its Notes folder. Like clipboard history, they aren’t encrypted. They aren’t synced either, and Gocast has no server of its own. A deleted note goes to the Trash and is gone for good once you empty it."
     },
     {
       "h": "When Gocast goes online",
@@ -130,7 +130,7 @@
       "text": "Ask in <a href=\"https://github.com/xcc3641/gocast/issues\">GitHub Issues</a>."
     }
   ],
-  "p_date": "Effective November 16, 2026.",
+  "p_date": "Effective November 17, 2026.",
   "back": "← Gocast",
   "c_title": "Gocast Changelog",
   "c_lede": "What’s new in each version of Gocast."
