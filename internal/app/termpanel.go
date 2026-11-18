@@ -1182,8 +1182,17 @@ func (p *termPanel) workAreaWidth() int {
 
 // sysPointer is where the pointer is, and the work area of the display
 // with it, which the floating terminal shows in; a fake in tests.
+// GOCAST_POINTER=x,y puts the pointer there for it, for screenshots of
+// the positions near the pointer with the real one left alone.
 var sysPointer = func() (mygo.Point, mygo.Rectangle) {
 	pt := mygo.Screen.CursorScreenPoint()
+	if x, y, ok := strings.Cut(os.Getenv("GOCAST_POINTER"), ","); ok {
+		if px, err := strconv.Atoi(x); err == nil {
+			if py, err := strconv.Atoi(y); err == nil {
+				pt = mygo.Point{X: px, Y: py}
+			}
+		}
+	}
 	return pt, mygo.Screen.DisplayNearestPoint(pt).WorkArea
 }
 

@@ -37,7 +37,9 @@ Gocast is a menu-bar app: it has no Dock icon. Started by hand it shows the
 search panel; quit it from the menu-bar icon (Quit Gocast) or with Ctrl-C.
 `GOCAST_APPEARANCE=dark` (or `light`) and `MYGO_LOCALE=en` (or `zh-Hans`)
 force the appearance and the language for one run, which is handy for
-checking both themes and both languages.
+checking both themes and both languages. `GOCAST_POINTER=x,y` makes the
+floating terminal take that point as the pointer's, for screenshots of the
+Near Pointer position without moving the real pointer.
 
 A development build shares its data with an installed Gocast, in
 `~/Library/Application Support/com.hugo.gocast/`. More details, including
