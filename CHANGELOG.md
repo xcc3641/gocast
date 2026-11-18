@@ -8,6 +8,18 @@ The section of each version is the release notes that the update window
 shows (MyGo reads `## [version]`), so write it for users, in Chinese and
 English.
 
+## [0.1.9] - 2026-11-19
+
+- 悬浮终端可以选在哪儿出现：顶部居中（和以前一样）、屏幕中央、底部居中、左侧、右侧，或者鼠标旁边。在设置 › 悬浮终端的「出现位置」里选。
+- 选「鼠标旁边」时，终端出现在鼠标下方，下面放不下就到上方。
+- 「出现位置」旁边有一个小屏幕示意图，换选项时能看到终端会摆在哪儿。
+- 修好了笔记往下滚时，文字会压到窗口顶栏上的问题。
+
+- Choose where the floating terminal appears: top center (as before), center, bottom center, left, right, or near the pointer. Find it under Position in Settings › Floating Terminal.
+- Near Pointer opens the terminal just below the pointer, or above it if there’s no room.
+- A small picture of your screen next to Position shows where the terminal will go as you change it.
+- Fixed text in a note showing over the window’s top bar when you scroll.
+
 ## [0.1.8] - 2026-11-17
 
 - 新增笔记：在搜索里选「笔记」，会浮出一个笔记窗口，随手就能记。第一行就是标题，一次看一篇。
