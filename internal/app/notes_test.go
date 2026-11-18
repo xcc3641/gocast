@@ -1148,9 +1148,75 @@ func TestNotesTypography(t *testing.T) {
 	}
 }
 
+// scrollUnderBar scrolls the note so that paragraph i's line starts top
+// DIPs above the editor's (the top bar's bottom edge), and returns the
+// editor's place: the line straddles the bar's edge.
+func scrollUnderBar(t *testing.T, nt *notesTest, i int, top float32) ui.Rect {
+	t.Helper()
+	nt.cur.doc.ScrollToParagraph(i, ui.ScrollStart)
+	nt.frame()
+	for _, p := range nt.cur.doc.VisibleParagraphs() {
+		if p.Index == i {
+			nt.cur.doc.ScrollBy(p.Top + top)
+			nt.frame()
+		}
+	}
+	vis := nt.cur.doc.VisibleParagraphs()
+	if len(vis) == 0 || vis[0].Index != i || abs32(vis[0].Top+top) > 0.5 {
+		t.Fatalf("not scrolled to paragraph %d at %v: %+v", i, -top, vis)
+	}
+	a, ok := nt.tt.Access(locales.NotesEditorLabel(nt.title()))
+	if !ok {
+		t.Fatal("no editor")
+	}
+	return a.Bounds
+}
+
+func TestNotesTextUnderBar(t *testing.T) {
+	// design.md 11.3: the text scrolled under the top bar does not show
+	// through it. A heading straddles the bar's bottom edge (44): the band
+	// of the bar just above it (36 to 44, below the title and the buttons)
+	// is all the bar's background, as at its right where there is no text,
+	// and the heading's ink is right below the edge.
+	for _, dark := range []bool{false, true} {
+		nt := notesTester(t, allBlocks)
+		nt.tt.SetDark(dark)
+		nt.frame()
+		ed := scrollUnderBar(t, nt, 2, 8) // Heading two's 26-high line
+		if !nt.scrolled {
+			t.Fatal("not scrolled")
+		}
+		if ed.Y != notesBarHeight+panelBorderWidth {
+			t.Errorf("editor at %v, want under the bar at %v", ed.Y, notesBarHeight+panelBorderWidth)
+		}
+		img := nt.tt.Image()
+		ref := notesWidth - 40
+		for y := 36; y < notesBarHeight; y++ {
+			for x := 2; x < ref; x++ {
+				if got, want := img.RGBAAt(x, y), img.RGBAAt(ref, y); got != want {
+					t.Fatalf("dark %v: text through the bar at (%d, %d): %v, want the bar's %v", dark, x, y, got, want)
+				}
+			}
+		}
+		inked := false
+		for y := notesBarHeight + 1; y < notesBarHeight+6 && !inked; y++ {
+			for x := notePadX; x < notesWidth/2; x++ {
+				if img.RGBAAt(x, y) != img.RGBAAt(ref, y) {
+					inked = true
+					break
+				}
+			}
+		}
+		if !inked {
+			t.Errorf("dark %v: no heading right under the bar's edge", dark)
+		}
+	}
+}
+
 func TestScreensNotes(t *testing.T) {
 	// design.md 11.12's screens, light and dark: the window at its size,
-	// every block, Browse Notes with pinned notes and with a match in the
+	// every block, scrolled with a heading under the top bar's edge,
+	// Browse Notes with pinned notes and with a match in the
 	// text, ⌘K, the empty state, the banner, the find bar, and an input
 	// method composing.
 	dir := screensDir(t)
@@ -1181,6 +1247,9 @@ func TestScreensNotes(t *testing.T) {
 		shot("notes-blocks", notesWidth, 820, dark, []string{blocks}, func(nt *notesTest) {
 			nt.cur.doc.ScrollToParagraph(0, ui.ScrollStart)
 			nt.frame()
+		})
+		shot("notes-scrolled", notesWidth, notesHeight, dark, []string{blocks}, func(nt *notesTest) {
+			scrollUnderBar(t, nt, 2, 8) // 二级标题 straddles the bar's edge
 		})
 		shot("notes-browse-pinned", notesWidth, notesHeight, dark, list, func(nt *notesTest) {
 			nt.store.SetPinned(noteID(0), true)

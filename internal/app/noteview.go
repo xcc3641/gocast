@@ -180,7 +180,10 @@ func roundButtonSized(c *ui.Context, k tokens, symbol, tip string, on bool, size
 // room around the text inside it (its theme's Padding), for the text to
 // scroll under the top bar and the scroll bar to be at the window's
 // edge; only the bottom's room is outside it, as Padding's is the same
-// above and below.
+// above and below. The column around it clips it at the top bar's bottom
+// edge (design.md 11.3): the editor paints a line partly scrolled out
+// whole, its own Clip holding only children, and the text would show
+// over the bar.
 func (n *notesWindow) editorArea(c *ui.Context, k tokens) {
 	d := n.cur
 	// The window's outline insets what is in it by its width: the text is
@@ -188,7 +191,7 @@ func (n *notesWindow) editorArea(c *ui.Context, k tokens) {
 	w, _ := c.Size()
 	th := n.design.theme()
 	th.Padding = [2]float32{max(notePadX-panelBorderWidth, (w-2*panelBorderWidth-noteTextMax)/2), notePadTop}
-	ui.Column(c).Grow(1).Shrink(1).Padding(0, 0, notePadBottom-notePadTop-panelBorderWidth, 0).Children(func() {
+	ui.Column(c).Grow(1).Shrink(1).Clip().Padding(0, 0, notePadBottom-notePadTop-panelBorderWidth, 0).Children(func() {
 		opts := richtext.EditorOptions{
 			Label:        locales.NotesEditorLabel(n.title()),
 			Placeholder:  locales.NotesPlaceholder(),
