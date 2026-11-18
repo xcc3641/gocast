@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/egoist/mygo"
+
 	"gocast/internal/running"
 	"gocast/internal/termhost"
 )
@@ -45,9 +47,13 @@ func TestMain(m *testing.M) {
 	sysDevBuild = func() bool { return true }
 	sysCheckUpdate = func(context.Context) (*foundUpdate, error) { return nil, errors.New("no checks in tests") }
 	sysRelaunch = func() { panic("relaunched in a test") }
-	// Nor of the system's displays and icons, which need the main loop.
+	// Nor of the system's displays, the pointer and icons, which need the
+	// main loop.
 	sysLocale = func() string { return "en" }
 	sysMaxScale = func() float64 { return 2 }
+	sysPointer = func() (mygo.Point, mygo.Rectangle) {
+		return mygo.Point{X: 700, Y: 300}, mygo.Rectangle{Y: 33, Width: 1512, Height: 949}
+	}
 	sysFileIcon = func(string, int) ([]byte, error) { return nil, errors.New("no icons in tests") }
 	sysTypeIcon = sysFileIcon
 	// Nor of the terminal host: no test starts one, or connects to the

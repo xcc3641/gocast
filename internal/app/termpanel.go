@@ -28,7 +28,6 @@ import (
 const (
 	termMinWidth  = settings.MinTerminalPixels // as small as the panel gets, by any setting or drag
 	termMinHeight = 300
-	termTopGap    = 8
 	tabBarH       = 52
 	tabH          = 32
 	// The terminal's room in the panel: across, under it, and under it
@@ -41,11 +40,10 @@ const (
 	// sizeSaveDelay is how long after the last step of a drag of the
 	// panel's edges its size is saved: once the drag ended.
 	sizeSaveDelay = 400 * time.Millisecond
-	slideIn       = 180 * time.Millisecond
-	slideOut      = 120 * time.Millisecond
-	// The panel drops dropIn to its place as it shows, and rises
-	// riseOut as it hides (design.md 1.5).
-	dropIn, riseOut = 12, 8
+	// How long the panel moves and fades as it shows and hides, or only
+	// fades, with Reduce Motion (design.md 1.5); how far, termplace.go.
+	slideIn         = 180 * time.Millisecond
+	slideOut        = 120 * time.Millisecond
 	fadeIn, fadeOut = 120 * time.Millisecond, 100 * time.Millisecond
 	animationFrame  = time.Second / 120
 )
@@ -86,7 +84,8 @@ func (s *session) title() string {
 }
 
 // termPanel is the floating terminal: a borderless panel that drops from
-// the top of the screen, over every app, with tabs.
+// the top of the screen, or shows where Settings has it, over every app,
+// with tabs.
 type termPanel struct {
 	g      *gocast
 	win    *mygo.Window
@@ -99,9 +98,11 @@ type termPanel struct {
 	reveal bool         // scroll the tab bar to the active tab
 	menu   bool         // the new tab menu shows
 	chosen int          // the row of the new tab menu chosen
-	top    int          // the top of the work area the panel shows in
 
 	wa      mygo.Rectangle // the work area the panel shows in
+	pos     string         // the position it shows at (settings.TerminalPositions)
+	pointer mygo.Point     // the pointer, as it showed: where it shows at settings.PositionPointer
+	pl      termPlace      // where it shows, and how it moves and resizes there
 	bounds  mygo.Rectangle // the panel's bounds as last placed or resized
 	placing bool           // the panel's bounds are being set, not dragged
 	saveGen int            // the size dragged to last, to save
@@ -1032,8 +1033,9 @@ func (p *termPanel) open() {
 	p.toggle()
 }
 
-// show drops the panel from the top of the work area of the display with
-// the pointer, at its default size (design.md 3.2, 1.5).
+// show shows the panel in the work area of the display with the pointer,
+// where Settings has it, at its size there, moving in from its side
+// (design.md 3.2, 3.7, 1.5).
 func (p *termPanel) show() {
 	if p.shown {
 		p.win.Focus()
@@ -1045,22 +1047,23 @@ func (p *termPanel) show() {
 	p.shown = true
 	p.hints.reset()
 	p.syncVisible()
-	wa := mygo.Screen.DisplayNearestPoint(mygo.Screen.CursorScreenPoint()).WorkArea
+	pt, wa := sysPointer()
 	w, h := termSize(wa.Width, wa.Height, p.g.settings)
-	x, y := wa.X+(wa.Width-w)/2, wa.Y+termTopGap
-	p.top, p.wa = wa.Y, wa
+	p.wa, p.pos, p.pointer = wa, p.g.settings.TermPosition(), pt
+	p.pl = termPlacement(p.pos, wa, w, h, pt)
+	x, y := p.pl.rect.X, p.pl.rect.Y
 	gen := p.anim.Add(1)
 	reduce := mygo.Theme.Preferences().ReduceMotion
 	// AppKit keeps a window's top under the menu bar (a frameless window
 	// is a titled one underneath), so the panel cannot slide from above
-	// the screen: it fades in as it drops the last dropIn (design.md
-	// 1.5), held at the menu bar for the first frames where termTopGap is
-	// less.
-	from := y - dropIn
+	// the screen: at the top it fades in as it drops the last dropIn
+	// (design.md 1.5), held at the menu bar for the first frames where
+	// termGap is less; elsewhere it moves in the last travelIn.
+	from := entryFrom(p.pl)
 	if reduce {
-		from = y
+		from = mygo.Point{X: x, Y: y}
 	}
-	p.place(mygo.Rectangle{X: x, Y: from, Width: w, Height: h})
+	p.place(mygo.Rectangle{X: from.X, Y: from.Y, Width: w, Height: h})
 	p.win.SetOpacity(0)
 	if s := p.current(); s != nil {
 		s.focus.Focus()
@@ -1073,7 +1076,7 @@ func (p *termPanel) show() {
 	}
 	p.animate(gen, slideIn, easeOut, func(t float64) {
 		p.win.SetOpacity(t)
-		p.win.SetPosition(x, from+int(math.Round(float64(y-from)*t)))
+		p.win.SetPosition(from.X+int(math.Round(float64(x-from.X)*t)), from.Y+int(math.Round(float64(y-from.Y)*t)))
 	}, nil)
 }
 
@@ -1086,11 +1089,11 @@ func (p *termPanel) place(r mygo.Rectangle) {
 	p.bounds = p.win.Bounds() // as AppKit constrained it
 }
 
-// resized follows the user's drag of the panel's edges (design.md 3.2):
-// the bottom edge sets its height, the left and right ones its width, on
-// both sides, so that it stays centered; its top stays. The size, in
-// percent of the work area, shows in Settings at once, and is saved once
-// the drag ends, for the next show.
+// resized follows the user's drag of the panel's edges (design.md 3.2,
+// 3.7): the edge it shows against stays, and the center line across it,
+// or both center lines at the center (dragRect). The size, in percent of
+// the work area, shows in Settings at once, and is saved once the drag
+// ends, for the next show.
 func (p *termPanel) resized() {
 	if p.placing || !p.shown || p.wa.Width <= 0 || p.wa.Height <= 0 {
 		return
@@ -1099,8 +1102,8 @@ func (p *termPanel) resized() {
 	if b == prev {
 		return
 	}
-	w, h := dragSize(prev, b, p.wa)
-	r := mygo.Rectangle{X: prev.X + (prev.Width-w)/2, Y: prev.Y, Width: w, Height: h}
+	r := dragRect(prev, b, p.wa, p.pl)
+	w, h := r.Width, r.Height
 	if r != b {
 		p.place(r)
 	} else {
@@ -1129,43 +1132,42 @@ func (p *termPanel) resized() {
 	})
 }
 
-// dragSize is the panel's size as the user drags its edges from prev to
-// b, in the work area wa: a left edge dragged grows or shrinks it on both
-// sides, as does a right one; the bottom edge sets the height; a top edge
-// dragged changes nothing. Within the settings' ranges and the minimum.
-func dragSize(prev, b, wa mygo.Rectangle) (w, h int) {
-	w, h = prev.Width, prev.Height
-	center2 := 2*prev.X + prev.Width // twice the center, in whole DIPs
-	switch {
-	case b.X != prev.X: // the left edge
-		w = center2 - 2*b.X
-	case b.Width != prev.Width: // the right edge
-		w = 2*(b.X+b.Width) - center2
-	}
-	if b.Y == prev.Y && b.Height != prev.Height { // the bottom edge
-		h = b.Height
-	}
-	w = clampSize(w, wa.Width, settings.MinTermWidth(wa.Width), settings.MaxTerminalWidth, termMinWidth)
-	h = clampSize(h, wa.Height, settings.MinTerminalHeight, settings.MaxTerminalHeight, termMinHeight)
-	return w, h
-}
-
 // clampSize keeps px within lo% and hi% of wa, at least least, and never
 // over wa.
 func clampSize(px, wa, lo, hi, least int) int {
 	return min(max(px, percentOf(wa, lo), least), percentOf(wa, hi), wa)
 }
 
-// sizeChanged gives the panel showing the size of Settings, at the top
-// of its work area, centered.
+// sizeChanged gives the panel showing the size of Settings, where it
+// shows, as it would show at that size: by the pointer where it was.
 func (p *termPanel) sizeChanged() {
 	if !p.shown || p.wa.Width <= 0 {
 		return
 	}
-	p.anim.Add(1) // ends a drop in progress where it would end
+	p.replace()
+}
+
+// positionChanged moves the panel showing to the position of Settings at
+// once, with no motion, in the work area it shows in; Near Pointer, by
+// the pointer where it is now (design.md 3.7). Hidden, it shows there
+// next.
+func (p *termPanel) positionChanged() {
+	if !p.shown || p.wa.Width <= 0 {
+		return
+	}
+	p.pos = p.g.settings.TermPosition()
+	p.pointer, _ = sysPointer()
+	p.replace()
+}
+
+// replace places the panel showing at p.pos, with the size of Settings,
+// ending a move in progress where it would end.
+func (p *termPanel) replace() {
+	p.anim.Add(1)
 	p.win.SetOpacity(1)
 	w, h := termSize(p.wa.Width, p.wa.Height, p.g.settings)
-	p.place(mygo.Rectangle{X: p.wa.X + (p.wa.Width-w)/2, Y: p.wa.Y + termTopGap, Width: w, Height: h})
+	p.pl = termPlacement(p.pos, p.wa, w, h, p.pointer)
+	p.place(p.pl.rect)
 }
 
 // workAreaWidth is the width of the work area of the display the panel
@@ -1174,7 +1176,15 @@ func (p *termPanel) workAreaWidth() int {
 	if p.shown && p.wa.Width > 0 {
 		return p.wa.Width
 	}
-	return mygo.Screen.DisplayNearestPoint(mygo.Screen.CursorScreenPoint()).WorkArea.Width
+	_, wa := sysPointer()
+	return wa.Width
+}
+
+// sysPointer is where the pointer is, and the work area of the display
+// with it, which the floating terminal shows in; a fake in tests.
+var sysPointer = func() (mygo.Point, mygo.Rectangle) {
+	pt := mygo.Screen.CursorScreenPoint()
+	return pt, mygo.Screen.DisplayNearestPoint(pt).WorkArea
 }
 
 // termSize is the panel's size in a work area of waW×waH for the
@@ -1194,8 +1204,8 @@ func termPercent(px, wa, lo, hi int) int {
 	return settings.SnapPercent(float64(px)*100/float64(wa), lo, hi)
 }
 
-// hide lifts the panel riseOut as it fades out (fades it only,
-// with Reduce Motion), its tabs and programs kept.
+// hide moves the panel back out to the side it came from as it fades out
+// (fades it only, with Reduce Motion), its tabs and programs kept.
 func (p *termPanel) hide() {
 	if !p.shown {
 		return
@@ -1216,10 +1226,10 @@ func (p *termPanel) hide() {
 		return
 	}
 	b := p.win.Bounds()
-	to := max(b.Y-riseOut, p.top) // no higher than AppKit lets it (see show)
+	to := exitTo(p.pl, b, p.wa) // no higher than AppKit lets it (see show)
 	p.animate(gen, slideOut, easeIn, func(t float64) {
 		p.win.SetOpacity(1 - t)
-		p.win.SetPosition(b.X, b.Y+int(math.Round(float64(to-b.Y)*t)))
+		p.win.SetPosition(b.X+int(math.Round(float64(to.X-b.X)*t)), b.Y+int(math.Round(float64(to.Y-b.Y)*t)))
 	}, done)
 }
 

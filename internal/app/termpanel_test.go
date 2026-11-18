@@ -5,8 +5,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/egoist/mygo"
-
 	"gocast/internal/presets"
 	"gocast/internal/settings"
 )
@@ -99,34 +97,6 @@ func TestTermPercent(t *testing.T) {
 			if got := termPercent(h, 949, settings.MinTerminalHeight, settings.MaxTerminalHeight); got != pct {
 				t.Errorf("height %d%% → %d px → %d%%", pct, h, got)
 			}
-		}
-	}
-}
-
-func TestDragSize(t *testing.T) {
-	wa := mygo.Rectangle{X: 0, Y: 33, Width: 1512, Height: 949}
-	prev := mygo.Rectangle{X: 302, Y: 41, Width: 908, Height: 380} // centered at 756
-	r := func(x, y, w, h int) mygo.Rectangle { return mygo.Rectangle{X: x, Y: y, Width: w, Height: h} }
-	for _, c := range []struct {
-		name         string
-		b            mygo.Rectangle
-		wantW, wantH int
-	}{
-		{"bottom edge down", r(302, 41, 908, 480), 908, 480},
-		{"bottom edge up", r(302, 41, 908, 330), 908, 330},
-		{"left edge out by 50: both sides", r(252, 41, 958, 380), 1008, 380},
-		{"left edge in by 40", r(342, 41, 868, 380), 828, 380},
-		{"right edge out by 30: both sides", r(302, 41, 938, 380), 968, 380},
-		{"bottom-right corner", r(302, 41, 938, 420), 968, 420},
-		{"top edge: nothing", r(302, 21, 908, 400), 908, 380},
-		{"under the minimum", r(302, 41, 908, 120), 908, 300},
-		{"over 90% high", r(302, 41, 908, 940), 908, 854},
-		{"wider than the screen", r(0, 41, 1300, 380), 1512, 380},
-		{"under 43% wide (650)", r(500, 41, 512, 380), 650, 380},
-	} {
-		w, h := dragSize(prev, c.b, wa)
-		if w != c.wantW || h != c.wantH {
-			t.Errorf("%s: dragSize = %d×%d, want %d×%d", c.name, w, h, c.wantW, c.wantH)
 		}
 	}
 }
