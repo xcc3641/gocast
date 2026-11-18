@@ -63,9 +63,10 @@ type prefsWindow struct {
 	searchOnly bool // the search panel opens with its search field alone
 	calculator bool // the search panel calculates (design.md 2.3a)
 	fontSize   float64
-	folderGone bool    // the default folder is not there, as of the last look
-	termPos    string  // the label of the floating terminal's position chosen
-	termWidth  float64 // percent of the work area
+	folderGone bool     // the default folder is not there, as of the last look
+	termPos    string   // the label of the floating terminal's position chosen
+	thumb      posThumb // the position's thumbnail, moving to it
+	termWidth  float64  // percent of the work area
 	termHeight float64
 	hideBlur   bool
 
@@ -125,6 +126,7 @@ func (p *prefsWindow) show(page string) {
 	p.calculator = p.g.settings.Calculator()
 	p.fontSize = float64(p.g.settings.Font())
 	p.termPos = positionLabel(p.g.settings.TermPosition())
+	p.thumb = posThumb{pos: p.g.settings.TermPosition()} // drawn in place
 	p.termWidth = float64(p.g.settings.TermWidth())
 	p.termHeight = float64(p.g.settings.TermHeight())
 	p.hideBlur = !p.g.settings.KeepTerminalOnBlur
@@ -475,7 +477,8 @@ func positionLabel(pos string) string {
 
 // positionRow chooses where the floating terminal shows: saved at once,
 // and the terminal showing moved there at once (design.md 3.7). Its note
-// says how Near Pointer places it, while chosen.
+// says how Near Pointer places it, while chosen; the thumbnail left of
+// it shows where.
 func (p *prefsWindow) positionRow(c *ui.Context, k tokens, g *group) {
 	labels := make([]string, len(settings.TerminalPositions))
 	for i, pos := range settings.TerminalPositions {
@@ -486,13 +489,18 @@ func (p *prefsWindow) positionRow(c *ui.Context, k tokens, g *group) {
 		hint = locales.GeneralPositionPointerHint()
 	}
 	g.row(c, k, locales.GeneralPosition(), hint, k.textSecondary, func() {
-		if ui.Select(c, &p.termPos, labels).Width(140).Label(locales.GeneralPosition()).Changed() {
-			if i := slices.Index(labels, p.termPos); i >= 0 {
-				p.g.settings.SetTermPosition(settings.TerminalPositions[i])
-				p.g.saveSettings()
-				p.g.term.positionChanged()
+		ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
+			p.positionThumb(c) // 45 high: the row 61, with its padding
+			if ui.Select(c, &p.termPos, labels).Width(140).Label(locales.GeneralPosition()).Changed() {
+				if i := slices.Index(labels, p.termPos); i >= 0 {
+					pos := settings.TerminalPositions[i]
+					p.thumb.set(pos, c.Now(), p.termWidth, p.termHeight, c.Preferences().ReduceMotion)
+					p.g.settings.SetTermPosition(pos)
+					p.g.saveSettings()
+					p.g.term.positionChanged()
+				}
 			}
-		}
+		})
 	})
 }
 

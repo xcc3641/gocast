@@ -293,6 +293,10 @@ func TestPositionSetting(t *testing.T) {
 	if !tt.HasText("在鼠标下方出现，下面放不下就到上方。") || tt.HasText("在鼠标所在的那块屏幕上。") {
 		t.Errorf("Near Pointer's note: %q", tt.Texts())
 	}
+	// The thumbnail goes there from the top, where it was drawn.
+	if p.thumb.pos != settings.PositionPointer || p.thumb.from != uiRect(thumbRect(settings.PositionTop, p.termWidth, p.termHeight)) {
+		t.Errorf("thumbnail: %+v", p.thumb)
+	}
 	choose("鼠标旁边", "顶部居中")
 	saved, _ = settings.Load(p.g.settingsPath())
 	if saved.TerminalPosition != "" || !tt.HasText("在鼠标所在的那块屏幕上。") {

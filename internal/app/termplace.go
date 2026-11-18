@@ -73,7 +73,13 @@ type termPlace struct {
 // axis where it is no larger than the work area less 16, else against
 // them; never outside it. pt counts for settings.PositionPointer only.
 func termPlacement(pos string, wa mygo.Rectangle, w, h int, pt mygo.Point) termPlace {
-	gx, gy := edgeGap(wa.Width, w), edgeGap(wa.Height, h)
+	return placeIn(pos, wa, w, h, pt, termGap)
+}
+
+// placeIn is termPlacement with gap for termGap: the same rules on a
+// screen of another scale, as Settings' thumbnail draws it.
+func placeIn(pos string, wa mygo.Rectangle, w, h int, pt mygo.Point, gap int) termPlace {
+	gx, gy := edgeGap(wa.Width, w, gap), edgeGap(wa.Height, h, gap)
 	cx, cy := wa.X+(wa.Width-w)/2, wa.Y+(wa.Height-h)/2
 	right, bottom := wa.X+wa.Width, wa.Y+wa.Height
 	pl := termPlace{in: travelIn, out: travelOut}
@@ -117,13 +123,12 @@ func termPlacement(pos string, wa mygo.Rectangle, w, h int, pt mygo.Point) termP
 }
 
 // edgeGap is the panel's distance from the work area's edges along an
-// axis span long where it is size: termGap, none where that leaves no
-// room.
-func edgeGap(span, size int) int {
-	if size > span-2*termGap {
+// axis span long where it is size: gap, none where that leaves no room.
+func edgeGap(span, size, gap int) int {
+	if size > span-2*gap {
 		return 0
 	}
-	return termGap
+	return gap
 }
 
 // clampInside is v, the start of size along an axis from lo span long,
