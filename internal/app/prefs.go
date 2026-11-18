@@ -64,6 +64,7 @@ type prefsWindow struct {
 	calculator bool // the search panel calculates (design.md 2.3a)
 	fontSize   float64
 	folderGone bool    // the default folder is not there, as of the last look
+	termPos    string  // the label of the floating terminal's position chosen
 	termWidth  float64 // percent of the work area
 	termHeight float64
 	hideBlur   bool
@@ -123,6 +124,7 @@ func (p *prefsWindow) show(page string) {
 	p.searchOnly = p.g.settings.SearchOnly
 	p.calculator = p.g.settings.Calculator()
 	p.fontSize = float64(p.g.settings.Font())
+	p.termPos = positionLabel(p.g.settings.TermPosition())
 	p.termWidth = float64(p.g.settings.TermWidth())
 	p.termHeight = float64(p.g.settings.TermHeight())
 	p.hideBlur = !p.g.settings.KeepTerminalOnBlur
@@ -424,6 +426,7 @@ func (p *prefsWindow) terminalGroup(c *ui.Context, k tokens) {
 				}
 			})
 		})
+		p.positionRow(c, k, g)
 		sizeHint := locales.GeneralSizeHint()
 		g.row(c, k, locales.GeneralWidth(), sizeHint, k.textSecondary, func() {
 			// From the least the terminal is wide on its display; the
@@ -449,6 +452,47 @@ func (p *prefsWindow) terminalGroup(c *ui.Context, k tokens) {
 				p.g.saveSettings()
 			}
 		})
+	})
+}
+
+// positionLabel names the floating terminal's position pos, one of
+// settings.TerminalPositions (copy.md 17).
+func positionLabel(pos string) string {
+	switch pos {
+	case settings.PositionCenter:
+		return locales.GeneralPositionCenter()
+	case settings.PositionBottom:
+		return locales.GeneralPositionBottom()
+	case settings.PositionLeft:
+		return locales.GeneralPositionLeft()
+	case settings.PositionRight:
+		return locales.GeneralPositionRight()
+	case settings.PositionPointer:
+		return locales.GeneralPositionPointer()
+	}
+	return locales.GeneralPositionTop()
+}
+
+// positionRow chooses where the floating terminal shows: saved at once,
+// and the terminal showing moved there at once (design.md 3.7). Its note
+// says how Near Pointer places it, while chosen.
+func (p *prefsWindow) positionRow(c *ui.Context, k tokens, g *group) {
+	labels := make([]string, len(settings.TerminalPositions))
+	for i, pos := range settings.TerminalPositions {
+		labels[i] = positionLabel(pos)
+	}
+	hint := locales.GeneralPositionHint()
+	if p.g.settings.TermPosition() == settings.PositionPointer {
+		hint = locales.GeneralPositionPointerHint()
+	}
+	g.row(c, k, locales.GeneralPosition(), hint, k.textSecondary, func() {
+		if ui.Select(c, &p.termPos, labels).Width(140).Label(locales.GeneralPosition()).Changed() {
+			if i := slices.Index(labels, p.termPos); i >= 0 {
+				p.g.settings.SetTermPosition(settings.TerminalPositions[i])
+				p.g.saveSettings()
+				p.g.term.positionChanged()
+			}
+		}
 	})
 }
 

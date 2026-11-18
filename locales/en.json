@@ -522,6 +522,42 @@
   "@generalFontSize": {
     "description": "General: stepper."
   },
+  "generalPosition": "Position",
+  "@generalPosition": {
+    "description": "General: select, where the floating terminal shows (copy.md 17)."
+  },
+  "generalPositionHint": "On the display with the pointer.",
+  "@generalPositionHint": {
+    "description": "General: under the position select."
+  },
+  "generalPositionPointerHint": "Opens just below the pointer, or above it if there’s no room.",
+  "@generalPositionPointerHint": {
+    "description": "General: under the position select, in place of generalPositionHint while Near Pointer is chosen."
+  },
+  "generalPositionTop": "Top Center",
+  "@generalPositionTop": {
+    "description": "General: position select, the default."
+  },
+  "generalPositionCenter": "Center",
+  "@generalPositionCenter": {
+    "description": "General: position select."
+  },
+  "generalPositionBottom": "Bottom Center",
+  "@generalPositionBottom": {
+    "description": "General: position select."
+  },
+  "generalPositionLeft": "Left",
+  "@generalPositionLeft": {
+    "description": "General: position select."
+  },
+  "generalPositionRight": "Right",
+  "@generalPositionRight": {
+    "description": "General: position select."
+  },
+  "generalPositionPointer": "Near Pointer",
+  "@generalPositionPointer": {
+    "description": "General: position select; placed once as it shows, it does not follow the pointer."
+  },
   "generalWidth": "Width",
   "@generalWidth": {
     "description": "General: slider, the floating terminal's width."

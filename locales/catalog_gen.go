@@ -1578,6 +1578,136 @@ func (msgs Messages) GeneralFontSize() string {
 	return Catalog.Format(msgs.locale, "generalFontSize", nil)
 }
 
+// GeneralPosition says "Position"
+// in the language the app shows.
+//
+// General: select, where the floating terminal shows (copy.md 17).
+func GeneralPosition() string { return In(i18n.Locale()).GeneralPosition() }
+
+// GeneralPosition says "Position"
+// in the language of msgs.
+//
+// General: select, where the floating terminal shows (copy.md 17).
+func (msgs Messages) GeneralPosition() string {
+	return Catalog.Format(msgs.locale, "generalPosition", nil)
+}
+
+// GeneralPositionHint says "On the display with the pointer."
+// in the language the app shows.
+//
+// General: under the position select.
+func GeneralPositionHint() string { return In(i18n.Locale()).GeneralPositionHint() }
+
+// GeneralPositionHint says "On the display with the pointer."
+// in the language of msgs.
+//
+// General: under the position select.
+func (msgs Messages) GeneralPositionHint() string {
+	return Catalog.Format(msgs.locale, "generalPositionHint", nil)
+}
+
+// GeneralPositionPointerHint says "Opens just below the pointer, or above it if there’s no room."
+// in the language the app shows.
+//
+// General: under the position select, in place of generalPositionHint while
+// Near Pointer is chosen.
+func GeneralPositionPointerHint() string { return In(i18n.Locale()).GeneralPositionPointerHint() }
+
+// GeneralPositionPointerHint says "Opens just below the pointer, or above it if there’s no room."
+// in the language of msgs.
+//
+// General: under the position select, in place of generalPositionHint while
+// Near Pointer is chosen.
+func (msgs Messages) GeneralPositionPointerHint() string {
+	return Catalog.Format(msgs.locale, "generalPositionPointerHint", nil)
+}
+
+// GeneralPositionTop says "Top Center"
+// in the language the app shows.
+//
+// General: position select, the default.
+func GeneralPositionTop() string { return In(i18n.Locale()).GeneralPositionTop() }
+
+// GeneralPositionTop says "Top Center"
+// in the language of msgs.
+//
+// General: position select, the default.
+func (msgs Messages) GeneralPositionTop() string {
+	return Catalog.Format(msgs.locale, "generalPositionTop", nil)
+}
+
+// GeneralPositionCenter says "Center"
+// in the language the app shows.
+//
+// General: position select.
+func GeneralPositionCenter() string { return In(i18n.Locale()).GeneralPositionCenter() }
+
+// GeneralPositionCenter says "Center"
+// in the language of msgs.
+//
+// General: position select.
+func (msgs Messages) GeneralPositionCenter() string {
+	return Catalog.Format(msgs.locale, "generalPositionCenter", nil)
+}
+
+// GeneralPositionBottom says "Bottom Center"
+// in the language the app shows.
+//
+// General: position select.
+func GeneralPositionBottom() string { return In(i18n.Locale()).GeneralPositionBottom() }
+
+// GeneralPositionBottom says "Bottom Center"
+// in the language of msgs.
+//
+// General: position select.
+func (msgs Messages) GeneralPositionBottom() string {
+	return Catalog.Format(msgs.locale, "generalPositionBottom", nil)
+}
+
+// GeneralPositionLeft says "Left"
+// in the language the app shows.
+//
+// General: position select.
+func GeneralPositionLeft() string { return In(i18n.Locale()).GeneralPositionLeft() }
+
+// GeneralPositionLeft says "Left"
+// in the language of msgs.
+//
+// General: position select.
+func (msgs Messages) GeneralPositionLeft() string {
+	return Catalog.Format(msgs.locale, "generalPositionLeft", nil)
+}
+
+// GeneralPositionRight says "Right"
+// in the language the app shows.
+//
+// General: position select.
+func GeneralPositionRight() string { return In(i18n.Locale()).GeneralPositionRight() }
+
+// GeneralPositionRight says "Right"
+// in the language of msgs.
+//
+// General: position select.
+func (msgs Messages) GeneralPositionRight() string {
+	return Catalog.Format(msgs.locale, "generalPositionRight", nil)
+}
+
+// GeneralPositionPointer says "Near Pointer"
+// in the language the app shows.
+//
+// General: position select; placed once as it shows, it does not follow the
+// pointer.
+func GeneralPositionPointer() string { return In(i18n.Locale()).GeneralPositionPointer() }
+
+// GeneralPositionPointer says "Near Pointer"
+// in the language of msgs.
+//
+// General: position select; placed once as it shows, it does not follow the
+// pointer.
+func (msgs Messages) GeneralPositionPointer() string {
+	return Catalog.Format(msgs.locale, "generalPositionPointer", nil)
+}
+
 // GeneralWidth says "Width"
 // in the language the app shows.
 //

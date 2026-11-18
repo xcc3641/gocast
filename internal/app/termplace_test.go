@@ -260,3 +260,42 @@ func TestDragRect(t *testing.T) {
 		}
 	}
 }
+
+// Choosing a position in Settings saves it at once, for the next show,
+// with the note under it saying how Near Pointer places the terminal
+// while it is chosen (copy.md 17).
+func TestPositionSetting(t *testing.T) {
+	p, tt, _ := hotkeyPrefs(t, "zh-Hans")
+	p.g.term = &termPanel{g: p.g} // hidden: nothing to move
+	p.page = pagePresets
+	p.termPos = positionLabel(p.g.settings.TermPosition())
+	tt.SetSize(prefsWidth, 900)
+	tt.Frame()
+	if !tt.HasText("在鼠标所在的那块屏幕上。") {
+		t.Fatalf("no note: %q", tt.Texts())
+	}
+	choose := func(from, label string) {
+		t.Helper()
+		if err := tt.Click(from); err != nil { // the select, showing its choice
+			t.Fatal(err)
+		}
+		tt.Frame()
+		if err := tt.Click(label); err != nil {
+			t.Fatalf("%v, of %q", err, tt.Texts())
+		}
+		tt.Frame()
+	}
+	choose("顶部居中", "鼠标旁边")
+	saved, err := settings.Load(p.g.settingsPath())
+	if err != nil || saved.TermPosition() != settings.PositionPointer {
+		t.Fatalf("saved %q, %v", saved.TerminalPosition, err)
+	}
+	if !tt.HasText("在鼠标下方出现，下面放不下就到上方。") || tt.HasText("在鼠标所在的那块屏幕上。") {
+		t.Errorf("Near Pointer's note: %q", tt.Texts())
+	}
+	choose("鼠标旁边", "顶部居中")
+	saved, _ = settings.Load(p.g.settingsPath())
+	if saved.TerminalPosition != "" || !tt.HasText("在鼠标所在的那块屏幕上。") {
+		t.Errorf("back to the top: saved %q, %q", saved.TerminalPosition, tt.Texts())
+	}
+}
