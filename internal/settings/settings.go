@@ -1,8 +1,9 @@
 // Package settings keeps Gocast's preferences in settings.json: the two
 // global shortcuts, the terminal's font size, whether the floating
-// terminal hides as the user clicks away, its size, the tips dismissed,
-// the clipboard history's and the calculator's switches, the hotkeys of
-// apps and terminal presets, and 自动检查更新 with the last check.
+// terminal hides as the user clicks away, its size and position, the tips
+// dismissed, the clipboard history's and the calculator's switches, the
+// hotkeys of apps and terminal presets, and 自动检查更新 with the last
+// check.
 package settings
 
 import (
@@ -58,6 +59,10 @@ type Settings struct {
 	// or dragging the panel's edges).
 	TerminalWidth  int `json:"terminalWidthPercent,omitempty"`
 	TerminalHeight int `json:"terminalHeightPercent,omitempty"`
+	// TerminalPosition is where the floating terminal shows on the
+	// display with the pointer, one of TerminalPositions; "" for
+	// PositionTop (copy.md 17).
+	TerminalPosition string `json:"terminalPosition,omitempty"`
 	// TerminalDir is the folder new plain terminals start in, and presets
 	// without a folder of their own, as the user reads it (~/Work); empty
 	// for the home folder.
@@ -282,6 +287,42 @@ func MinTermWidth(workArea int) int {
 // what was set, for a wider display.
 func (s Settings) TermWidthOn(workArea int) int {
 	return max(s.TermWidth(), MinTermWidth(workArea))
+}
+
+// Where the floating terminal shows, in the work area of the display with
+// the pointer (copy.md 17): its top edge centered, the default; its
+// center; its bottom edge centered; its left or right edge, centered
+// vertically; or just below the pointer, above it where there is no room.
+const (
+	PositionTop     = "top"
+	PositionCenter  = "center"
+	PositionBottom  = "bottom"
+	PositionLeft    = "left"
+	PositionRight   = "right"
+	PositionPointer = "pointer"
+)
+
+// TerminalPositions are the positions of the floating terminal, in the
+// order Settings lists them.
+var TerminalPositions = []string{PositionTop, PositionCenter, PositionBottom, PositionLeft, PositionRight, PositionPointer}
+
+// TermPosition is where the floating terminal shows: one of
+// TerminalPositions, PositionTop while unset or for any other value
+// (settings.json edited by hand, or by a later Gocast).
+func (s Settings) TermPosition() string {
+	if slices.Contains(TerminalPositions, s.TerminalPosition) {
+		return s.TerminalPosition
+	}
+	return PositionTop
+}
+
+// SetTermPosition makes pos where the floating terminal shows, "" again
+// for the default.
+func (s *Settings) SetTermPosition(pos string) {
+	s.TerminalPosition = pos
+	if pos == PositionTop {
+		s.TerminalPosition = ""
+	}
 }
 
 // TermHeight is the floating terminal's height in percent of the work

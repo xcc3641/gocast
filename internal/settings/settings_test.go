@@ -260,3 +260,37 @@ func TestMigrateUpdater(t *testing.T) {
 		})
 	}
 }
+
+// The floating terminal's position survives a restart, and a value Gocast
+// does not know (edited by hand, or written by a later version) reads as
+// the default, the top.
+func TestTerminalPosition(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "settings.json")
+	for _, pos := range TerminalPositions {
+		var s Settings
+		s.SetTermPosition(pos)
+		if err := s.Save(path); err != nil {
+			t.Fatal(err)
+		}
+		data, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if pos == PositionTop && strings.Contains(string(data), "terminalPosition") {
+			t.Errorf("the default is saved: %s", data)
+		}
+		got, err := Load(path)
+		if err != nil || got.TermPosition() != pos {
+			t.Errorf("%s: Load = %q, %v", pos, got.TermPosition(), err)
+		}
+	}
+	for _, raw := range []string{`{}`, `{"terminalPosition": "middle"}`, `{"terminalPosition": "Top"}`, `{"terminalPosition": ""}`} {
+		if err := os.WriteFile(path, []byte(raw), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		got, err := Load(path)
+		if err != nil || got.TermPosition() != PositionTop {
+			t.Errorf("%s: Load = %q, %v", raw, got.TermPosition(), err)
+		}
+	}
+}
