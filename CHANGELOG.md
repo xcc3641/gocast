@@ -8,6 +8,14 @@ The section of each version is the release notes that the update window
 shows (MyGo reads `## [version]`), so write it for users, in Chinese and
 English.
 
+## [0.2.0] - 2026-11-19
+
+- 设置 › 悬浮终端的「出现位置」改成一排六张小图：顶部、中央、底部、左侧、右侧、鼠标处，每张都画出终端会在哪儿，点哪张选哪张。
+- 「鼠标旁边」改成「鼠标处」：唤出悬浮终端时，终端里正在输入的那一行对准鼠标。跑 agent 时就是底下的输入框，眼睛不用找。放不下时贴着屏幕边，不会出屏。
+
+- Position in Settings › Floating Terminal is now a row of six pictures: Top, Center, Bottom, Left, Right and At Pointer. Each one shows where the terminal goes; click the one you want.
+- Near Pointer is now At Pointer: when the floating terminal appears, the line you’re typing on lines up with the pointer. With an agent running, that’s its input box at the bottom, right where you’re looking. If there’s no room, it stays inside the screen.
+
 ## [0.1.9] - 2026-11-19
 
 - 悬浮终端可以选在哪儿出现：顶部居中（和以前一样）、屏幕中央、底部居中、左侧、右侧，或者鼠标旁边。在设置 › 悬浮终端的「出现位置」里选。
