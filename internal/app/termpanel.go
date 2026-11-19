@@ -100,6 +100,7 @@ type termPanel struct {
 	chosen int          // the row of the new tab menu chosen
 
 	wa      mygo.Rectangle // the work area the panel shows in
+	scale   float64        // the scale of its display
 	pos     string         // the position it shows at (settings.TerminalPositions)
 	pointer mygo.Point     // the pointer, as it showed: where it shows at settings.PositionPointer
 	pl      termPlace      // where it shows, and how it moves and resizes there
@@ -1047,10 +1048,10 @@ func (p *termPanel) show() {
 	p.shown = true
 	p.hints.reset()
 	p.syncVisible()
-	pt, wa := sysPointer()
+	pt, wa, scale := sysPointer()
 	w, h := termSize(wa.Width, wa.Height, p.g.settings)
-	p.wa, p.pos, p.pointer = wa, p.g.settings.TermPosition(), pt
-	p.pl = termPlacement(p.pos, wa, w, h, pt)
+	p.wa, p.scale, p.pos, p.pointer = wa, scale, p.g.settings.TermPosition(), pt
+	p.pl = termPlacement(p.pos, wa, w, h, pt, p.typedAnchor(h))
 	x, y := p.pl.rect.X, p.pl.rect.Y
 	gen := p.anim.Add(1)
 	reduce := mygo.Theme.Preferences().ReduceMotion
@@ -1148,15 +1149,15 @@ func (p *termPanel) sizeChanged() {
 }
 
 // positionChanged moves the panel showing to the position of Settings at
-// once, with no motion, in the work area it shows in; Near Pointer, by
-// the pointer where it is now (design.md 3.7). Hidden, it shows there
-// next.
+// once, with no motion, in the work area it shows in; At Pointer, its line
+// typed on at the pointer where it is now (design.md 3.7). Hidden, it
+// shows there next.
 func (p *termPanel) positionChanged() {
 	if !p.shown || p.wa.Width <= 0 {
 		return
 	}
 	p.pos = p.g.settings.TermPosition()
-	p.pointer, _ = sysPointer()
+	p.pointer, _, _ = sysPointer()
 	p.replace()
 }
 
@@ -1166,8 +1167,44 @@ func (p *termPanel) replace() {
 	p.anim.Add(1)
 	p.win.SetOpacity(1)
 	w, h := termSize(p.wa.Width, p.wa.Height, p.g.settings)
-	p.pl = termPlacement(p.pos, p.wa, w, h, p.pointer)
+	p.pl = termPlacement(p.pos, p.wa, w, h, p.pointer, p.typedAnchor(h))
 	p.place(p.pl.rect)
+}
+
+// typedAnchor is how far under the top of the panel, h high, the middle
+// of the line typed on in the tab showing is (cursorAnchor), at
+// settings.PositionPointer, where it shows at the pointer: the row of its
+// cursor, else estimated.
+func (p *termPanel) typedAnchor(h int) int {
+	if p.pos != settings.PositionPointer {
+		return 0
+	}
+	size := float32(p.g.settings.Font())
+	s := p.current()
+	capsules := false
+	if s != nil {
+		capsules = p.hasCapsules(s)
+		if s.fontSize > 0 {
+			size = s.fontSize
+		}
+	}
+	return cursorAnchor(h, size, max(p.scale, 1), capsules, sessionCursor(s))
+}
+
+// sessionCursor is the row of the cursor of the tab's terminal, 0 at the
+// top of its screen, as the host's frames last said, the panel hidden as
+// showing: where its program takes what is typed. -1 for a tab that tells
+// none: not started yet, as a new tab or one of the host's not yet joined,
+// running in Gocast, of which MyGo tells no cursor, or with the cursor
+// hidden, as a program drawing its own. A test's says what it is told.
+var sessionCursor = func(s *session) int {
+	if s == nil || s.term == nil || s.conn == nil {
+		return -1
+	}
+	if cur := s.conn.cursor(); cur.Known && cur.Visible {
+		return cur.Row
+	}
+	return -1
 }
 
 // workAreaWidth is the width of the work area of the display the panel
@@ -1176,15 +1213,15 @@ func (p *termPanel) workAreaWidth() int {
 	if p.shown && p.wa.Width > 0 {
 		return p.wa.Width
 	}
-	_, wa := sysPointer()
+	_, wa, _ := sysPointer()
 	return wa.Width
 }
 
-// sysPointer is where the pointer is, and the work area of the display
-// with it, which the floating terminal shows in; a fake in tests.
+// sysPointer is where the pointer is, and the work area and scale of the
+// display with it, which the floating terminal shows in; a fake in tests.
 // GOCAST_POINTER=x,y puts the pointer there for it, for screenshots of
-// the positions near the pointer with the real one left alone.
-var sysPointer = func() (mygo.Point, mygo.Rectangle) {
+// the position at the pointer with the real one left alone.
+var sysPointer = func() (mygo.Point, mygo.Rectangle, float64) {
 	pt := mygo.Screen.CursorScreenPoint()
 	if x, y, ok := strings.Cut(os.Getenv("GOCAST_POINTER"), ","); ok {
 		if px, err := strconv.Atoi(x); err == nil {
@@ -1193,7 +1230,8 @@ var sysPointer = func() (mygo.Point, mygo.Rectangle) {
 			}
 		}
 	}
-	return pt, mygo.Screen.DisplayNearestPoint(pt).WorkArea
+	d := mygo.Screen.DisplayNearestPoint(pt)
+	return pt, d.WorkArea, d.ScaleFactor
 }
 
 // termSize is the panel's size in a work area of waW×waH for the

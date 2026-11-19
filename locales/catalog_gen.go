@@ -1581,13 +1581,15 @@ func (msgs Messages) GeneralFontSize() string {
 // GeneralPosition says "Position"
 // in the language the app shows.
 //
-// General: select, where the floating terminal shows (copy.md 17).
+// Settings › Floating Terminal: the name of the row of six pictures of
+// where the floating terminal shows, and of their radio group (copy.md 17).
 func GeneralPosition() string { return In(i18n.Locale()).GeneralPosition() }
 
 // GeneralPosition says "Position"
 // in the language of msgs.
 //
-// General: select, where the floating terminal shows (copy.md 17).
+// Settings › Floating Terminal: the name of the row of six pictures of
+// where the floating terminal shows, and of their radio group (copy.md 17).
 func (msgs Messages) GeneralPosition() string {
 	return Catalog.Format(msgs.locale, "generalPosition", nil)
 }
@@ -1595,43 +1597,45 @@ func (msgs Messages) GeneralPosition() string {
 // GeneralPositionHint says "On the display with the pointer."
 // in the language the app shows.
 //
-// General: under the position select.
+// Settings › Floating Terminal: under Position, over its pictures.
 func GeneralPositionHint() string { return In(i18n.Locale()).GeneralPositionHint() }
 
 // GeneralPositionHint says "On the display with the pointer."
 // in the language of msgs.
 //
-// General: under the position select.
+// Settings › Floating Terminal: under Position, over its pictures.
 func (msgs Messages) GeneralPositionHint() string {
 	return Catalog.Format(msgs.locale, "generalPositionHint", nil)
 }
 
-// GeneralPositionPointerHint says "Opens just below the pointer, or above it if there’s no room."
+// GeneralPositionPointerHint says "The line you’re typing on lines up with the pointer."
 // in the language the app shows.
 //
-// General: under the position select, in place of generalPositionHint while
-// Near Pointer is chosen.
+// Settings › Floating Terminal: under Position, in place of
+// generalPositionHint while At Pointer is chosen.
 func GeneralPositionPointerHint() string { return In(i18n.Locale()).GeneralPositionPointerHint() }
 
-// GeneralPositionPointerHint says "Opens just below the pointer, or above it if there’s no room."
+// GeneralPositionPointerHint says "The line you’re typing on lines up with the pointer."
 // in the language of msgs.
 //
-// General: under the position select, in place of generalPositionHint while
-// Near Pointer is chosen.
+// Settings › Floating Terminal: under Position, in place of
+// generalPositionHint while At Pointer is chosen.
 func (msgs Messages) GeneralPositionPointerHint() string {
 	return Catalog.Format(msgs.locale, "generalPositionPointerHint", nil)
 }
 
-// GeneralPositionTop says "Top Center"
+// GeneralPositionTop says "Top"
 // in the language the app shows.
 //
-// General: position select, the default.
+// Settings › Floating Terminal: under the first picture of Position, the
+// default. Short: six names share a row.
 func GeneralPositionTop() string { return In(i18n.Locale()).GeneralPositionTop() }
 
-// GeneralPositionTop says "Top Center"
+// GeneralPositionTop says "Top"
 // in the language of msgs.
 //
-// General: position select, the default.
+// Settings › Floating Terminal: under the first picture of Position, the
+// default. Short: six names share a row.
 func (msgs Messages) GeneralPositionTop() string {
 	return Catalog.Format(msgs.locale, "generalPositionTop", nil)
 }
@@ -1639,27 +1643,31 @@ func (msgs Messages) GeneralPositionTop() string {
 // GeneralPositionCenter says "Center"
 // in the language the app shows.
 //
-// General: position select.
+// Settings › Floating Terminal: under a picture of Position. Short: six
+// names share a row.
 func GeneralPositionCenter() string { return In(i18n.Locale()).GeneralPositionCenter() }
 
 // GeneralPositionCenter says "Center"
 // in the language of msgs.
 //
-// General: position select.
+// Settings › Floating Terminal: under a picture of Position. Short: six
+// names share a row.
 func (msgs Messages) GeneralPositionCenter() string {
 	return Catalog.Format(msgs.locale, "generalPositionCenter", nil)
 }
 
-// GeneralPositionBottom says "Bottom Center"
+// GeneralPositionBottom says "Bottom"
 // in the language the app shows.
 //
-// General: position select.
+// Settings › Floating Terminal: under a picture of Position. Short: six
+// names share a row.
 func GeneralPositionBottom() string { return In(i18n.Locale()).GeneralPositionBottom() }
 
-// GeneralPositionBottom says "Bottom Center"
+// GeneralPositionBottom says "Bottom"
 // in the language of msgs.
 //
-// General: position select.
+// Settings › Floating Terminal: under a picture of Position. Short: six
+// names share a row.
 func (msgs Messages) GeneralPositionBottom() string {
 	return Catalog.Format(msgs.locale, "generalPositionBottom", nil)
 }
@@ -1667,13 +1675,15 @@ func (msgs Messages) GeneralPositionBottom() string {
 // GeneralPositionLeft says "Left"
 // in the language the app shows.
 //
-// General: position select.
+// Settings › Floating Terminal: under a picture of Position. Short: six
+// names share a row.
 func GeneralPositionLeft() string { return In(i18n.Locale()).GeneralPositionLeft() }
 
 // GeneralPositionLeft says "Left"
 // in the language of msgs.
 //
-// General: position select.
+// Settings › Floating Terminal: under a picture of Position. Short: six
+// names share a row.
 func (msgs Messages) GeneralPositionLeft() string {
 	return Catalog.Format(msgs.locale, "generalPositionLeft", nil)
 }
@@ -1681,29 +1691,33 @@ func (msgs Messages) GeneralPositionLeft() string {
 // GeneralPositionRight says "Right"
 // in the language the app shows.
 //
-// General: position select.
+// Settings › Floating Terminal: under a picture of Position. Short: six
+// names share a row.
 func GeneralPositionRight() string { return In(i18n.Locale()).GeneralPositionRight() }
 
 // GeneralPositionRight says "Right"
 // in the language of msgs.
 //
-// General: position select.
+// Settings › Floating Terminal: under a picture of Position. Short: six
+// names share a row.
 func (msgs Messages) GeneralPositionRight() string {
 	return Catalog.Format(msgs.locale, "generalPositionRight", nil)
 }
 
-// GeneralPositionPointer says "Near Pointer"
+// GeneralPositionPointer says "At Pointer"
 // in the language the app shows.
 //
-// General: position select; placed once as it shows, it does not follow the
-// pointer.
+// Settings › Floating Terminal: under the last picture of Position; the
+// line typed on in the terminal shows at the pointer, placed once as it
+// shows, not following the pointer.
 func GeneralPositionPointer() string { return In(i18n.Locale()).GeneralPositionPointer() }
 
-// GeneralPositionPointer says "Near Pointer"
+// GeneralPositionPointer says "At Pointer"
 // in the language of msgs.
 //
-// General: position select; placed once as it shows, it does not follow the
-// pointer.
+// Settings › Floating Terminal: under the last picture of Position; the
+// line typed on in the terminal shows at the pointer, placed once as it
+// shows, not following the pointer.
 func (msgs Messages) GeneralPositionPointer() string {
 	return Catalog.Format(msgs.locale, "generalPositionPointer", nil)
 }

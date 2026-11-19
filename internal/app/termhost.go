@@ -417,6 +417,16 @@ func (c *hostConn) Close() error {
 	return nil
 }
 
+// cursor is where the frames of the host's terminal last left its cursor
+// (termhost.Stream.Cursor); not Known before the host started it.
+func (c *hostConn) cursor() termhost.Cursor {
+	st := c.stream()
+	if st == nil {
+		return termhost.Cursor{}
+	}
+	return st.Cursor()
+}
+
 // lost reports whether the host went away under the conn's terminal.
 func (c *hostConn) lost() bool {
 	st := c.stream()

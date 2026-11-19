@@ -51,8 +51,8 @@ func TestMain(m *testing.M) {
 	// main loop.
 	sysLocale = func() string { return "en" }
 	sysMaxScale = func() float64 { return 2 }
-	sysPointer = func() (mygo.Point, mygo.Rectangle) {
-		return mygo.Point{X: 700, Y: 300}, mygo.Rectangle{Y: 33, Width: 1512, Height: 949}
+	sysPointer = func() (mygo.Point, mygo.Rectangle, float64) {
+		return mygo.Point{X: 700, Y: 300}, mygo.Rectangle{Y: 33, Width: 1512, Height: 949}, 2
 	}
 	sysFileIcon = func(string, int) ([]byte, error) { return nil, errors.New("no icons in tests") }
 	sysTypeIcon = sysFileIcon

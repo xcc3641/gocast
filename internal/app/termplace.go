@@ -1,23 +1,22 @@
 package app
 
 import (
+	"math"
+
 	"github.com/egoist/mygo"
+	"github.com/egoist/mygo/ui"
 
 	"gocast/internal/settings"
 )
 
 // Where the floating terminal shows, how it moves as it shows and hides,
 // and which of its edges stay as the user drags the others (design.md
-// 3.7), as pure maths of the work area, the panel's size and the pointer.
+// 3.7), as pure maths of the work area, the panel's size, the pointer and,
+// at the pointer, the line typed on.
 
-// The panel's distances, in DIPs (design.md 3.7).
-const (
-	termGap = 8 // from the work area's edges, in every position
-	// Near the pointer, the panel's top edge is pointerBelow under the
-	// pointer, out of the way of the arrow's ~17; flipped above it, its
-	// bottom edge pointerAbove over it, above the I-beam's upper half.
-	pointerBelow, pointerAbove = 24, 16
-)
+// termGap is the panel's distance from the work area's edges, in every
+// position, in DIPs (design.md 3.7).
+const termGap = 8
 
 // The panel's travel as it shows and hides (design.md 1.5, 3.7): at the
 // top it drops dropIn and rises riseOut, as in 0.1.8, where its start is
@@ -28,7 +27,6 @@ const (
 	dropIn, riseOut     = 12, 8
 	travelIn, travelOut = 8, 8
 	centerSide          = sideAbove // where the panel at the center comes from
-	pointerUnplaceable  = sideAbove // ... and the one by the pointer, with room on neither side of it
 )
 
 // termSide is the side the panel comes from as it shows, and goes back
@@ -61,24 +59,22 @@ type termPlace struct {
 	// The side it comes from, and how far it travels in and out.
 	from    termSide
 	in, out int
-	// Near the pointer: flipped above it, as there was no room below;
-	// or against the work area's edge on the side with more room, as
-	// there was room on neither side (it may cover the pointer then).
-	flipped, unplaceable bool
 }
 
 // termPlacement is where a panel w×h shows at pos, one of
 // settings.TerminalPositions, in the work area wa of the display with the
 // pointer pt (design.md 3.7): 8 from the work area's edges, along an
 // axis where it is no larger than the work area less 16, else against
-// them; never outside it. pt counts for settings.PositionPointer only.
-func termPlacement(pos string, wa mygo.Rectangle, w, h int, pt mygo.Point) termPlace {
-	return placeIn(pos, wa, w, h, pt, termGap)
+// them; never outside it. pt counts for settings.PositionPointer only,
+// where the panel's line typed on, anchor DIPs under its top
+// (cursorAnchor), is at the pointer, the panel centered across it.
+func termPlacement(pos string, wa mygo.Rectangle, w, h int, pt mygo.Point, anchor int) termPlace {
+	return placeIn(pos, wa, w, h, pt, anchor, termGap)
 }
 
 // placeIn is termPlacement with gap for termGap: the same rules on a
-// screen of another scale, as Settings' thumbnail draws it.
-func placeIn(pos string, wa mygo.Rectangle, w, h int, pt mygo.Point, gap int) termPlace {
+// screen of another scale, as Settings' pictures draw them.
+func placeIn(pos string, wa mygo.Rectangle, w, h int, pt mygo.Point, anchor, gap int) termPlace {
 	gx, gy := edgeGap(wa.Width, w, gap), edgeGap(wa.Height, h, gap)
 	cx, cy := wa.X+(wa.Width-w)/2, wa.Y+(wa.Height-h)/2
 	right, bottom := wa.X+wa.Width, wa.Y+wa.Height
@@ -100,26 +96,58 @@ func placeIn(pos string, wa mygo.Rectangle, w, h int, pt mygo.Point, gap int) te
 		x = right - gx - w
 		pl.fixX, pl.from = fixEnd, sideRight
 	case settings.PositionPointer:
-		x = pt.X - w/2
-		below, above := pt.Y+pointerBelow, pt.Y-pointerAbove-h
-		switch {
-		case below+h <= bottom-gy:
-			y = below
-			pl.fixY, pl.from = fixStart, sideAbove // unfolding away from the pointer
-		case above >= wa.Y+gy:
-			y, pl.flipped = above, true
-			pl.fixY, pl.from = fixEnd, sideBelow
-		default: // against the edge of the side with more room
-			pl.unplaceable, pl.from = true, pointerUnplaceable
-			if bottom-pt.Y >= pt.Y-wa.Y {
-				y, pl.fixY = bottom-gy-h, fixEnd
-			} else {
-				y, pl.fixY = wa.Y+gy, fixStart
-			}
-		}
+		// Over the pointer, mostly: the line typed on, near the bottom
+		// as an agent's input box is, rises to the pointer and stops
+		// there, and stays as the panel grows up. Kept inside the work
+		// area below, where the line then misses the pointer.
+		x, y = pt.X-w/2, pt.Y-anchor
+		pl.fixY, pl.from = fixEnd, sideBelow
 	}
 	pl.rect = mygo.Rectangle{X: clampInside(x, wa.X, wa.Width, w, gx), Y: clampInside(y, wa.Y, wa.Height, h, gy), Width: w, Height: h}
 	return pl
+}
+
+// The line typed on, at the pointer (design.md 3.7). A terminal that
+// tells no cursor, as one not started yet, has its line estimated where
+// an agent's input box is: its middle typedLinesUp lines, each
+// termLineHeight its font size, over the bottom of the terminal's room,
+// with a line and two of status under it.
+const typedLinesUp = 3.5
+
+// termGridTop is how far under the panel's top the terminal's rows start:
+// under its outline and the tab bar, the terminal having no padding of
+// its own (termPanel.view, run).
+const termGridTop = panelBorderWidth + tabBarH
+
+// cursorAnchor is how far under the top of a panel h high the middle of
+// its line typed on is, which shows at the pointer (design.md 3.7), for a
+// tab of font size, its bottom padding that of capsules or not: of the
+// cursor's row, on a display of scale, as the terminal lays its rows out,
+// kept to the rows the panel holds; estimated with a row < 0, not known.
+func cursorAnchor(h int, fontSize float32, scale float64, capsules bool, row int) int {
+	bottom := float64(termPadBottom)
+	if capsules {
+		bottom = termPadCapsules
+	}
+	if row < 0 {
+		return int(math.Round(float64(h) - bottom - typedLinesUp*float64(fontSize)*termLineHeight))
+	}
+	// As the terminal's view: its cells a whole number of pixels high, its
+	// rows from the pixel its top is on.
+	cell := termCellPixels(fontSize, scale)
+	room := float64(h) - 2*panelBorderWidth - tabBarH - bottom
+	rows := max(int(math.Round(room*scale))/cell, 1)
+	row = min(row, rows-1)
+	top := math.Round(termGridTop*scale) / scale
+	return int(math.Round(top + (float64(row)+0.5)*float64(cell)/scale))
+}
+
+// termCellPixels is how many pixels high the terminal's rows are at font
+// size on a display of scale, as MyGo's terminal view makes them: the
+// font's line, termLineHeight high, up to a whole pixel.
+func termCellPixels(fontSize float32, scale float64) int {
+	m := ui.Font{Family: "monospace", Size: fontSize, Weight: 400}.Metrics()
+	return max(int(math.Ceil(float64((m.Ascent+m.Descent+m.LineGap)*termLineHeight*float32(scale)-0.05))), 1)
 }
 
 // edgeGap is the panel's distance from the work area's edges along an

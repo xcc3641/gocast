@@ -524,39 +524,39 @@
   },
   "generalPosition": "Position",
   "@generalPosition": {
-    "description": "General: select, where the floating terminal shows (copy.md 17)."
+    "description": "Settings › Floating Terminal: the name of the row of six pictures of where the floating terminal shows, and of their radio group (copy.md 17)."
   },
   "generalPositionHint": "On the display with the pointer.",
   "@generalPositionHint": {
-    "description": "General: under the position select."
+    "description": "Settings › Floating Terminal: under Position, over its pictures."
   },
-  "generalPositionPointerHint": "Opens just below the pointer, or above it if there’s no room.",
+  "generalPositionPointerHint": "The line you’re typing on lines up with the pointer.",
   "@generalPositionPointerHint": {
-    "description": "General: under the position select, in place of generalPositionHint while Near Pointer is chosen."
+    "description": "Settings › Floating Terminal: under Position, in place of generalPositionHint while At Pointer is chosen."
   },
-  "generalPositionTop": "Top Center",
+  "generalPositionTop": "Top",
   "@generalPositionTop": {
-    "description": "General: position select, the default."
+    "description": "Settings › Floating Terminal: under the first picture of Position, the default. Short: six names share a row."
   },
   "generalPositionCenter": "Center",
   "@generalPositionCenter": {
-    "description": "General: position select."
+    "description": "Settings › Floating Terminal: under a picture of Position. Short: six names share a row."
   },
-  "generalPositionBottom": "Bottom Center",
+  "generalPositionBottom": "Bottom",
   "@generalPositionBottom": {
-    "description": "General: position select."
+    "description": "Settings › Floating Terminal: under a picture of Position. Short: six names share a row."
   },
   "generalPositionLeft": "Left",
   "@generalPositionLeft": {
-    "description": "General: position select."
+    "description": "Settings › Floating Terminal: under a picture of Position. Short: six names share a row."
   },
   "generalPositionRight": "Right",
   "@generalPositionRight": {
-    "description": "General: position select."
+    "description": "Settings › Floating Terminal: under a picture of Position. Short: six names share a row."
   },
-  "generalPositionPointer": "Near Pointer",
+  "generalPositionPointer": "At Pointer",
   "@generalPositionPointer": {
-    "description": "General: position select; placed once as it shows, it does not follow the pointer."
+    "description": "Settings › Floating Terminal: under the last picture of Position; the line typed on in the terminal shows at the pointer, placed once as it shows, not following the pointer."
   },
   "generalWidth": "Width",
   "@generalWidth": {

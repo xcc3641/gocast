@@ -63,10 +63,10 @@ type prefsWindow struct {
 	searchOnly bool // the search panel opens with its search field alone
 	calculator bool // the search panel calculates (design.md 2.3a)
 	fontSize   float64
-	folderGone bool     // the default folder is not there, as of the last look
-	termPos    string   // the label of the floating terminal's position chosen
-	thumb      posThumb // the position's thumbnail, moving to it
-	termWidth  float64  // percent of the work area
+	folderGone bool      // the default folder is not there, as of the last look
+	termPos    string    // the floating terminal's position chosen (settings.TerminalPositions)
+	posGroup   ui.Handle // the row of its pictures
+	termWidth  float64   // percent of the work area
 	termHeight float64
 	hideBlur   bool
 
@@ -125,8 +125,7 @@ func (p *prefsWindow) show(page string) {
 	p.searchOnly = p.g.settings.SearchOnly
 	p.calculator = p.g.settings.Calculator()
 	p.fontSize = float64(p.g.settings.Font())
-	p.termPos = positionLabel(p.g.settings.TermPosition())
-	p.thumb = posThumb{pos: p.g.settings.TermPosition()} // drawn in place
+	p.termPos = p.g.settings.TermPosition()
 	p.termWidth = float64(p.g.settings.TermWidth())
 	p.termHeight = float64(p.g.settings.TermHeight())
 	p.hideBlur = !p.g.settings.KeepTerminalOnBlur
@@ -475,33 +474,83 @@ func positionLabel(pos string) string {
 	return locales.GeneralPositionTop()
 }
 
-// positionRow chooses where the floating terminal shows: saved at once,
-// and the terminal showing moved there at once (design.md 3.7). Its note
-// says how Near Pointer places it, while chosen; the thumbnail left of
-// it shows where.
+// positionRow chooses where the floating terminal shows (design.md 3.7):
+// its name and note over a row of the six positions' pictures, a radio
+// group, each named under its picture. A picture clicked, or its name, or
+// the arrows, choose it: saved at once, and the terminal showing moved
+// there at once. The note says how At Pointer places it, while chosen.
 func (p *prefsWindow) positionRow(c *ui.Context, k tokens, g *group) {
-	labels := make([]string, len(settings.TerminalPositions))
-	for i, pos := range settings.TerminalPositions {
-		labels[i] = positionLabel(pos)
+	if g.rows > 0 {
+		groupDivider(c, k)
 	}
+	g.rows++
 	hint := locales.GeneralPositionHint()
 	if p.g.settings.TermPosition() == settings.PositionPointer {
 		hint = locales.GeneralPositionPointerHint()
 	}
-	g.row(c, k, locales.GeneralPosition(), hint, k.textSecondary, func() {
-		ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
-			p.positionThumb(c) // 45 high: the row 61, with its padding
-			if ui.Select(c, &p.termPos, labels).Width(140).Label(locales.GeneralPosition()).Changed() {
-				if i := slices.Index(labels, p.termPos); i >= 0 {
-					pos := settings.TerminalPositions[i]
-					p.thumb.set(pos, c.Now(), p.termWidth, p.termHeight, c.Preferences().ReduceMotion)
-					p.g.settings.SetTermPosition(pos)
-					p.g.saveSettings()
-					p.g.term.positionChanged()
-				}
+	ui.Column(c).Padding(10, groupInset, 12, 0).Gap(12).Children(func() {
+		ui.Column(c).Gap(2).Children(func() {
+			ui.Text(c, locales.GeneralPosition()).FontSize(13).TextColor(k.text)
+			ui.Text(c, hint).FontSize(12).TextColor(k.textSecondary)
+		})
+		p.positionPictures(c, k, hint)
+	})
+}
+
+// positionPictures is the radio group of the positions' pictures, across
+// the row in cells of equal width, in two rows of three where a cell
+// would be under pictureCell wide. The arrows choose the next or the one
+// before, stopping at the ends.
+func (p *prefsWindow) positionPictures(c *ui.Context, k tokens, hint string) {
+	positions := settings.TerminalPositions
+	perRow := len(positions)
+	if w := p.posGroup.Bounds(c).W; w > 0 && w/float32(perRow) < pictureCell {
+		perRow = (perRow + 1) / 2
+	}
+	focusedAt := -1
+	cell := func(i int, pos string) {
+		name := positionLabel(pos)
+		c.Key("position-" + pos)
+		item := ui.RadioBase(c, &p.termPos, pos).Column().Grow(1).Basis(0).AlignItems(ui.Center).Gap(nameGap).
+			FocusRing(false).Cursor(ui.CursorDefault).Label(name)
+		if item.Changed() {
+			p.g.settings.SetTermPosition(p.termPos)
+			p.g.saveSettings()
+			p.g.term.positionChanged()
+			c.Invalidate() // the note over it, built before, for the new choice
+		}
+		if item.Focused() {
+			focusedAt = i
+		}
+		chosen := p.termPos == pos
+		item.Children(func() {
+			p.positionPicture(c, pos, chosen, item.FocusVisible(), item.Pressed())
+			t := ui.Text(c, name).FontSize(12).FixedLineHeight(nameLine).SingleLine().AccessHidden(true)
+			if chosen {
+				t.FontWeight(500).TextColor(k.text)
+			} else {
+				t.TextColor(k.textSecondary)
 			}
 		})
-	})
+	}
+	group := ui.RadioGroup(c, func() {
+		for start := 0; start < len(positions); start += perRow {
+			ui.Row(c).Children(func() {
+				for i := start; i < min(start+perRow, len(positions)); i++ {
+					cell(i, positions[i])
+				}
+			})
+		}
+	}).Gap(pictureRowGap).Bind(&p.posGroup).Label(locales.GeneralPosition()).Description(hint)
+	// The group goes round from the last to the first: not here.
+	switch focusedAt {
+	case 0:
+		group.Shortcut(0, ui.KeyLeft)
+		group.Shortcut(0, ui.KeyUp)
+	case len(positions) - 1:
+		group.Shortcut(0, ui.KeyRight)
+		group.Shortcut(0, ui.KeyDown)
+	}
 }
 
 func (p *prefsWindow) presetsPage(c *ui.Context, k tokens) {
