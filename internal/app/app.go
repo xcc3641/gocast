@@ -70,6 +70,9 @@ type gocast struct {
 	// quitting is set while the app quits: the panels, which hide rather
 	// than close, close then, or their OnClose would cancel the quit.
 	quitting bool
+	// showWhenReady: another Gocast was opened before this one was ready,
+	// which shows its search panel once it is (secondInstance).
+	showWhenReady bool
 
 	presets      []presets.Preset
 	presetsStamp time.Time
@@ -364,11 +367,24 @@ func (g *gocast) ready() {
 			return
 		}
 	}
-	if !mygo.App.WasOpenedAtLogin() && !relaunched() {
+	if g.showWhenReady || !mygo.App.WasOpenedAtLogin() && !relaunched() {
 		// Started by the user: show what it does. Relaunched to update,
-		// it shows nothing, as at login (design.md 4.5).
+		// it shows nothing, as at login (design.md 4.5), unless the user
+		// opened Gocast meanwhile.
+		g.showWhenReady = false
 		g.launcher.show()
 	}
+}
+
+// secondInstance shows the search panel for a Gocast opened while this one
+// runs, which then exits. One opened before this one is ready, as while
+// it relaunches to update, gets it once it is: there is no panel yet.
+func (g *gocast) secondInstance() {
+	if g.launcher == nil {
+		g.showWhenReady = true
+		return
+	}
+	g.launcher.show()
 }
 
 // Run starts Gocast. When another Gocast is running, it returns at once,
@@ -419,7 +435,7 @@ func Run() {
 	// with LSUIElement (mygo.config.ts).
 	mygo.App.SetActivationPolicy(mygo.ActivationPolicyAccessory)
 	mygo.App.OnWindowAllClosed(func() {}) // keep running without windows
-	mygo.App.OnSecondInstance(func([]string, string) { g.launcher.show() })
+	mygo.App.OnSecondInstance(func([]string, string) { g.secondInstance() })
 	mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) { g.quitting = true })
 	mygo.App.OnQuitCanceled(func() { g.quitting = false })
 	mygo.App.WhenReady(g.ready)
