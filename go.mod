@@ -15,3 +15,5 @@ require (
 	golang.org/x/net v0.59.0 // indirect
 	golang.org/x/text v0.43.0 // indirect
 )
+
+replace github.com/egoist/mygo => github.com/xcc3641/mygo v0.9.1-0.20261119150050-e8b609c56eea

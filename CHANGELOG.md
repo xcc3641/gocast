@@ -8,6 +8,16 @@ The section of each version is the release notes that the update window
 shows (MyGo reads `## [version]`), so write it for users, in Chinese and
 English.
 
+## [0.2.1] - 2026-11-20
+
+- 修好了更新后点「重新打开」，Gocast 有时没再出现的问题。现在新版在 Gocast 退出的那一刻才换上，下载好以后后台不再挂着任何东西。每一步都记在 `~/Library/Logs/Gocast/update.log`。
+- 修好了 Gocast 刚启动时又被打开一次（比如更新重新打开时正好点了图标）会直接退出的问题。现在会等准备好，再打开搜索面板。
+- 从 0.2.0 或更早的版本升到 0.2.1，这一次还是由旧版负责重新打开。万一没自动出现，手动打开 Gocast 就是新版；之后的更新不会再这样。
+
+- Fixed Gocast sometimes not coming back after you chose Relaunch to finish an update. The new version is now swapped in the moment Gocast quits, and nothing is left waiting in the background after the download. Each step is logged in `~/Library/Logs/Gocast/update.log`.
+- Fixed Gocast quitting when it was opened again while still starting up (for example, clicking its icon as an update relaunched it). It now opens the search panel once it’s ready.
+- Updating from 0.2.0 or earlier to 0.2.1, the old version still handles the relaunch this one time. If Gocast doesn’t come back on its own, open it and you’ll have the new version. Later updates won’t do this.
+
 ## [0.2.0] - 2026-11-19
 
 - 设置 › 悬浮终端的「出现位置」改成一排六张小图：顶部、中央、底部、左侧、右侧、鼠标处，每张都画出终端会在哪儿，点哪张选哪张。
