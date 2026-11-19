@@ -12,6 +12,7 @@ package termhost
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/binary"
 	"encoding/json"
 	"errors"
@@ -199,4 +200,47 @@ func parseFrame(p []byte) (cols, rows int, frame []byte, err error) {
 		return 0, 0, nil, errors.New("termhost: short frame")
 	}
 	return int(binary.BigEndian.Uint16(p[0:2])), int(binary.BigEndian.Uint16(p[2:4])), p[4:], nil
+}
+
+// frameCursor reads where a frame leaves the cursor, from the sequence
+// MyGo's Mirror ends each frame with (Mirror.state):
+// ESC[0m ESC[{row+1};{col+1}H ESC[?25{h|l} ESC[{shape} q. ok is false for
+// a frame that does not end so, as one that is empty.
+func frameCursor(frame []byte) (c Cursor, ok bool) {
+	const lead = "\x1b[0m\x1b["
+	i := bytes.LastIndex(frame, []byte(lead))
+	if i < 0 {
+		return Cursor{}, false
+	}
+	p := frame[i+len(lead):]
+	num := func(end byte) (int, bool) {
+		n, digits := 0, 0
+		for len(p) > 0 && p[0] >= '0' && p[0] <= '9' && digits < 6 {
+			n = n*10 + int(p[0]-'0')
+			p, digits = p[1:], digits+1
+		}
+		if digits == 0 || len(p) == 0 || p[0] != end {
+			return 0, false
+		}
+		p = p[1:]
+		return n, true
+	}
+	row, ok1 := num(';')
+	col, ok2 := num('H')
+	if !ok1 || !ok2 || row < 1 || col < 1 || !bytes.HasPrefix(p, []byte("\x1b[?25")) || len(p) < 6 {
+		return Cursor{}, false
+	}
+	shown := p[5]
+	if shown != 'h' && shown != 'l' {
+		return Cursor{}, false
+	}
+	p = p[6:]
+	if !bytes.HasPrefix(p, []byte("\x1b[")) {
+		return Cursor{}, false
+	}
+	p = p[2:]
+	if _, ok := num(' '); !ok || string(p) != "q" {
+		return Cursor{}, false
+	}
+	return Cursor{Row: row - 1, Col: col - 1, Visible: shown == 'h', Known: true}, true
 }

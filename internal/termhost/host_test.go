@@ -786,3 +786,48 @@ func TestCloseInherited(t *testing.T) {
 		t.Errorf("own: %v", err)
 	}
 }
+
+// The end of a frame says where the cursor is and whether it shows, as
+// MyGo's Mirror writes it; a frame that does not end so says nothing.
+func TestFrameCursor(t *testing.T) {
+	for _, c := range []struct {
+		frame string
+		want  Cursor
+	}{
+		{"\x1b[2J\x1b[H$ \x1b[0m\x1b[1;3H\x1b[?25h\x1b[0 q", Cursor{Row: 0, Col: 2, Visible: true, Known: true}},
+		{"rows\x1b[0m\x1b[38;120H\x1b[?25l\x1b[2 q", Cursor{Row: 37, Col: 119, Known: true}},
+		// Only the last: a frame of a frame's text, as cat of a log of
+		// them, still ends with its own.
+		{"\x1b[0m\x1b[9;9H\x1b[?25h\x1b[1 q\r\nmore\x1b[0m\x1b[12;1H\x1b[?25h\x1b[6 q", Cursor{Row: 11, Visible: true, Known: true}},
+		{"", Cursor{}},
+		{"text with no cursor", Cursor{}},
+		{"\x1b[0m\x1b[3;4H\x1b[?25h", Cursor{}},                 // cut short
+		{"\x1b[0m\x1b[3;4H\x1b[?25h\x1b[0 qand then", Cursor{}}, // not the end
+		{"\x1b[0m\x1b[;4H\x1b[?25h\x1b[0 q", Cursor{}},          // no row
+		{"\x1b[0m\x1b[0;4H\x1b[?25h\x1b[0 q", Cursor{}},         // rows count from 1
+		{"\x1b[0m\x1b[3;4H\x1b[?25x\x1b[0 q", Cursor{}},         // neither h nor l
+		{"\x1b[0m\x1b[3;4H\x1b[?1049h\x1b[0 q", Cursor{}},       // another mode
+		{"\x1b[0m\x1b[3;4H\x1b[?25h\x1b[ q", Cursor{}},          // no shape
+		{"\x1b[0m\x1b[99999999;4H\x1b[?25h\x1b[0 q", Cursor{}},  // no screen is that tall
+	} {
+		got, ok := frameCursor([]byte(c.frame))
+		if got != c.want || ok != c.want.Known {
+			t.Errorf("%q: %+v %v, want %+v", c.frame, got, ok, c.want)
+		}
+	}
+}
+
+// A stream knows where its terminal's cursor is from the frames it read:
+// where the program's output left it, and whether the program hides it.
+func TestStreamCursor(t *testing.T) {
+	_, c, _ := testHost(t)
+	prog := []string{"/bin/sh", "-c", `printf 'one\ntwo\nthree'; read l; printf '\033[?25l'; read l`}
+	id, err := c.Create(CreateRequest{Argv: prog, Dir: "/", Cols: 40, Rows: 10})
+	if err != nil {
+		t.Fatal(err)
+	}
+	term := show(t, c, id, nil)
+	until(term.read, func() bool { return term.st.Cursor() == Cursor{Row: 2, Col: 5, Visible: true, Known: true} })
+	term.st.Write([]byte("\r"))
+	until(term.read, func() bool { cur := term.st.Cursor(); return cur.Known && !cur.Visible && cur.Row == 3 })
+}

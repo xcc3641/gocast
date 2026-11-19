@@ -256,6 +256,24 @@ type Stream struct {
 	code   int
 	closed bool // Close
 	lost   bool // the host went away
+	cursor Cursor
+}
+
+// Cursor is where a frame of the host left the cursor of its terminal:
+// its row and column on the screen, 0 at the top left, and whether its
+// program shows it. Known is false until a frame said.
+type Cursor struct {
+	Row, Col       int
+	Visible, Known bool
+}
+
+// Cursor is where the last frame read left the cursor, which shows where
+// the program takes what is typed: up to a frame behind the host, a
+// second while the terminal does not show (SetVisible).
+func (s *Stream) Cursor() Cursor {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.cursor
 }
 
 // Bind gives the stream what resizes the terminal it feeds; Read waits
@@ -295,6 +313,11 @@ func (s *Stream) Read(p []byte) (int, error) {
 			if (cols != s.cols || rows != s.rows) && s.resize != nil {
 				s.cols, s.rows = cols, rows
 				s.resize(cols, rows)
+			}
+			if cur, ok := frameCursor(frame); ok {
+				s.mu.Lock()
+				s.cursor = cur
+				s.mu.Unlock()
 			}
 			s.buf = frame
 		case msgExit:
