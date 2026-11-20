@@ -79,8 +79,15 @@ func (g *gocast) newAwake(o keepawake.Options) {
 // once.
 func (g *gocast) setUpAwake() {
 	g.newAwake(keepawake.Options{Backend: sysAwakeBackend})
-	mygo.App.OnWillQuit(func(*mygo.QuitEvent) { g.awake.Close() })
+	mygo.App.OnWillQuit(func(*mygo.QuitEvent) { g.closeAwake() })
 	mygo.Power.OnResume(g.awake.Check)
+}
+
+// closeAwake ends Keep Awake as Gocast quits, the tray icon back to
+// normal at once, as Close tells of no change.
+func (g *gocast) closeAwake() {
+	g.awake.Close()
+	g.awakeChanged()
 }
 
 // awakeActive reports whether Gocast keeps the Mac awake.
@@ -145,12 +152,18 @@ func (g *gocast) awakeChanged() {
 // technology reads as "Gocast, keeping awake" (design.md 2.10, copy.md
 // 18.5).
 func (g *gocast) showTrayAwake() {
-	if g.tray == nil {
-		return
-	}
 	png, tip := trayPNG, appName
 	if g.awakeOn {
 		png, tip = awakeTrayPNG, locales.AwakeTrayLabel()
+	}
+	sysTrayLook(g, png, tip)
+}
+
+// sysTrayLook gives the tray icon png and the tooltip tip; the tests
+// note the tooltip.
+var sysTrayLook = func(g *gocast, png []byte, tip string) {
+	if g.tray == nil {
+		return
 	}
 	if err := g.tray.SetIcon(png, true); err != nil {
 		log.Printf("tray icon: %v", err)

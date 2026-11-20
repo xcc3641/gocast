@@ -272,6 +272,61 @@ func TestAwakeEndsAndTray(t *testing.T) {
 	}
 }
 
+// The tray's tooltip says "keeping awake" from the start, through Change
+// To, and is Gocast's again at once as the session stops, ends on time
+// (checked as the Mac wakes too) or Gocast quits.
+func TestAwakeTrayTooltip(t *testing.T) {
+	l, _, f := awakePanel(t, "en")
+	g := l.g
+	var tips []string
+	old := sysTrayLook
+	t.Cleanup(func() { sysTrayLook = old })
+	sysTrayLook = func(_ *gocast, _ []byte, tip string) { tips = append(tips, tip) }
+	last := func() string {
+		if len(tips) == 0 {
+			return ""
+		}
+		return tips[len(tips)-1]
+	}
+	change := func(label string) {
+		for _, it := range g.trayMenu().Items() {
+			if it.Label == "Change To" || it.Label == "Keep Awake" {
+				for _, s := range it.Submenu {
+					if s.Label == label {
+						s.Click(s, nil)
+						return
+					}
+				}
+			}
+		}
+		t.Fatalf("no %q in the tray", label)
+	}
+
+	change("Until I Stop")
+	change("30 Minutes") // Change To: still on
+	if last() != "Gocast, keeping awake" {
+		t.Fatalf("on: %q", tips)
+	}
+	g.stopAwake()
+	if last() != appName {
+		t.Errorf("stopped: %q", tips)
+	}
+	change("30 Minutes")
+	*f.now = f.now.Add(31 * time.Minute) // asleep past its end
+	g.awake.Check()                      // as the Mac wakes
+	if last() != appName || g.awakeActive() {
+		t.Errorf("ended: %q", tips)
+	}
+	change("1 Hour")
+	g.closeAwake()
+	if last() != appName || len(f.as.held) != 0 {
+		t.Errorf("quit: %q, held %v", tips, f.as.held)
+	}
+	if want := []string{"Gocast, keeping awake", appName, "Gocast, keeping awake", appName, "Gocast, keeping awake", appName}; !slices.Equal(tips, want) {
+		t.Errorf("tips %q", tips)
+	}
+}
+
 // The switch in Settings › General applies at once to the session
 // running, and is kept; when the new assertion can't be made, nothing
 // changes.
