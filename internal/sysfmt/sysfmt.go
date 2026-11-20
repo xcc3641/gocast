@@ -4,7 +4,8 @@
 // clock ("今天 14:05", "昨天 09:12", "11月10日 18:30"), and a size in its
 // byte units ("84 KB"); and for the calculator's card (design.md 2.3a,
 // copy.md 7.1), the day exchange rates are from ("今天", "11月10日") and
-// the system's grouping separator and decimal point.
+// the system's grouping separator and decimal point; and for Keep Awake
+// (copy.md 18.0), a time of day on the system's 12- or 24-hour clock.
 package sysfmt
 
 import "time"

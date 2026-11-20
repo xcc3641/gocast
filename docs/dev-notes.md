@@ -76,6 +76,7 @@ Release builds are signed with the Developer ID in `macos.signingIdentity` (mygo
 | `internal/settings` | settings.json |
 | `internal/shortcut` | Accelerator ⇄ glyphs (⌥⇧Space), and the recorder's key → accelerator |
 | `internal/running` | Running apps (the dot under their icons) |
+| `internal/keepawake` | Keep Awake without its UI (design.md 2.10, copy.md 18): the `Keeper` (one IOKit power assertion at a time, ended by the wall clock), parsing typed lengths and times, the words for what is left. Held in the main process only, never the terminal host. `GOCAST_REAL_ASSERTION=1 go test -run TestRealAssertion ./internal/keepawake` checks the real assertion in `pmset -g assertions` |
 | `locales/` | MyGo i18n catalogs: `en` (source) and `zh-Hans`; they follow the system language |
 
 ## Data
