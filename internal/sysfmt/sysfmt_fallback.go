@@ -21,6 +21,9 @@ func fallbackDay(t, now time.Time) string {
 	return t.Format("01-02")
 }
 
+// fallbackClock is Clock where the system can't say it: a 24-hour clock.
+func fallbackClock(t time.Time) string { return t.Format("15:04") }
+
 // fallbackBytes is Bytes where the system can't say it, in decimal units
 // as Finder's.
 func fallbackBytes(n int64) string {

@@ -166,6 +166,29 @@ func Day(t, now time.Time, locale string, long bool) string {
 	return fallbackDay(t, now)
 }
 
+// Clock says the time of day of t, hours and minutes, on the system's 12-
+// or 24-hour clock in the language of locale: "17:30", "5:30 PM",
+// "下午5:30" (Keep Awake's "until", copy.md 18.0).
+func Clock(t time.Time, locale string) string {
+	if !classes() {
+		return fallbackClock(t)
+	}
+	// An autorelease pool is the thread's: keep to it till it drains.
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+	pool := classPool.Send(selNew)
+	defer pool.Send(selDrain)
+	f := classDateFmt.Send(selNew)
+	defer f.Send(selRelease)
+	f.Send(selSetLocale, nsLocale(locale))
+	f.Send(selTemplate, classStr.Send(selString, "jmm"))
+	date := classDate.Send(selDateSince, float64(t.UnixNano())/1e9)
+	if s := goString(f.Send(selFromDate, date)); s != "" {
+		return s
+	}
+	return fallbackClock(t)
+}
+
 // Separators are the grouping separator and the decimal point of the
 // system's number format (System Settings › General › Language & Region):
 // "," and "." in the US, "." and "," in Germany, a space and "," in

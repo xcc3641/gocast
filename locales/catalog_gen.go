@@ -9877,3 +9877,501 @@ func NotesRowLabelPinned(title string, modified string) string {
 func (msgs Messages) NotesRowLabelPinned(title string, modified string) string {
 	return Catalog.Format(msgs.locale, "notesRowLabelPinned", map[string]any{"title": title, "modified": modified})
 }
+
+// AwakeTitle says "Keep Awake"
+// in the language the app shows.
+//
+// Keep Awake's search row while it is off, and the tray submenu's name then
+// (copy.md 18.1, 18.3).
+func AwakeTitle() string { return In(i18n.Locale()).AwakeTitle() }
+
+// AwakeTitle says "Keep Awake"
+// in the language of msgs.
+//
+// Keep Awake's search row while it is off, and the tray submenu's name then
+// (copy.md 18.1, 18.3).
+func (msgs Messages) AwakeTitle() string {
+	return Catalog.Format(msgs.locale, "awakeTitle", nil)
+}
+
+// AwakeStop says "Stop Keeping Awake"
+// in the language the app shows.
+//
+// Keep Awake's search row while it is on, and the tray menu's second line
+// then (copy.md 18.1, 18.3).
+func AwakeStop() string { return In(i18n.Locale()).AwakeStop() }
+
+// AwakeStop says "Stop Keeping Awake"
+// in the language of msgs.
+//
+// Keep Awake's search row while it is on, and the tray menu's second line
+// then (copy.md 18.1, 18.3).
+func (msgs Messages) AwakeStop() string {
+	return Catalog.Format(msgs.locale, "awakeStop", nil)
+}
+
+// AwakeFor says "Keep Awake for {duration}"
+// in the language the app shows.
+//
+// Search row of a preset or a typed duration: duration is awakeHours,
+// awakeMinutes or awakeHoursMinutes (copy.md 18.1).
+func AwakeFor(duration string) string { return In(i18n.Locale()).AwakeFor(duration) }
+
+// AwakeFor says "Keep Awake for {duration}"
+// in the language of msgs.
+//
+// Search row of a preset or a typed duration: duration is awakeHours,
+// awakeMinutes or awakeHoursMinutes (copy.md 18.1).
+func (msgs Messages) AwakeFor(duration string) string {
+	return Catalog.Format(msgs.locale, "awakeFor", map[string]any{"duration": duration})
+}
+
+// AwakeUntil says "Keep Awake Until {time}"
+// in the language the app shows.
+//
+// Search row of a typed time of day, later today; time on the system's
+// clock (copy.md 18.1).
+func AwakeUntil(time_ string) string { return In(i18n.Locale()).AwakeUntil(time_) }
+
+// AwakeUntil says "Keep Awake Until {time}"
+// in the language of msgs.
+//
+// Search row of a typed time of day, later today; time on the system's
+// clock (copy.md 18.1).
+func (msgs Messages) AwakeUntil(time_ string) string {
+	return Catalog.Format(msgs.locale, "awakeUntil", map[string]any{"time": time_})
+}
+
+// AwakeUntilTomorrow says "Keep Awake Until Tomorrow {time}"
+// in the language the app shows.
+//
+// Search row of a typed time of day already past today (copy.md 18.1).
+func AwakeUntilTomorrow(time_ string) string { return In(i18n.Locale()).AwakeUntilTomorrow(time_) }
+
+// AwakeUntilTomorrow says "Keep Awake Until Tomorrow {time}"
+// in the language of msgs.
+//
+// Search row of a typed time of day already past today (copy.md 18.1).
+func (msgs Messages) AwakeUntilTomorrow(time_ string) string {
+	return Catalog.Format(msgs.locale, "awakeUntilTomorrow", map[string]any{"time": time_})
+}
+
+// AwakeUntilBare says "Keep Awake Until"
+// in the language the app shows.
+//
+// Search row while only “keep awake until” is typed, dimmed;
+// awakeTypeTime is its hint (copy.md 18.1).
+func AwakeUntilBare() string { return In(i18n.Locale()).AwakeUntilBare() }
+
+// AwakeUntilBare says "Keep Awake Until"
+// in the language of msgs.
+//
+// Search row while only “keep awake until” is typed, dimmed;
+// awakeTypeTime is its hint (copy.md 18.1).
+func (msgs Messages) AwakeUntilBare() string {
+	return Catalog.Format(msgs.locale, "awakeUntilBare", nil)
+}
+
+// AwakeTypeTime says "Type a time, like 17:30 or 5pm"
+// in the language the app shows.
+//
+// The dim hint beside awakeUntilBare (copy.md 18.1).
+func AwakeTypeTime() string { return In(i18n.Locale()).AwakeTypeTime() }
+
+// AwakeTypeTime says "Type a time, like 17:30 or 5pm"
+// in the language of msgs.
+//
+// The dim hint beside awakeUntilBare (copy.md 18.1).
+func (msgs Messages) AwakeTypeTime() string {
+	return Catalog.Format(msgs.locale, "awakeTypeTime", nil)
+}
+
+// AwakeHours says "{h, plural, one {# Hour} other {# Hours}}"
+// in the language the app shows.
+//
+// A length in whole hours, in titles and the tray submenu (copy.md 18.1,
+// 18.3).
+func AwakeHours(h int) string { return In(i18n.Locale()).AwakeHours(h) }
+
+// AwakeHours says "{h, plural, one {# Hour} other {# Hours}}"
+// in the language of msgs.
+//
+// A length in whole hours, in titles and the tray submenu (copy.md 18.1,
+// 18.3).
+func (msgs Messages) AwakeHours(h int) string {
+	return Catalog.Format(msgs.locale, "awakeHours", map[string]any{"h": h})
+}
+
+// AwakeMinutes says "{m, plural, one {# Minute} other {# Minutes}}"
+// in the language the app shows.
+//
+// A length in minutes, under an hour, in titles and the tray submenu
+// (copy.md 18.1, 18.3).
+func AwakeMinutes(m int) string { return In(i18n.Locale()).AwakeMinutes(m) }
+
+// AwakeMinutes says "{m, plural, one {# Minute} other {# Minutes}}"
+// in the language of msgs.
+//
+// A length in minutes, under an hour, in titles and the tray submenu
+// (copy.md 18.1, 18.3).
+func (msgs Messages) AwakeMinutes(m int) string {
+	return Catalog.Format(msgs.locale, "awakeMinutes", map[string]any{"m": m})
+}
+
+// AwakeHoursMinutes says "{h, plural, one {# Hour} other {# Hours}} {m, plural, one {# Minute} other {# Minutes}}"
+// in the language the app shows.
+//
+// A length in hours and minutes, in titles (copy.md 18.1).
+func AwakeHoursMinutes(h int, m int) string { return In(i18n.Locale()).AwakeHoursMinutes(h, m) }
+
+// AwakeHoursMinutes says "{h, plural, one {# Hour} other {# Hours}} {m, plural, one {# Minute} other {# Minutes}}"
+// in the language of msgs.
+//
+// A length in hours and minutes, in titles (copy.md 18.1).
+func (msgs Messages) AwakeHoursMinutes(h int, m int) string {
+	return Catalog.Format(msgs.locale, "awakeHoursMinutes", map[string]any{"h": h, "m": m})
+}
+
+// AwakeLeftHours says "{h} hr"
+// in the language the app shows.
+//
+// Time left in whole hours, inside awakeLeft and the like (copy.md 18.0).
+func AwakeLeftHours(h int) string { return In(i18n.Locale()).AwakeLeftHours(h) }
+
+// AwakeLeftHours says "{h} hr"
+// in the language of msgs.
+//
+// Time left in whole hours, inside awakeLeft and the like (copy.md 18.0).
+func (msgs Messages) AwakeLeftHours(h int) string {
+	return Catalog.Format(msgs.locale, "awakeLeftHours", map[string]any{"h": h})
+}
+
+// AwakeLeftMinutes says "{m} min"
+// in the language the app shows.
+//
+// Time left under an hour, inside awakeLeft and the like (copy.md 18.0).
+func AwakeLeftMinutes(m int) string { return In(i18n.Locale()).AwakeLeftMinutes(m) }
+
+// AwakeLeftMinutes says "{m} min"
+// in the language of msgs.
+//
+// Time left under an hour, inside awakeLeft and the like (copy.md 18.0).
+func (msgs Messages) AwakeLeftMinutes(m int) string {
+	return Catalog.Format(msgs.locale, "awakeLeftMinutes", map[string]any{"m": m})
+}
+
+// AwakeLeftHoursMinutes says "{h} hr {m} min"
+// in the language the app shows.
+//
+// Time left in hours and minutes, inside awakeLeft and the like (copy.md
+// 18.0).
+func AwakeLeftHoursMinutes(h int, m int) string { return In(i18n.Locale()).AwakeLeftHoursMinutes(h, m) }
+
+// AwakeLeftHoursMinutes says "{h} hr {m} min"
+// in the language of msgs.
+//
+// Time left in hours and minutes, inside awakeLeft and the like (copy.md
+// 18.0).
+func (msgs Messages) AwakeLeftHoursMinutes(h int, m int) string {
+	return Catalog.Format(msgs.locale, "awakeLeftHoursMinutes", map[string]any{"h": h, "m": m})
+}
+
+// AwakeLeft says "{duration} left"
+// in the language the app shows.
+//
+// The small text of Stop Keeping Awake's search row for a length of time
+// (copy.md 18.1).
+func AwakeLeft(duration string) string { return In(i18n.Locale()).AwakeLeft(duration) }
+
+// AwakeLeft says "{duration} left"
+// in the language of msgs.
+//
+// The small text of Stop Keeping Awake's search row for a length of time
+// (copy.md 18.1).
+func (msgs Messages) AwakeLeft(duration string) string {
+	return Catalog.Format(msgs.locale, "awakeLeft", map[string]any{"duration": duration})
+}
+
+// AwakeLastMinute says "Less than a minute left"
+// in the language the app shows.
+//
+// The small text of Stop Keeping Awake's search row in its last minute
+// (copy.md 18.3).
+func AwakeLastMinute() string { return In(i18n.Locale()).AwakeLastMinute() }
+
+// AwakeLastMinute says "Less than a minute left"
+// in the language of msgs.
+//
+// The small text of Stop Keeping Awake's search row in its last minute
+// (copy.md 18.3).
+func (msgs Messages) AwakeLastMinute() string {
+	return Catalog.Format(msgs.locale, "awakeLastMinute", nil)
+}
+
+// AwakeLeftUntil says "Until {time}"
+// in the language the app shows.
+//
+// The small text of Stop Keeping Awake's search row for a time of day
+// (copy.md 18.1).
+func AwakeLeftUntil(time_ string) string { return In(i18n.Locale()).AwakeLeftUntil(time_) }
+
+// AwakeLeftUntil says "Until {time}"
+// in the language of msgs.
+//
+// The small text of Stop Keeping Awake's search row for a time of day
+// (copy.md 18.1).
+func (msgs Messages) AwakeLeftUntil(time_ string) string {
+	return Catalog.Format(msgs.locale, "awakeLeftUntil", map[string]any{"time": time_})
+}
+
+// AwakeLeftUntilTomorrow says "Until tomorrow {time}"
+// in the language the app shows.
+//
+// The small text of Stop Keeping Awake's search row for a time of day
+// tomorrow (copy.md 18.0, 18.1).
+func AwakeLeftUntilTomorrow(time_ string) string {
+	return In(i18n.Locale()).AwakeLeftUntilTomorrow(time_)
+}
+
+// AwakeLeftUntilTomorrow says "Until tomorrow {time}"
+// in the language of msgs.
+//
+// The small text of Stop Keeping Awake's search row for a time of day
+// tomorrow (copy.md 18.0, 18.1).
+func (msgs Messages) AwakeLeftUntilTomorrow(time_ string) string {
+	return Catalog.Format(msgs.locale, "awakeLeftUntilTomorrow", map[string]any{"time": time_})
+}
+
+// AwakeLeftForever says "Until you stop"
+// in the language the app shows.
+//
+// The small text of Stop Keeping Awake's search row with no end (copy.md
+// 18.1).
+func AwakeLeftForever() string { return In(i18n.Locale()).AwakeLeftForever() }
+
+// AwakeLeftForever says "Until you stop"
+// in the language of msgs.
+//
+// The small text of Stop Keeping Awake's search row with no end (copy.md
+// 18.1).
+func (msgs Messages) AwakeLeftForever() string {
+	return Catalog.Format(msgs.locale, "awakeLeftForever", nil)
+}
+
+// AwakeStatusLeft says "Keeping Awake · {duration} left"
+// in the language the app shows.
+//
+// The tray menu's first line, dimmed, for a length of time (copy.md 18.3).
+func AwakeStatusLeft(duration string) string { return In(i18n.Locale()).AwakeStatusLeft(duration) }
+
+// AwakeStatusLeft says "Keeping Awake · {duration} left"
+// in the language of msgs.
+//
+// The tray menu's first line, dimmed, for a length of time (copy.md 18.3).
+func (msgs Messages) AwakeStatusLeft(duration string) string {
+	return Catalog.Format(msgs.locale, "awakeStatusLeft", map[string]any{"duration": duration})
+}
+
+// AwakeStatusLastMinute says "Keeping Awake · less than a minute left"
+// in the language the app shows.
+//
+// The tray menu's first line in the last minute (copy.md 18.3).
+func AwakeStatusLastMinute() string { return In(i18n.Locale()).AwakeStatusLastMinute() }
+
+// AwakeStatusLastMinute says "Keeping Awake · less than a minute left"
+// in the language of msgs.
+//
+// The tray menu's first line in the last minute (copy.md 18.3).
+func (msgs Messages) AwakeStatusLastMinute() string {
+	return Catalog.Format(msgs.locale, "awakeStatusLastMinute", nil)
+}
+
+// AwakeStatusUntil says "Keeping Awake · until {time}"
+// in the language the app shows.
+//
+// The tray menu's first line for a time of day (copy.md 18.3).
+func AwakeStatusUntil(time_ string) string { return In(i18n.Locale()).AwakeStatusUntil(time_) }
+
+// AwakeStatusUntil says "Keeping Awake · until {time}"
+// in the language of msgs.
+//
+// The tray menu's first line for a time of day (copy.md 18.3).
+func (msgs Messages) AwakeStatusUntil(time_ string) string {
+	return Catalog.Format(msgs.locale, "awakeStatusUntil", map[string]any{"time": time_})
+}
+
+// AwakeStatusUntilTomorrow says "Keeping Awake · until tomorrow {time}"
+// in the language the app shows.
+//
+// The tray menu's first line for a time of day tomorrow (copy.md 18.0,
+// 18.3).
+func AwakeStatusUntilTomorrow(time_ string) string {
+	return In(i18n.Locale()).AwakeStatusUntilTomorrow(time_)
+}
+
+// AwakeStatusUntilTomorrow says "Keeping Awake · until tomorrow {time}"
+// in the language of msgs.
+//
+// The tray menu's first line for a time of day tomorrow (copy.md 18.0,
+// 18.3).
+func (msgs Messages) AwakeStatusUntilTomorrow(time_ string) string {
+	return Catalog.Format(msgs.locale, "awakeStatusUntilTomorrow", map[string]any{"time": time_})
+}
+
+// AwakeStatusForever says "Keeping Awake · until you stop"
+// in the language the app shows.
+//
+// The tray menu's first line with no end (copy.md 18.3).
+func AwakeStatusForever() string { return In(i18n.Locale()).AwakeStatusForever() }
+
+// AwakeStatusForever says "Keeping Awake · until you stop"
+// in the language of msgs.
+//
+// The tray menu's first line with no end (copy.md 18.3).
+func (msgs Messages) AwakeStatusForever() string {
+	return Catalog.Format(msgs.locale, "awakeStatusForever", nil)
+}
+
+// AwakeChangeTo says "Change To"
+// in the language the app shows.
+//
+// The tray submenu's name while keeping awake (copy.md 18.3).
+func AwakeChangeTo() string { return In(i18n.Locale()).AwakeChangeTo() }
+
+// AwakeChangeTo says "Change To"
+// in the language of msgs.
+//
+// The tray submenu's name while keeping awake (copy.md 18.3).
+func (msgs Messages) AwakeChangeTo() string {
+	return Catalog.Format(msgs.locale, "awakeChangeTo", nil)
+}
+
+// AwakeUntilIStop says "Until I Stop"
+// in the language the app shows.
+//
+// The tray submenu's first item: keep awake with no end (copy.md 18.3).
+func AwakeUntilIStop() string { return In(i18n.Locale()).AwakeUntilIStop() }
+
+// AwakeUntilIStop says "Until I Stop"
+// in the language of msgs.
+//
+// The tray submenu's first item: keep awake with no end (copy.md 18.3).
+func (msgs Messages) AwakeUntilIStop() string {
+	return Catalog.Format(msgs.locale, "awakeUntilIStop", nil)
+}
+
+// AwakeNoticeForever says "Keeping awake until you stop"
+// in the language the app shows.
+//
+// Notice: started with no end (copy.md 18.2).
+func AwakeNoticeForever() string { return In(i18n.Locale()).AwakeNoticeForever() }
+
+// AwakeNoticeForever says "Keeping awake until you stop"
+// in the language of msgs.
+//
+// Notice: started with no end (copy.md 18.2).
+func (msgs Messages) AwakeNoticeForever() string {
+	return Catalog.Format(msgs.locale, "awakeNoticeForever", nil)
+}
+
+// AwakeNoticeLeft says "Keeping awake, {duration} left"
+// in the language the app shows.
+//
+// Notice: started for a length of time (copy.md 18.2).
+func AwakeNoticeLeft(duration string) string { return In(i18n.Locale()).AwakeNoticeLeft(duration) }
+
+// AwakeNoticeLeft says "Keeping awake, {duration} left"
+// in the language of msgs.
+//
+// Notice: started for a length of time (copy.md 18.2).
+func (msgs Messages) AwakeNoticeLeft(duration string) string {
+	return Catalog.Format(msgs.locale, "awakeNoticeLeft", map[string]any{"duration": duration})
+}
+
+// AwakeNoticeUntil says "Keeping awake until {time}"
+// in the language the app shows.
+//
+// Notice: started until a time of day (copy.md 18.2).
+func AwakeNoticeUntil(time_ string) string { return In(i18n.Locale()).AwakeNoticeUntil(time_) }
+
+// AwakeNoticeUntil says "Keeping awake until {time}"
+// in the language of msgs.
+//
+// Notice: started until a time of day (copy.md 18.2).
+func (msgs Messages) AwakeNoticeUntil(time_ string) string {
+	return Catalog.Format(msgs.locale, "awakeNoticeUntil", map[string]any{"time": time_})
+}
+
+// AwakeNoticeUntilTomorrow says "Keeping awake until tomorrow {time}"
+// in the language the app shows.
+//
+// Notice: started until a time of day tomorrow (copy.md 18.0, 18.2).
+func AwakeNoticeUntilTomorrow(time_ string) string {
+	return In(i18n.Locale()).AwakeNoticeUntilTomorrow(time_)
+}
+
+// AwakeNoticeUntilTomorrow says "Keeping awake until tomorrow {time}"
+// in the language of msgs.
+//
+// Notice: started until a time of day tomorrow (copy.md 18.0, 18.2).
+func (msgs Messages) AwakeNoticeUntilTomorrow(time_ string) string {
+	return Catalog.Format(msgs.locale, "awakeNoticeUntilTomorrow", map[string]any{"time": time_})
+}
+
+// AwakeNoticeStopped says "Stopped keeping awake"
+// in the language the app shows.
+//
+// Notice: stopped (copy.md 18.2).
+func AwakeNoticeStopped() string { return In(i18n.Locale()).AwakeNoticeStopped() }
+
+// AwakeNoticeStopped says "Stopped keeping awake"
+// in the language of msgs.
+//
+// Notice: stopped (copy.md 18.2).
+func (msgs Messages) AwakeNoticeStopped() string {
+	return Catalog.Format(msgs.locale, "awakeNoticeStopped", nil)
+}
+
+// AwakeScreenOff says "Let the screen turn off while keeping awake"
+// in the language the app shows.
+//
+// Settings › General: the switch (copy.md 18.4).
+func AwakeScreenOff() string { return In(i18n.Locale()).AwakeScreenOff() }
+
+// AwakeScreenOff says "Let the screen turn off while keeping awake"
+// in the language of msgs.
+//
+// Settings › General: the switch (copy.md 18.4).
+func (msgs Messages) AwakeScreenOff() string {
+	return Catalog.Format(msgs.locale, "awakeScreenOff", nil)
+}
+
+// AwakeScreenOffNote says "The screen turns off as usual, but your Mac stays awake, so downloads and terminal commands keep going. Closing the l…"
+// in the language the app shows.
+//
+// Settings › General: the text under awakeScreenOff (copy.md 18.4).
+func AwakeScreenOffNote() string { return In(i18n.Locale()).AwakeScreenOffNote() }
+
+// AwakeScreenOffNote says "The screen turns off as usual, but your Mac stays awake, so downloads and terminal commands keep going. Closing the l…"
+// in the language of msgs.
+//
+// Settings › General: the text under awakeScreenOff (copy.md 18.4).
+func (msgs Messages) AwakeScreenOffNote() string {
+	return Catalog.Format(msgs.locale, "awakeScreenOffNote", nil)
+}
+
+// AwakeTrayLabel says "Gocast, keeping awake"
+// in the language the app shows.
+//
+// The tray icon as assistive technology reads it while keeping awake
+// (copy.md 18.5).
+func AwakeTrayLabel() string { return In(i18n.Locale()).AwakeTrayLabel() }
+
+// AwakeTrayLabel says "Gocast, keeping awake"
+// in the language of msgs.
+//
+// The tray icon as assistive technology reads it while keeping awake
+// (copy.md 18.5).
+func (msgs Messages) AwakeTrayLabel() string {
+	return Catalog.Format(msgs.locale, "awakeTrayLabel", nil)
+}

@@ -99,3 +99,14 @@ func TestSeparators(t *testing.T) {
 		t.Errorf("Separators() = %q, %q", group, decimal)
 	}
 }
+
+// Clock says the hour and minute on either clock: "17:30" or "5:30 PM".
+func TestClock(t *testing.T) {
+	at := time.Date(2026, 11, 12, 17, 30, 0, 0, time.Local)
+	for _, locale := range []string{"en", "zh-Hans"} {
+		s := Clock(at, locale)
+		if !strings.Contains(s, "30") || !strings.Contains(s, "17") && !strings.Contains(s, "5") {
+			t.Errorf("Clock(17:30, %s) = %q", locale, s)
+		}
+	}
+}

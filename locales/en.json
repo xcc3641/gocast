@@ -3011,5 +3011,253 @@
         "example": "Today 14:05"
       }
     }
+  },
+  "awakeTitle": "Keep Awake",
+  "@awakeTitle": {
+    "description": "Keep Awake's search row while it is off, and the tray submenu's name then (copy.md 18.1, 18.3)."
+  },
+  "awakeStop": "Stop Keeping Awake",
+  "@awakeStop": {
+    "description": "Keep Awake's search row while it is on, and the tray menu's second line then (copy.md 18.1, 18.3)."
+  },
+  "awakeFor": "Keep Awake for {duration}",
+  "@awakeFor": {
+    "description": "Search row of a preset or a typed duration: duration is awakeHours, awakeMinutes or awakeHoursMinutes (copy.md 18.1).",
+    "placeholders": {
+      "duration": {
+        "type": "String",
+        "example": "1 Hour 30 Minutes"
+      }
+    }
+  },
+  "awakeUntil": "Keep Awake Until {time}",
+  "@awakeUntil": {
+    "description": "Search row of a typed time of day, later today; time on the system's clock (copy.md 18.1).",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "17:30"
+      }
+    }
+  },
+  "awakeUntilTomorrow": "Keep Awake Until Tomorrow {time}",
+  "@awakeUntilTomorrow": {
+    "description": "Search row of a typed time of day already past today (copy.md 18.1).",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "08:00"
+      }
+    }
+  },
+  "awakeUntilBare": "Keep Awake Until",
+  "@awakeUntilBare": {
+    "description": "Search row while only “keep awake until” is typed, dimmed; awakeTypeTime is its hint (copy.md 18.1)."
+  },
+  "awakeTypeTime": "Type a time, like 17:30 or 5pm",
+  "@awakeTypeTime": {
+    "description": "The dim hint beside awakeUntilBare (copy.md 18.1)."
+  },
+  "awakeHours": "{h, plural, one {# Hour} other {# Hours}}",
+  "@awakeHours": {
+    "description": "A length in whole hours, in titles and the tray submenu (copy.md 18.1, 18.3).",
+    "placeholders": {
+      "h": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "awakeMinutes": "{m, plural, one {# Minute} other {# Minutes}}",
+  "@awakeMinutes": {
+    "description": "A length in minutes, under an hour, in titles and the tray submenu (copy.md 18.1, 18.3).",
+    "placeholders": {
+      "m": {
+        "type": "int",
+        "example": "30"
+      }
+    }
+  },
+  "awakeHoursMinutes": "{h, plural, one {# Hour} other {# Hours}} {m, plural, one {# Minute} other {# Minutes}}",
+  "@awakeHoursMinutes": {
+    "description": "A length in hours and minutes, in titles (copy.md 18.1).",
+    "placeholders": {
+      "h": {
+        "type": "int",
+        "example": "1"
+      },
+      "m": {
+        "type": "int",
+        "example": "30"
+      }
+    }
+  },
+  "awakeLeftHours": "{h} hr",
+  "@awakeLeftHours": {
+    "description": "Time left in whole hours, inside awakeLeft and the like (copy.md 18.0).",
+    "placeholders": {
+      "h": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "awakeLeftMinutes": "{m} min",
+  "@awakeLeftMinutes": {
+    "description": "Time left under an hour, inside awakeLeft and the like (copy.md 18.0).",
+    "placeholders": {
+      "m": {
+        "type": "int",
+        "example": "25"
+      }
+    }
+  },
+  "awakeLeftHoursMinutes": "{h} hr {m} min",
+  "@awakeLeftHoursMinutes": {
+    "description": "Time left in hours and minutes, inside awakeLeft and the like (copy.md 18.0).",
+    "placeholders": {
+      "h": {
+        "type": "int",
+        "example": "1"
+      },
+      "m": {
+        "type": "int",
+        "example": "23"
+      }
+    }
+  },
+  "awakeLeft": "{duration} left",
+  "@awakeLeft": {
+    "description": "The small text of Stop Keeping Awake's search row for a length of time (copy.md 18.1).",
+    "placeholders": {
+      "duration": {
+        "type": "String",
+        "example": "1 hr 23 min"
+      }
+    }
+  },
+  "awakeLastMinute": "Less than a minute left",
+  "@awakeLastMinute": {
+    "description": "The small text of Stop Keeping Awake's search row in its last minute (copy.md 18.3)."
+  },
+  "awakeLeftUntil": "Until {time}",
+  "@awakeLeftUntil": {
+    "description": "The small text of Stop Keeping Awake's search row for a time of day (copy.md 18.1).",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "17:30"
+      }
+    }
+  },
+  "awakeLeftUntilTomorrow": "Until tomorrow {time}",
+  "@awakeLeftUntilTomorrow": {
+    "description": "The small text of Stop Keeping Awake's search row for a time of day tomorrow (copy.md 18.0, 18.1).",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "08:00"
+      }
+    }
+  },
+  "awakeLeftForever": "Until you stop",
+  "@awakeLeftForever": {
+    "description": "The small text of Stop Keeping Awake's search row with no end (copy.md 18.1)."
+  },
+  "awakeStatusLeft": "Keeping Awake · {duration} left",
+  "@awakeStatusLeft": {
+    "description": "The tray menu's first line, dimmed, for a length of time (copy.md 18.3).",
+    "placeholders": {
+      "duration": {
+        "type": "String",
+        "example": "1 hr 23 min"
+      }
+    }
+  },
+  "awakeStatusLastMinute": "Keeping Awake · less than a minute left",
+  "@awakeStatusLastMinute": {
+    "description": "The tray menu's first line in the last minute (copy.md 18.3)."
+  },
+  "awakeStatusUntil": "Keeping Awake · until {time}",
+  "@awakeStatusUntil": {
+    "description": "The tray menu's first line for a time of day (copy.md 18.3).",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "17:30"
+      }
+    }
+  },
+  "awakeStatusUntilTomorrow": "Keeping Awake · until tomorrow {time}",
+  "@awakeStatusUntilTomorrow": {
+    "description": "The tray menu's first line for a time of day tomorrow (copy.md 18.0, 18.3).",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "08:00"
+      }
+    }
+  },
+  "awakeStatusForever": "Keeping Awake · until you stop",
+  "@awakeStatusForever": {
+    "description": "The tray menu's first line with no end (copy.md 18.3)."
+  },
+  "awakeChangeTo": "Change To",
+  "@awakeChangeTo": {
+    "description": "The tray submenu's name while keeping awake (copy.md 18.3)."
+  },
+  "awakeUntilIStop": "Until I Stop",
+  "@awakeUntilIStop": {
+    "description": "The tray submenu's first item: keep awake with no end (copy.md 18.3)."
+  },
+  "awakeNoticeForever": "Keeping awake until you stop",
+  "@awakeNoticeForever": {
+    "description": "Notice: started with no end (copy.md 18.2)."
+  },
+  "awakeNoticeLeft": "Keeping awake, {duration} left",
+  "@awakeNoticeLeft": {
+    "description": "Notice: started for a length of time (copy.md 18.2).",
+    "placeholders": {
+      "duration": {
+        "type": "String",
+        "example": "1 hr 30 min"
+      }
+    }
+  },
+  "awakeNoticeUntil": "Keeping awake until {time}",
+  "@awakeNoticeUntil": {
+    "description": "Notice: started until a time of day (copy.md 18.2).",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "17:30"
+      }
+    }
+  },
+  "awakeNoticeUntilTomorrow": "Keeping awake until tomorrow {time}",
+  "@awakeNoticeUntilTomorrow": {
+    "description": "Notice: started until a time of day tomorrow (copy.md 18.0, 18.2).",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "08:00"
+      }
+    }
+  },
+  "awakeNoticeStopped": "Stopped keeping awake",
+  "@awakeNoticeStopped": {
+    "description": "Notice: stopped (copy.md 18.2)."
+  },
+  "awakeScreenOff": "Let the screen turn off while keeping awake",
+  "@awakeScreenOff": {
+    "description": "Settings › General: the switch (copy.md 18.4)."
+  },
+  "awakeScreenOffNote": "The screen turns off as usual, but your Mac stays awake, so downloads and terminal commands keep going. Closing the lid, choosing Sleep from the Apple menu or a very low battery will still put it to sleep.",
+  "@awakeScreenOffNote": {
+    "description": "Settings › General: the text under awakeScreenOff (copy.md 18.4)."
+  },
+  "awakeTrayLabel": "Gocast, keeping awake",
+  "@awakeTrayLabel": {
+    "description": "The tray icon as assistive technology reads it while keeping awake (copy.md 18.5)."
   }
 }
