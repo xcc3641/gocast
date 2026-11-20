@@ -163,6 +163,14 @@ func ParseQuery(q string) (Match, bool) {
 	return Match{}, false
 }
 
+// Commanded reports whether q starts with Keep Awake's name or an alias,
+// whatever follows: the panel then shows Keep Awake itself, though
+// ParseQuery reads nothing after it (copy.md 18.1).
+func Commanded(q string) bool {
+	_, ok := cutWord(normalize(q), commands)
+	return ok
+}
+
 // normalize lowercases s, turns full-width letters, digits and signs
 // (as a Chinese input method types them: "９０ｍ", "17：30") into ASCII,
 // and every run of spaces into one.

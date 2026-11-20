@@ -3259,5 +3259,13 @@
   "awakeTrayLabel": "Gocast, keeping awake",
   "@awakeTrayLabel": {
     "description": "The tray icon as assistive technology reads it while keeping awake (copy.md 18.5)."
+  },
+  "footerStart": "Start",
+  "@footerStart": {
+    "description": "Search panel: the primary action of Keep Awake and its rows with an end (copy.md 18.1)."
+  },
+  "footerStop": "Stop",
+  "@footerStop": {
+    "description": "Search panel: the primary action of Stop Keeping Awake (copy.md 18.1)."
   }
 }

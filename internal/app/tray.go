@@ -34,7 +34,12 @@ func (g *gocast) setUpTray() {
 		return
 	}
 	g.updateTray()
-	mygo.App.OnLocaleChanged(func(string) { g.updateTray() })
+	mygo.App.OnLocaleChanged(func(string) {
+		g.updateTray()
+		if g.awakeOn {
+			g.showTrayAwake() // its label
+		}
+	})
 	mygo.App.OnWillQuit(func(*mygo.QuitEvent) { g.tray.Destroy() })
 }
 
@@ -46,16 +51,22 @@ func (g *gocast) updateTray() {
 	}
 }
 
+// trayMenu is the tray's menu (design.md 5): Keep Awake's lines over it
+// while on, its submenu under the clipboard history while off (design.md
+// 2.10).
 func (g *gocast) trayMenu() *mygo.Menu {
-	items := []*mygo.MenuItem{
-		{Label: locales.TraySearch(), Accelerator: g.launcherKey, Click: func(*mygo.MenuItem, *mygo.Window) { g.launcher.show() }},
-		{Label: locales.TrayTerminal(), Accelerator: g.terminalKey, Click: func(*mygo.MenuItem, *mygo.Window) { g.term.toggle() }},
-		{Label: locales.ClipboardHistory(), Accelerator: g.clipKey, Click: func(*mygo.MenuItem, *mygo.Window) { g.launcher.openClip(false) }},
+	items := append(g.awakeTrayItems(),
+		&mygo.MenuItem{Label: locales.TraySearch(), Accelerator: g.launcherKey, Click: func(*mygo.MenuItem, *mygo.Window) { g.launcher.show() }},
+		&mygo.MenuItem{Label: locales.TrayTerminal(), Accelerator: g.terminalKey, Click: func(*mygo.MenuItem, *mygo.Window) { g.term.toggle() }},
+		&mygo.MenuItem{Label: locales.ClipboardHistory(), Accelerator: g.clipKey, Click: func(*mygo.MenuItem, *mygo.Window) { g.launcher.openClip(false) }},
+	)
+	items = append(items, g.awakeTrayMenu()...)
+	items = append(items,
 		mygo.Separator(),
-		{Label: locales.TraySettings(), Accelerator: "Cmd+,", Click: func(*mygo.MenuItem, *mygo.Window) { g.openSettings("") }},
+		&mygo.MenuItem{Label: locales.TraySettings(), Accelerator: "Cmd+,", Click: func(*mygo.MenuItem, *mygo.Window) { g.openSettings("") }},
 		g.updateMenuItem(),
 		mygo.Separator(),
-	}
+	)
 	// Close All Terminals, over Quit, while there is a tab (design.md 5):
 	// the terminals go on after Gocast quits, and only it ends them all.
 	if g.term != nil && len(g.term.tabs) > 0 {

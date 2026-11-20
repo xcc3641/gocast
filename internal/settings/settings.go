@@ -77,6 +77,10 @@ type Settings struct {
 	// fetches no exchange rates (the switch "Calculate in search", on by
 	// default; design.md 2.3a, 4.4).
 	CalculatorOff bool `json:"calculatorOff,omitempty"`
+	// AwakeScreenOff: Keep Awake lets the screen turn off, keeping only
+	// the Mac from sleeping (the switch "Let the screen turn off while
+	// keeping awake", off by default; design.md 2.10, copy.md 18.4).
+	AwakeScreenOff bool `json:"keepAwakeScreenOff,omitempty"`
 	// AutoUpdate is the switch 「自动检查更新」 (design.md 4.4, 4.5), on
 	// by default: nil until MigrateUpdater took it from the updater
 	// plugin's updater.json, once.

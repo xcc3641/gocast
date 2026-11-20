@@ -84,6 +84,7 @@ type prefsWindow struct {
 	autoUpdate bool // 自动检查更新 (design.md 4.5)
 	searchOnly bool // the search panel opens with its search field alone
 	calculator bool // the search panel calculates (design.md 2.3a)
+	screenOff  bool // Keep Awake lets the screen turn off (design.md 2.10)
 	fontSize   float64
 	folderGone bool    // the default folder is not there, as of the last look
 	termPos    string  // the floating terminal's position chosen (settings.TerminalPositions)
@@ -162,6 +163,7 @@ func (p *prefsWindow) show(page string) {
 	p.autoUpdate = p.g.settings.AutoUpdates()
 	p.searchOnly = p.g.settings.SearchOnly
 	p.calculator = p.g.settings.Calculator()
+	p.screenOff = p.g.settings.AwakeScreenOff
 	p.fontSize = float64(p.g.settings.Font())
 	p.termPos = p.g.settings.TermPosition()
 	p.termWidth = float64(p.g.settings.TermWidth())
@@ -974,6 +976,15 @@ func (p *prefsWindow) generalPage(c *ui.Context, k tokens) {
 		g.row(c, k, locales.GeneralCalculator(), locales.GeneralCalculatorHint(), k.textSecondary, func() {
 			if ui.Switch(c, &p.calculator).Label(locales.GeneralCalculator()).Changed() {
 				p.g.calc.setOn(p.calculator)
+			}
+		})
+	})
+	// Keep Awake's one switch, a group of its own with no title: at once,
+	// to a session running too, saying nothing (design.md 2.10).
+	newGroup(c, k, func(g *group) {
+		g.row(c, k, locales.AwakeScreenOff(), locales.AwakeScreenOffNote(), k.textSecondary, func() {
+			if ui.Switch(c, &p.screenOff).Label(locales.AwakeScreenOff()).Changed() && !p.g.setAwakeScreenOff(p.screenOff) {
+				p.screenOff = p.g.settings.AwakeScreenOff
 			}
 		})
 	})

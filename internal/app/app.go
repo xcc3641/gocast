@@ -13,6 +13,7 @@ import (
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/plugins/terminal"
 
+	"gocast/internal/keepawake"
 	"gocast/internal/presets"
 	"gocast/internal/settings"
 	"gocast/internal/shortcut"
@@ -66,6 +67,14 @@ type gocast struct {
 	// arranger runs the window actions, remembering where each window
 	// was for Restore (windowsArranger).
 	arranger *sysact.Arranger
+
+	// awake keeps the Mac awake (design.md 2.10); nil in the tests that
+	// don't set one up, where Keep Awake shows nowhere. awakeOn is
+	// whether it did as the app last showed it (awakeChanged); awakeNow
+	// is its clock.
+	awake    *keepawake.Keeper
+	awakeOn  bool
+	awakeNow func() time.Time
 
 	// quitting is set while the app quits: the panels, which hide rather
 	// than close, close then, or their OnClose would cancel the quit.
@@ -335,6 +344,7 @@ func (g *gocast) ready() {
 	// it at once later (design.md 2.8.8).
 	g.clip = newClipService(g)
 	g.calc = newCalcService(g)
+	g.setUpAwake() // before the search panel, which shows Keep Awake
 	g.launcher = newLauncher(g)
 	g.host = newTermHost(termHostDir(g.dir, sysBundleID(), sysDevBuild()))
 	g.term = newTermPanel(g)

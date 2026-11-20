@@ -679,5 +679,7 @@
   "awakeNoticeStopped": "已停止保持唤醒",
   "awakeScreenOff": "保持唤醒时允许屏幕关闭",
   "awakeScreenOffNote": "打开后屏幕照常关闭，只是 Mac 不睡眠，下载和终端里的命令会接着跑。合上盖子、从苹果菜单选「睡眠」或电量很低时，Mac 仍会睡眠。",
-  "awakeTrayLabel": "Gocast，正在保持唤醒"
+  "awakeTrayLabel": "Gocast，正在保持唤醒",
+  "footerStart": "开始",
+  "footerStop": "停止"
 }

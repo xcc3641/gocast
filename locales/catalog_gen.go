@@ -10375,3 +10375,33 @@ func AwakeTrayLabel() string { return In(i18n.Locale()).AwakeTrayLabel() }
 func (msgs Messages) AwakeTrayLabel() string {
 	return Catalog.Format(msgs.locale, "awakeTrayLabel", nil)
 }
+
+// FooterStart says "Start"
+// in the language the app shows.
+//
+// Search panel: the primary action of Keep Awake and its rows with an end
+// (copy.md 18.1).
+func FooterStart() string { return In(i18n.Locale()).FooterStart() }
+
+// FooterStart says "Start"
+// in the language of msgs.
+//
+// Search panel: the primary action of Keep Awake and its rows with an end
+// (copy.md 18.1).
+func (msgs Messages) FooterStart() string {
+	return Catalog.Format(msgs.locale, "footerStart", nil)
+}
+
+// FooterStop says "Stop"
+// in the language the app shows.
+//
+// Search panel: the primary action of Stop Keeping Awake (copy.md 18.1).
+func FooterStop() string { return In(i18n.Locale()).FooterStop() }
+
+// FooterStop says "Stop"
+// in the language of msgs.
+//
+// Search panel: the primary action of Stop Keeping Awake (copy.md 18.1).
+func (msgs Messages) FooterStop() string {
+	return Catalog.Format(msgs.locale, "footerStop", nil)
+}

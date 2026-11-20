@@ -11,6 +11,7 @@ import (
 
 	"gocast/internal/apps"
 	"gocast/internal/calc"
+	"gocast/internal/keepawake"
 	"gocast/internal/presets"
 	"gocast/internal/search"
 	"gocast/internal/settings"
@@ -64,6 +65,10 @@ type entry struct {
 	preset string // its ID, for a preset
 	own    string // the ID of Gocast's own item (clipItemID, ...)
 	action string // the ID of an action (sysact)
+	// awake is what a Keep Awake row is, request what it starts
+	// (design.md 2.10).
+	awake   awakeRow
+	request keepawake.Request
 }
 
 // action is an item of the actions menu (Cmd-K).
@@ -512,18 +517,22 @@ func (l *launcher) itemRow(c *ui.Context, k tokens, item int, chosen bool) {
 		tag = locales.SearchTagGocast()
 	case e.action != "":
 		tag = actionTag(e.action)
+	case e.awake != awakeNone:
+		tag, subtitle = locales.SearchTagSystem(), l.awakeSubtitle(e)
 	case e.app == nil:
 		tag = locales.SearchTagPreset()
 		if j := presets.Find(l.g.presets, e.preset); j >= 0 {
 			subtitle = l.g.presetSubtitle(l.g.presets[j])
 		}
 	}
-	listRow(c, k, chosen, func() {
+	row := listRow(c, k, chosen, func() {
 		switch {
 		case e.own != "":
 			symbolSquare(c, k, ownSymbol(l.own, e.own))
 		case e.action != "":
 			listIcon(c, func() { actionSquare(c, k, e.action, iconSize, 6, 13, k.textOnGlass) })
+		case e.awake != awakeNone:
+			symbolSquare(c, k, awakeSymbol(e))
 		case e.app == nil:
 			presetSquare(c, k)
 		default:
@@ -552,6 +561,9 @@ func (l *launcher) itemRow(c *ui.Context, k tokens, item int, chosen bool) {
 		}
 		listNote(c, k, tag).Shrink(0)
 	})
+	if e.awake == awakeHint { // nothing to start yet (design.md 2.10)
+		row.Opacity(0.55)
+	}
 }
 
 // rowKey keeps the choice on its row as the rows change: its item's ID,
@@ -600,6 +612,13 @@ func (l *launcher) itemLabel(item int) string {
 	}
 	if e.action != "" { // "Lock Screen, System" (copy.md 15.6)
 		return it.Title + sep + actionTag(e.action) + hotkeySpoken(l.entryAccel(e))
+	}
+	if e.awake != awakeNone { // "Stop Keeping Awake, System, 25 min left" (copy.md 18.5)
+		s := it.Title + sep + locales.SearchTagSystem()
+		if sub := l.awakeSubtitle(e); sub != "" {
+			s += sep + sub
+		}
+		return s
 	}
 	if e.app != nil {
 		s := it.Title
@@ -720,6 +739,10 @@ func primaryName(e entry) string {
 		return locales.FooterCreate()
 	case e.action != "":
 		return locales.FooterRun()
+	case e.awake == awakeStop:
+		return locales.FooterStop()
+	case e.awake != awakeNone:
+		return locales.FooterStart()
 	case e.own == "" && e.app == nil:
 		return locales.FooterOpenInTerminal()
 	}
@@ -744,6 +767,8 @@ func (l *launcher) current() (entry, bool) {
 		return entry{calc: true}, true
 	case r.own >= 0:
 		return entry{own: l.own[r.own].id}, true
+	case l.entries[r.item].awake == awakeHint: // nothing to act on, as no results
+		return entry{}, false
 	}
 	return l.entries[r.item], true
 }
@@ -814,6 +839,9 @@ func (l *launcher) actions() []action {
 			as = append(as, l.hotkeyActions(h, l.g.hotkeyLabel(h), e)...)
 		}
 		return as
+	}
+	if e.awake != awakeNone { // Start or Stop alone
+		return []action{{awakeSymbol(e), primaryName(e), []string{"↩"}, l.primary}}
 	}
 	if e.action != "" { // Run, and its hotkey (design.md 2.9)
 		as := []action{{"play", primaryName(e), []string{"↩"}, l.primary}}
@@ -973,6 +1001,16 @@ func (l *launcher) act(second bool) {
 		}
 		return
 	}
+	if e.awake != awakeNone {
+		if second {
+			return
+		}
+		if id := l.currentID(); id != awakeTypedID {
+			l.g.record(id, l.query)
+		}
+		l.awakeAct(e)
+		return
+	}
 	l.g.record(l.currentID(), l.query)
 	l.hide() // the keyboard goes back to the app the user was in first
 	if e.app == nil {
@@ -1099,6 +1137,7 @@ func (l *launcher) rebuild() {
 		l.items = append(l.items, it)
 		l.entries = append(l.entries, entry{action: a.ID})
 	}
+	l.awakeItems(now)
 	for i := range l.apps {
 		app := &l.apps[i]
 		id := "app:" + app.ID
@@ -1169,7 +1208,7 @@ func (l *launcher) find() []panelRow {
 	if l.empty() {
 		return suggestionRows(suggested(l.ranked, padIDs(l.g.presets), l.exists), l.itemIndex, l.own)
 	}
-	rows := itemRows(search.Filter(l.items, l.query, l.g.usage.Choice(l.query, time.Now())))
+	rows := l.awakeRows(itemRows(search.Filter(l.items, l.query, l.g.usage.Choice(l.query, time.Now()))))
 	if l.calcOn { // the calculator's card first (design.md 2.3a)
 		rows = append([]panelRow{{calc: true, item: -1, own: -1}}, rows...)
 	}
