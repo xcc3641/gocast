@@ -109,12 +109,17 @@ func chooseTitle(t *testing.T, l *launcher, title string) {
 	t.Fatalf("no %q in %q", title, awakeTitles(l))
 }
 
-// Off, Keep Awake and its presets show; a preset starts one assertion,
-// the panel staying with Stop Keeping Awake first, saying what is left,
-// the choice on the preset; a whole minute later the row says so; Stop
-// releases the assertion and Keep Awake is back.
+// Off, Keep Awake and its presets show in copy.md 18.1's order, however
+// often each was used; a preset starts one assertion, the panel staying
+// with Stop Keeping Awake in Keep Awake's place, saying what is left, the
+// choice on the preset; a whole minute later the row says so; Stop
+// releases the assertion and Keep Awake is back, chosen still.
 func TestAwakeRowsStartAndStop(t *testing.T) {
 	l, tt, f := awakePanel(t, "en")
+	for range 3 {
+		l.g.usage.Record(awakePrefix+"240", "keep awake", awakeNow)
+	}
+	l.rebuild()
 	typeQuery(l, "keep awake")
 	want := []string{"> Keep Awake", "Keep Awake for 30 Minutes", "Keep Awake for 1 Hour", "Keep Awake for 2 Hours", "Keep Awake for 4 Hours"}
 	if got := awakeTitles(l); !slices.Equal(got, want) {
@@ -128,8 +133,7 @@ func TestAwakeRowsStartAndStop(t *testing.T) {
 	if got := f.as.types(); !slices.Equal(got, []keepawake.AssertionType{keepawake.PreventDisplaySleep}) {
 		t.Errorf("held %q", got)
 	}
-	// Opened, the preset ranks higher (usage.json).
-	want = []string{"Stop Keeping Awake", "> Keep Awake for 1 Hour", "Keep Awake for 30 Minutes", "Keep Awake for 2 Hours", "Keep Awake for 4 Hours"}
+	want = []string{"Stop Keeping Awake", "Keep Awake for 30 Minutes", "> Keep Awake for 1 Hour", "Keep Awake for 2 Hours", "Keep Awake for 4 Hours"}
 	if got := awakeTitles(l); !slices.Equal(got, want) {
 		t.Fatalf("on: %q", got)
 	}
@@ -150,6 +154,10 @@ func TestAwakeRowsStartAndStop(t *testing.T) {
 	}
 	if got := awakeTitles(l); got[0] != "> Keep Awake" {
 		t.Errorf("after stopping: %q", got)
+	}
+	l.primary() // Keep Awake: Stop Keeping Awake in its place, chosen
+	if got := awakeTitles(l); got[0] != "> Stop Keeping Awake" {
+		t.Errorf("after starting: %q", got)
 	}
 }
 
@@ -176,6 +184,13 @@ func TestAwakeTyped(t *testing.T) {
 	if len(f.as.held) != 1 || st.Kind != keepawake.Until || l.notice != "Keeping awake until tomorrow 09:00" {
 		t.Errorf("replaced: held %d, %+v, %q", len(f.as.held), st, l.notice)
 	}
+
+	chooseTitle(t, l, "Stop Keeping Awake") // the last row goes: the one over it chosen
+	l.primary()
+	if got := awakeTitles(l); !slices.Equal(got, []string{"> Keep Awake Until Tomorrow 09:00"}) {
+		t.Fatalf("stopped from the typed rows: %q", got)
+	}
+	l.primary()
 
 	typeQuery(l, "keep awake 100h") // over 99 hours: Keep Awake itself
 	if got := awakeTitles(l); !slices.Equal(got, []string{"> Stop Keeping Awake"}) {

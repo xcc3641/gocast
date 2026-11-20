@@ -210,7 +210,7 @@ func (l *launcher) awakeItems(now time.Time) {
 	names = append(names, keepawake.Aliases...)
 	add := func(id, title string, e entry, names []string) {
 		it := search.NewItem(id, title, names...)
-		it.Score = g.usage.Score(id, now)
+		// No usage: the rows keep copy.md 18.1's order (awakeRows).
 		it.Tier = 1 // the system's (design.md 2.9)
 		l.items = append(l.items, it)
 		l.entries = append(l.entries, e)
@@ -266,17 +266,24 @@ func (l *launcher) awakeRows(rows []panelRow) []panelRow {
 		}
 		return append(front, slices.DeleteFunc(rows, l.isAwake)...)
 	}
+	// Together where the first of them is, in copy.md 18.1's order (that
+	// of their items): Keep Awake or Stop Keeping Awake, then the presets.
 	first := slices.IndexFunc(rows, l.isAwake)
-	at := slices.IndexFunc(rows, func(r panelRow) bool { return r.item == toggle && l.isAwake(r) })
-	switch {
-	case at < 0 && keepawake.Commanded(l.query):
-		return slices.Insert(rows, max(first, 0), panelRow{item: toggle, own: -1})
-	case on && at > first:
-		r := rows[at]
-		rows = slices.Delete(rows, at, at+1)
-		return slices.Insert(rows, first, r)
+	var awake []panelRow
+	for _, r := range rows {
+		if l.isAwake(r) {
+			awake = append(awake, r)
+		}
 	}
-	return rows
+	if !slices.ContainsFunc(awake, func(r panelRow) bool { return r.item == toggle }) && keepawake.Commanded(l.query) {
+		awake = append(awake, panelRow{item: toggle, own: -1})
+	}
+	if len(awake) == 0 {
+		return rows
+	}
+	slices.SortFunc(awake, func(a, b panelRow) int { return a.item - b.item })
+	rows = slices.DeleteFunc(rows, l.isAwake)
+	return slices.Insert(rows, min(max(first, 0), len(rows)), awake...)
 }
 
 // awakeSymbol is the symbol of a Keep Awake row: the cup filled for Stop
@@ -306,6 +313,10 @@ func (l *launcher) awakeSubtitle(e entry) string {
 // 2.10, copy.md 18.2).
 func (l *launcher) awakeAct(e entry) {
 	g := l.g
+	// The choice stays at its place, on the row that ran or the one in
+	// its place (Keep Awake and Stop Keeping Awake), the rows rebuilt.
+	at := l.chosen
+	defer func() { l.choose(min(at, len(l.rows)-1)) }()
 	switch e.awake {
 	case awakeStop:
 		g.stopAwake()

@@ -1005,10 +1005,7 @@ func (l *launcher) act(second bool) {
 		if second {
 			return
 		}
-		if id := l.currentID(); id != awakeTypedID {
-			l.g.record(id, l.query)
-		}
-		l.awakeAct(e)
+		l.awakeAct(e) // no usage: the rows keep their order (copy.md 18.1)
 		return
 	}
 	l.g.record(l.currentID(), l.query)
