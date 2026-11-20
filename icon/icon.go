@@ -16,6 +16,12 @@ var App []byte
 //go:embed tray.png
 var Tray []byte
 
+// TrayAwake is the menu-bar icon while keeping awake (design.md 2.10):
+// the same outline filled, the cursor cut out of it, as Tray a template.
+//
+//go:embed tray-awake.png
+var TrayAwake []byte
+
 // Logo is Gocast's mark, 20 DIP (40 px), black on transparent, a
 // template image.
 //

@@ -6,6 +6,8 @@ Writes, next to this script:
   icon.png          1024 app icon (rounded square on a transparent margin), for mygo build
   AppIcon.icon/     Icon Composer icon (macOS 26+): solid fill + one glyph layer
   tray.png          36 px (18 pt @2x) menu bar template, black on transparent
+  tray-awake.png    36 px menu bar template while keeping awake: the same outline
+                    filled, the cursor cut out (design.md 2.10)
   logo-template.png 40 px (20 pt @2x) search bar logo, black on transparent
 """
 import json, math, os
@@ -56,8 +58,9 @@ def app_icon(size=1024):
     rrect(d, (392 * k, 292 * k, 632 * k, 732 * k), 40 * k, (255, 255, 255, 255))
     return img.resize((size, size), Image.LANCZOS)
 
-def template(pt):
-    """Squircle outline with the cursor inside, black on transparent, @2x."""
+def template(pt, awake=False):
+    """Squircle outline with the cursor inside, black on transparent, @2x.
+    awake: the squircle filled and the cursor cut out of it instead."""
     px = pt * 2
     S = px * SS
     u = S / 18  # design on an 18-unit grid
@@ -65,14 +68,16 @@ def template(pt):
     m = Image.new("L", (S, S), 0)
     d = ImageDraw.Draw(m)
     d.polygon(squircle(9 * u, 9 * u, 7.6 * u), fill=255)
-    d.polygon(squircle(9 * u, 9 * u, 6.05 * u), fill=0)
-    d.rounded_rectangle((7.25 * u, 5.1 * u, 10.75 * u, 12.9 * u), 0.8 * u, fill=255)
+    if not awake:
+        d.polygon(squircle(9 * u, 9 * u, 6.05 * u), fill=0)
+    d.rounded_rectangle((7.25 * u, 5.1 * u, 10.75 * u, 12.9 * u), 0.8 * u, fill=0 if awake else 255)
     img.paste((0, 0, 0, 255), (0, 0), m)
     return img.resize((px, px), Image.LANCZOS)
 
 big = app_icon(1024)
 big.save(os.path.join(HERE, "icon.png"))
 template(18).save(os.path.join(HERE, "tray.png"))
+template(18, awake=True).save(os.path.join(HERE, "tray-awake.png"))
 template(20).save(os.path.join(HERE, "logo-template.png"))
 
 # Icon Composer: the system draws shape, glass, shadow and dark/tinted looks.
