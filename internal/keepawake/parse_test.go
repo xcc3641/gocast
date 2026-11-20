@@ -70,57 +70,65 @@ func TestParseDurationInvalid(t *testing.T) {
 }
 
 // Times of day are read on a 24-hour clock, with am and pm, and in
-// Chinese with or without the part of the day.
+// Chinese with or without the part of the day; an hour up to 12 with
+// none of these is Twelve.
 func TestParseTime(t *testing.T) {
 	for _, c := range []struct {
-		in   string
-		h, m int
+		in     string
+		h, m   int
+		twelve bool
 	}{
-		{"17:30", 17, 30},
-		{"9:05", 9, 5},
-		{"09:05", 9, 5},
-		{"0:00", 0, 0},
-		{"23:59", 23, 59},
-		{"5pm", 17, 0},
-		{"5 pm", 17, 0},
-		{"5PM", 17, 0},
-		{"5:30 pm", 17, 30},
-		{"5:30pm", 17, 30},
-		{"5 p.m.", 17, 0},
-		{"11am", 11, 0},
-		{"12am", 0, 0},
-		{"12pm", 12, 0},
-		{"12:15 am", 0, 15},
-		{"noon", 12, 0},
-		{"midnight", 0, 0},
-		{"17：30", 17, 30},
-		{"17点", 17, 0},
-		{"17点30", 17, 30},
-		{"17点30分", 17, 30},
-		{"17时30分", 17, 30},
-		{"5点半", 5, 30},
-		{"8点整", 8, 0},
-		{"下午5点", 17, 0},
-		{"下午5点半", 17, 30},
-		{"下午 5:30", 17, 30},
-		{"下午五点半", 17, 30},
-		{"下午12点", 12, 0},
-		{"下午17点", 17, 0},
-		{"上午10点", 10, 0},
-		{"早上8点", 8, 0},
-		{"中午12点", 12, 0},
-		{"中午1点", 13, 0},
-		{"傍晚6点", 18, 0},
-		{"晚上8点", 20, 0},
-		{"晚上8:30", 20, 30},
-		{"晚上12点", 0, 0},
-		{"凌晨2点", 2, 0},
-		{"凌晨12点", 0, 0},
-		{"十七点", 17, 0},
+		{"17:30", 17, 30, false},
+		{"9:05", 9, 5, true},
+		{"09:05", 9, 5, false},
+		{"0:00", 0, 0, false},
+		{"23:59", 23, 59, false},
+		{"5pm", 17, 0, false},
+		{"5 pm", 17, 0, false},
+		{"5PM", 17, 0, false},
+		{"5:30 pm", 17, 30, false},
+		{"5:30pm", 17, 30, false},
+		{"5 p.m.", 17, 0, false},
+		{"11am", 11, 0, false},
+		{"12am", 0, 0, false},
+		{"12pm", 12, 0, false},
+		{"12:15 am", 0, 15, false},
+		{"noon", 12, 0, false},
+		{"midnight", 0, 0, false},
+		{"17：30", 17, 30, false},
+		{"17点", 17, 0, false},
+		{"17点30", 17, 30, false},
+		{"17点30分", 17, 30, false},
+		{"17时30分", 17, 30, false},
+		{"5点半", 5, 30, true},
+		{"8点整", 8, 0, true},
+		{"下午5点", 17, 0, false},
+		{"下午5点半", 17, 30, false},
+		{"下午 5:30", 17, 30, false},
+		{"下午五点半", 17, 30, false},
+		{"下午12点", 12, 0, false},
+		{"下午17点", 17, 0, false},
+		{"上午10点", 10, 0, false},
+		{"早上8点", 8, 0, false},
+		{"中午12点", 12, 0, false},
+		{"中午1点", 13, 0, false},
+		{"傍晚6点", 18, 0, false},
+		{"晚上8点", 20, 0, false},
+		{"晚上8:30", 20, 30, false},
+		{"晚上12点", 0, 0, false},
+		{"凌晨2点", 2, 0, false},
+		{"凌晨12点", 0, 0, false},
+		{"十七点", 17, 0, false},
+		{"5点", 5, 0, true},
+		{"12点", 12, 0, true},
+		{"12:15", 12, 15, true},
+		{"05:00", 5, 0, false},
+		{"05点", 5, 0, false},
+		{"五点", 5, 0, true},
 	} {
-		h, m, err := ParseTime(c.in)
-		if err != nil || h != c.h || m != c.m {
-			t.Errorf("ParseTime(%q) = %d:%02d, %v; want %d:%02d", c.in, h, m, err, c.h, c.m)
+		want := Request{Kind: Until, Hour: c.h, Minute: c.m, Twelve: c.twelve}
+		if got, err := ParseTime(c.in); err != nil || got != want {
+			t.Errorf("ParseTime(%q) = %+v, %v; want %+v", c.in, got, err, want)
 		}
 	}
 }
@@ -131,8 +139,51 @@ func TestParseTimeInvalid(t *testing.T) {
 		"", "5", "17", "1730", "24:00", "17:60", "17:5", "17:305", "17.30", "13pm", "0am",
 		"5 pm tomorrow", "下午5pm", "上午13点", "凌晨8点", "17点61分", "5.5点", "abc", "pm", "下午",
 	} {
-		if h, m, err := ParseTime(in); !errors.Is(err, ErrInvalid) {
-			t.Errorf("ParseTime(%q) = %d:%02d, %v; want ErrInvalid", in, h, m, err)
+		if r, err := ParseTime(in); !errors.Is(err, ErrInvalid) {
+			t.Errorf("ParseTime(%q) = %+v, %v; want ErrInvalid", in, r, err)
+		}
+	}
+}
+
+// A time of day typed without saying which half of the day ends at the
+// sooner of its two times still to come; one written on a 24-hour clock
+// or with its half of the day ends as written; "tomorrow" follows the
+// time chosen.
+func TestDeadlineTwelve(t *testing.T) {
+	day := func(d, h, m int) time.Time { return time.Date(2026, 11, d, h, m, 0, 0, shanghai) }
+	for _, c := range []struct {
+		in       string
+		now      time.Time
+		want     time.Time
+		tomorrow bool
+	}{
+		{"5点", day(19, 10, 0), day(19, 17, 0), false},
+		{"5点", day(19, 20, 0), day(20, 5, 0), true},
+		{"5点", day(19, 4, 0), day(19, 5, 0), false},
+		{"5:30", day(19, 17, 30), day(20, 5, 30), true},
+		{"5:30", day(19, 17, 29), day(19, 17, 30), false},
+		{"12点", day(19, 13, 0), day(20, 0, 0), true},
+		{"12点", day(19, 9, 0), day(19, 12, 0), false},
+		{"12点", day(19, 11, 59), day(19, 12, 0), false},
+		{"11:59", day(19, 11, 59), day(19, 23, 59), false},
+		{"11:59", day(19, 11, 58), day(19, 11, 59), false},
+		{"11:59", day(19, 23, 59), day(20, 11, 59), true},
+		{"12:15", day(19, 23, 0), day(20, 0, 15), true},
+		{"05:00", day(19, 10, 0), day(20, 5, 0), true},
+		{"17:00", day(19, 10, 0), day(19, 17, 0), false},
+		{"上午5点", day(19, 10, 0), day(20, 5, 0), true},
+		{"5am", day(19, 10, 0), day(20, 5, 0), true},
+		{"下午5点", day(19, 20, 0), day(20, 17, 0), true},
+	} {
+		r, err := ParseTime(c.in)
+		if err != nil {
+			t.Fatalf("ParseTime(%q): %v", c.in, err)
+		}
+		if got := r.Deadline(c.now); !got.Equal(c.want) {
+			t.Errorf("%q at %s: %v, want %v", c.in, c.now.Format("15:04"), got, c.want)
+		}
+		if got := r.Tomorrow(c.now); got != c.tomorrow {
+			t.Errorf("%q at %s: Tomorrow %v", c.in, c.now.Format("15:04"), got)
 		}
 	}
 }
@@ -143,6 +194,9 @@ func TestParseTimeInvalid(t *testing.T) {
 func TestParseQuery(t *testing.T) {
 	type m = Match
 	until := func(h, min int) Match { return Match{Request: Request{Kind: Until, Hour: h, Minute: min}} }
+	either := func(h, min int) Match {
+		return Match{Request: Request{Kind: Until, Hour: h, Minute: min, Twelve: true}}
+	}
 	length := func(d time.Duration) Match { return Match{Request: Request{Kind: For, Duration: d}} }
 	for _, c := range []struct {
 		in   string
@@ -194,7 +248,20 @@ func TestParseQuery(t *testing.T) {
 		{"keep awake for", m{}, false},
 		{"keep awake soon", m{}, false},
 		{"保持唤醒 一会儿", m{}, false},
-		{"唤醒 90", m{}, false},
+		{"唤醒 90", length(90 * time.Minute), true},
+		{"keep awake 90", length(90 * time.Minute), true},
+		{"keep awake for 45", length(45 * time.Minute), true},
+		{"保持唤醒 5940", length(MaxDuration), true},
+		{"保持唤醒 5941", m{}, false},
+		{"唤醒 0", m{}, false},
+		{"until 90", m{}, false},
+		{"到 5", m{}, false},
+		{"保持唤醒到 5", m{}, false},
+		{"到 5点", either(5, 0), true},
+		{"到 5点半", either(5, 30), true},
+		{"until 5:30", either(5, 30), true},
+		{"唤醒 12点", either(12, 0), true},
+		{"到 05:00", until(5, 0), true},
 		{"keep awake 100h", m{}, false},
 		{"keep awake until later", m{}, false},
 		{"保持唤醒到 25:00", m{}, false},

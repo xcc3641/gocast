@@ -27,6 +27,8 @@ func TestDetail(t *testing.T) {
 		{for90, 0, "1 hr 30 min left", "还剩 1 小时 30 分"},
 		{for90, 7*time.Minute + time.Second, "1 hr 23 min left", "还剩 1 小时 23 分"},
 		{for90, 30 * time.Minute, "1 hr left", "还剩 1 小时"},
+		{State{Kind: For, Deadline: t0.Add(2 * time.Hour)}, 0, "2 hr left", "还剩 2 小时"},
+		{State{Kind: For, Deadline: t0.Add(2 * time.Hour)}, time.Second, "2 hr left", "还剩 2 小时"},
 		{for90, 65 * time.Minute, "25 min left", "还剩 25 分钟"},
 		{for90, 89 * time.Minute, "1 min left", "还剩 1 分钟"},
 		{for90, 89*time.Minute + time.Second, "Less than a minute left", "还剩不到 1 分钟"},
@@ -60,6 +62,9 @@ func TestTitle(t *testing.T) {
 		{Request{Kind: For, Duration: 61 * time.Minute}, "Keep Awake for 1 Hour 1 Minute", "保持唤醒 1 小时 1 分钟"},
 		{Request{Kind: Until, Hour: 17, Minute: 30}, "Keep Awake Until 17:30", "保持唤醒到 17:30"},
 		{Request{Kind: Until, Hour: 8}, "Keep Awake Until Tomorrow 08:00", "保持唤醒到明天 08:00"},
+		// At 14:00, "5点" is today's 17:00 and "2点" tomorrow's 02:00.
+		{Request{Kind: Until, Hour: 5, Twelve: true}, "Keep Awake Until 17:00", "保持唤醒到 17:00"},
+		{Request{Kind: Until, Hour: 2, Twelve: true}, "Keep Awake Until Tomorrow 02:00", "保持唤醒到明天 02:00"},
 		{Request{Kind: Forever}, "Keep Awake", "保持唤醒"},
 	} {
 		if got := words("en").Title(c.r, t0); got != c.en {
@@ -75,9 +80,20 @@ func TestTitle(t *testing.T) {
 // sentences (copy.md 18.2, 18.3).
 func TestStatusAndNotice(t *testing.T) {
 	l := State{Kind: For, Deadline: t0.Add(90 * time.Minute)}.Left(t0)
+	two := State{Kind: For, Deadline: t0.Add(2 * time.Hour)}.Left(t0)
 	en, zh := words("en"), words("zh-Hans")
 	for _, c := range []struct{ got, want string }{
 		{en.Status(l), "Keeping Awake · 1 hr 30 min left"},
+		{en.Status(two), "Keeping Awake · 2 hr left"},
+		{zh.Status(two), "正在保持唤醒 · 还剩 2 小时"},
+		{en.Notice(two), "Keeping awake, 2 hr left"},
+		{zh.Notice(two), "正在保持唤醒，还剩 2 小时"},
+		{en.Length(2 * time.Hour), "2 Hours"},
+		{zh.Length(2 * time.Hour), "2 小时"},
+		{en.Length(60 * time.Minute), "1 Hour"},
+		{en.Status(Left{Kind: Until, At: t0, Tomorrow: true}), "Keeping Awake · until tomorrow 14:00"},
+		{en.Notice(Left{Kind: Until, At: t0, Tomorrow: true}), "Keeping awake until tomorrow 14:00"},
+		{zh.Notice(Left{Kind: Until, At: t0, Tomorrow: true}), "正在保持唤醒，到明天 14:00"},
 		{zh.Status(l), "正在保持唤醒 · 还剩 1 小时 30 分"},
 		{en.Notice(l), "Keeping awake, 1 hr 30 min left"},
 		{zh.Notice(l), "正在保持唤醒，还剩 1 小时 30 分"},

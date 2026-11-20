@@ -521,3 +521,18 @@ func TestDeadline(t *testing.T) {
 		}
 	}
 }
+
+// A session until "5点" started at 14:00 ends at 17:00 today, and says so.
+func TestStartTwelve(t *testing.T) {
+	kt := newKeeperTest(t)
+	if err := kt.Start(Request{Kind: Until, Hour: 5, Twelve: true}); err != nil {
+		t.Fatal(err)
+	}
+	at := time.Date(2026, 11, 19, 17, 0, 0, 0, shanghai)
+	if s := kt.State(); !s.Deadline.Equal(at) {
+		t.Errorf("deadline %v, want %v", s.Deadline, at)
+	}
+	if got := kt.Left(); got != (Left{Kind: Until, At: at}) {
+		t.Errorf("left %+v", got)
+	}
+}

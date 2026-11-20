@@ -18,6 +18,10 @@ type Request struct {
 	Duration time.Duration
 	// Hour (0–23) and Minute are Until's time of day.
 	Hour, Minute int
+	// Twelve: Hour (1–12) was typed with nothing to say which half of
+	// the day ("5点", "5:30"), and the session ends at whichever of Hour
+	// and Hour+12 (for 12, noon and midnight) comes first.
+	Twelve bool
 }
 
 // The lengths a session can have.
@@ -44,7 +48,7 @@ func (r Request) Validate() error {
 		}
 		return nil
 	case Until:
-		if r.Hour < 0 || r.Hour > 23 || r.Minute < 0 || r.Minute > 59 {
+		if r.Hour < 0 || r.Hour > 23 || r.Minute < 0 || r.Minute > 59 || r.Twelve && (r.Hour < 1 || r.Hour > 12) {
 			return fmt.Errorf("%w: time %d:%02d", ErrInvalid, r.Hour, r.Minute)
 		}
 		return nil
@@ -53,21 +57,36 @@ func (r Request) Validate() error {
 }
 
 // Deadline is when r, started now, ends: zero for Forever; for Until, the
-// time of day today, or tomorrow when that is not after now.
+// time of day today, or tomorrow when that is not after now; for Twelve,
+// the sooner of its two times so.
 func (r Request) Deadline(now time.Time) time.Time {
 	now = now.Round(0)
 	switch r.Kind {
 	case For:
 		return now.Add(r.Duration)
 	case Until:
-		y, m, d := now.Date()
-		t := time.Date(y, m, d, r.Hour, r.Minute, 0, 0, now.Location())
-		if !t.After(now) {
-			t = time.Date(y, m, d+1, r.Hour, r.Minute, 0, 0, now.Location())
+		t := next(r.Hour, r.Minute, now)
+		if r.Twelve {
+			if pm := next(r.Hour%12+12, r.Minute, now); pm.Before(t) {
+				t = pm
+			}
+			if am := next(r.Hour%12, r.Minute, now); am.Before(t) {
+				t = am
+			}
 		}
 		return t
 	}
 	return time.Time{}
+}
+
+// next is the first h:m after now, today or tomorrow.
+func next(h, m int, now time.Time) time.Time {
+	y, mo, d := now.Date()
+	t := time.Date(y, mo, d, h, m, 0, 0, now.Location())
+	if !t.After(now) {
+		t = time.Date(y, mo, d+1, h, m, 0, 0, now.Location())
+	}
+	return t
 }
 
 // Tomorrow reports whether r, an Until started now, ends tomorrow.
@@ -103,7 +122,8 @@ var untils = []string{"until", "till", "til", "直到", "到"}
 
 // ParseQuery finds a session to start in what is typed in the search
 // panel (copy.md 18.1): Keep Awake's name or an alias and a length
-// ("keep awake 1h30m", "唤醒 90m", "keep awake for 2 hours") or a time
+// ("keep awake 1h30m", "唤醒 90m", "keep awake for 2 hours", "唤醒 90",
+// minutes) or a time
 // ("keep awake until 5pm", "保持唤醒到 17:30", "咖啡 下午5点"); or a
 // time after "until" or "到" alone ("until 5pm", "到 17:30"). With only
 // "keep awake until" or "保持唤醒到", the Match is NeedTime. Anything else,
@@ -118,11 +138,11 @@ func ParseQuery(q string) (Match, bool) {
 		if t == "" {
 			return Match{NeedTime: command}, command
 		}
-		h, m, err := ParseTime(t)
+		r, err := ParseTime(t)
 		if err != nil {
 			return Match{}, false
 		}
-		return Match{Request: Request{Kind: Until, Hour: h, Minute: m}}, true
+		return Match{Request: r}, true
 	}
 	if !command || rest == "" {
 		return Match{}, false
@@ -130,11 +150,15 @@ func ParseQuery(q string) (Match, bool) {
 	if r, ok := cutWord(rest, []string{"for"}); ok {
 		rest = strings.TrimSpace(r)
 	}
+	if n, r, ok := number(rest); ok && r == "" && n > 0 {
+		// A bare number after the name is minutes: "唤醒 90".
+		rest += "m"
+	}
 	if d, err := ParseDuration(rest); err == nil {
 		return Match{Request: Request{Kind: For, Duration: d}}, true
 	}
-	if h, m, err := ParseTime(rest); err == nil {
-		return Match{Request: Request{Kind: Until, Hour: h, Minute: m}}, true
+	if r, err := ParseTime(rest); err == nil {
+		return Match{Request: r}, true
 	}
 	return Match{}, false
 }
@@ -354,18 +378,28 @@ func evening(h int) (int, bool) {
 	return h, h <= 4 || h >= 17 && h <= 23
 }
 
-// ParseTime reads a time of day: on a 24-hour clock ("17:30", "9:05"),
-// with am or pm ("5pm", "5:30 pm", "5 p.m.", "12am"), or in Chinese
-// ("17点", "17点30分", "5点半", "下午5点", "晚上8:30", "下午五点半"). A
-// bare number is no time.
-func ParseTime(s string) (hour, minute int, err error) {
+// ParseTime reads a time of day, as an Until: on a 24-hour clock
+// ("17:30", "05:00"), with am or pm ("5pm", "5:30 pm", "5 p.m.", "12am"),
+// or in Chinese ("17点", "17点30分", "下午5点", "晚上8:30", "下午五点半").
+// An hour from 1 to 12 with nothing to say which half of the day ("5点",
+// "5点半", "5:30", "12点"; not "05:00") is Twelve. A bare number is no
+// time.
+func ParseTime(s string) (Request, error) {
+	h, m, twelve, err := parseTime(s)
+	if err != nil {
+		return Request{}, err
+	}
+	return Request{Kind: Until, Hour: h, Minute: m, Twelve: twelve}, nil
+}
+
+func parseTime(s string) (hour, minute int, twelve bool, err error) {
 	s = normalize(s)
 	bad := fmt.Errorf("%w: time %q", ErrInvalid, s)
 	switch s {
 	case "noon", "中午":
-		return 12, 0, nil
+		return 12, 0, false, nil
 	case "midnight", "午夜":
-		return 0, 0, nil
+		return 0, 0, false, nil
 	}
 	var to24 func(int) (int, bool)
 	for _, p := range dayParts {
@@ -376,9 +410,11 @@ func ParseTime(s string) (hour, minute int, err error) {
 	}
 	n, rest, ok := number(s)
 	if !ok || n != math.Trunc(n) || strings.Contains(s[:len(s)-len(rest)], ".") {
-		return 0, 0, bad
+		return 0, 0, false, bad
 	}
 	h, m := int(n), 0
+	// A leading zero ("05:00") says a 24-hour clock.
+	twelve = h >= 1 && h <= 12 && s[0] != '0'
 	marked := false // a minute, 点, am or pm says it is a time
 	switch {
 	case strings.HasPrefix(rest, ":"):
@@ -388,7 +424,7 @@ func ParseTime(s string) (hour, minute int, err error) {
 			i++
 		}
 		if i != 2 {
-			return 0, 0, bad
+			return 0, 0, false, bad
 		}
 		m, _ = strconv.Atoi(mm[:2])
 		rest, marked = mm[2:], true
@@ -403,7 +439,7 @@ func ParseTime(s string) (hour, minute int, err error) {
 			default:
 				if mn, r, ok := number(rest); ok {
 					if mn != math.Trunc(mn) || strings.Contains(rest[:len(rest)-len(r)], ".") {
-						return 0, 0, bad
+						return 0, 0, false, bad
 					}
 					m = int(mn)
 					rest = strings.TrimPrefix(strings.TrimSpace(r), "分钟")
@@ -416,21 +452,23 @@ func ParseTime(s string) (hour, minute int, err error) {
 	if rest != "" {
 		pm, ok := map[string]bool{"am": false, "a.m.": false, "a.m": false, "pm": true, "p.m.": true, "p.m": true}[rest]
 		if !ok || to24 != nil || h < 1 || h > 12 {
-			return 0, 0, bad
+			return 0, 0, false, bad
 		}
 		h %= 12
+		twelve = false
 		if pm {
 			h += 12
 		}
 		marked = true
 	} else if to24 != nil {
+		twelve = false
 		if h, ok = to24(h); !ok {
-			return 0, 0, bad
+			return 0, 0, false, bad
 		}
 		marked = true
 	}
 	if !marked || h < 0 || h > 23 || m < 0 || m > 59 {
-		return 0, 0, bad
+		return 0, 0, false, bad
 	}
-	return h, m, nil
+	return h, m, twelve, nil
 }
