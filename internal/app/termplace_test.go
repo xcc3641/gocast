@@ -9,6 +9,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"gocast/internal/settings"
+	"gocast/locales"
 )
 
 // The work areas of the tests: a MacBook's under its menu bar, with the
@@ -432,5 +433,112 @@ func TestPositionSetting(t *testing.T) {
 	tt.Key(0, ui.KeyTab)
 	if tt.Focused("顶部") || tt.Focused("中央") {
 		t.Error("Tab went from picture to picture")
+	}
+}
+
+// 出现位置 holds still, frame by frame: its six pictures in one row, and
+// the rows under it where they are, as the page opens, from another page
+// and back again, and as the choice changes its note, which is the
+// choice's in the frame the pictures show it. Before, back from another
+// page, the pictures came in two rows of three for a frame.
+func TestPositionLayoutHoldsStill(t *testing.T) {
+	cases := []struct {
+		name, from  string // the page shown first
+		start, pick string // the position at first, and the one clicked
+		away        string // a page gone to and back from
+	}{
+		{name: "open", from: pagePresets, start: settings.PositionTop},
+		{name: "pick pointer", from: pagePresets, start: settings.PositionTop, pick: settings.PositionPointer},
+		{name: "pick top", from: pagePresets, start: settings.PositionPointer, pick: settings.PositionTop},
+		{name: "from general", from: pageGeneral, start: settings.PositionTop},
+		{name: "from clipboard", from: pageClipboard, start: settings.PositionPointer},
+		{name: "back from general", from: pagePresets, start: settings.PositionTop, away: pageGeneral},
+		{name: "back from clipboard", from: pagePresets, start: settings.PositionPointer, away: pageClipboard},
+	}
+	for _, locale := range []string{"zh-Hans", "en"} {
+		for _, cs := range cases {
+			t.Run(locale+"/"+cs.name, func(t *testing.T) {
+				p, _ := positionPrefs(t, locale, cs.start)
+				p.page = cs.from
+				var tt *ui.Tester
+				widthAt := float32(-1)
+				frame, paints, seen, builtPos := 0, 0, 0, ""
+				// Each frame's first build sees how the frame before it laid
+				// out and painted, that frame's last build.
+				look := func() {
+					if paints == seen {
+						return
+					}
+					seen = paints
+					frame++
+					w, ok := tt.Find(locales.GeneralWidth())
+					if !ok || p.page != pagePresets {
+						return
+					}
+					if widthAt < 0 {
+						widthAt = w.Y
+					} else if w.Y != widthAt {
+						t.Errorf("frame %d: %s at y %v, before at %v", frame, locales.GeneralWidth(), w.Y, widthAt)
+					}
+					var rowAt float32
+					for i, pos := range settings.TerminalPositions {
+						// Its name, under it.
+						r, ok := tt.Find(positionLabel(pos))
+						if !ok {
+							t.Fatalf("frame %d: no %s: %q", frame, positionLabel(pos), tt.Texts())
+						}
+						if i == 0 {
+							rowAt = r.Y
+						} else if r.Y != rowAt {
+							t.Errorf("frame %d: %s at y %v, %s at %v", frame, positionLabel(pos), r.Y, positionLabel(settings.TerminalPositions[0]), rowAt)
+						}
+					}
+					// The note of the position chosen as it laid out.
+					if !tt.HasText(positionHint(builtPos)) {
+						t.Errorf("frame %d: %s chosen, the note %q", frame, builtPos, tt.Texts())
+					}
+				}
+				tt = ui.NewTester(func(c *ui.Context) {
+					if tt != nil {
+						look()
+					}
+					p.view(c)
+					builtPos = p.termPos
+					// Counts the frames painted.
+					ui.Overlay(c, func() {
+						ui.Box(c).Absolute().Size(1, 1).Draw(func(*ui.Painter, ui.Rect) { paints++ })
+					})
+				}, prefsWidth, 700)
+				tt.Frame()
+				tt.Frame()
+				if cs.from != pagePresets {
+					if err := tt.Click(locales.PagePresets()); err != nil {
+						t.Fatal(err)
+					}
+				}
+				if cs.away != "" {
+					page := map[string]string{pageGeneral: locales.PageGeneral(), pageClipboard: locales.PageClipboard()}[cs.away]
+					if err := tt.Click(page); err != nil {
+						t.Fatal(err)
+					}
+					tt.Frame()
+					if err := tt.Click(locales.PagePresets()); err != nil {
+						t.Fatal(err)
+					}
+				}
+				if cs.pick != "" {
+					a, _ := tt.AccessByRole(ui.RoleRadio, positionLabel(cs.pick))
+					tt.ClickAt(a.Bounds.X+a.Bounds.W/2, a.Bounds.Y+ringBoxH/2)
+					if p.termPos != cs.pick {
+						t.Fatalf("chose %s", p.termPos)
+					}
+				}
+				tt.Frame()
+				tt.Frame()
+				if widthAt < 0 || frame < 3 {
+					t.Fatalf("%d frames looked at, no %s: %q", frame, locales.GeneralWidth(), tt.Texts())
+				}
+			})
+		}
 	}
 }

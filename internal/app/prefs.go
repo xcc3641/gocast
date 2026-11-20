@@ -2,6 +2,7 @@ package app
 
 import (
 	"log"
+	"math"
 	"slices"
 	"strconv"
 	"strings"
@@ -26,6 +27,11 @@ const (
 	pageGeneral   = "general"
 	pageAbout     = "about"
 )
+
+// prefsBarHeight is the band across the top of Settings, under the
+// traffic lights, where the sidebar and the pages start: the window's
+// title bar, hidden, so the view's to drag by (design.md 4.1).
+const prefsBarHeight = 52
 
 // prefsWindow is the Settings window: an ordinary window, the only one that
 // makes Gocast the active app, which hides rather than closes, back on the
@@ -63,10 +69,9 @@ type prefsWindow struct {
 	searchOnly bool // the search panel opens with its search field alone
 	calculator bool // the search panel calculates (design.md 2.3a)
 	fontSize   float64
-	folderGone bool      // the default folder is not there, as of the last look
-	termPos    string    // the floating terminal's position chosen (settings.TerminalPositions)
-	posGroup   ui.Handle // the row of its pictures
-	termWidth  float64   // percent of the work area
+	folderGone bool    // the default folder is not there, as of the last look
+	termPos    string  // the floating terminal's position chosen (settings.TerminalPositions)
+	termWidth  float64 // percent of the work area
 	termHeight float64
 	hideBlur   bool
 
@@ -78,6 +83,10 @@ type prefsWindow struct {
 
 	// About: the status line read out last (design.md 6).
 	updateSaid string
+
+	// What moves the window: the band across its top, and the sidebar
+	// under the pages' tabs.
+	bar, sideBar ui.Handle
 }
 
 func newPrefsWindow(g *gocast) *prefsWindow {
@@ -165,13 +174,13 @@ func (p *prefsWindow) view(c *ui.Context) {
 		if p.page == pageShortcuts {
 			// The page itself does not scroll, its list does (design.md
 			// 4.4).
-			ui.Column(c).Grow(1).Shrink(1).Background(k.surface).Padding(52, 28, 24, 28).Children(func() {
+			ui.Column(c).Grow(1).Shrink(1).Background(k.surface).Padding(prefsBarHeight, 28, 24, 28).Children(func() {
 				p.shortcutsPage(c, k)
 			})
 			return
 		}
 		ui.Scroll(c).Grow(1).Background(k.surface).Children(func() {
-			ui.Column(c).Padding(52, 28, 24, 28).Children(func() {
+			ui.Column(c).Padding(prefsBarHeight, 28, 24, 28).Children(func() {
 				switch p.page {
 				case pagePresets:
 					p.presetsPage(c, k)
@@ -189,6 +198,17 @@ func (p *prefsWindow) view(c *ui.Context) {
 	})
 	p.editor(c, k)
 	p.clearConfirmation(c, k)
+	p.titleBar(c)
+}
+
+// titleBar is the band across the top of the window, over the pages and
+// over a dialog's dimmed window, which moves the window as a title bar
+// does: Settings hides its own (design.md 4.1). Where it stops, the pages
+// take the pointer, their sliders and lists too.
+func (p *prefsWindow) titleBar(c *ui.Context) {
+	ui.Overlay(c, func() {
+		ui.Box(c).Absolute().Left(0).Top(0).Right(0).Height(prefsBarHeight).DragWindow().AccessHidden(true).Bind(&p.bar)
+	})
 }
 
 // sidebar lists the pages, under room for the traffic lights, on the
@@ -209,7 +229,7 @@ func (p *prefsWindow) sidebar(c *ui.Context, k tokens) {
 			p.goTo(pages[j].id)
 		}
 	}
-	ui.Column(c).Width(200).Shrink(0).Padding(52, 10, 10, 10).Gap(2).Role(ui.RoleList).Label(locales.SettingsTitle()).
+	ui.Column(c).Width(200).Shrink(0).Padding(prefsBarHeight, 0, 0, 0).Role(ui.RoleList).Label(locales.SettingsTitle()).
 		Focusable().HandleInput(func(ev ui.InputEvent) bool {
 		if ev.Kind != ui.InputKeyDown || ev.Mods != 0 {
 			return false
@@ -227,7 +247,7 @@ func (p *prefsWindow) sidebar(c *ui.Context, k tokens) {
 	}).Children(func() {
 		// Chosen in the selection gray, as the search results and the
 		// terminal's tabs (design.md 4.2), not the accent.
-		ui.Themed(c, listTheme(c, k)).Background(ui.Transparent).Gap(2).Children(func() {
+		ui.Themed(c, listTheme(c, k)).Background(ui.Transparent).Padding(0, 10).Gap(2).Children(func() {
 			for _, pg := range pages {
 				on := p.page == pg.id
 				icon := k.textSecondary
@@ -243,6 +263,9 @@ func (p *prefsWindow) sidebar(c *ui.Context, k tokens) {
 				})
 			}
 		})
+		// Under the tabs, to the window's bottom, the sidebar moves the
+		// window, as the band over it (design.md 4.1).
+		ui.Box(c).Grow(1).DragWindow().AccessHidden(true).Bind(&p.sideBar)
 	})
 }
 
@@ -412,6 +435,11 @@ func (p *prefsWindow) spotlightSolved() {
 // presets on their page, with the note on resizing under it (design.md
 // 4.4).
 func (p *prefsWindow) terminalGroup(c *ui.Context, k tokens) {
+	// From the least the terminal is wide on its display; the width set
+	// shown no less, though kept until changed. Before the position's
+	// pictures, which draw the terminal at that width in the same frame.
+	lo := settings.MinTermWidth(p.g.term.workAreaWidth())
+	p.termWidth = max(p.termWidth, float64(lo))
 	newGroupNoted(c, k, locales.GeneralTerminalGroupHint(), func(g *group) {
 		p.defaultFolderRow(c, k, g)
 		g.row(c, k, locales.GeneralFontSize(), "", k.textSecondary, func() {
@@ -430,10 +458,6 @@ func (p *prefsWindow) terminalGroup(c *ui.Context, k tokens) {
 		p.positionRow(c, k, g)
 		sizeHint := locales.GeneralSizeHint()
 		g.row(c, k, locales.GeneralWidth(), sizeHint, k.textSecondary, func() {
-			// From the least the terminal is wide on its display; the
-			// width set shown no less, though kept until changed.
-			lo := settings.MinTermWidth(p.g.term.workAreaWidth())
-			p.termWidth = max(p.termWidth, float64(lo))
 			if p.percentSlider(c, k, locales.GeneralWidth(), &p.termWidth, lo, settings.MaxTerminalWidth) {
 				p.g.settings.TerminalWidth = int(p.termWidth)
 				p.g.saveSettings()
@@ -484,17 +508,52 @@ func (p *prefsWindow) positionRow(c *ui.Context, k tokens, g *group) {
 		groupDivider(c, k)
 	}
 	g.rows++
-	hint := locales.GeneralPositionHint()
-	if p.g.settings.TermPosition() == settings.PositionPointer {
-		hint = locales.GeneralPositionPointerHint()
-	}
+	// The note of the position chosen, as the pictures show it, in the
+	// same frame; as high as the higher of the two, wrapped, for the
+	// pictures under it not to move as it changes (design.md 3.7).
+	hint := positionHint(p.termPos)
+	lines := max(textLines(c, locales.GeneralPositionHint(), 12, positionRowWidth), textLines(c, locales.GeneralPositionPointerHint(), 12, positionRowWidth))
+	m := ui.Font{Size: 12, Weight: 400}.Metrics()
+	hintHeight := float32(lines) * (m.Ascent + m.Descent + m.LineGap)
 	ui.Column(c).Padding(10, groupInset, 12, 0).Gap(12).Children(func() {
 		ui.Column(c).Gap(2).Children(func() {
 			ui.Text(c, locales.GeneralPosition()).FontSize(13).TextColor(k.text)
-			ui.Text(c, hint).FontSize(12).TextColor(k.textSecondary)
+			ui.Text(c, hint).FontSize(12).TextColor(k.textSecondary).MinHeight(hintHeight)
 		})
 		p.positionPictures(c, k, hint)
 	})
+}
+
+// textLines is how many lines s takes at size, wrapped at width.
+func textLines(c *ui.Context, s string, size, width float32) int {
+	_, line := c.MeasureText(0, ui.Span{Text: "x", Size: size})
+	_, h := c.MeasureText(width, ui.Span{Text: s, Size: size})
+	return max(int(math.Round(float64(h/line))), 1)
+}
+
+// positionHint is the note under 出现位置 while pos is chosen: how At
+// Pointer places the terminal, else on which display (copy.md 17).
+func positionHint(pos string) string {
+	if pos == settings.PositionPointer {
+		return locales.GeneralPositionPointerHint()
+	}
+	return locales.GeneralPositionHint()
+}
+
+// positionRowWidth is the width of the row of pictures, in a group on a
+// page of the Settings window, which does not resize: the window less the
+// sidebar and the page's padding, less the group's padding and the row's.
+const positionRowWidth = prefsWidth - hkContentLeft - 28 - 2*groupInset
+
+// positionsPerRow is how many pictures a row of them holds: all of them,
+// or half where a cell would be under pictureCell wide, from the row's
+// width, which is fixed; not as laid out in the last frame, which the
+// first frame of the page doesn't have, or has of another page's element.
+func positionsPerRow(n int) int {
+	if positionRowWidth/float32(n) < pictureCell {
+		return (n + 1) / 2
+	}
+	return n
 }
 
 // positionPictures is the radio group of the positions' pictures, across
@@ -503,10 +562,7 @@ func (p *prefsWindow) positionRow(c *ui.Context, k tokens, g *group) {
 // before, stopping at the ends.
 func (p *prefsWindow) positionPictures(c *ui.Context, k tokens, hint string) {
 	positions := settings.TerminalPositions
-	perRow := len(positions)
-	if w := p.posGroup.Bounds(c).W; w > 0 && w/float32(perRow) < pictureCell {
-		perRow = (perRow + 1) / 2
-	}
+	perRow := positionsPerRow(len(positions))
 	focusedAt := -1
 	cell := func(i int, pos string) {
 		name := positionLabel(pos)
@@ -517,7 +573,6 @@ func (p *prefsWindow) positionPictures(c *ui.Context, k tokens, hint string) {
 			p.g.settings.SetTermPosition(p.termPos)
 			p.g.saveSettings()
 			p.g.term.positionChanged()
-			c.Invalidate() // the note over it, built before, for the new choice
 		}
 		if item.Focused() {
 			focusedAt = i
@@ -541,7 +596,7 @@ func (p *prefsWindow) positionPictures(c *ui.Context, k tokens, hint string) {
 				}
 			})
 		}
-	}).Gap(pictureRowGap).Bind(&p.posGroup).Label(locales.GeneralPosition()).Description(hint)
+	}).Gap(pictureRowGap).Label(locales.GeneralPosition()).Description(hint)
 	// The group goes round from the last to the first: not here.
 	switch focusedAt {
 	case 0:
