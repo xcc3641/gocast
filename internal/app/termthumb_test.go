@@ -3,6 +3,7 @@ package app
 import (
 	"image"
 	"testing"
+	"time"
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
@@ -108,4 +109,181 @@ func positionPrefs(t *testing.T, locale, pos string) (*prefsWindow, *ui.Tester) 
 	tt.SetScale(2)
 	tt.SetSize(prefsWidth, 700)
 	return p, tt
+}
+
+// A picture plays its small terminal coming in as the floating terminal
+// does at its position, scaled down (design.md 3.7): from 4 away, fading
+// in, over 360 ms on the terminal's own curve; At Pointer's pointer fades
+// in over 120 ms first, then its terminal rises; with less motion, it only
+// fades in, over 120 ms. The others stay still.
+func TestThumbPlayPoses(t *testing.T) {
+	start := time.Date(2026, 11, 20, 10, 0, 0, 0, time.UTC)
+	at := func(d time.Duration) time.Time { return start.Add(d) }
+	from := map[string]thumbPose{
+		settings.PositionTop:     {dy: -4},
+		settings.PositionCenter:  {dy: -4},
+		settings.PositionBottom:  {dy: 4},
+		settings.PositionLeft:    {dx: -4},
+		settings.PositionRight:   {dx: 4},
+		settings.PositionPointer: {dy: 4},
+	}
+	for _, pos := range settings.TerminalPositions {
+		a := thumbPlay{pos: pos, start: start}
+		lead := time.Duration(0)
+		if pos == settings.PositionPointer {
+			lead = thumbPointerFor
+			if got := a.poseOf(pos, at(0)); got.pointer != 0 || got.term != 0 {
+				t.Errorf("%s at 0: %+v, its pointer not yet in", pos, got)
+			}
+			if got := a.poseOf(pos, at(60*time.Millisecond)); got.pointer <= 0 || got.pointer >= 1 || got.term != 0 {
+				t.Errorf("%s at 60 ms: %+v, its pointer half in, the terminal not", pos, got)
+			}
+		}
+		want := from[pos]
+		want.pointer = 1
+		if got := a.poseOf(pos, at(lead)); got != want {
+			t.Errorf("%s at %v: %+v, want %+v", pos, lead, got, want)
+		}
+		mid := a.poseOf(pos, at(lead+thumbPlayFor/2))
+		if mid.term <= 0.5 || mid.term >= 1 || mid.dx*want.dx < 0 || mid.dy*want.dy < 0 || abs32(mid.dx)+abs32(mid.dy) >= 2 {
+			t.Errorf("%s half way: %+v, more than half in and on its way from %+v", pos, mid, want)
+		}
+		if !a.playing(at(lead + thumbPlayFor - time.Millisecond)) {
+			t.Errorf("%s: done before %v", pos, lead+thumbPlayFor)
+		}
+		if got := a.poseOf(pos, at(lead+thumbPlayFor)); got != restPose || a.playing(at(lead+thumbPlayFor)) {
+			t.Errorf("%s at %v: %+v, not still", pos, lead+thumbPlayFor, got)
+		}
+		for _, other := range settings.TerminalPositions {
+			if other != pos && a.poseOf(other, at(lead)) != restPose {
+				t.Errorf("%s playing: %s moves", pos, other)
+			}
+		}
+		fade := thumbPlay{pos: pos, start: start, fade: true}
+		if got := fade.poseOf(pos, at(0)); got != (thumbPose{pointer: 1}) {
+			t.Errorf("%s with less motion at 0: %+v", pos, got)
+		}
+		if got := fade.poseOf(pos, at(60*time.Millisecond)); got.dx != 0 || got.dy != 0 || got.term <= 0 || got.term >= 1 {
+			t.Errorf("%s with less motion at 60 ms: %+v, moving", pos, got)
+		}
+		if fade.playing(at(thumbFadeFor)) {
+			t.Errorf("%s with less motion: longer than %v", pos, thumbFadeFor)
+		}
+	}
+}
+
+// The pictures play as design.md 3.7 says: the one chosen, by the pointer
+// or the keys, once; one not chosen that the pointer rests on 150 ms,
+// once until the pointer leaves it, not one swept over nor the one chosen;
+// coming to another, the one playing goes still. With less motion, only
+// choosing plays, fading in. Still otherwise, with no frames asked for.
+func TestPositionPicturePlays(t *testing.T) {
+	for _, locale := range []string{"zh-Hans", "en"} {
+		p, tt := positionPrefs(t, locale, settings.PositionTop)
+		tt.Frame()
+		center := func(pos string) (float32, float32) {
+			t.Helper()
+			a, ok := tt.AccessByRole(ui.RoleRadio, positionLabel(pos))
+			if !ok {
+				t.Fatalf("%s: no %s: %+v", locale, positionLabel(pos), tt.AccessAll())
+			}
+			return a.Bounds.X + a.Bounds.W/2, a.Bounds.Y + ringBoxH/2
+		}
+		playing := func(when, want string) {
+			t.Helper()
+			got := ""
+			if p.play.playing(tt.Now()) {
+				got = p.play.pos
+			}
+			if got != want {
+				t.Errorf("%s: %s: %q playing, want %q", locale, when, got, want)
+			}
+		}
+		playing("opened", "")
+		if tt.FramePending() {
+			t.Errorf("%s: opened, frames asked for", locale)
+		}
+
+		// Chosen by the pointer.
+		tt.ClickAt(center(settings.PositionBottom))
+		tt.Frame()
+		playing("底部 clicked", settings.PositionBottom)
+		tt.Advance(thumbPlayFor / 2)
+		playing("底部 half way", settings.PositionBottom)
+		// Another chosen half way: it starts, the first goes still.
+		tt.ClickAt(center(settings.PositionLeft))
+		tt.Frame()
+		playing("左侧 clicked", settings.PositionLeft)
+		tt.Advance(thumbPlayFor)
+		playing("played", "")
+		tt.Advance(50 * time.Millisecond) // the frame after its last
+		if tt.FramePending() {
+			t.Errorf("%s: played, frames still asked for", locale)
+		}
+
+		// Rested on, not chosen.
+		tt.Move(center(settings.PositionRight))
+		tt.Frame()
+		tt.Advance(thumbRestFor - 20*time.Millisecond)
+		playing("右侧 swept over", "")
+		tt.Advance(20 * time.Millisecond)
+		playing("右侧 rested on", settings.PositionRight)
+		tt.Advance(thumbPlayFor / 2)
+		tt.Move(center(settings.PositionCenter))
+		tt.Frame()
+		playing("on to 中央", "")
+		tt.Advance(thumbRestFor)
+		playing("中央 rested on", settings.PositionCenter)
+		tt.Advance(thumbPlayFor)
+		tt.Advance(time.Second)
+		playing("中央 rested on, played", "")
+		// Off and back on: again.
+		tt.Move(10, 650)
+		tt.Frame()
+		tt.Move(center(settings.PositionCenter))
+		tt.Frame()
+		tt.Advance(thumbRestFor)
+		playing("中央 rested on again", settings.PositionCenter)
+		tt.Advance(thumbPlayFor)
+		// The one chosen does not play.
+		tt.Move(center(settings.PositionLeft))
+		tt.Frame()
+		tt.Advance(time.Second)
+		playing("左侧, chosen, rested on", "")
+
+		// Chosen by the keys, At Pointer's lasting its pointer's 120 ms
+		// more.
+		tt.Move(10, 650)
+		tt.Frame()
+		for range 40 {
+			if tt.Focused(positionLabel(settings.PositionLeft)) {
+				break
+			}
+			tt.Key(0, ui.KeyTab)
+		}
+		tt.Key(0, ui.KeyRight)
+		tt.Key(0, ui.KeyRight)
+		tt.Frame()
+		playing("鼠标处 by the keys", settings.PositionPointer)
+		tt.Advance(thumbPlayFor)
+		playing("鼠标处 after 360 ms", settings.PositionPointer)
+		tt.Advance(thumbPointerFor)
+		playing("鼠标处 played", "")
+
+		// With less motion.
+		tt.SetPreferences(ui.Preferences{ReduceMotion: true})
+		tt.Frame()
+		tt.ClickAt(center(settings.PositionTop))
+		tt.Frame()
+		playing("顶部 clicked, less motion", settings.PositionTop)
+		if !p.play.fade {
+			t.Errorf("%s: with less motion, 顶部 moves", locale)
+		}
+		tt.Advance(thumbFadeFor)
+		playing("顶部 faded in", "")
+		tt.Move(center(settings.PositionBottom))
+		tt.Frame()
+		tt.Advance(time.Second)
+		playing("底部 rested on, less motion", "")
+	}
 }

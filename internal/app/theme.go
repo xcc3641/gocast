@@ -12,8 +12,11 @@ type tokens struct {
 	text, textSecondary, textOnGlass ui.Color
 	selection, hairline, keycap      ui.Color
 	surface, groupFill               ui.Color
-	// cardFill is the calculator's card, not chosen (design.md 2.3a).
+	// cardFill is the calculator's card, not chosen (design.md 2.3a), and
+	// the small boxes of Settings, its search field and paths (4.3).
 	cardFill ui.Color
+	// hover is a Settings tab under the pointer (design.md 4.2).
+	hover ui.Color
 	// glassTint is laid over the system's glass by both glass windows,
 	// at their own alpha (searchTint, terminalTint): the glass turns
 	// mid-gray over a dark desktop in light mode (and over a light one in
@@ -49,6 +52,7 @@ func tokensOf(dark, highContrast bool) tokens {
 			text: ui.Hex("#F5F5F7"), textSecondary: ui.Hex("#A1A1A6"), textOnGlass: ui.Hex("#AEAEB2"),
 			selection: ui.RGBA(255, 255, 255, 0.10), hairline: ui.RGBA(255, 255, 255, 0.10), keycap: ui.RGBA(255, 255, 255, 0.10),
 			surface: ui.Hex("#1C1C1E"), groupFill: ui.Hex("#2C2C2E"), cardFill: ui.RGBA(255, 255, 255, 0.05),
+			hover:       ui.RGBA(255, 255, 255, 0.06),
 			glassTint:   ui.Hex("#1C1C1E"),
 			panelBorder: ui.RGBA(255, 255, 255, 0.18), capsuleBorder: ui.RGBA(255, 255, 255, 0.12),
 			panelShadow: ui.RGBA(0, 0, 0, 0.55),
@@ -60,6 +64,7 @@ func tokensOf(dark, highContrast bool) tokens {
 			text: ui.Hex("#1D1D1F"), textSecondary: ui.Hex("#6E6E73"), textOnGlass: ui.Hex("#505054"),
 			selection: ui.RGBA(0, 0, 0, 0.08), hairline: ui.RGBA(0, 0, 0, 0.10), keycap: ui.RGBA(0, 0, 0, 0.06),
 			surface: ui.Hex("#FFFFFF"), groupFill: ui.Hex("#F5F5F7"), cardFill: ui.RGBA(0, 0, 0, 0.04),
+			hover:       ui.RGBA(0, 0, 0, 0.04),
 			glassTint:   ui.Hex("#F6F6F8"),
 			panelBorder: ui.RGBA(0, 0, 0, 0.18), capsuleBorder: ui.RGBA(0, 0, 0, 0.08),
 			panelShadow: ui.RGBA(0, 0, 0, 0.30),
@@ -112,6 +117,14 @@ func listTheme(c *ui.Context, k tokens) *ui.Theme {
 	t.SurfaceHover = ui.Transparent
 	t.Radius = 8
 	return &t
+}
+
+// sidebarTheme is the theme of Settings' tabs: listTheme's, a tab under
+// the pointer in the hover gray (design.md 4.2).
+func sidebarTheme(c *ui.Context, k tokens) *ui.Theme {
+	t := listTheme(c, k)
+	t.SurfaceHover = k.hover
+	return t
 }
 
 // searchListTheme is the search panel's list's: its rows draw their own

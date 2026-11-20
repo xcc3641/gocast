@@ -93,15 +93,17 @@ func thumbColorsOf(dark bool) thumbColors {
 
 // positionPicture is the picture of pos, for the sizes of Settings,
 // ringed while chosen, with the focus ring outside that while it has the
-// keyboard's focus, at pressedOpacity while pressed: a drawing only,
-// hidden from assistive technology, which reads the radio button around
-// it (copy.md 17).
-func (p *prefsWindow) positionPicture(c *ui.Context, pos string, chosen, focused, pressed bool) {
+// keyboard's focus, at pressedOpacity while pressed, its small terminal
+// in the pose that pose says as the window paints, once all of the view
+// has built and chosen what plays: a drawing only, hidden from assistive technology, which reads
+// the radio button around it (copy.md 17). It reports whether the pointer
+// is over it.
+func (p *prefsWindow) positionPicture(c *ui.Context, pos string, chosen, focused, pressed bool, pose func() thumbPose) bool {
 	col := thumbColorsOf(c.Theme().Dark)
 	accent := c.Theme().Accent
 	term := uiRect(thumbRect(pos, p.termWidth, p.termHeight))
 	pointer := pos == settings.PositionPointer
-	ui.Box(c).Size(ringBoxW, ringBoxH).Shrink(0).AccessHidden(true).Draw(func(pt *ui.Painter, r ui.Rect) {
+	ring := ui.Box(c).Size(ringBoxW, ringBoxH).Shrink(0).AccessHidden(true).Draw(func(pt *ui.Painter, r ui.Rect) {
 		r = snapRect(pt, r)
 		if chosen {
 			pt.Stroke(r, accent, ringRadius, ringW)
@@ -109,14 +111,16 @@ func (p *prefsWindow) positionPicture(c *ui.Context, pos string, chosen, focused
 		if focused {
 			pt.FocusRing(r, [4]float32{ringRadius, ringRadius, ringRadius, ringRadius})
 		}
-	}).Children(func() {
+	})
+	ring.Children(func() {
 		pic := ui.Box(c).Size(thumbW, thumbH).Margin(ringOut).Shrink(0).Draw(func(pt *ui.Painter, r ui.Rect) {
-			drawThumb(pt, r, col, term, pointer)
+			drawThumb(pt, r, col, term, pointer, pose())
 		})
 		if pressed {
 			pic.Opacity(pressedOpacity)
 		}
 	})
+	return ring.Hovered()
 }
 
 // snapRect is r with its edges on the display's pixels.
@@ -129,8 +133,9 @@ func snapRect(pt *ui.Painter, r ui.Rect) ui.Rect {
 
 // drawThumb draws the picture at r: the screen, its menu bar and Dock, the
 // small terminal at term, and with pointer the line typed on and the
-// pointer over it.
-func drawThumb(pt *ui.Painter, r ui.Rect, col thumbColors, term ui.Rect, pointer bool) {
+// pointer over it; the terminal, with its line, moved and faded as pose
+// says, within the screen, and the pointer faded.
+func drawThumb(pt *ui.Painter, r ui.Rect, col thumbColors, term ui.Rect, pointer bool, pose thumbPose) {
 	s := pt.Scale()
 	snap := func(v float32) float32 { return float32(math.Round(float64(v*s))) / s } // to the display's pixels
 	at := func(x, y, w, h float32) ui.Rect {
@@ -142,20 +147,27 @@ func drawThumb(pt *ui.Painter, r ui.Rect, col thumbColors, term ui.Rect, pointer
 	pt.Stroke(screen, col.screenLine, 4, 1)
 	pt.FillRadii(at(0, 0, thumbW, 3), [4]float32{4, 4, 0, 0}, col.bars) // the menu bar
 	pt.Fill(at((thumbW-28)/2, thumbH-2-4, 28, 4), col.bars, 1.5)        // the Dock
-	box := at(term.X, term.Y, term.W, term.H)
-	pt.Fill(box, col.term, 2)
-	pt.Stroke(box, col.termLine, 2, 1)
-	pt.FillRadii(ui.Rect{X: box.X, Y: box.Y, W: box.W, H: 3}, [4]float32{2, 2, 0, 0}, col.tabs) // the tabs
-	if !pointer {
+	if pose.term > 0 {
+		pt.Clip(screen, 4, func() {
+			box := at(term.X+pose.dx, term.Y+pose.dy, term.W, term.H)
+			pt.Fill(box, col.term.Alpha(pose.term), 2)
+			pt.Stroke(box, col.termLine.Alpha(pose.term), 2, 1)
+			pt.FillRadii(ui.Rect{X: box.X, Y: box.Y, W: box.W, H: 3}, [4]float32{2, 2, 0, 0}, col.tabs.Alpha(pose.term)) // the tabs
+			if pointer {
+				line := at(term.X+pose.dx+thumbLineInset, thumbLineY+pose.dy, term.W-2*thumbLineInset, thumbLineH)
+				pt.Fill(line, col.line.Alpha(pose.term), 1)
+			}
+		})
+	}
+	if !pointer || pose.pointer <= 0 {
 		return
 	}
-	pt.Fill(at(term.X+thumbLineInset, thumbLineY, term.W-2*thumbLineInset, thumbLineH), col.line, 1)
 	// An arrow 6 wide and 9 high, its tip at thumbTip: black, with a
 	// white line of 1 around it, half of a 2 wide stroke under it.
 	x, y := snap(r.X+thumbTipX), snap(r.Y+thumbTipY)
 	arrow := new(ui.Path).MoveTo(x, y).LineTo(x, y+8).LineTo(x+1.9, y+6.2).LineTo(x+3.1, y+9).
 		LineTo(x+4.4, y+8.4).LineTo(x+3.2, y+5.7).LineTo(x+6, y+5.7).Close()
 	arrow.Join(ui.MiterJoin)
-	pt.StrokePath(arrow, 2, ui.RGB(255, 255, 255))
-	pt.FillPath(arrow, ui.RGB(0, 0, 0))
+	pt.StrokePath(arrow, 2, ui.RGB(255, 255, 255).Alpha(pose.pointer))
+	pt.FillPath(arrow, ui.RGB(0, 0, 0).Alpha(pose.pointer))
 }

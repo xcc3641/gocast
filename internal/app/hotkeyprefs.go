@@ -43,12 +43,12 @@ const (
 	hkDescLeft    = hkIcon + 10 // the line under a row, from the row's padding: under the name
 	hkNoteHeight  = 52          // the line under Gocast's own in With Shortcut, none set
 	hkExpandFor   = 120 * time.Millisecond
-	hkContentLeft = 200 + 28 // the sidebar and the content's padding
+	hkContentLeft = 200 + pagePadX // the sidebar and the content's padding
 )
 
 // hkListWidth is a row's width: the content area's, less its padding and
-// the list block's.
-const hkListWidth = prefsWidth - hkContentLeft - 28 - 2*hkListPad
+// the list card's border and padding.
+const hkListWidth = prefsWidth - hkContentLeft - pagePadX - 2*cardBorder - 2*hkListPad
 
 // hkNoteWidth is the widest a line of the list empty, or of the note
 // under Gocast's own, is: 20 clear of either side (design.md 4.4).
@@ -569,12 +569,6 @@ func (p *prefsWindow) shortcutsPage(c *ui.Context, k tokens) {
 			}
 		}
 	}
-	title := ui.Text(c, locales.PageShortcuts()).FontSize(20).FontWeight(600).TextColor(k.text).Role(ui.RoleHeading).Shrink(0)
-	if p.notice != noticeNone {
-		title.Margin(0, 0, 16, 0)
-	} else {
-		title.Margin(0, 0, 6, 0)
-	}
 	p.spotlightNotice(c, k)
 	ui.Text(c, locales.HotkeysIntro()).FontSize(12).TextColor(k.textSecondary).MaxLines(2).Margin(0, 0, 14, 0).Shrink(0)
 	ui.Row(c).Height(28).Shrink(0).Gap(10).AlignItems(ui.Center).Margin(0, 0, 10, 0).Children(func() {
@@ -588,7 +582,7 @@ func (p *prefsWindow) shortcutsPage(c *ui.Context, k tokens) {
 			}
 		})
 	})
-	ui.Column(c).Grow(1).Shrink(1).Background(k.groupFill).Radius(10).Padding(hkListPad).Children(func() {
+	card(c, k).Grow(1).Shrink(1).Padding(hkListPad).Children(func() {
 		if len(h.shown) == 0 {
 			p.hotkeysEmpty(c, k)
 			return
@@ -606,7 +600,7 @@ func (p *prefsWindow) shortcutsPage(c *ui.Context, k tokens) {
 // while it holds any.
 func (p *prefsWindow) hotkeySearch(c *ui.Context, k tokens) {
 	h := &p.hk
-	ui.Row(c).Grow(1).Shrink(1).Height(28).Radius(7).Background(k.groupFill).Padding(0, 6, 0, 8).Gap(6).AlignItems(ui.Center).Children(func() {
+	ui.Row(c).Grow(1).Shrink(1).Height(28).Radius(7).Background(k.cardFill).Border(1, k.hairline).Padding(0, 6, 0, 8).Gap(6).AlignItems(ui.Center).Children(func() {
 		sfsymbols.Symbol(c, "magnifyingglass").Size(12).Color(k.textSecondary)
 		field := ui.TextInputBase(c, &h.query).Bind(&h.search).Grow(1).Shrink(1).FontSize(13).
 			Placeholder(locales.HotkeysSearch()).Label(locales.HotkeysSearch()).OnTextKey(p.searchKey)

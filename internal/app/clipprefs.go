@@ -70,7 +70,6 @@ func (p *prefsWindow) installedIgnored() []ignoredApp {
 
 func (p *prefsWindow) clipboardPage(c *ui.Context, k tokens) {
 	s := p.g.clip
-	pageTitle(c, k, locales.PageClipboard())
 	newGroup(c, k, func(g *group) {
 		g.row(c, k, locales.ClipKeep(), locales.ClipKeepHint(), k.textSecondary, func() {
 			if ui.Switch(c, &p.clipKeep).Label(locales.ClipKeep()).Changed() {
@@ -90,21 +89,16 @@ func (p *prefsWindow) clipboardPage(c *ui.Context, k tokens) {
 		})
 		// Pasting on Return: while Gocast may not press ⌘V, the
 		// description says so, with a button to System Settings.
-		groupDivider(c, k)
-		g.rows++
-		noAX := p.clipPaste && !s.trusted()
-		ui.Row(c).MinHeight(44).Padding(8, 14, 8, 0).Gap(12).AlignItems(ui.Center).Children(func() {
-			ui.Column(c).Grow(1).Shrink(1).Gap(2).Children(func() {
-				ui.Text(c, locales.ClipPasteOnEnter()).FontSize(13).TextColor(k.text)
-				if noAX {
-					ui.Text(c, locales.ClipNoAXHint()).FontSize(12).TextColor(k.warning)
-					ui.Row(c).Margin(6, 0, 0, 0).Children(func() { // 8 under the text with the gap
-						ui.Button(c, locales.ClipOpenSettings()).Height(24).FontSize(12).OnClick(s.openAccessibility)
-					})
-				} else {
-					ui.Text(c, locales.ClipPasteOnEnterHint()).FontSize(12).TextColor(k.textSecondary)
-				}
-			})
+		desc, descColor, under := locales.ClipPasteOnEnterHint(), k.textSecondary, func() {}
+		if p.clipPaste && !s.trusted() {
+			desc, descColor = locales.ClipNoAXHint(), k.warning
+			under = func() {
+				ui.Row(c).Margin(5, 0, 0, 0).Children(func() { // 8 under the text with the gap
+					ui.Button(c, locales.ClipOpenSettings()).Height(24).FontSize(12).OnClick(s.openAccessibility)
+				})
+			}
+		}
+		g.rowWith(c, k, locales.ClipPasteOnEnter(), desc, descColor, under, func() {
 			if ui.Switch(c, &p.clipPaste).Label(locales.ClipPasteOnEnter()).Changed() {
 				s.setPasteOnReturn(p.clipPaste)
 			}
@@ -118,6 +112,10 @@ func (p *prefsWindow) clipboardPage(c *ui.Context, k tokens) {
 	})
 }
 
+// ignoredInset is the padding of the card of ignored apps, at either side,
+// as it was on the gray block (design.md 4.3).
+const ignoredInset = 14
+
 // ignoredGroup lists the ignored apps installed here, one chosen at a
 // time, over a bar adding and removing them.
 func (p *prefsWindow) ignoredGroup(c *ui.Context, k tokens) {
@@ -125,7 +123,7 @@ func (p *prefsWindow) ignoredGroup(c *ui.Context, k tokens) {
 	if !slices.ContainsFunc(list, func(a ignoredApp) bool { return a.id == p.clipIgnoredSel }) {
 		p.clipIgnoredSel = ""
 	}
-	ui.Column(c).Background(k.groupFill).Radius(10).Padding(6, groupInset, 0, groupInset).Margin(0, 0, 20, 0).Children(func() {
+	card(c, k).Padding(6, ignoredInset, 0, ignoredInset).Margin(0, 0, 20, 0).Children(func() {
 		ui.Column(c).Role(ui.RoleList).Label(locales.ClipIgnoredTitle()).Children(func() {
 			for _, a := range list {
 				id := a.id
@@ -145,7 +143,7 @@ func (p *prefsWindow) ignoredGroup(c *ui.Context, k tokens) {
 			}
 		})
 		if len(list) > 0 {
-			ui.Box(c).Height(1).Background(k.hairline).Margin(6, -groupInset, 0, -groupInset).Shrink(0)
+			ui.Box(c).Height(1).Background(k.hairline).Margin(6, -ignoredInset, 0, -ignoredInset).Shrink(0)
 		}
 		ui.Row(c).Height(32).Gap(2).AlignItems(ui.Center).Children(func() {
 			p.barButton(c, k, "plus", locales.ClipAddApp(), false, p.addIgnoredApp)

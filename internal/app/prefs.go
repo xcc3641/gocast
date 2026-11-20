@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/egoist/mygo"
+	"github.com/egoist/mygo/plugins/glass"
 	"github.com/egoist/mygo/plugins/sfsymbols"
 	"github.com/egoist/mygo/ui"
 
@@ -29,9 +30,24 @@ const (
 )
 
 // prefsBarHeight is the band across the top of Settings, under the
-// traffic lights, where the sidebar and the pages start: the window's
-// title bar, hidden, so the view's to drag by (design.md 4.1).
+// traffic lights, where the sidebar's tabs start and the page's header
+// is: the window's title bar, hidden, so the view's to drag by (design.md
+// 4.1).
 const prefsBarHeight = 52
+
+// The measures of a page (design.md 4.3): its padding, its content from
+// pageTop, under the header; its cards, their border, their rows'
+// padding; the header's frost fading in and out.
+const (
+	pageTop         = prefsBarHeight + 6
+	pagePadX        = 28
+	pageBottom      = 32
+	prefsCardRadius = 12
+	cardBorder      = 1
+	cardPadX        = 16
+	cardPadY        = 12
+	frostFor        = 180 * time.Millisecond
+)
 
 // prefsWindow is the Settings window: an ordinary window, the only one that
 // makes Gocast the active app, which hides rather than closes, back on the
@@ -84,9 +100,22 @@ type prefsWindow struct {
 	// About: the status line read out last (design.md 6).
 	updateSaid string
 
-	// What moves the window: the band across its top, and the sidebar
-	// under the pages' tabs.
-	bar, sideBar ui.Handle
+	// What moves the window: the sidebar, but for its tabs; the page's
+	// header; and over a dialog, the band across the window's top.
+	sideBar, header, bar ui.Handle
+	// Where each page that scrolls is scrolled to, by its ID, and how
+	// much the header's frost shows: what scrolls under it, or the
+	// pointer over it, brings it in (design.md 4.3).
+	scrolls map[string]*ui.ScrollState
+	frostOn bool
+	frost   float32
+
+	// The pictures of 出现位置: the one playing, and the one the pointer
+	// is on, since when, played yet (design.md 3.7).
+	play       thumbPlay
+	restPos    string
+	restSince  time.Time
+	restPlayed bool
 }
 
 func newPrefsWindow(g *gocast) *prefsWindow {
@@ -171,40 +200,103 @@ func (p *prefsWindow) view(c *ui.Context) {
 	}
 	ui.Row(c).Fill().AlignItems(ui.Stretch).Children(func() {
 		p.sidebar(c, k)
-		if p.page == pageShortcuts {
-			// The page itself does not scroll, its list does (design.md
-			// 4.4).
-			ui.Column(c).Grow(1).Shrink(1).Background(k.surface).Padding(prefsBarHeight, 28, 24, 28).Children(func() {
-				p.shortcutsPage(c, k)
-			})
-			return
-		}
-		ui.Scroll(c).Grow(1).Background(k.surface).Children(func() {
-			ui.Column(c).Padding(prefsBarHeight, 28, 24, 28).Children(func() {
-				switch p.page {
-				case pagePresets:
-					p.presetsPage(c, k)
-				case pageClipboard:
-					p.clipboardPage(c, k)
-				case pageGeneral:
-					p.generalPage(c, k)
-				case pageAbout:
-					p.aboutPage(c, k)
-				default:
+		ui.Column(c).Grow(1).Shrink(1).Background(k.surface).Children(func() {
+			scrolls := p.page != pageShortcuts
+			if scrolls {
+				c.Key("page-" + p.page)
+				ui.Scroll(c).Grow(1).TrackScroll(p.scrollOf(p.page)).ScrollbarInsets(prefsBarHeight, 0, 0, 0).Children(func() {
+					ui.Column(c).Padding(pageTop, pagePadX, pageBottom, pagePadX).Children(func() {
+						switch p.page {
+						case pagePresets:
+							p.presetsPage(c, k)
+						case pageClipboard:
+							p.clipboardPage(c, k)
+						case pageGeneral:
+							p.generalPage(c, k)
+						default:
+							p.aboutPage(c, k)
+						}
+					})
+				})
+			} else {
+				// The page itself does not scroll, its list does (design.md
+				// 4.4).
+				ui.Column(c).Grow(1).Shrink(1).Padding(pageTop, pagePadX, pageBottom, pagePadX).Children(func() {
 					p.shortcutsPage(c, k)
-				}
-			})
+				})
+			}
+			p.pageHeader(c, k, scrolls)
+			// The line between the sidebar and the page, the page's
+			// (design.md 4.2).
+			ui.Box(c).Absolute().Left(0).Top(0).Bottom(0).Width(1).Background(k.hairline).PassThrough().ZIndex(2)
 		})
 	})
 	p.editor(c, k)
 	p.clearConfirmation(c, k)
-	p.titleBar(c)
+	if p.editing || p.clipConfirm {
+		p.titleBar(c)
+	}
 }
 
-// titleBar is the band across the top of the window, over the pages and
-// over a dialog's dimmed window, which moves the window as a title bar
-// does: Settings hides its own (design.md 4.1). Where it stops, the pages
-// take the pointer, their sliders and lists too.
+// scrollOf is where the page with the ID is scrolled to.
+func (p *prefsWindow) scrollOf(page string) *ui.ScrollState {
+	if p.scrolls == nil {
+		p.scrolls = map[string]*ui.ScrollState{}
+	}
+	if p.scrolls[page] == nil {
+		p.scrolls[page] = &ui.ScrollState{}
+	}
+	return p.scrolls[page]
+}
+
+// pageName is the name of the page with the ID.
+func pageName(page string) string {
+	switch page {
+	case pagePresets:
+		return locales.PagePresets()
+	case pageClipboard:
+		return locales.PageClipboard()
+	case pageGeneral:
+		return locales.PageGeneral()
+	case pageAbout:
+		return locales.PageAbout()
+	}
+	return locales.PageShortcuts()
+}
+
+// pageHeader is the bar across the top of the page, under the traffic
+// lights, which stays as the page scrolls: the page's name, and on a page
+// that scrolls, the frosted edge of what scrolls under it, with a hairline
+// along its bottom, fading in as the page is scrolled from its top or the
+// pointer is over the bar, out as neither is (design.md 4.3). It moves the
+// window, as a title bar.
+func (p *prefsWindow) pageHeader(c *ui.Context, k tokens, scrolls bool) {
+	bar := ui.Row(c).Absolute().Top(0).Left(0).Right(0).Height(prefsBarHeight).Padding(0, pagePadX).AlignItems(ui.Center).
+		DragWindow().Bind(&p.header).ZIndex(2)
+	p.frostOn = scrolls && (p.scrollOf(p.page).Y > 0 || bar.Hovered())
+	target := float32(0)
+	if p.frostOn {
+		target = 1
+	}
+	// At once with less motion, which it is not told is no motion.
+	p.frost = bar.AnimateTo("frost", target, ui.Animation{Duration: frostFor})
+	bar.Children(func() {
+		ui.Text(c, pageName(p.page)).FontSize(15).FontWeight(700).TextColor(k.text).SingleLine().Shrink(1).Role(ui.RoleHeading)
+	})
+	// The frost, under the bar's name, not inside the bar: there, it
+	// would frost the name too.
+	if p.frost > 0 {
+		ui.Box(c).Absolute().Top(0).Left(0).Right(0).Height(prefsBarHeight - 1).Opacity(p.frost).PassThrough().ZIndex(1).
+			Material(glass.ScrollEdge{Hard: true, Background: k.surface})
+		ui.Box(c).Absolute().Left(0).Right(0).Top(prefsBarHeight - 1).Height(1).Opacity(p.frost).PassThrough().ZIndex(1).
+			Background(k.hairline)
+	}
+}
+
+// titleBar is the band across the top of the window over a dialog's
+// dimmed window, which moves the window as a title bar does: Settings
+// hides its own (design.md 4.1). Without a dialog, the sidebar and the
+// page's header do.
 func (p *prefsWindow) titleBar(c *ui.Context) {
 	ui.Overlay(c, func() {
 		ui.Box(c).Absolute().Left(0).Top(0).Right(0).Height(prefsBarHeight).DragWindow().AccessHidden(true).Bind(&p.bar)
@@ -212,7 +304,8 @@ func (p *prefsWindow) titleBar(c *ui.Context) {
 }
 
 // sidebar lists the pages, under room for the traffic lights, on the
-// window's sidebar material.
+// window's sidebar material; anywhere but on its tabs, it moves the
+// window (design.md 4.2).
 func (p *prefsWindow) sidebar(c *ui.Context, k tokens) {
 	pages := []struct{ id, icon, label string }{
 		{pageShortcuts, "keyboard", locales.PageShortcuts()},
@@ -229,43 +322,42 @@ func (p *prefsWindow) sidebar(c *ui.Context, k tokens) {
 			p.goTo(pages[j].id)
 		}
 	}
-	ui.Column(c).Width(200).Shrink(0).Padding(prefsBarHeight, 0, 0, 0).Role(ui.RoleList).Label(locales.SettingsTitle()).
-		Focusable().HandleInput(func(ev ui.InputEvent) bool {
-		if ev.Kind != ui.InputKeyDown || ev.Mods != 0 {
-			return false
-		}
-		switch ev.Key {
-		case ui.KeyUp:
-			move(-1)
-		case ui.KeyDown:
-			move(1)
-		default:
-			return false
-		}
-		p.win.Invalidate()
-		return true
-	}).Children(func() {
-		// Chosen in the selection gray, as the search results and the
-		// terminal's tabs (design.md 4.2), not the accent.
-		ui.Themed(c, listTheme(c, k)).Background(ui.Transparent).Padding(0, 10).Gap(2).Children(func() {
-			for _, pg := range pages {
-				on := p.page == pg.id
-				icon := k.textSecondary
-				if on {
-					icon = k.text
-				}
-				id := pg.id
-				c.Key(id)
-				ui.Row(c).Height(28).Padding(0, 8).Radius(8).Gap(8).AlignItems(ui.Center).Selected(on).
-					Role(ui.RoleListItem).Label(pg.label).OnClick(func() { p.goTo(id) }).Children(func() {
-					sfsymbols.Symbol(c, pg.icon).Size(16).Color(icon)
-					ui.Text(c, pg.label).FontSize(13).TextColor(k.text).SingleLine()
-				})
+	accent := c.Theme().Accent
+	ui.Column(c).Width(200).Shrink(0).Padding(prefsBarHeight, 10, 10, 10).DragWindow().Bind(&p.sideBar).Children(func() {
+		ui.Column(c).Role(ui.RoleList).Label(locales.SettingsTitle()).Focusable().HandleInput(func(ev ui.InputEvent) bool {
+			if ev.Kind != ui.InputKeyDown || ev.Mods != 0 {
+				return false
 			}
+			switch ev.Key {
+			case ui.KeyUp:
+				move(-1)
+			case ui.KeyDown:
+				move(1)
+			default:
+				return false
+			}
+			p.win.Invalidate()
+			return true
+		}).Children(func() {
+			// Chosen in the selection gray, as the search results and
+			// the terminal's tabs, its icon in the accent (design.md 4.2).
+			ui.Themed(c, sidebarTheme(c, k)).Background(ui.Transparent).Gap(2).Children(func() {
+				for _, pg := range pages {
+					on := p.page == pg.id
+					icon := k.textSecondary
+					if on {
+						icon = accent
+					}
+					id := pg.id
+					c.Key(id)
+					ui.Row(c).Height(32).Padding(0, 9).Radius(8).Gap(9).AlignItems(ui.Center).Selected(on).
+						Role(ui.RoleListItem).Label(pg.label).OnClick(func() { p.goTo(id) }).Children(func() {
+						sfsymbols.Symbol(c, pg.icon).Size(16).Color(icon)
+						ui.Text(c, pg.label).FontSize(13).FontWeight(500).TextColor(k.text).SingleLine().Shrink(1)
+					})
+				}
+			})
 		})
-		// Under the tabs, to the window's bottom, the sidebar moves the
-		// window, as the band over it (design.md 4.1).
-		ui.Box(c).Grow(1).DragWindow().AccessHidden(true).Bind(&p.sideBar)
 	})
 }
 
@@ -285,66 +377,72 @@ func (p *prefsWindow) goTo(page string) {
 
 // --- Layout helpers (design.md 4.3) ---
 
-func pageTitle(c *ui.Context, k tokens, title string) {
-	ui.Text(c, title).FontSize(20).FontWeight(600).TextColor(k.text).Margin(0, 0, 16, 0).Role(ui.RoleHeading)
-}
-
-// groupTitle is the title over a group (13 Semibold), and its
-// description under it (12, textSecondary), 8 over the group.
+// groupTitle is the title over a card (13 Semibold), and its description
+// under it (12, textSecondary), in by 4, 8 over the card.
 func groupTitle(c *ui.Context, k tokens, title, desc string) {
-	ui.Column(c).Gap(2).Margin(0, 14, 8, 14).Children(func() {
+	ui.Column(c).Gap(2).Margin(0, 4, 8, 4).Children(func() {
 		ui.Text(c, title).FontSize(13).FontWeight(600).TextColor(k.text).Role(ui.RoleHeading)
 		if desc != "" {
-			ui.Text(c, desc).FontSize(12).TextColor(k.textSecondary)
+			ui.Text(c, desc).FontSize(12).LineHeight(1.4).TextColor(k.textSecondary)
 		}
 	})
 }
 
-// group is a rounded block of rows, rows separated by hairlines.
+// card is a block of Settings on the page's own white, set apart by a
+// hairline around it: a card of rows, or what else stands in a block.
+func card(c *ui.Context, k tokens) ui.Element {
+	return ui.Column(c).Background(k.surface).Border(cardBorder, k.hairline).Radius(prefsCardRadius)
+}
+
+// group is a card of rows, rows separated by hairlines.
 type group struct{ rows int }
 
 func newGroup(c *ui.Context, k tokens, rows func(g *group)) {
 	g := &group{}
-	ui.Column(c).Background(k.groupFill).Radius(10).Padding(0, 0, 0, 14).Margin(0, 0, 20, 0).Children(func() { rows(g) })
+	card(c, k).Margin(0, 0, 20, 0).Children(func() { rows(g) })
 }
 
-// newGroupNoted is a group with a note under it (12, textSecondary), 20
-// over what follows.
+// newGroupNoted is a group with a note under it (12, textSecondary), in by
+// 4, 20 over what follows.
 func newGroupNoted(c *ui.Context, k tokens, note string, rows func(g *group)) {
 	g := &group{}
-	ui.Column(c).Background(k.groupFill).Radius(10).Padding(0, 0, 0, 14).Children(func() { rows(g) })
-	ui.Text(c, note).FontSize(12).TextColor(k.textSecondary).Margin(6, 14, 20, 14)
+	card(c, k).Children(func() { rows(g) })
+	ui.Text(c, note).FontSize(12).LineHeight(1.4).TextColor(k.textSecondary).Margin(6, 4, 20, 4)
 }
 
-// groupDivider is the hairline between a group's rows, inset 14 from
-// both of the group's edges, as System Settings draws it (design.md 4.3):
-// the group pads 14 on the left, the divider keeps 14 on the right.
+// groupDivider is the hairline between a group's rows, across the card
+// (design.md 4.3).
 func groupDivider(c *ui.Context, k tokens) {
-	ui.Box(c).Height(1).Background(k.hairline).Margin(0, groupInset, 0, 0).Shrink(0)
+	ui.Box(c).Height(1).Background(k.hairline).Shrink(0)
 }
-
-// groupInset is where a group's rows and dividers start and end, from
-// its edges.
-const groupInset = 14
 
 // row is a row of a group: label and a description under it at the left,
 // the control at the right. A description in the warning color says a
 // problem, after a warning sign.
 func (g *group) row(c *ui.Context, k tokens, label, desc string, descColor ui.Color, control func()) {
+	g.rowWith(c, k, label, desc, descColor, nil, control)
+}
+
+// rowWith is a row whose label has under, as a button, under its
+// description.
+func (g *group) rowWith(c *ui.Context, k tokens, label, desc string, descColor ui.Color, under, control func()) {
 	if g.rows > 0 {
 		groupDivider(c, k)
 	}
 	g.rows++
-	ui.Row(c).MinHeight(44).Padding(8, 14, 8, 0).Gap(12).AlignItems(ui.Center).Children(func() {
-		ui.Column(c).Grow(1).Shrink(1).Gap(2).Children(func() {
-			ui.Text(c, label).FontSize(13).TextColor(k.text)
+	ui.Row(c).MinHeight(48).Padding(cardPadY, cardPadX).Gap(16).AlignItems(ui.Center).Children(func() {
+		ui.Column(c).Grow(1).Shrink(1).Gap(3).Children(func() {
+			ui.Text(c, label).FontSize(13).FontWeight(500).TextColor(k.text)
 			if desc != "" && descColor == k.warning {
 				ui.Row(c).Gap(4).AlignItems(ui.Center).Children(func() {
 					sfsymbols.Symbol(c, "exclamationmark.triangle").Size(12).Color(k.warning)
-					ui.Text(c, desc).FontSize(12).TextColor(descColor).Shrink(1)
+					ui.Text(c, desc).FontSize(12).LineHeight(1.4).TextColor(descColor).Shrink(1)
 				})
 			} else if desc != "" {
-				ui.Text(c, desc).FontSize(12).TextColor(descColor)
+				ui.Text(c, desc).FontSize(12).LineHeight(1.4).TextColor(descColor)
+			}
+			if under != nil {
+				under()
 			}
 		})
 		if control != nil {
@@ -379,7 +477,7 @@ func (p *prefsWindow) spotlightNotice(c *ui.Context, k tokens) {
 		tr = ui.ElementTransition{}
 	}
 	c.Key("spotlightNotice")
-	block := ui.Row(c).Background(k.groupFill).Radius(10).Padding(14).Gap(10).Margin(0, 0, 14, 0).Shrink(0).
+	block := card(c, k).Row().Padding(14).Gap(10).Margin(0, 0, 14, 0).Shrink(0).
 		AlignItems(ui.Start).Transition(tr)
 	if p.notice == noticeSolved {
 		block.AlignItems(ui.Center).Role(ui.RoleStatus).Children(func() {
@@ -513,12 +611,11 @@ func (p *prefsWindow) positionRow(c *ui.Context, k tokens, g *group) {
 	// pictures under it not to move as it changes (design.md 3.7).
 	hint := positionHint(p.termPos)
 	lines := max(textLines(c, locales.GeneralPositionHint(), 12, positionRowWidth), textLines(c, locales.GeneralPositionPointerHint(), 12, positionRowWidth))
-	m := ui.Font{Size: 12, Weight: 400}.Metrics()
-	hintHeight := float32(lines) * (m.Ascent + m.Descent + m.LineGap)
-	ui.Column(c).Padding(10, groupInset, 12, 0).Gap(12).Children(func() {
-		ui.Column(c).Gap(2).Children(func() {
-			ui.Text(c, locales.GeneralPosition()).FontSize(13).TextColor(k.text)
-			ui.Text(c, hint).FontSize(12).TextColor(k.textSecondary).MinHeight(hintHeight)
+	hintHeight := float32(lines) * 12 * 1.4
+	ui.Column(c).Padding(cardPadY, cardPadX).Gap(12).Children(func() {
+		ui.Column(c).Gap(3).Children(func() {
+			ui.Text(c, locales.GeneralPosition()).FontSize(13).FontWeight(500).TextColor(k.text)
+			ui.Text(c, hint).FontSize(12).LineHeight(1.4).TextColor(k.textSecondary).MinHeight(hintHeight)
 		})
 		p.positionPictures(c, k, hint)
 	})
@@ -540,10 +637,11 @@ func positionHint(pos string) string {
 	return locales.GeneralPositionHint()
 }
 
-// positionRowWidth is the width of the row of pictures, in a group on a
+// positionRowWidth is the width of the row of pictures, in a card on a
 // page of the Settings window, which does not resize: the window less the
-// sidebar and the page's padding, less the group's padding and the row's.
-const positionRowWidth = prefsWidth - hkContentLeft - 28 - 2*groupInset
+// sidebar and the page's padding, less the card's border and the row's
+// padding; about 88 for each of six (design.md 4.3).
+const positionRowWidth = prefsWidth - hkContentLeft - pagePadX - 2*cardBorder - 2*cardPadX
 
 // positionsPerRow is how many pictures a row of them holds: all of them,
 // or half where a cell would be under pictureCell wide, from the row's
@@ -559,11 +657,13 @@ func positionsPerRow(n int) int {
 // positionPictures is the radio group of the positions' pictures, across
 // the row in cells of equal width, in two rows of three where a cell
 // would be under pictureCell wide. The arrows choose the next or the one
-// before, stopping at the ends.
+// before, stopping at the ends. The picture chosen plays, and one the
+// pointer rests on (design.md 3.7).
 func (p *prefsWindow) positionPictures(c *ui.Context, k tokens, hint string) {
 	positions := settings.TerminalPositions
 	perRow := positionsPerRow(len(positions))
 	focusedAt := -1
+	now, on := c.Now(), ""
 	cell := func(i int, pos string) {
 		name := positionLabel(pos)
 		c.Key("position-" + pos)
@@ -573,13 +673,17 @@ func (p *prefsWindow) positionPictures(c *ui.Context, k tokens, hint string) {
 			p.g.settings.SetTermPosition(p.termPos)
 			p.g.saveSettings()
 			p.g.term.positionChanged()
+			p.choosePicture(c, pos)
 		}
 		if item.Focused() {
 			focusedAt = i
 		}
 		chosen := p.termPos == pos
 		item.Children(func() {
-			p.positionPicture(c, pos, chosen, item.FocusVisible(), item.Pressed())
+			pose := func() thumbPose { return p.play.poseOf(pos, now) }
+			if p.positionPicture(c, pos, chosen, item.FocusVisible(), item.Pressed(), pose) {
+				on = pos
+			}
 			t := ui.Text(c, name).FontSize(12).FixedLineHeight(nameLine).SingleLine().AccessHidden(true)
 			if chosen {
 				t.FontWeight(500).TextColor(k.text)
@@ -597,6 +701,8 @@ func (p *prefsWindow) positionPictures(c *ui.Context, k tokens, hint string) {
 			})
 		}
 	}).Gap(pictureRowGap).Label(locales.GeneralPosition()).Description(hint)
+	p.restOn(c, on)
+	p.playOn(c)
 	// The group goes round from the last to the first: not here.
 	switch focusedAt {
 	case 0:
@@ -609,11 +715,10 @@ func (p *prefsWindow) positionPictures(c *ui.Context, k tokens, hint string) {
 }
 
 func (p *prefsWindow) presetsPage(c *ui.Context, k tokens) {
-	pageTitle(c, k, locales.PagePresets())
 	p.terminalGroup(c, k)
 	groupTitle(c, k, locales.PresetsGroup(), locales.PresetsIntro())
 	if len(p.g.presets) == 0 {
-		ui.Column(c).Height(160).Background(k.groupFill).Radius(10).Justify(ui.Center).AlignItems(ui.Center).Gap(6).Children(func() {
+		card(c, k).Height(160).Justify(ui.Center).AlignItems(ui.Center).Gap(6).Children(func() {
 			sfsymbols.Symbol(c, "apple.terminal").Size(28).Color(k.textSecondary)
 			ui.Text(c, locales.PresetsEmptyTitle()).FontSize(15).FontWeight(600).TextColor(k.text)
 			ui.Text(c, locales.PresetsEmptyExample()).FontSize(13).TextColor(k.textSecondary)
@@ -621,14 +726,14 @@ func (p *prefsWindow) presetsPage(c *ui.Context, k tokens) {
 		})
 		return
 	}
-	ui.Column(c).Background(k.groupFill).Radius(10).Padding(0, 0, 0, 14).Children(func() {
+	card(c, k).Children(func() {
 		for i, pr := range p.g.presets {
 			if i > 0 {
 				groupDivider(c, k)
 			}
 			id := pr.ID
 			c.Key(id)
-			ui.Row(c).Height(52).Padding(0, 14, 0, 0).Gap(8).AlignItems(ui.Center).Role(ui.RoleButton).
+			ui.Row(c).Height(52).Padding(0, cardPadX).Gap(8).AlignItems(ui.Center).Role(ui.RoleButton).
 				Label(presetTitle(pr) + "，" + p.g.presetSubtitle(pr)).OnClick(func() { p.edit(id) }).Children(func() {
 				ui.Column(c).Grow(1).Shrink(1).Gap(2).Children(func() {
 					ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
@@ -687,7 +792,7 @@ func (p *prefsWindow) editor(c *ui.Context, k tokens) {
 				}).Error(p.nameProblem)
 				ui.Field(c, locales.PresetFolder(), func() {
 					ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-						ui.Box(c).Height(28).Grow(1).Shrink(1).Padding(0, 8).Radius(6).Background(k.groupFill).
+						ui.Box(c).Height(28).Grow(1).Shrink(1).Padding(0, 8).Radius(6).Background(k.cardFill).Border(1, k.hairline).
 							Justify(ui.Center).Children(func() {
 							if strings.TrimSpace(p.draft.Dir) != "" {
 								ui.Text(c, presets.ShortPath(p.draft.Dir)).FontSize(12).Font("monospace").TextColor(k.text).SingleLine().TruncateMiddle()
@@ -839,7 +944,6 @@ func searchOnlyHint(registered, set string) string {
 }
 
 func (p *prefsWindow) generalPage(c *ui.Context, k tokens) {
-	pageTitle(c, k, locales.PageGeneral())
 	newGroup(c, k, func(g *group) {
 		g.row(c, k, locales.GeneralLogin(), locales.GeneralLoginHint(), k.textSecondary, func() {
 			if ui.Switch(c, &p.login).Label(locales.GeneralLogin()).Changed() {
@@ -910,7 +1014,8 @@ func (p *prefsWindow) terminalSizeChanged() {
 // check found on the page (design.md 4.4, 4.5).
 func (p *prefsWindow) aboutPage(c *ui.Context, k tokens) {
 	st := p.g.updates.about()
-	ui.Column(c).MinHeight(500 - 52 - 24).Justify(ui.Center).AlignItems(ui.Center).Children(func() {
+	// In the room under the header (design.md 4.3).
+	ui.Column(c).MinHeight(prefsHeight - pageTop - pageBottom).Justify(ui.Center).AlignItems(ui.Center).Children(func() {
 		// The app icon, icon.png at 64 (design.md 1.6, 4.2).
 		ui.Image(c, appIcon()).Size(64, 64).Shrink(0)
 		ui.Text(c, appName).FontSize(20).FontWeight(600).TextColor(k.text).Margin(12, 0, 0, 0)
@@ -981,8 +1086,8 @@ func (p *prefsWindow) defaultFolderRow(c *ui.Context, k tokens, g *group) {
 	}
 	g.row(c, k, locales.GeneralDefaultFolder(), hint, hintColor, func() {
 		ui.Row(c).Gap(8).AlignItems(ui.Center).Shrink(0).Children(func() {
-			// On the group's fill: the window's (design.md 4.4).
-			box := ui.Box(c).Width(240).Height(28).Padding(0, 8).Radius(6).Background(k.surface).Justify(ui.Center).
+			// A small box on the card, not a card (design.md 4.3).
+			box := ui.Box(c).Width(240).Height(28).Padding(0, 8).Radius(6).Background(k.cardFill).Border(1, k.hairline).Justify(ui.Center).
 				OnClick(p.chooseDefaultFolder)
 			if home {
 				box.Children(func() {
