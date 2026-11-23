@@ -8,6 +8,14 @@ The section of each version is the release notes that the update window
 shows (MyGo reads `## [version]`), so write it for users, in Chinese and
 English.
 
+## [0.3.1] - 2026-11-24
+
+- 打开搜索面板时不再分「推荐」「Gocast」两段，合成一列：常用的在前，Gocast 自己的功能接在后面，同一项只出现一次。
+- Gocast 自己的功能右边只写「Gocast」，快捷键只在选中那一行出现，打字搜到它们时也一样。
+
+- The search panel no longer splits into Suggestions and Gocast when it opens. It’s one list: what you use most comes first, Gocast’s own items follow, and nothing appears twice.
+- Gocast’s own items are marked just “Gocast”, and their shortcut shows only on the selected row, including when you find them by typing.
+
 ## [0.3.0] - 2026-11-23
 
 - 新增保持唤醒：在搜索里打「唤醒」就能让 Mac 不睡眠，也能直接打时长或时间，比如「唤醒 1h」「到 17:30」。开着时菜单栏图标变成实心的，菜单里能看到还剩多久、随时停止。退出 Gocast 就自动结束。
