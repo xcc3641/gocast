@@ -8,6 +8,22 @@ The section of each version is the release notes that the update window
 shows (MyGo reads `## [version]`), so write it for users, in Chinese and
 English.
 
+## [0.3.0] - 2026-11-23
+
+- 新增保持唤醒：在搜索里打「唤醒」就能让 Mac 不睡眠，也能直接打时长或时间，比如「唤醒 1h」「到 17:30」。开着时菜单栏图标变成实心的，菜单里能看到还剩多久、随时停止。退出 Gocast 就自动结束。
+- 设置 › 通用里可以打开「保持唤醒时允许屏幕关闭」：屏幕照常关，Mac 不睡眠，下载和终端里的命令接着跑。
+- 原来的「快捷键」页改叫「搜索与快捷键」：所有功能和应用按组列出，每一项都能设快捷键，也能用右边的开关从搜索里藏起来，藏起来的快捷键照样能用。整组也能一键关，顶上能筛出「已隐藏」的找回来。
+- 在搜索面板里按 ⌘K，最后一项「在搜索中隐藏」能直接把用不上的那一项藏掉。
+- 设置窗口换了新样子，按住顶部或侧边栏空白处就能拖动；「出现位置」的小图点一下或停在上面，会演示终端从哪儿出来。
+- 修好了在设置里切换页面时，「出现位置」那块会跳一下的问题。
+
+- New: Keep Awake. Type “awake” in search to stop your Mac from sleeping, or type a length or a time, like “awake 1h” or “until 17:30”. While it’s on, the menu bar icon is filled in, and its menu shows how long is left and lets you stop. Quitting Gocast ends it.
+- Turn on “Let the screen turn off while keeping awake” in Settings › General: the screen turns off as usual, but your Mac stays awake, so downloads and terminal commands keep going.
+- The Shortcuts page is now Search & Shortcuts: everything Gocast can open is listed in groups, and each item can have a shortcut or be hidden from search with the switch on the right. Hidden items still work with their shortcuts. You can turn off a whole group, and the Hidden filter at the top brings things back.
+- Press ⌘K in the search panel and choose Hide from Search to hide the item you don’t need.
+- Settings has a new look, and you can drag the window by its top or the empty part of the sidebar. Click or hover over a Position picture to see where the terminal comes from.
+- Fixed the Position section jumping when you switched pages in Settings.
+
 ## [0.2.1] - 2026-11-20
 
 - 修好了更新后点「重新打开」，Gocast 有时没再出现的问题。现在新版在 Gocast 退出的那一刻才换上，下载好以后后台不再挂着任何东西。每一步都记在 `~/Library/Logs/Gocast/update.log`。
