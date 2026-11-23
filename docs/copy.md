@@ -1,4 +1,6 @@
-# Gocast 界面文案 v1.36（搜索面板 · 悬浮终端 · 笔记 · 设置）
+# Gocast 界面文案 v1.37（搜索面板 · 悬浮终端 · 笔记 · 设置）
+
+v1.37 改动：2.2a 空搜索框合成一列，去掉「推荐」「Gocast」小标题；Gocast 行右侧只写灰字，键帽只在选中时出。
 
 v1.36 改动：19.6 ⌘K「在搜索中隐藏」胶囊英文改短。
 
@@ -144,24 +146,20 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 
 用词说明：Mac 上统一说「拷贝」「访达」，跟系统菜单一致；「预设 · 2」用「新标签」，和悬浮终端里的按钮同一个词，不写「新开标签」。退出项带上应用名，避免和「退出 Gocast」混淆。
 
-### 2.2a 打开时的推荐列表（搜索框空着时）
+### 2.2a 打开时的列表（搜索框空着时；v1.37 起合成一列，不分组）
 
-按 ⌘Space 直接展开，分两组。原来空输入 ⌘K 那张「Gocast 操作」列表并进第二组；空输入时也有选中的行了，所以 ⌘K 就是 2.2 那张普通卡片。
+按 ⌘Space 直接展开，一列，不加小标题、不加分隔线。前面是常用的（最多 8 行），后面接 Gocast 自己的几项，前面已经出现过的不再重复。顺序和规则以 design.md 2.5a 为准。
 
 | 位置 | 中文 | English |
 |---|---|---|
-| 第一组小标题 | 推荐 | Suggestions |
-| 第二组小标题 | Gocast | Gocast |
-| Gocast 组 · 行 | 剪贴板历史 / 打开悬浮终端 / 添加预设 / 设置… / 退出 Gocast | Clipboard History / Open Floating Terminal / Add Preset / Settings… / Quit Gocast |
-| Gocast 组行的主操作 | 打开；「退出 Gocast」那行是「退出」 | Open; Quit for Quit Gocast |
+| Gocast 自己的行 | 剪贴板历史 / 笔记 / 打开悬浮终端 / 添加预设 / 设置… / 退出 Gocast | Clipboard History / Notes / Open Floating Terminal / Add Preset / Settings… / Quit Gocast |
+| 这些行右侧的灰字 | Gocast | Gocast |
+| 这些行的主操作 | 打开；「退出 Gocast」那行是「退出」 | Open; Quit for Quit Gocast |
 
 用词说明：
-- 第二组不叫「命令」。「命令」在 Gocast 里专指预设里运行的那条命令（pi、npm run dev），文件夹 · 命令的副标题天天在眼前，再拿它当组名会混。用「Gocast」，和搜索结果里这些行右侧的标记同一个词。
-- 是「添加预设」，不是「新建预设」，跟设置里的按钮同一句。
-- 推荐组的行和搜索结果长得一样（应用行、预设行，右侧标记「应用」「预设」）。Gocast 自己的项目进了推荐组时，右侧标记写「Gocast」。没用过时放进去的几个常用项也一样，不加「示例」之类的字。
-- Gocast 组的行右侧放键帽：剪贴板历史用当前的剪贴板快捷键，打开悬浮终端用终端快捷键，设置… 用 ⌘,，其余不放。不再写「用预设打开」小标题：预设在推荐组里，也能直接搜。
-
-打字以后照旧是搜索结果，不分这两组。打过字再清空，回到这张推荐列表。
+- 不再有「推荐」「Gocast」两个小标题（Hugo 不要分类）。「推荐」这个词界面上不用了。
+- 右侧和别的行一样只写灰字「Gocast」，键帽只在选中时出（照 2.3），不再一直亮着。
+- 不叫「命令」：「命令」专指预设里运行的那条命令。是「添加预设」，不是「新建预设」，跟设置里的按钮同一句。
 
 ### 2.3 读屏（VoiceOver）
 
@@ -171,10 +169,8 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 | 应用行 | {名称}，应用 | {name}, App |
 | 同名应用行（有副标题时） | {名称}，{副标题}，应用 | {name}, {subtitle}, App |
 | 预设行 | {名称}，预设，{文件夹} | {name}, Preset, {folder} |
-| 推荐组小标题 | 推荐，标题 | Suggestions, heading |
-| Gocast 组小标题 | Gocast，标题 | Gocast, heading |
-| Gocast 组的行 | 就用可见的名称，如「剪贴板历史」 | The visible name, e.g. “Clipboard History” |
-| 推荐组的行 | 同上面应用行、预设行 | Same as app and preset rows above |
+| 空搜索框列表里 Gocast 自己的行（v1.37 起没有小标题） | {名称}，Gocast | {name}, Gocast |
+| 空搜索框列表里的应用、预设行 | 同上面应用行、预设行 | Same as app and preset rows above |
 
 不放运行中的标记，也不读「正在运行」：行里不区分开没开，开着和没开一样按回车打开。
 
@@ -269,7 +265,7 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 | 开关 | 登录时自动启动 | Open Gocast at login |
 | 开关说明 | 打开后，开机就能用快捷键，不用先手动打开。 | Then your shortcuts work right after you log in. |
 | 开关 | 打开时只显示搜索框 | Show only the search field |
-| 开关说明 | 打开后，按 {搜索快捷键} 只出现搜索框，不列推荐，打字才出结果。 | When on, {shortcut} shows just the search field. Results appear as you type. |
+| 开关说明 | 打开后，按 {搜索快捷键} 只出现搜索框，打字才出结果。 | When on, {shortcut} shows just the search field. Results appear as you type. |
 | 分组标题（v1.26 起这一组整个搬到 4.2「悬浮终端」页，通用里不再有） | 悬浮终端 | Floating Terminal |
 | 分组说明 | 也可以直接拖终端边缘来改大小，这里会跟着变。 | You can also drag the terminal's edges. These values update as you do. |
 | 终端字号 | 字号 | Font size |
@@ -353,10 +349,10 @@ v1.1 改动（回应 design.md 第 9 节）：新增 2.1 底栏、2.2 ⌘K 菜�
 | 搜索面板结果行 | 剪贴板历史 | Clipboard History |
 | 上面那行的右侧标记 | Gocast | Gocast |
 | 上面那行也能搜到的词（不显示） | 剪贴板、粘贴板、剪切板、历史、clipboard、paste、history | same |
-| 打开时的 Gocast 组（2.2a，放在第一行） | 剪贴板历史 | Clipboard History |
+| 打开时的列表（2.2a，Gocast 自己那几行的第一行） | 剪贴板历史 | Clipboard History |
 | 菜单栏菜单（放在「悬浮终端」下面） | 剪贴板历史 | Clipboard History |
 
-主操作：打开（↵）。右侧标记不写「命令」：「命令」在 Gocast 里专指预设里运行的那条命令。键帽：Gocast 组和菜单栏这一项右侧显示当前的剪贴板快捷键（默认 ⌃⌘V）。
+主操作：打开（↵）。右侧标记不写「命令」：「命令」在 Gocast 里专指预设里运行的那条命令。键帽：菜单栏这一项右侧显示当前的剪贴板快捷键（默认 ⌃⌘V）；搜索面板里键帽只在选中时出（v1.37）。
 用户自己会说「粘贴板」「剪切板」，所以这些词都要能搜到，但界面上只写「剪贴板」。
 
 ### 6.2 剪贴板视图
@@ -743,7 +739,7 @@ English: Gocast only goes online to check for updates and to fetch exchange rate
 | 预设行 | {名称}，预设，{文件夹}，快捷键 {按键} | {name}, Preset, {folder}, shortcut {keys} |
 | {按键} 的读法 | Control Option Command Shift 加键名，如「Option Command T」 | e.g. “Option Command T” |
 
-看得见的键帽不配文字，跟 Gocast 组里的那几行一样。
+看得见的键帽不配文字。
 
 设置 › 快捷键列表里的行（v1.20）：
 
@@ -766,7 +762,7 @@ English: Gocast only goes online to check for updates and to fetch exchange rate
 | 位置 | 中文 | English |
 |---|---|---|
 | 搜索面板左下角提示胶囊 | 新版本 {版本} 已就绪 · 重新打开 | Version {version} is ready · Relaunch |
-| ⌘K 菜单里（Gocast 组，下好后才有） | 重新打开以更新到 {版本} | Relaunch to Update to {version} |
+| 空搜索框列表里（Gocast 那几行最前面，下好后才有） | 重新打开以更新到 {版本} | Relaunch to Update to {version} |
 | 菜单栏菜单（替换「检查更新…」那一行） | 重新打开以更新到 {版本} | Relaunch to Update to {version} |
 | 点了之后（胶囊里，一两秒） | 正在重新打开… | Relaunching… |
 
