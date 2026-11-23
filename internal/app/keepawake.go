@@ -254,11 +254,11 @@ func (l *launcher) isAwake(r panelRow) bool {
 }
 
 // awakeRows puts Keep Awake's rows in the results (copy.md 18.1): for a
-// length or time typed, its row first, Stop Keeping Awake after it while
-// on, and none of the others, which would say the same; for "keep awake
+// length or time typed, Stop Keeping Awake first while on, then its row,
+// and none of the others, which would say the same; for "keep awake
 // until" alone, the hint's row; for Keep Awake's name followed by what
 // it can't read, Keep Awake itself. While on, Stop Keeping Awake comes
-// first of Keep Awake's rows.
+// first of Keep Awake's rows (design.md 2.10).
 func (l *launcher) awakeRows(rows []panelRow) []panelRow {
 	if l.g.awake == nil {
 		return rows
@@ -273,10 +273,11 @@ func (l *launcher) awakeRows(rows []panelRow) []panelRow {
 			title = awakeWords().Title(m.Request, l.g.awakeNow())
 		}
 		l.items[typed].Title, l.entries[typed] = title, e
-		front := []panelRow{{item: typed, own: -1}}
+		var front []panelRow
 		if on {
 			front = append(front, panelRow{item: toggle, own: -1})
 		}
+		front = append(front, panelRow{item: typed, own: -1})
 		return append(front, slices.DeleteFunc(rows, l.isAwake)...)
 	}
 	// Together where the first of them is, in copy.md 18.1's order (that
@@ -297,6 +298,20 @@ func (l *launcher) awakeRows(rows []panelRow) []panelRow {
 	slices.SortFunc(awake, func(a, b panelRow) int { return a.item - b.item })
 	rows = slices.DeleteFunc(rows, l.isAwake)
 	return slices.Insert(rows, min(max(first, 0), len(rows)), awake...)
+}
+
+// firstRow is the row chosen first: the first row, but for the row of
+// what is typed under Stop Keeping Awake, so that Return starts what was
+// typed (design.md 2.10).
+func (l *launcher) firstRow() int {
+	i := firstRow(l.rows)
+	if i < 0 || i+1 >= len(l.rows) || l.g.awake == nil || l.rows[i].item < 0 {
+		return i
+	}
+	if r := l.rows[i]; l.isAwake(r) && l.entries[r.item].awake == awakeStop && l.rows[i+1].item == l.itemAt[awakeTypedID] && l.isAwake(l.rows[i+1]) {
+		return i + 1
+	}
+	return i
 }
 
 // awakeSymbol is the symbol of a Keep Awake row: the cup filled for Stop
@@ -326,10 +341,23 @@ func (l *launcher) awakeSubtitle(e entry) string {
 // 2.10, copy.md 18.2).
 func (l *launcher) awakeAct(e entry) {
 	g := l.g
-	// The choice stays at its place, on the row that ran or the one in
-	// its place (Keep Awake and Stop Keeping Awake), the rows rebuilt.
+	// The choice stays on the row that ran, the rows rebuilt, or the one
+	// in its place (Keep Awake and Stop Keeping Awake): the typed row as
+	// Stop Keeping Awake comes over it or goes.
 	at := l.chosen
-	defer func() { l.choose(min(at, len(l.rows)-1)) }()
+	var was any
+	if at >= 0 && at < len(l.rows) {
+		was = l.rowKey(at)
+	}
+	defer func() {
+		for i := range l.rows {
+			if was != nil && l.rowKey(i) == was {
+				l.choose(i)
+				return
+			}
+		}
+		l.choose(min(at, len(l.rows)-1))
+	}()
 	switch e.awake {
 	case awakeStop:
 		g.stopAwake()

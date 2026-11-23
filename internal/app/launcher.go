@@ -1104,7 +1104,7 @@ func (l *launcher) rebuild() {
 	if _, ok := l.chosenRow(); ok {
 		was = l.rowKey(l.chosen)
 	}
-	first := l.chosen == firstRow(l.rows) && !l.moved
+	first := l.chosen == l.firstRow() && !l.moved
 	l.own = l.ownItems()
 	l.items, l.entries = l.items[:0], l.entries[:0]
 	now := time.Now()
@@ -1153,7 +1153,7 @@ func (l *launcher) rebuild() {
 	}
 	l.filtered = l.queryKey()
 	l.rows = l.find()
-	chosen := firstRow(l.rows)
+	chosen := l.firstRow()
 	if !first && was != nil {
 		for i := range l.rows {
 			if l.rowKey(i) == was {
@@ -1184,7 +1184,7 @@ func (l *launcher) filter() {
 	l.moved = false
 	l.menuOpen = false
 	l.rows = l.find()
-	l.choose(firstRow(l.rows))
+	l.choose(l.firstRow())
 }
 
 // queryKey is the query the rows are for: "" for an empty one.

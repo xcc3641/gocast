@@ -161,10 +161,13 @@ func TestAwakeRowsStartAndStop(t *testing.T) {
 	}
 }
 
-// A length or time typed is its own row, first, the names' rows gone;
-// starting one while on replaces the session, one assertion held; a
-// time past today's is tomorrow's; and an invalid length starts nothing,
-// leaving the session as it was.
+// A length or time typed is its own row, the names' rows gone; while
+// on, Stop Keeping Awake comes first and the typed row after it is
+// chosen, so that Return starts what was typed; started from the panel,
+// the choice stays on the typed row as Stop comes over it, and stopping
+// leaves it there. Starting one while on replaces the session, one
+// assertion held; a time past today's is tomorrow's; and an invalid
+// length starts nothing, leaving the session as it was.
 func TestAwakeTyped(t *testing.T) {
 	l, _, f := awakePanel(t, "en")
 	typeQuery(l, "keep awake 1h30m")
@@ -175,8 +178,11 @@ func TestAwakeTyped(t *testing.T) {
 	if l.notice != "Keeping awake, 1 hr 30 min left" {
 		t.Errorf("notice %q", l.notice)
 	}
+	if got := awakeTitles(l); !slices.Equal(got, []string{"Stop Keeping Awake", "> Keep Awake for 1 Hour 30 Minutes"}) {
+		t.Fatalf("started: %q", got)
+	}
 	typeQuery(l, "coffee until 9am")
-	if got := awakeTitles(l); !slices.Equal(got, []string{"> Keep Awake Until Tomorrow 09:00", "Stop Keeping Awake"}) {
+	if got := awakeTitles(l); !slices.Equal(got, []string{"Stop Keeping Awake", "> Keep Awake Until Tomorrow 09:00"}) {
 		t.Fatalf("until, on: %q", got)
 	}
 	l.primary()
@@ -184,20 +190,52 @@ func TestAwakeTyped(t *testing.T) {
 	if len(f.as.held) != 1 || st.Kind != keepawake.Until || l.notice != "Keeping awake until tomorrow 09:00" {
 		t.Errorf("replaced: held %d, %+v, %q", len(f.as.held), st, l.notice)
 	}
+	if got := awakeTitles(l); !slices.Equal(got, []string{"Stop Keeping Awake", "> Keep Awake Until Tomorrow 09:00"}) {
+		t.Fatalf("replaced: %q", got)
+	}
 
-	chooseTitle(t, l, "Stop Keeping Awake") // the last row goes: the one over it chosen
+	chooseTitle(t, l, "Stop Keeping Awake") // the first row goes: the typed row chosen
 	l.primary()
 	if got := awakeTitles(l); !slices.Equal(got, []string{"> Keep Awake Until Tomorrow 09:00"}) {
 		t.Fatalf("stopped from the typed rows: %q", got)
 	}
 	l.primary()
 
+	typeQuery(l, "keep awake until") // the hint chosen, Return doing nothing
+	if got := awakeTitles(l); !slices.Equal(got, []string{"Stop Keeping Awake", "> Keep Awake Until"}) {
+		t.Errorf("hint, on: %q", got)
+	}
 	typeQuery(l, "keep awake 100h") // over 99 hours: Keep Awake itself
 	if got := awakeTitles(l); !slices.Equal(got, []string{"> Stop Keeping Awake"}) {
 		t.Errorf("invalid: %q", got)
 	}
 	if err := l.g.awake.Start(keepawake.Request{Kind: keepawake.For, Duration: 100 * time.Hour}); err == nil || l.g.awake.State() != st {
 		t.Errorf("invalid started: %v", err)
+	}
+}
+
+// "唤醒 1h": started from the panel, Stop comes first, the choice on
+// the typed row, second; stopped, the typed row alone, chosen; ending on
+// its own, the same.
+func TestAwakeTypedStartedZh(t *testing.T) {
+	l, _, f := awakePanel(t, "zh-Hans")
+	typeQuery(l, "唤醒 1h")
+	if got := awakeTitles(l); !slices.Equal(got, []string{"> 保持唤醒 1 小时"}) {
+		t.Fatalf("typed: %q", got)
+	}
+	l.primary()
+	if got := awakeTitles(l); !slices.Equal(got, []string{"停止保持唤醒", "> 保持唤醒 1 小时"}) || l.chosen != 1 {
+		t.Fatalf("started: %q, chosen %d", got, l.chosen)
+	}
+	l.choose(0)
+	l.primary()
+	if got := awakeTitles(l); !slices.Equal(got, []string{"> 保持唤醒 1 小时"}) || l.g.awakeActive() {
+		t.Fatalf("stopped: %q", got)
+	}
+	l.primary()
+	f.advance(l.g, time.Hour)
+	if got := awakeTitles(l); !slices.Equal(got, []string{"> 保持唤醒 1 小时"}) || l.g.awakeActive() {
+		t.Errorf("ended: %q", got)
 	}
 }
 
@@ -378,6 +416,14 @@ func TestScreensAwake(t *testing.T) {
 				typeQuery(l, q)
 			})
 			shot("typed", func(l *launcher, f awakeFakes) { typeQuery(l, q+" 1h30m") })
+			tq := "keep awake 1h"
+			if loc == "zh-Hans" {
+				tq = "唤醒 1h"
+			}
+			shot("typed-started", func(l *launcher, f awakeFakes) {
+				typeQuery(l, tq)
+				l.primary()
+			})
 			shot("until", func(l *launcher, f awakeFakes) { typeQuery(l, q+" until 9am") })
 			shot("need-time", func(l *launcher, f awakeFakes) { typeQuery(l, q+" until") })
 			shot("stopped", func(l *launcher, f awakeFakes) {
