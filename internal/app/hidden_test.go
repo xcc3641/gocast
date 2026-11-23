@@ -484,3 +484,37 @@ func TestScreensSearchShortcuts(t *testing.T) {
 		}
 	}
 }
+
+// All five Keep Awake rows hidden: "唤醒" and "awake" find none of Keep
+// Awake's rows; one of them hidden: only that one is not found (each row
+// only its own, no cascade).
+func TestSearchHiddenAwakeAll(t *testing.T) {
+	ids := []string{awakeToggleID, awakePrefix + "30", awakePrefix + "60", awakePrefix + "120", awakePrefix + "240"}
+	for _, loc := range []string{"en", "zh-Hans"} {
+		l, _, _ := awakePanel(t, loc)
+		g := l.g
+		g.setSearchHidden(awakePrefix+"60", settings.GroupSystem, true)
+		for _, q := range []string{"awake", "唤醒"} {
+			typeQuery(l, q)
+			got := rowIDs(l)
+			if slices.Contains(got, awakePrefix+"60") {
+				t.Errorf("%s: 1 hour hidden, found by %q: %q", loc, q, got)
+			}
+		}
+		if q := map[string]string{"en": "awake", "zh-Hans": "唤醒"}[loc]; !found(l, q, awakePrefix+"30") || !found(l, q, awakeToggleID) {
+			t.Errorf("%s: one hidden, the others not found: %q", loc, shown(l))
+		}
+		for _, id := range ids {
+			g.setSearchHidden(id, settings.GroupSystem, true)
+		}
+		for _, q := range []string{"awake", "唤醒", "keep awake", "保持唤醒"} {
+			typeQuery(l, q)
+			for _, id := range rowIDs(l) {
+				if strings.HasPrefix(id, awakePrefix) {
+					t.Errorf("%s: all hidden, %q found %q", loc, q, rowIDs(l))
+					break
+				}
+			}
+		}
+	}
+}
