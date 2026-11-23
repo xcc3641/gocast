@@ -309,7 +309,7 @@ func TestUpdateTrayItem(t *testing.T) {
 }
 
 // updatePanel is hotkeyPanel's search panel with a version ready, shown
-// again for its Gocast group to have it.
+// again for its list to have it.
 func updatePanel(t *testing.T, locale string) (*launcher, *ui.Tester, *fakeUpdater) {
 	t.Helper()
 	l, tt, _ := hotkeyPanel(t, locale)
@@ -320,19 +320,20 @@ func updatePanel(t *testing.T, locale string) (*launcher, *ui.Tester, *fakeUpdat
 	return l, tt, f
 }
 
-// The Gocast group has Relaunch to Update first, found by its words in
+// The list under an empty query has Relaunch to Update first of
+// Gocast's items, right after the suggestions, found by its words in
 // both languages; the suggestions keep the choice, and it counts for
 // none (design.md 4.5).
 func TestUpdateRow(t *testing.T) {
 	l, _, _ := hotkeyPanel(t, "en")
 	useFakeUpdater(t, l.g)
-	if slices.Contains(shown(l), "group:"+updateItemID) {
+	if slices.Contains(shown(l), updateItemID) {
 		t.Fatal("a row with nothing ready")
 	}
 	l, tt, f := updatePanel(t, "en")
 	rows := shown(l)
-	i := slices.Index(rows, "group:"+updateItemID)
-	if i < 0 || rows[i-1] != "title:Gocast" || rows[0] != "title:Suggestions" || !slices.Contains(rows, "> app:com.apple.Terminal") {
+	i := slices.Index(rows, updateItemID)
+	if i < 1 || i+1 >= len(rows) || rows[i+1] != clipItemID || !slices.Contains(rows[:i], "> app:com.apple.Terminal") {
 		t.Fatalf("rows: %q", rows)
 	}
 	if !has(tt, "Relaunch to Update to 0.2.0") {
@@ -409,7 +410,7 @@ func TestUpdatePill(t *testing.T) {
 	}
 	l.enterSearch(clipNow.Add(2 * time.Hour)) // shown again
 	tt.Frame()
-	if has(tt, "Version 0.2.0 is ready") || !slices.Contains(shown(l), "group:"+updateItemID) {
+	if has(tt, "Version 0.2.0 is ready") || !slices.Contains(shown(l), updateItemID) {
 		t.Errorf("closed, shown again: %q", tt.Texts())
 	}
 }
@@ -584,7 +585,7 @@ func TestScreensUpdates(t *testing.T) {
 		panel("upd-relaunching", func(l *launcher, f *fakeUpdater) { f.u.relaunch() })
 		panel("upd-search", func(l *launcher, f *fakeUpdater) { typeQuery(l, "更新") })
 		panel("upd-row", func(l *launcher, f *fakeUpdater) {
-			l.choose(slices.Index(shown(l), "group:"+updateItemID))
+			l.choose(slices.Index(shown(l), updateItemID))
 		})
 		panel("upd-notice", func(l *launcher, f *fakeUpdater) { l.notice = locales.FooterPathCopied() })
 

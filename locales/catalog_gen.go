@@ -296,48 +296,18 @@ func (msgs Messages) SearchNoPresetsHint() string {
 	return Catalog.Format(msgs.locale, "searchNoPresetsHint", nil)
 }
 
-// SearchSuggestions says "Suggestions"
-// in the language the app shows.
-//
-// Search panel, under an empty query: title of the group of the items
-// opened most (copy.md 2.2a).
-func SearchSuggestions() string { return In(i18n.Locale()).SearchSuggestions() }
-
-// SearchSuggestions says "Suggestions"
-// in the language of msgs.
-//
-// Search panel, under an empty query: title of the group of the items
-// opened most (copy.md 2.2a).
-func (msgs Messages) SearchSuggestions() string {
-	return Catalog.Format(msgs.locale, "searchSuggestions", nil)
-}
-
-// SearchGocastGroup says "Gocast"
-// in the language the app shows.
-//
-// Search panel, under an empty query: title of the group of Gocast's own
-// items (copy.md 2.2a). Not “Commands”.
-func SearchGocastGroup() string { return In(i18n.Locale()).SearchGocastGroup() }
-
-// SearchGocastGroup says "Gocast"
-// in the language of msgs.
-//
-// Search panel, under an empty query: title of the group of Gocast's own
-// items (copy.md 2.2a). Not “Commands”.
-func (msgs Messages) SearchGocastGroup() string {
-	return Catalog.Format(msgs.locale, "searchGocastGroup", nil)
-}
-
 // SearchHeading says "{name}, heading"
 // in the language the app shows.
 //
-// Screen reader: a group title of the search panel's list (copy.md 2.3).
+// Screen reader: a section title of Browse Notes' list (copy.md 16.4). The
+// search panel's list has no titles since copy.md v1.37.
 func SearchHeading(name string) string { return In(i18n.Locale()).SearchHeading(name) }
 
 // SearchHeading says "{name}, heading"
 // in the language of msgs.
 //
-// Screen reader: a group title of the search panel's list (copy.md 2.3).
+// Screen reader: a section title of Browse Notes' list (copy.md 16.4). The
+// search panel's list has no titles since copy.md v1.37.
 func (msgs Messages) SearchHeading(name string) string {
 	return Catalog.Format(msgs.locale, "searchHeading", map[string]any{"name": name})
 }

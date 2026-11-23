@@ -2,8 +2,8 @@ package app
 
 // What the search leaves out (design.md 4.4, 2.5): the items hidden in
 // Settings › Search & Shortcuts, or with Hide from Search in the search
-// panel's Cmd-K menu, which typing does not find and the suggestions and
-// the Gocast group do not show. Their hotkeys work as before, and the
+// panel's Cmd-K menu, which typing does not find and the list under an
+// empty query does not show. Their hotkeys work as before, and the
 // tray menu's items stay.
 
 import (
@@ -187,7 +187,7 @@ func (l *launcher) suggestable(id string) bool {
 }
 
 // shownOwn are Gocast's own items the search does not leave out, as the
-// Gocast group shows them.
+// list under an empty query shows them.
 func (l *launcher) shownOwn(id string) bool { return !l.g.searchHidden(id, "") }
 
 // withoutHidden leaves out of the rows the items hidden.
@@ -221,18 +221,11 @@ func (l *launcher) hideItem(id, path string) {
 	l.sayAction(actionNotice{icon: "eye.slash", text: locales.HiddenFromSearchNotice(), long: true})
 }
 
-// nearRow is the row to choose in place of the one at i, gone: the next
-// that is not a title, else the one before; -1 for none.
+// nearRow is the row to choose in place of the one at i, gone: the next,
+// else the one before; -1 for none.
 func nearRow(rows []panelRow, i int) int {
-	for j := max(i, 0); j < len(rows); j++ {
-		if rows[j].title == "" {
-			return j
-		}
+	if len(rows) == 0 {
+		return -1
 	}
-	for j := min(i, len(rows)) - 1; j >= 0; j-- {
-		if rows[j].title == "" {
-			return j
-		}
-	}
-	return -1
+	return min(max(i, 0), len(rows)-1)
 }

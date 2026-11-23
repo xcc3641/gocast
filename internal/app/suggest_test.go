@@ -10,6 +10,8 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"gocast/internal/presets"
+	"gocast/internal/settings"
+	"gocast/internal/shortcut"
 	"gocast/internal/usage"
 	"gocast/locales"
 )
@@ -31,7 +33,7 @@ func TestGocastItems(t *testing.T) {
 	// none for Add Preset and Quit Gocast (no ⌘Q).
 	var got []string
 	for _, o := range gocastItems("Ctrl+`", "Ctrl+Cmd+V", do) {
-		got = append(got, o.id+" "+o.symbol+" "+o.label+" "+strings.Join(o.caps, ""))
+		got = append(got, o.id+" "+o.symbol+" "+o.label+" "+strings.Join(shortcut.Caps(o.accel), ""))
 		o.run()
 	}
 	want := []string{
@@ -51,30 +53,34 @@ func TestGocastItems(t *testing.T) {
 		t.Errorf("ran %q, want %q", did, want)
 	}
 	// The shortcuts as the user set them; none registered, no keys.
-	if o := gocastItems("Cmd+Alt+T", "Cmd+Shift+V", do); strings.Join(o[0].caps, "") != "⇧⌘V" || strings.Join(o[2].caps, "") != "⌥⌘T" {
-		t.Errorf("caps %q, %q", o[0].caps, o[2].caps)
+	if o := gocastItems("Cmd+Alt+T", "Cmd+Shift+V", do); o[0].accel != "Cmd+Shift+V" || o[2].accel != "Cmd+Alt+T" {
+		t.Errorf("shortcuts %q, %q", o[0].accel, o[2].accel)
 	}
-	if o := gocastItems("", "", do); len(o[0].caps) != 0 || len(o[2].caps) != 0 {
-		t.Errorf("caps without a shortcut: %q, %q", o[0].caps, o[2].caps)
+	if o := gocastItems("", "", do); o[0].accel != "" || o[2].accel != "" {
+		t.Errorf("shortcuts without one: %q, %q", o[0].accel, o[2].accel)
+	}
+	// Settings… with a hotkey of its own: that, not ⌘, (design.md 4.4).
+	do.settingsKey, do.addPresetKey = "Alt+Cmd+,", "Ctrl+Alt+P"
+	if o := gocastItems("", "", do); o[ownIndex(o, settingsItemID)].accel != "Alt+Cmd+," || o[ownIndex(o, addPresetItemID)].accel != "Ctrl+Alt+P" {
+		t.Errorf("hotkeys of Settings… and Add Preset: %+v", o)
 	}
 }
 
 func TestSuggestionsCopy(t *testing.T) {
-	// copy.md v1.15, 2.2a, 2.3 and 4.3.
+	// copy.md 2.2a, 2.3 and 4.3.
 	for _, c := range []struct {
 		locale string
 		want   []string
 	}{
-		{"zh-Hans", []string{"推荐", "Gocast", "推荐，标题", "Gocast，标题", "打开", "退出", "在悬浮终端打开",
+		{"zh-Hans", []string{"Gocast", "打开", "退出", "在悬浮终端打开",
 			"剪贴板历史", "打开悬浮终端", "添加预设", "设置…", "退出 Gocast",
-			"打开时只显示搜索框", "打开后，按 ⌘Space 只出现搜索框，不列推荐，打字才出结果。"}},
-		{"en", []string{"Suggestions", "Gocast", "Suggestions, heading", "Gocast, heading", "Open", "Quit", "Open in Floating Terminal",
+			"打开时只显示搜索框", "打开后，按 ⌘Space 只出现搜索框，打字才出结果。"}},
+		{"en", []string{"Gocast", "Open", "Quit", "Open in Floating Terminal",
 			"Clipboard History", "Open Floating Terminal", "Add Preset", "Settings…", "Quit Gocast",
 			"Show only the search field", "When on, ⌘Space shows just the search field. Results appear as you type."}},
 	} {
 		inLocale(t, c.locale)
-		got := []string{locales.SearchSuggestions(), locales.SearchGocastGroup(),
-			locales.SearchHeading(locales.SearchSuggestions()), locales.SearchHeading(locales.SearchGocastGroup()),
+		got := []string{locales.SearchTagGocast(),
 			primaryName(entry{own: clipItemID}), primaryName(entry{own: quitItemID}), primaryName(entry{preset: "a"}),
 			locales.ClipboardHistory(), locales.MenuTerminal(), locales.PresetsAdd(), locales.TraySettings(), locales.TrayQuit(),
 			locales.GeneralSearchOnly(), searchOnlyHint("", "Cmd+Space")}
@@ -148,21 +154,21 @@ func TestPadIDs(t *testing.T) {
 	}
 }
 
-// spellRows spells rows as they read: "[title]", an item's ID, Gocast's own
-// item's ID, "+" in the Gocast group.
+// spellRows spells rows as they read: an item's ID, Gocast's own item's
+// ID, "*" after one not chosen as the list shows.
 func spellRows(rows []panelRow, items []string, own []ownItem) []string {
 	var out []string
 	for _, r := range rows {
-		switch {
-		case r.title != "":
-			out = append(out, "["+r.title+"]")
-		case r.own >= 0 && r.group:
-			out = append(out, "+"+own[r.own].id)
-		case r.own >= 0:
-			out = append(out, own[r.own].id)
-		default:
-			out = append(out, items[r.item])
+		s := ""
+		if r.own >= 0 {
+			s = own[r.own].id
+		} else {
+			s = items[r.item]
 		}
+		if r.later {
+			s += "*"
+		}
+		out = append(out, s)
 	}
 	return out
 }
@@ -172,51 +178,91 @@ func TestSuggestionRows(t *testing.T) {
 	own := gocastItems("", "", gocastDo{})
 	items := []string{"preset:p", clipItemID, "app:a"}
 	item := func(id string) int { return slices.Index(items, id) }
-	group := []string{"[Gocast]", "+gocast:clipboard", "+gocast:notes", "+gocast:terminal", "+gocast:add-preset", "+gocast:settings", "+gocast:quit"}
+	ownRows := []string{"gocast:clipboard", "gocast:notes", "gocast:terminal", "gocast:add-preset", "gocast:settings", "gocast:quit"}
 
-	// Gocast's own items show as theirs, the clipboard history too, and
-	// again in the Gocast group; what isn't there is skipped.
-	got := spellRows(suggestionRows([]string{"app:a", clipItemID, "app:gone", "gocast:settings", "preset:p"}, item, own, allShown), items, own)
-	want := append([]string{"[Suggestions]", "app:a", "gocast:clipboard", "gocast:settings", "preset:p"}, group...)
+	// One column, no titles (design.md 2.5a): the suggestions, Gocast's
+	// own items as theirs, then Gocast's own items not among them, so
+	// Settings… and the clipboard history show once; what isn't there is
+	// skipped.
+	got := spellRows(suggestionRows([]string{"app:a", clipItemID, "app:gone", settingsItemID, "preset:p"}, item, own, allShown), items, own)
+	want := []string{"app:a", "gocast:clipboard", "gocast:settings", "preset:p",
+		"gocast:notes", "gocast:terminal", "gocast:add-preset", "gocast:quit"}
 	if !slices.Equal(got, want) {
 		t.Errorf("rows:\n got %q\nwant %q", got, want)
 	}
-	// No suggestions: no title over none; the Gocast group, its first
-	// row first.
+	// No suggestions: Gocast's own items alone, the first chosen.
 	rows := suggestionRows(nil, item, own, allShown)
-	if got := spellRows(rows, items, own); !slices.Equal(got, group) {
+	if got := spellRows(rows, items, own); !slices.Equal(got, ownRows) {
 		t.Errorf("no suggestions: %q", got)
 	}
-	if f := firstRow(rows); f != 1 || rows[f].own != ownIndex(own, clipItemID) {
+	if f := firstRow(rows); f != 0 || rows[f].own != ownIndex(own, clipItemID) {
 		t.Errorf("first row %d", f)
 	}
-	// Results: no titles.
+	// Hidden: left out, the next coming up (design.md 4.4).
+	shown := func(id string) bool { return id != notesItemID && id != quitItemID }
+	if got := spellRows(suggestionRows(nil, item, own, shown), items, own); !slices.Equal(got, []string{"gocast:clipboard", "gocast:terminal", "gocast:add-preset", "gocast:settings"}) {
+		t.Errorf("hidden: %q", got)
+	}
+	// Results: Gocast's own items are search items there.
 	if got := spellRows(itemRows([]int{2, 0}), items, own); !slices.Equal(got, []string{"app:a", "preset:p"}) {
 		t.Errorf("results: %q", got)
+	}
+}
+
+// Relaunch to Update is first of Gocast's own items (design.md 4.5); first
+// of all, it is not chosen as the list shows, the row after it is, unless
+// it is alone.
+func TestSuggestionRowsUpdate(t *testing.T) {
+	inLocale(t, "en")
+	own := gocastItems("", "", gocastDo{update: "0.2.0"})
+	items := []string{"app:a"}
+	item := func(id string) int { return slices.Index(items, id) }
+
+	rows := suggestionRows([]string{"app:a", termItemID}, item, own, allShown)
+	want := []string{"app:a", "gocast:terminal", "gocast:update*", "gocast:clipboard", "gocast:notes", "gocast:add-preset", "gocast:settings", "gocast:quit"}
+	if got := spellRows(rows, items, own); !slices.Equal(got, want) {
+		t.Errorf("rows:\n got %q\nwant %q", got, want)
+	}
+	if f := firstRow(rows); f != 0 {
+		t.Errorf("first row %d, want the first suggestion", f)
+	}
+	rows = suggestionRows(nil, item, own, allShown)
+	if got := spellRows(rows, items, own); len(got) == 0 || got[0] != "gocast:update*" {
+		t.Fatalf("no suggestions: %q", got)
+	}
+	if f := firstRow(rows); f != 1 || own[rows[f].own].id != clipItemID {
+		t.Errorf("first row %d, want the clipboard history's, after Relaunch to Update", f)
+	}
+	// Alone: chosen.
+	alone := func(id string) bool { return id == updateItemID }
+	if rows := suggestionRows(nil, item, own, alone); len(rows) != 1 || firstRow(rows) != 0 {
+		t.Errorf("alone: %q, first %d", spellRows(rows, items, own), firstRow(rows))
+	}
+	if firstRow(nil) != -1 {
+		t.Error("a first row of none")
 	}
 }
 
 func TestStepRow(t *testing.T) {
 	inLocale(t, "en")
 	own := gocastItems("", "", gocastDo{})
-	rows := suggestionRows([]string{"gocast:terminal", "gocast:settings"}, func(string) int { return -1 }, own, allShown)
-	// [Suggestions] terminal settings [Gocast] clipboard notes terminal add settings quit
+	rows := suggestionRows([]string{termItemID, settingsItemID}, func(string) int { return -1 }, own, allShown)
+	// terminal settings clipboard notes add quit
 	for _, c := range []struct{ from, step, want int }{
-		{1, 1, 2}, {2, 1, 4}, {4, -1, 2}, {1, -1, 1}, {9, 1, 9}, {9, 3, 9},
-		{1, 3, 5}, {-1, 1, 1}, {99, -1, 1},
+		{0, 1, 1}, {1, 1, 2}, {2, -1, 1}, {0, -1, 0}, {5, 1, 5}, {5, 3, 5},
+		{0, 3, 3}, {-1, 1, 0}, {99, -1, 0}, {4, -9, 0},
 	} {
 		if got := stepRow(rows, c.from, c.step); got != c.want {
 			t.Errorf("stepRow(%d, %d) = %d, want %d", c.from, c.step, got, c.want)
 		}
 	}
-	// The first row of a group shows with its title, when the title is
-	// above the rows in view.
-	for _, c := range []struct{ chosen, first, want int }{
-		{1, 0, 0}, {1, 1, 0}, {4, 4, 3}, {4, 1, 4}, {5, 5, 5},
-	} {
-		if got := revealedRow(rows, c.chosen, c.first); got != c.want {
-			t.Errorf("revealedRow(%d, %d) = %d, want %d", c.chosen, c.first, got, c.want)
+	for _, c := range []struct{ at, want int }{{0, 0}, {3, 3}, {6, 5}, {-1, 0}} {
+		if got := nearRow(rows, c.at); got != c.want {
+			t.Errorf("nearRow(%d) = %d, want %d", c.at, got, c.want)
 		}
+	}
+	if nearRow(nil, 0) != -1 {
+		t.Error("a near row of none")
 	}
 }
 
@@ -286,8 +332,10 @@ func TestLauncherSuggestions(t *testing.T) {
 	l.ranked = u.Ranked(now)
 	l.filtered = noQuery
 	l.filter()
-	group := []string{"title:Gocast", "group:gocast:clipboard", "group:gocast:notes", "group:gocast:terminal", "group:gocast:add-preset", "group:gocast:settings", "group:gocast:quit"}
-	want := append([]string{"title:Suggestions", "> app:dev.zed.Zed", "gocast:terminal", "preset:p", "app:com.apple.finder", "app:com.apple.Safari"}, group...)
+	// One column, no titles; the floating terminal, suggested, not again
+	// among Gocast's own items (design.md 2.5a).
+	own := []string{"gocast:clipboard", "gocast:notes", "gocast:add-preset", "gocast:settings", "gocast:quit"}
+	want := append([]string{"> app:dev.zed.Zed", "gocast:terminal", "preset:p", "app:com.apple.finder", "app:com.apple.Safari"}, own...)
 	if got := shown(l); !slices.Equal(got, want) {
 		t.Errorf("as it shows:\n got %q\nwant %q", got, want)
 	}
@@ -305,13 +353,13 @@ func TestLauncherSuggestions(t *testing.T) {
 	u.Record("app:com.apple.Notes", "", now)
 	l.move(2)
 	l.rebuild()
-	want[1], want[3] = "app:dev.zed.Zed", "> preset:p"
+	want[0], want[2] = "app:dev.zed.Zed", "> preset:p"
 	if got := shown(l); !slices.Equal(got, want) {
 		t.Errorf("rebuilt:\n got %q\nwant %q", got, want)
 	}
-	// Down across the groups, over the Gocast title, stopping at the end.
+	// Down past the suggestions to Gocast's own items, stopping at the end.
 	l.move(3)
-	if r, _ := l.chosenRow(); !r.group || l.own[r.own].id != clipItemID {
+	if r, _ := l.chosenRow(); r.own < 0 || l.own[r.own].id != clipItemID {
 		t.Errorf("after the suggestions: row %d %+v", l.chosen, r)
 	}
 	l.move(99)
@@ -329,7 +377,7 @@ func TestLauncherSuggestions(t *testing.T) {
 	// first chosen.
 	l.query = ""
 	l.filter()
-	want[1], want[3] = "> app:dev.zed.Zed", "preset:p"
+	want[0], want[2] = "> app:dev.zed.Zed", "preset:p"
 	if got := shown(l); !slices.Equal(got, want) {
 		t.Errorf("cleared:\n got %q\nwant %q", got, want)
 	}
@@ -337,7 +385,7 @@ func TestLauncherSuggestions(t *testing.T) {
 	l.ranked = u.Ranked(now)
 	l.filtered = noQuery
 	l.filter()
-	if got := shown(l); len(got) < 3 || got[1] != "> app:com.apple.Notes" || got[2] != "app:dev.zed.Zed" {
+	if got := shown(l); len(got) < 2 || got[0] != "> app:com.apple.Notes" || got[1] != "app:dev.zed.Zed" {
 		t.Errorf("reranked: %q", got)
 	}
 }
@@ -358,7 +406,7 @@ func TestLauncherSearchOnly(t *testing.T) {
 	if l.compact() || l.targetHeight() != expandedHeight {
 		t.Fatalf("expanded: compact %v, height %v", l.compact(), l.targetHeight())
 	}
-	if got := shown(l); len(got) < 2 || got[0] != "title:Suggestions" || got[1] != "> app:com.apple.finder" {
+	if got := shown(l); len(got) < 1 || got[0] != "> app:com.apple.finder" {
 		t.Errorf("expanded: %q", got)
 	}
 	// Typing then clearing: the bar alone again.
@@ -405,7 +453,7 @@ func TestLauncherSearchesOwnItems(t *testing.T) {
 				t.Errorf("%s %q: symbol %s, want %s", locale, c.query, s, symbols[c.want])
 			}
 			title := ownTitle(locales.In(locale), c.want)
-			if got := l.rowLabel(l.chosen); got != title+listSep()+locales.SearchTagGocast() {
+			if got := l.rowLabel(l.chosen); got != title+listSep()+locales.SearchTagGocast()+hotkeySpoken(l.own[ownIndex(l.own, c.want)].accel) {
 				t.Errorf("%s %q: label %q", locale, c.query, got)
 			}
 		}
@@ -418,3 +466,124 @@ func TestLauncherSearchesOwnItems(t *testing.T) {
 
 // allShown hides none of Gocast's own items.
 func allShown(string) bool { return true }
+
+// The list under an empty query as it draws (design.md 2.5a): no titles;
+// Gocast's own rows with the Gocast tag, their keys on the row chosen
+// alone, their labels saying their shortcuts chosen or not (copy.md 2.3,
+// 11.4); Settings…, opened often, once, among the suggestions.
+func TestSuggestionsDrawn(t *testing.T) {
+	l, tt, _ := hotkeyPanel(t, "en")
+	if has(tt, "Suggestions") || !has(tt, locales.SearchTagGocast()) || !has(tt, locales.ClipboardHistory()) {
+		t.Fatalf("texts: %q", tt.Texts())
+	}
+	for i := range l.rows {
+		if s := l.rowLabel(i); strings.Contains(s, "heading") {
+			t.Errorf("a title: %q", s)
+		}
+	}
+	// Terminal chosen, with ⌥⌘T: the clipboard history's ⌃⌘V not shown.
+	if got := shown(l); len(got) == 0 || got[0] != "> app:com.apple.Terminal" {
+		t.Fatalf("rows: %q", got)
+	}
+	if !has(tt, "⌥") || !has(tt, "T") || has(tt, "⌃") || has(tt, "V") {
+		t.Errorf("Terminal chosen: %q", tt.Texts())
+	}
+	clip := slices.Index(shown(l), clipItemID)
+	if got := l.rowLabel(clip); got != "Clipboard History, Gocast, shortcut Control Command V" {
+		t.Errorf("clipboard history, not chosen: %q", got)
+	}
+	// The clipboard history chosen: its keys, Terminal's gone.
+	l.choose(clip)
+	tt.Frame()
+	if !has(tt, "⌃") || !has(tt, "⌘") || !has(tt, "V") || has(tt, "⌥") {
+		t.Errorf("clipboard history chosen: %q", tt.Texts())
+	}
+	if got := l.rowLabel(clip); got != "Clipboard History, Gocast, shortcut Control Command V" {
+		t.Errorf("clipboard history, chosen: %q", got)
+	}
+	for id, want := range map[string]string{
+		settingsItemID:  "Settings…, Gocast, shortcut Command Comma",
+		addPresetItemID: "Add Preset, Gocast",
+		quitItemID:      "Quit Gocast, Gocast",
+	} {
+		if got := l.rowLabel(slices.Index(shown(l), id)); got != want {
+			t.Errorf("%s: %q, want %q", id, got, want)
+		}
+	}
+
+	// Settings… opened most: first, and not again after.
+	for range 20 {
+		l.g.usage.Record(settingsItemID, "", clipNow)
+	}
+	l.leave(clipNow)
+	l.enterSearch(clipNow.Add(time.Hour))
+	tt.Frame()
+	got := shown(l)
+	if len(got) == 0 || got[0] != "> "+settingsItemID {
+		t.Fatalf("Settings… opened most: %q", got)
+	}
+	n := 0
+	for _, s := range got {
+		if strings.TrimPrefix(s, "> ") == settingsItemID {
+			n++
+		}
+	}
+	if n != 1 || !slices.Contains(got, clipItemID) || !slices.Contains(got, quitItemID) {
+		t.Errorf("Settings… %d times: %q", n, got)
+	}
+	if !has(tt, "⌘") || !has(tt, ",") {
+		t.Errorf("Settings… chosen, no ⌘,: %q", tt.Texts())
+	}
+}
+
+// Typed, Gocast's own items show their shortcuts as in the list under an
+// empty query: the keys on the row chosen alone, the label saying them
+// (design.md 2.3, copy.md 11.4).
+func TestOwnResultsShortcuts(t *testing.T) {
+	l, tt, _ := hotkeyPanel(t, "en")
+	for _, c := range []struct {
+		query, id, label string
+		caps             []string
+	}{
+		{"clipboard", clipItemID, "Clipboard History, Gocast, shortcut Control Command V", []string{"⌃", "⌘", "V"}},
+		{"floating", termItemID, "Open Floating Terminal, Gocast, shortcut Control Grave Accent", []string{"⌃", "`"}},
+		{"settings", settingsItemID, "Settings…, Gocast, shortcut Command Comma", []string{"⌘", ","}},
+		{"add preset", addPresetItemID, "Add Preset, Gocast", nil},
+		{"quit", quitItemID, "Quit Gocast, Gocast", nil},
+	} {
+		typeQuery(l, c.query)
+		tt.Frame()
+		if got := shown(l); len(got) == 0 || got[0] != "> "+c.id {
+			t.Errorf("%q: %q", c.query, got)
+			continue
+		}
+		if got := l.rowLabel(l.chosen); got != c.label {
+			t.Errorf("%q: label %q, want %q", c.query, got, c.label)
+		}
+		for _, cp := range c.caps {
+			if !has(tt, cp) {
+				t.Errorf("%q: no %s in %q", c.query, cp, tt.Texts())
+			}
+		}
+		if c.caps == nil && has(tt, "⌃") { // ⌘ is the actions capsule's
+			t.Errorf("%q: keys %q", c.query, tt.Texts())
+		}
+	}
+	// Add Preset with a hotkey: its keys; not chosen (under an empty
+	// query, Terminal chosen with ⌥⌘T), its label says them still, its
+	// keys not shown.
+	l.g.settings.SetHotkey(settings.Hotkey{Own: settings.OwnAddPreset}, "Ctrl+Alt+P")
+	l.rebuild()
+	typeQuery(l, "preset")
+	tt.Frame()
+	i := slices.Index(withoutActions(shown(l)), "> "+addPresetItemID)
+	if i < 0 || l.rowLabel(i) != "Add Preset, Gocast, shortcut Control Option P" || !has(tt, "⌥") || !has(tt, "P") {
+		t.Errorf("Add Preset with a hotkey: %q, %q", shown(l), tt.Texts())
+	}
+	typeQuery(l, "")
+	tt.Frame()
+	i = slices.Index(shown(l), addPresetItemID)
+	if i < 0 || l.rowLabel(i) != "Add Preset, Gocast, shortcut Control Option P" || has(tt, "⌃") || has(tt, "P") {
+		t.Errorf("Add Preset not chosen: %q, %q", shown(l), tt.Texts())
+	}
+}

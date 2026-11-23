@@ -142,8 +142,8 @@ type launcher struct {
 	rec      hotkeyRecorder
 	recInput ui.Handle
 
-	// own are Gocast's own items, the Gocast group's rows (design.md
-	// 2.5a).
+	// own are Gocast's own items, the rows after the suggestions
+	// (design.md 2.5a).
 	own []ownItem
 	// ranked are the items opened most, as they ranked as the panel
 	// showed: the suggestions do not move while it shows.
@@ -431,13 +431,10 @@ func (l *launcher) expand() {
 	}
 }
 
-// choose chooses the row i, off a title, telling the list the app chose
-// it (else it keeps the choice on the item it had, or on none when the
-// item is gone), and shows it in the next frame.
+// choose chooses the row i, telling the list the app chose it (else it
+// keeps the choice on the item it had, or on none when the item is gone),
+// and shows it in the next frame.
 func (l *launcher) choose(i int) {
-	if i >= 0 && i < len(l.rows) && l.rows[i].title != "" {
-		i = stepRow(l.rows, i, 1)
-	}
 	l.list.Selected = &l.chosen
 	l.list.Choose(i)
 	l.scroll = true
@@ -457,12 +454,10 @@ func (l *launcher) resultList(c *ui.Context, k tokens) {
 	})
 	if l.scroll && l.chosen >= 0 && l.chosen < len(l.rows) {
 		l.scroll = false
-		first, _ := l.list.Visible()
-		l.list.ScrollIntoView(revealedRow(l.rows, l.chosen, first))
+		l.list.ScrollIntoView(l.chosen)
 	}
 	if list.Changed() {
-		// A click chose a row (off a title): the keyboard stays in the
-		// field.
+		// A click chose a row: the keyboard stays in the field.
 		l.choose(l.chosen)
 		l.scroll = false
 		l.moved = true
@@ -474,34 +469,31 @@ func (l *launcher) resultList(c *ui.Context, k tokens) {
 }
 
 // row shows a row, in the selection gray when chosen: the calculator's
-// card, a group's title, Gocast's own item, or a search item.
+// card, Gocast's own item, or a search item.
 func (l *launcher) row(c *ui.Context, k tokens, i int, chosen bool) {
 	r := l.rows[i]
 	switch {
 	case r.calc:
 		l.calcRow(c, k, chosen)
-	case r.title != "":
-		listSection(c, k, r.title, locales.SearchHeading(r.title))
 	case r.own >= 0:
-		l.ownRow(c, k, l.own[r.own], r.group, chosen)
+		l.ownRow(c, k, l.own[r.own], chosen)
 	default:
 		l.itemRow(c, k, r.item, chosen)
 	}
 }
 
 // ownRow shows Gocast's own item as a search result shows (design.md
-// 2.5a): its symbol on a square, its name, and "Gocast" at the right; in
-// the Gocast group, its shortcut instead.
-func (l *launcher) ownRow(c *ui.Context, k tokens, o ownItem, group, chosen bool) {
+// 2.5a): its symbol on a square, its name, and "Gocast" at the right,
+// with its shortcut's keys before it on the row chosen alone.
+func (l *launcher) ownRow(c *ui.Context, k tokens, o ownItem, chosen bool) {
 	listRow(c, k, chosen, func() {
 		symbolSquare(c, k, o.symbol)
 		listTitle(c, k, o.label)
 		ui.Spacer(c)
-		if !group {
-			listNote(c, k, locales.SearchTagGocast()).Shrink(0)
-		} else if len(o.caps) > 0 {
-			keycaps(c, k, o.caps, 12)
+		if chosen {
+			rowKeycaps(c, k, o.accel)
 		}
+		listNote(c, k, locales.SearchTagGocast()).Shrink(0)
 	})
 }
 
@@ -566,37 +558,29 @@ func (l *launcher) itemRow(c *ui.Context, k tokens, item int, chosen bool) {
 	}
 }
 
-// rowKey keeps the choice on its row as the rows change: its item's ID,
-// in the Gocast group apart from the suggestions.
+// rowKey keeps the choice on its row as the rows change: its item's ID.
 func (l *launcher) rowKey(i int) any {
 	r := l.rows[i]
 	switch {
 	case r.calc:
 		return "calc"
-	case r.title != "":
-		return "title:" + r.title
-	case r.own >= 0 && r.group:
-		return "group:" + l.own[r.own].id
 	case r.own >= 0:
 		return l.own[r.own].id
 	}
 	return l.items[r.item].ID
 }
 
-// rowLabel is what assistive technology reads of a row (copy.md 2.3): a
-// group's title, "Suggestions, heading"; in the Gocast group, the name;
-// Gocast's own item elsewhere, as the clipboard history's result.
+// rowLabel is what assistive technology reads of a row (copy.md 2.3):
+// Gocast's own item as the clipboard history's result, "Settings…,
+// Gocast", with its shortcut, chosen or not (copy.md 11.4).
 func (l *launcher) rowLabel(i int) string {
 	r := l.rows[i]
 	switch {
 	case r.calc:
 		return l.card(time.Now()).label
-	case r.title != "":
-		return locales.SearchHeading(r.title)
-	case r.own >= 0 && r.group:
-		return l.own[r.own].label
 	case r.own >= 0:
-		return l.own[r.own].label + listSep() + locales.SearchTagGocast()
+		o := l.own[r.own]
+		return o.label + listSep() + locales.SearchTagGocast() + hotkeySpoken(o.accel)
 	}
 	return l.itemLabel(r.item)
 }
@@ -607,8 +591,8 @@ func (l *launcher) rowLabel(i int) string {
 func (l *launcher) itemLabel(item int) string {
 	it, e := l.items[item], l.entries[item]
 	sep := listSep()
-	if e.own != "" {
-		return it.Title + sep + locales.SearchTagGocast()
+	if e.own != "" { // "Settings…, Gocast, shortcut Command Comma" (copy.md 2.3, 11.4)
+		return it.Title + sep + locales.SearchTagGocast() + hotkeySpoken(l.entryAccel(e))
 	}
 	if e.action != "" { // "Lock Screen, System" (copy.md 15.6)
 		return it.Title + sep + actionTag(e.action) + hotkeySpoken(l.entryAccel(e))
@@ -751,7 +735,7 @@ func primaryName(e entry) string {
 
 // chosenRow returns the row chosen, while the panel shows rows.
 func (l *launcher) chosenRow() (panelRow, bool) {
-	if l.compact() || l.chosen < 0 || l.chosen >= len(l.rows) || l.rows[l.chosen].title != "" {
+	if l.compact() || l.chosen < 0 || l.chosen >= len(l.rows) {
 		return panelRow{}, false
 	}
 	return l.rows[l.chosen], true

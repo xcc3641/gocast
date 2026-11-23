@@ -6,9 +6,9 @@ package app
 // then once a day, and downloads and installs a newer version at once,
 // which runs once Gocast relaunches or at its next launch. Once it is
 // ready, four places say so: the pill at the bottom left of the search
-// panel, the first row of the Gocast group, the tray menu's line in place
-// of 检查更新…, and the status line of Settings › About, where 检查更新
-// checks on the page.
+// panel, the first of Gocast's own rows under an empty query, the tray
+// menu's line in place of 检查更新…, and the status line of Settings ›
+// About, where 检查更新 checks on the page.
 
 import (
 	"context"
@@ -279,7 +279,7 @@ func (u *updateService) finish(r updateResult) {
 func (u *updateService) autoChanged() { u.schedule() }
 
 // relaunch quits Gocast and opens it again, which runs the version ready:
-// the pill, the Gocast group's row, the tray and About do it alike.
+// the pill, its row in the search panel, the tray and About do it alike.
 func (u *updateService) relaunch() {
 	if u.ready == "" || u.relaunching {
 		return

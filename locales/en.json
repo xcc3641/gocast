@@ -94,21 +94,13 @@
   "@searchNoPresetsHint": {
     "description": "Added under no results when there is no preset at all."
   },
-  "searchSuggestions": "Suggestions",
-  "@searchSuggestions": {
-    "description": "Search panel, under an empty query: title of the group of the items opened most (copy.md 2.2a)."
-  },
-  "searchGocastGroup": "Gocast",
-  "@searchGocastGroup": {
-    "description": "Search panel, under an empty query: title of the group of Gocast's own items (copy.md 2.2a). Not “Commands”."
-  },
   "searchHeading": "{name}, heading",
   "@searchHeading": {
-    "description": "Screen reader: a group title of the search panel's list (copy.md 2.3).",
+    "description": "Screen reader: a section title of Browse Notes' list (copy.md 16.4). The search panel's list has no titles since copy.md v1.37.",
     "placeholders": {
       "name": {
         "type": "String",
-        "example": "Suggestions"
+        "example": "Pinned"
       }
     }
   },

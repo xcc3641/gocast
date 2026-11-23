@@ -118,7 +118,7 @@ func TestSearchHiddenGroup(t *testing.T) {
 	}
 }
 
-// Gocast's own items hidden: not found, nor in the Gocast group; Keep
+// Gocast's own items hidden: not found, nor listed under an empty query; Keep
 // Awake hidden: not brought in by "awake", its lengths still found.
 func TestSearchHiddenOwn(t *testing.T) {
 	l, _, _ := awakePanel(t, "en")
@@ -128,14 +128,14 @@ func TestSearchHiddenOwn(t *testing.T) {
 		t.Errorf("clipboard history hidden, found: %q", shown(l))
 	}
 	typeQuery(l, "")
-	if slices.Contains(shown(l), "group:"+clipItemID) || !slices.Contains(shown(l), "group:"+termItemID) {
-		t.Errorf("Gocast group: %q", shown(l))
+	if slices.Contains(shown(l), clipItemID) || !slices.Contains(shown(l), termItemID) {
+		t.Errorf("Gocast's items: %q", shown(l))
 	}
-	// All of the Gocast group hidden: no title over none.
+	// All of the Gocast group hidden: none of Gocast's items listed.
 	g.setGroupHidden(settings.GroupGocast, true)
 	typeQuery(l, "")
 	if slices.ContainsFunc(shown(l), func(s string) bool {
-		return strings.HasPrefix(s, "group:") || s == "title:"+locales.SearchGocastGroup()
+		return strings.HasPrefix(strings.TrimPrefix(s, "> "), ownItemPrefix)
 	}) {
 		t.Errorf("Gocast hidden whole: %q", shown(l))
 	}

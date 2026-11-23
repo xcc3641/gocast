@@ -173,7 +173,7 @@ func actionPanel(t *testing.T, locale string) (*launcher, *ui.Tester, *actionFak
 func rowIDs(l *launcher) []string {
 	var out []string
 	for _, r := range l.rows {
-		if r.title == "" && !r.calc && r.own < 0 {
+		if !r.calc && r.own < 0 {
 			out = append(out, l.items[r.item].ID)
 		}
 	}
@@ -667,7 +667,7 @@ func TestActionAccessibility(t *testing.T) {
 	t.Cleanup(func() { clipFrontmost = clipboard.FrontmostApp })
 	l.g.actionHotkeyPressed(sysact.RightHalf)
 	tt.Frame()
-	if !l.shown || l.query != "" || !has(tt, "Allow Gocast to arrange windows") || !has(tt, locales.SearchSuggestions()) {
+	if !l.shown || l.query != "" || !has(tt, "Allow Gocast to arrange windows") || !has(tt, locales.ClipboardHistory()) {
 		t.Fatalf("from a hotkey: shown %v, %q, %q", l.shown, l.query, tt.Texts())
 	}
 

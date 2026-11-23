@@ -250,7 +250,7 @@ func (l *launcher) awakeItems(now time.Time) {
 
 // isAwake reports whether the row is one of Keep Awake's.
 func (l *launcher) isAwake(r panelRow) bool {
-	return r.title == "" && !r.calc && r.own < 0 && r.item >= 0 && l.entries[r.item].awake != awakeNone
+	return !r.calc && r.own < 0 && r.item >= 0 && l.entries[r.item].awake != awakeNone
 }
 
 // awakeRows puts Keep Awake's rows in the results (copy.md 18.1): for a

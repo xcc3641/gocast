@@ -7,12 +7,11 @@ import (
 
 	"gocast/internal/presets"
 	"gocast/internal/settings"
-	"gocast/internal/shortcut"
 	"gocast/locales"
 )
 
-// The search panel's list under an empty query (design.md 2.5a): the
-// suggestions, then Gocast's own items.
+// The search panel's list under an empty query (design.md 2.5a): one
+// column, the suggestions then Gocast's own items, without titles.
 
 // The IDs of Gocast's own items, which usage.json scores as it does apps
 // and presets, and the search finds as it does them.
@@ -20,29 +19,32 @@ const (
 	clipItemID = "gocast:clipboard"
 	termItemID = "gocast:terminal"
 	// The notes' items (design.md 11.1): the notes window, a new note,
-	// Browse Notes. The Gocast group has the first alone.
+	// Browse Notes. The list under an empty query has the first alone.
 	notesItemID     = "gocast:notes"
 	newNoteItemID   = "gocast:new-note"
 	searchNotesID   = "gocast:search-notes"
 	addPresetItemID = "gocast:add-preset"
 	settingsItemID  = "gocast:settings"
 	quitItemID      = "gocast:quit"
-	// updateItemID is 重新打开以更新到 {版本}, which the Gocast group has
-	// first while a new version is ready (design.md 4.5); never scored.
+	// updateItemID is 重新打开以更新到 {版本}, first of Gocast's own items
+	// under an empty query while a new version is ready (design.md 4.5);
+	// never scored.
 	updateItemID = "gocast:update"
 )
 
 // ownItemPrefix begins the IDs of Gocast's own items.
 const ownItemPrefix = "gocast:"
 
-// ownItem is one of Gocast's own items: a row of the Gocast group, which
-// the suggestions may show too.
+// ownItem is one of Gocast's own items, which the list under an empty
+// query has after the suggestions, unless among them.
 type ownItem struct {
 	id, symbol, label string
-	caps              []string // its shortcut, at the right of its row in the Gocast group
-	run               func()
-	// searched: found by the search alone, not a row of the Gocast group
-	// (New Note, Search Notes: design.md 11.1).
+	// accel is its shortcut, "" for none: its keycaps on its row while
+	// chosen, and what assistive technology reads (design.md 2.5a).
+	accel string
+	run   func()
+	// searched: found by the search alone, not listed under an empty
+	// query (New Note, Search Notes: design.md 11.1).
 	searched bool
 }
 
@@ -61,12 +63,12 @@ type gocastDo struct {
 	addPresetKey, settingsKey string
 }
 
-// gocastItems are the rows of the Gocast group, in copy.md 2.2a's order:
-// the clipboard history, Notes and the floating terminal with their
+// gocastItems are Gocast's own items, in copy.md 2.2a's order: the
+// clipboard history, Notes and the floating terminal with their
 // shortcuts, Add Preset, Settings… with ⌘, and Quit Gocast, without ⌘Q;
 // first, while a new version is ready, Relaunch to Update to it, without
 // keys (design.md 4.5); then New Note and Search Notes, which the search
-// finds but the group has not (design.md 11.1).
+// finds but the list under an empty query has not (design.md 11.1).
 func gocastItems(terminalKey, clipKey string, do gocastDo) []ownItem {
 	var own []ownItem
 	for _, fn := range []*func(){&do.clipboard, &do.terminal, &do.addPreset, &do.settings, &do.quit, &do.relaunch, &do.notes, &do.newNote, &do.searchNotes} {
@@ -77,19 +79,19 @@ func gocastItems(terminalKey, clipKey string, do gocastDo) []ownItem {
 	if do.update != "" {
 		own = append(own, ownItem{id: updateItemID, symbol: "arrow.down.circle", label: locales.UpdateRelaunchTo(do.update), run: do.relaunch})
 	}
-	settingsCaps := []string{"⌘", ","}
+	settingsKey := "Cmd+,"
 	if do.settingsKey != "" {
-		settingsCaps = shortcut.Caps(do.settingsKey)
+		settingsKey = do.settingsKey
 	}
 	return append(own, []ownItem{
-		{id: clipItemID, symbol: "doc.on.clipboard", label: locales.ClipboardHistory(), caps: shortcut.Caps(clipKey), run: do.clipboard},
-		{id: notesItemID, symbol: ownSymbolOf(notesItemID), label: locales.NotesItem(), caps: shortcut.Caps(do.notesKey), run: do.notes},
-		{id: termItemID, symbol: "apple.terminal", label: locales.MenuTerminal(), caps: shortcut.Caps(terminalKey), run: do.terminal},
-		{id: addPresetItemID, symbol: "plus", label: locales.PresetsAdd(), caps: shortcut.Caps(do.addPresetKey), run: do.addPreset},
-		{id: settingsItemID, symbol: "gearshape", label: locales.TraySettings(), caps: settingsCaps, run: do.settings},
+		{id: clipItemID, symbol: "doc.on.clipboard", label: locales.ClipboardHistory(), accel: clipKey, run: do.clipboard},
+		{id: notesItemID, symbol: ownSymbolOf(notesItemID), label: locales.NotesItem(), accel: do.notesKey, run: do.notes},
+		{id: termItemID, symbol: "apple.terminal", label: locales.MenuTerminal(), accel: terminalKey, run: do.terminal},
+		{id: addPresetItemID, symbol: "plus", label: locales.PresetsAdd(), accel: do.addPresetKey, run: do.addPreset},
+		{id: settingsItemID, symbol: "gearshape", label: locales.TraySettings(), accel: settingsKey, run: do.settings},
 		{id: quitItemID, symbol: "power", label: locales.TrayQuit(), run: do.quit},
-		{id: newNoteItemID, symbol: ownSymbolOf(newNoteItemID), label: locales.NotesNewItem(), caps: shortcut.Caps(do.newNoteKey), run: do.newNote, searched: true},
-		{id: searchNotesID, symbol: ownSymbolOf(searchNotesID), label: locales.NotesSearchItem(), caps: shortcut.Caps(do.searchNotesKey), run: do.searchNotes, searched: true},
+		{id: newNoteItemID, symbol: ownSymbolOf(newNoteItemID), label: locales.NotesNewItem(), accel: do.newNoteKey, run: do.newNote, searched: true},
+		{id: searchNotesID, symbol: ownSymbolOf(searchNotesID), label: locales.NotesSearchItem(), accel: do.searchNotesKey, run: do.searchNotes, searched: true},
 	}...)
 }
 
@@ -261,17 +263,15 @@ func suggested(ranked, pad []string, exists func(id string) bool) []string {
 	return out
 }
 
-// panelRow is a row of the search panel's list: a group's title, a search
-// item (an app, a preset, the clipboard history), one of Gocast's own
-// items, or the calculator's card (design.md 2.3a).
+// panelRow is a row of the search panel's list: a search item (an app, a
+// preset, the clipboard history), one of Gocast's own items, or the
+// calculator's card (design.md 2.3a).
 type panelRow struct {
-	calc  bool   // the calculator's card, the first row
-	title string // the group's title, for a title's row
-	item  int    // the index of the search item, or -1
-	own   int    // the index of Gocast's own item, or -1
-	group bool   // in the Gocast group: its shortcut at the right, rather than what it is
-	// later: not chosen as the list shows, though first of its group
-	// (Relaunch to Update, design.md 4.5).
+	calc bool // the calculator's card, the first row
+	item int  // the index of the search item, or -1
+	own  int  // the index of Gocast's own item, or -1
+	// later: not chosen as the list shows, though first (Relaunch to
+	// Update, design.md 4.5).
 	later bool
 }
 
@@ -284,11 +284,11 @@ func itemRows(results []int) []panelRow {
 	return rows
 }
 
-// suggestionRows lays out the list under an empty query: the suggestions
-// under their title, if any, then Gocast's own items under theirs, those
-// shown says (not hidden in the search, design.md 4.4). item returns the
-// index of the search item with an ID, or -1; Gocast's own items show as
-// theirs, the clipboard history too.
+// suggestionRows lays out the list under an empty query, one column
+// without titles (design.md 2.5a): the suggestions, then Gocast's own
+// items not among them, those shown says (not hidden in the search,
+// design.md 4.4). item returns the index of the search item with an ID,
+// or -1; Gocast's own items show as theirs, the clipboard history too.
 func suggestionRows(suggestions []string, item func(id string) int, own []ownItem, shown func(id string) bool) []panelRow {
 	var rows []panelRow
 	for _, id := range suggestions {
@@ -301,62 +301,36 @@ func suggestionRows(suggestions []string, item func(id string) int, own []ownIte
 		if r.own < 0 && r.item < 0 {
 			continue
 		}
-		if len(rows) == 0 {
-			rows = append(rows, panelRow{title: locales.SearchSuggestions(), item: -1, own: -1})
-		}
 		rows = append(rows, r)
 	}
-	titled := false
 	for i, o := range own {
-		if o.searched || !shown(o.id) {
+		if o.searched || !shown(o.id) || slices.Contains(suggestions, o.id) {
 			continue
 		}
-		if !titled {
-			rows = append(rows, panelRow{title: locales.SearchGocastGroup(), item: -1, own: -1})
-			titled = true
-		}
-		rows = append(rows, panelRow{item: -1, own: i, group: true, later: o.id == updateItemID})
+		rows = append(rows, panelRow{item: -1, own: i, later: o.id == updateItemID})
 	}
 	return rows
 }
 
-// firstRow is the row chosen as the list shows: the first that is not a
-// title, nor Relaunch to Update unless it is the only row; or -1.
+// firstRow is the row chosen as the list shows: the first, but Relaunch
+// to Update unless it is the only row; or -1.
 func firstRow(rows []panelRow) int {
-	if i := slices.IndexFunc(rows, func(r panelRow) bool { return r.title == "" && !r.later }); i >= 0 {
+	if i := slices.IndexFunc(rows, func(r panelRow) bool { return !r.later }); i >= 0 {
 		return i
 	}
-	return slices.IndexFunc(rows, func(r panelRow) bool { return r.title == "" })
+	if len(rows) > 0 {
+		return 0
+	}
+	return -1
 }
 
-// stepRow moves the choice from the row by step rows, over the titles,
-// stopping at either end without wrapping.
+// stepRow moves the choice from the row by step rows, stopping at either
+// end without wrapping.
 func stepRow(rows []panelRow, from, step int) int {
 	if from < 0 || from >= len(rows) {
 		return firstRow(rows)
 	}
-	dir := 1
-	if step < 0 {
-		dir, step = -1, -step
-	}
-	at := from
-	for r := from + dir; r >= 0 && r < len(rows) && step > 0; r += dir {
-		if rows[r].title == "" {
-			at = r
-			step--
-		}
-	}
-	return at
-}
-
-// revealedRow is the row to scroll into view to show the row chosen: its
-// group's title with it when it is the first of its group and the title is
-// not in view, first being the first row in view (design.md 2.5a).
-func revealedRow(rows []panelRow, chosen, first int) int {
-	if chosen > 0 && chosen < len(rows) && rows[chosen-1].title != "" && chosen-1 <= first {
-		return chosen - 1
-	}
-	return chosen
+	return min(max(from+step, 0), len(rows)-1)
 }
 
 // restoring reports whether the panel, hidden at hiddenAt, shows again as

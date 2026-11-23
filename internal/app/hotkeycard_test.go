@@ -76,7 +76,7 @@ func has(tt *ui.Tester, s string) bool { return slices.Contains(tt.Texts(), s) }
 func chooseRow(t *testing.T, l *launcher, id string) {
 	t.Helper()
 	for i := range l.rows {
-		if r := l.rows[i]; r.title == "" && !r.calc && r.own < 0 && l.items[r.item].ID == id {
+		if r := l.rows[i]; !r.calc && r.own < 0 && l.items[r.item].ID == id {
 			l.choose(i)
 			return
 		}
@@ -234,7 +234,7 @@ func TestHotkeyRowLabels(t *testing.T) {
 	l.g.settings.SetHotkey(settings.Hotkey{Preset: "p"}, "Ctrl+Alt+1")
 	typeQuery(l, "gocast")
 	for i := range l.rows {
-		if r := l.rows[i]; r.own < 0 && !r.calc && r.title == "" && l.items[r.item].ID == "preset:p" {
+		if r := l.rows[i]; r.own < 0 && !r.calc && l.items[r.item].ID == "preset:p" {
 			if got := l.rowLabel(i); got != "gocast, Preset, ~/Projects/gocast, shortcut Control Option 1" {
 				t.Errorf("preset: %q", got)
 			}
@@ -242,7 +242,7 @@ func TestHotkeyRowLabels(t *testing.T) {
 	}
 	typeQuery(l, "")
 	for i := range l.rows {
-		if r := l.rows[i]; r.own < 0 && !r.calc && r.title == "" && l.items[r.item].ID == "app:com.apple.Terminal" {
+		if r := l.rows[i]; r.own < 0 && !r.calc && l.items[r.item].ID == "app:com.apple.Terminal" {
 			if got := l.rowLabel(i); got != "Terminal, App, shortcut Option Command T" {
 				t.Errorf("Terminal: %q", got)
 			}

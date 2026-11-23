@@ -44,7 +44,7 @@ func panelTester(t *testing.T) (*launcher, *ui.Tester) {
 // the reverse (design.md 2.8.1).
 func TestPanelKeepsNothingHidden(t *testing.T) {
 	l, tt := panelTester(t)
-	search, clip := locales.SearchSuggestions(), locales.ClipPlaceholder()
+	search, clip := locales.ClipboardHistory(), locales.ClipPlaceholder()
 	has := func(s string) bool { return slices.Contains(tt.Texts(), s) }
 
 	// Created hidden, its first frame (which the window keeps) is empty.
@@ -122,7 +122,7 @@ func TestPanelRestoredAfterHiding(t *testing.T) {
 	tt.SetWindowHidden(true)
 	l.enterSearch(now.Add(40*time.Second + restoreFor))
 	tt.SetWindowHidden(false)
-	if l.query != "" || !slices.Contains(tt.Texts(), locales.SearchSuggestions()) {
+	if l.query != "" || !slices.Contains(tt.Texts(), locales.ClipboardHistory()) {
 		t.Errorf("after 90 s: %q, %q", l.query, tt.Texts())
 	}
 

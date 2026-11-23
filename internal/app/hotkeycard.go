@@ -75,8 +75,16 @@ func (l *launcher) hotkeyActions(h settings.Hotkey, name string, e entry) []acti
 	return as
 }
 
-// entryAccel is the hotkey of what a row opens, "" for none.
+// entryAccel is the hotkey of what a row opens, "" for none: for
+// Gocast's own item, its shortcut as the list under an empty query shows
+// it, Settings… ⌘, without one of its own (design.md 2.3, 2.5a).
 func (l *launcher) entryAccel(e entry) string {
+	if e.own != "" {
+		if i := ownIndex(l.own, e.own); i >= 0 {
+			return l.own[i].accel
+		}
+		return ""
+	}
 	if h, ok := entryHotkey(e); ok {
 		return l.g.settings.Hotkey(h)
 	}

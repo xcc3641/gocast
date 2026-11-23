@@ -101,7 +101,7 @@ func awakeTitles(l *launcher) []string {
 func chooseTitle(t *testing.T, l *launcher, title string) {
 	t.Helper()
 	for i, r := range l.rows {
-		if r.item >= 0 && r.title == "" && !r.calc && r.own < 0 && l.items[r.item].Title == title {
+		if r.item >= 0 && !r.calc && r.own < 0 && l.items[r.item].Title == title {
 			l.choose(i)
 			return
 		}
