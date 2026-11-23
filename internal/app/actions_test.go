@@ -273,9 +273,9 @@ func TestActionOrder(t *testing.T) {
 	}
 }
 
-// With System & Window, the longest of the filter in English, the search
-// field beside it keeps 200 at least (design.md 4.4): from its left edge
-// (8 + 12 + 6 before the text) to 10 short of the filter.
+// The search field beside the filter keeps 200 at least (design.md 4.4):
+// from its left edge (8 + 12 + 6 before the text) to 10 short of the
+// filter.
 func TestHotkeyPrefsSearchWidth(t *testing.T) {
 	for _, loc := range []string{"en", "zh-Hans"} {
 		useFakeActions(t)
@@ -287,9 +287,6 @@ func TestHotkeyPrefsSearchWidth(t *testing.T) {
 		}
 		if w := filter.Bounds.X - 10 - (field.Bounds.X - 26); w < 200 {
 			t.Errorf("%s: the search field is %.1f wide", loc, w)
-		}
-		if !has(tt, locales.HotkeysFilterActions()) {
-			t.Errorf("%s: no %q", loc, locales.HotkeysFilterActions())
 		}
 		// The placeholder whole in the field's text box: MyGo cuts it
 		// without an ellipsis.
@@ -365,8 +362,8 @@ func TestActionTieOrder(t *testing.T) {
 	}
 }
 
-// A row: the icon, the name, its tag; Run in the capsule; Cmd-K: Run and
-// its shortcut alone; read as "Lock Screen, System" (design.md 2.9).
+// A row: the icon, the name, its tag; Run in the capsule; Cmd-K: Run,
+// its shortcut and Hide from Search alone; read as "Lock Screen, System" (design.md 2.9).
 func TestActionRow(t *testing.T) {
 	l, tt, _ := actionPanel(t, "en")
 	typeQuery(l, "lock screen")
@@ -377,7 +374,7 @@ func TestActionRow(t *testing.T) {
 			t.Errorf("no %q in %q", s, tt.Texts())
 		}
 	}
-	if got := menuLabels(l); !slices.Equal(got, []string{"Run", "Set Shortcut…"}) {
+	if got := menuLabels(l); !slices.Equal(got, []string{"Run", "Set Shortcut…", "Hide from Search"}) {
 		t.Errorf("Cmd-K: %q", got)
 	}
 	if got := l.rowLabel(l.chosen); got != "Lock Screen, System" {
@@ -399,7 +396,7 @@ func TestActionRow(t *testing.T) {
 	if got := l.g.settings.Hotkey(h); got == "" || l.rec.on {
 		t.Fatalf("set: %q, recording %v", got, l.rec.on)
 	}
-	if got := menuLabels(l); !slices.Equal(got, []string{"Run", "Change Shortcut…", "Remove Shortcut"}) {
+	if got := menuLabels(l); !slices.Equal(got, []string{"Run", "Change Shortcut…", "Remove Shortcut", "Hide from Search"}) {
 		t.Errorf("Cmd-K with a shortcut: %q", got)
 	}
 	if got := l.rowLabel(l.chosen); !strings.HasPrefix(got, "Left Half, Window, ") {
@@ -727,26 +724,25 @@ func TestActionHotkeys(t *testing.T) {
 	}
 }
 
-// Settings › Shortcuts: the actions last, the system's then the
-// window's, in copy.md's order; the Actions filter leaves them alone.
+// Settings › Search & Shortcuts: the actions in System & Window, the
+// system's then Keep Awake's then the window's, in copy.md's order.
 func TestHotkeyPrefsActions(t *testing.T) {
 	useFakeActions(t)
 	p, tt, _ := hotkeyPrefs(t, "en")
-	var want []string
-	for _, a := range sysact.Actions {
-		want = append(want, actionPrefix+a.ID)
-	}
-	ids := shownIDs(p)
-	if len(ids) < len(want) || !slices.Equal(ids[len(ids)-len(want):], want) {
-		t.Fatalf("rows: %q", ids)
-	}
-	p.hk.filter = hkFilterActions
+	p.g.settings.SetCollapsed(settings.GroupGocast, true)
 	p.filterHotkeys(true)
 	tt.Frame()
-	if got := shownIDs(p); !slices.Equal(got, want) {
-		t.Errorf("Actions: %q", got)
+	want := systemRowIDs()
+	var got []string
+	for _, ln := range p.hk.lines {
+		if ln.group == settings.GroupSystem && ln.row >= 0 {
+			got = append(got, p.hk.rows[ln.row].id)
+		}
 	}
-	for _, s := range []string{"System & Window", "Lock Screen", "System"} {
+	if !slices.Equal(got, want) {
+		t.Fatalf("System & Window: %q", got)
+	}
+	for _, s := range []string{"System & Window", "Lock Screen"} {
 		if !has(tt, s) {
 			t.Errorf("no %q in %q", s, tt.Texts())
 		}
@@ -757,7 +753,7 @@ func TestHotkeyPrefsActions(t *testing.T) {
 	if got := shownIDs(p); !slices.Equal(got, []string{actionPrefix + sysact.ToggleAppearance}) {
 		t.Errorf("dark mode: %q", got)
 	}
-	if got := p.hotkeyRowLabel(0); got != "Toggle Appearance, System, "+locales.HotkeysNoShortcut() {
+	if got := p.hotkeyRowLabel(1); got != "Toggle Appearance, System, "+locales.HotkeysNoShortcut() {
 		t.Errorf("label %q", got)
 	}
 	// Set, a window action's.
@@ -827,7 +823,7 @@ func TestScreensActions(t *testing.T) {
 			p, tt, _ := hotkeyPrefs(t, loc)
 			tt.SetScale(2)
 			tt.SetDark(dark)
-			p.hk.filter = hkFilterActions
+			p.g.settings.SetCollapsed(settings.GroupGocast, true)
 			p.filterHotkeys(true)
 			_ = p.g.setHotkey(actionHotkey(sysact.LeftHalf), "Ctrl+Alt+Left")
 			name := "settings-actions-"
@@ -838,7 +834,7 @@ func TestScreensActions(t *testing.T) {
 			if loc == "en" {
 				continue
 			}
-			p.hk.list.ScrollTo(len(p.hk.shown)-1, ui.End)
+			p.hk.list.ScrollTo(rowIndex(t, p, actionPrefix+sysact.LeftHalf), ui.Start)
 			saveScreen(t, tt, dir, "settings-actions-window-"+mode, image.Rect(0, 0, prefsWidth, prefsHeight))
 		}
 	}

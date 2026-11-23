@@ -56,6 +56,9 @@ type gocastDo struct {
 	notes, newNote, searchNotes func()
 	notesKey, newNoteKey        string
 	searchNotesKey              string
+	// The hotkeys of Add Preset and Settings… (design.md 4.4), "" for
+	// none: Settings… then shows ⌘,.
+	addPresetKey, settingsKey string
 }
 
 // gocastItems are the rows of the Gocast group, in copy.md 2.2a's order:
@@ -74,12 +77,16 @@ func gocastItems(terminalKey, clipKey string, do gocastDo) []ownItem {
 	if do.update != "" {
 		own = append(own, ownItem{id: updateItemID, symbol: "arrow.down.circle", label: locales.UpdateRelaunchTo(do.update), run: do.relaunch})
 	}
+	settingsCaps := []string{"⌘", ","}
+	if do.settingsKey != "" {
+		settingsCaps = shortcut.Caps(do.settingsKey)
+	}
 	return append(own, []ownItem{
 		{id: clipItemID, symbol: "doc.on.clipboard", label: locales.ClipboardHistory(), caps: shortcut.Caps(clipKey), run: do.clipboard},
 		{id: notesItemID, symbol: ownSymbolOf(notesItemID), label: locales.NotesItem(), caps: shortcut.Caps(do.notesKey), run: do.notes},
 		{id: termItemID, symbol: "apple.terminal", label: locales.MenuTerminal(), caps: shortcut.Caps(terminalKey), run: do.terminal},
-		{id: addPresetItemID, symbol: "plus", label: locales.PresetsAdd(), run: do.addPreset},
-		{id: settingsItemID, symbol: "gearshape", label: locales.TraySettings(), caps: []string{"⌘", ","}, run: do.settings},
+		{id: addPresetItemID, symbol: "plus", label: locales.PresetsAdd(), caps: shortcut.Caps(do.addPresetKey), run: do.addPreset},
+		{id: settingsItemID, symbol: "gearshape", label: locales.TraySettings(), caps: settingsCaps, run: do.settings},
 		{id: quitItemID, symbol: "power", label: locales.TrayQuit(), run: do.quit},
 		{id: newNoteItemID, symbol: ownSymbolOf(newNoteItemID), label: locales.NotesNewItem(), caps: shortcut.Caps(do.newNoteKey), run: do.newNote, searched: true},
 		{id: searchNotesID, symbol: ownSymbolOf(searchNotesID), label: locales.NotesSearchItem(), caps: shortcut.Caps(do.searchNotesKey), run: do.searchNotes, searched: true},
@@ -278,10 +285,11 @@ func itemRows(results []int) []panelRow {
 }
 
 // suggestionRows lays out the list under an empty query: the suggestions
-// under their title, if any, then Gocast's own items under theirs. item
-// returns the index of the search item with an ID, or -1; Gocast's own
-// items show as theirs, the clipboard history too.
-func suggestionRows(suggestions []string, item func(id string) int, own []ownItem) []panelRow {
+// under their title, if any, then Gocast's own items under theirs, those
+// shown says (not hidden in the search, design.md 4.4). item returns the
+// index of the search item with an ID, or -1; Gocast's own items show as
+// theirs, the clipboard history too.
+func suggestionRows(suggestions []string, item func(id string) int, own []ownItem, shown func(id string) bool) []panelRow {
 	var rows []panelRow
 	for _, id := range suggestions {
 		r := panelRow{item: -1, own: -1}
@@ -298,13 +306,16 @@ func suggestionRows(suggestions []string, item func(id string) int, own []ownIte
 		}
 		rows = append(rows, r)
 	}
-	if len(own) > 0 {
-		rows = append(rows, panelRow{title: locales.SearchGocastGroup(), item: -1, own: -1})
-	}
+	titled := false
 	for i, o := range own {
-		if !o.searched {
-			rows = append(rows, panelRow{item: -1, own: i, group: true, later: o.id == updateItemID})
+		if o.searched || !shown(o.id) {
+			continue
 		}
+		if !titled {
+			rows = append(rows, panelRow{title: locales.SearchGocastGroup(), item: -1, own: -1})
+			titled = true
+		}
+		rows = append(rows, panelRow{item: -1, own: i, group: true, later: o.id == updateItemID})
 	}
 	return rows
 }

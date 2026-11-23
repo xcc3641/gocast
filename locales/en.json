@@ -300,9 +300,9 @@
   "@settingsTitle": {
     "description": "Title of the Settings window."
   },
-  "pageShortcuts": "Shortcuts",
+  "pageShortcuts": "Search & Shortcuts",
   "@pageShortcuts": {
-    "description": "Settings sidebar."
+    "description": "Settings sidebar, and the page's title (copy.md 19.1)."
   },
   "pagePresets": "Floating Terminal",
   "@pagePresets": {
@@ -2338,9 +2338,9 @@
       }
     }
   },
-  "hotkeysIntro": "Give anything a shortcut. Apps and presets open with one press and hide with another while in front. System and window actions just run.",
+  "hotkeysIntro": "Give anything a shortcut, or hide what you don’t need from search. Hidden items still work with their shortcuts.",
   "@hotkeysIntro": {
-    "description": "Settings › Shortcuts: line over the list (copy.md 11.3)."
+    "description": "Settings › Search & Shortcuts: line over the list (copy.md 19.1)."
   },
   "hotkeysSearch": "Search apps or presets",
   "@hotkeysSearch": {
@@ -2353,14 +2353,6 @@
   "hotkeysFilterSet": "With Shortcut",
   "@hotkeysFilterSet": {
     "description": "Settings › Shortcuts: filter, the rows with a shortcut (copy.md 11.3)."
-  },
-  "hotkeysFilterApps": "Apps",
-  "@hotkeysFilterApps": {
-    "description": "Settings › Shortcuts: filter (copy.md 11.3)."
-  },
-  "hotkeysFilterPresets": "Presets",
-  "@hotkeysFilterPresets": {
-    "description": "Settings › Shortcuts: filter (copy.md 11.3)."
   },
   "hotkeysFilter": "Show",
   "@hotkeysFilter": {
@@ -2431,6 +2423,106 @@
         "example": "Safari"
       }
     }
+  },
+  "hotkeysFilterHidden": "Hidden",
+  "@hotkeysFilterHidden": {
+    "description": "Settings › Search & Shortcuts: filter, the rows hidden in the search (copy.md 19.1)."
+  },
+  "groupGocast": "Gocast",
+  "@groupGocast": {
+    "description": "Settings › Search & Shortcuts: the group of Gocast's own items (copy.md 19.2)."
+  },
+  "groupSystem": "System & Window",
+  "@groupSystem": {
+    "description": "Settings › Search & Shortcuts: the group of the system's and the window's actions, Keep Awake too (copy.md 19.2)."
+  },
+  "groupPresets": "Presets",
+  "@groupPresets": {
+    "description": "Settings › Search & Shortcuts: the group of the terminal presets (copy.md 19.2)."
+  },
+  "groupSystemApps": "System Apps",
+  "@groupSystemApps": {
+    "description": "Settings › Search & Shortcuts: the group of the apps in /System/Applications (copy.md 19.2)."
+  },
+  "groupOtherApps": "Other Apps",
+  "@groupOtherApps": {
+    "description": "Settings › Search & Shortcuts: the group of the other apps (copy.md 19.2)."
+  },
+  "groupHiddenCount": "{m} hidden",
+  "@groupHiddenCount": {
+    "description": "Settings › Search & Shortcuts: after a group's count, while some of its rows are hidden (copy.md 19.2).",
+    "placeholders": {
+      "m": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "groupShowTip": "Show this group in search",
+  "@groupShowTip": {
+    "description": "Settings › Search & Shortcuts: tooltip of a group's switch (copy.md 19.2)."
+  },
+  "rowShowTip": "Show in search",
+  "@rowShowTip": {
+    "description": "Settings › Search & Shortcuts: tooltip of a row's switch (copy.md 19.3)."
+  },
+  "hiddenEmpty": "Nothing is hidden. Turn off the switch on any row to keep it out of search.",
+  "@hiddenEmpty": {
+    "description": "Settings › Search & Shortcuts: the filter Hidden with no rows (copy.md 19.4)."
+  },
+  "groupSpoken": "{group}, {n, plural, one {# item} other {# items}}",
+  "@groupSpoken": {
+    "description": "Screen reader: a group's title row, its name and count (copy.md 19.5).",
+    "placeholders": {
+      "group": {
+        "type": "String",
+        "example": "System Apps"
+      },
+      "n": {
+        "type": "int",
+        "example": "38"
+      }
+    }
+  },
+  "groupExpanded": "expanded",
+  "@groupExpanded": {
+    "description": "Screen reader: a group's title row, expanded (copy.md 19.5)."
+  },
+  "groupCollapsed": "collapsed",
+  "@groupCollapsed": {
+    "description": "Screen reader: a group's title row, collapsed (copy.md 19.5)."
+  },
+  "groupSwitchSpoken": "Show “{group}” in search",
+  "@groupSwitchSpoken": {
+    "description": "Screen reader: a group's switch; the system adds \"switch, on/off\" (copy.md 19.5).",
+    "placeholders": {
+      "group": {
+        "type": "String",
+        "example": "System Apps"
+      }
+    }
+  },
+  "rowSwitchSpoken": "Show “{name}” in search",
+  "@rowSwitchSpoken": {
+    "description": "Screen reader: a row's switch; the system adds \"switch, on/off\" (copy.md 19.5).",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Calendar"
+      }
+    }
+  },
+  "rowHiddenSpoken": "hidden from search",
+  "@rowHiddenSpoken": {
+    "description": "Screen reader: after a row hidden in the search (copy.md 19.5)."
+  },
+  "actionHideFromSearch": "Hide from Search",
+  "@actionHideFromSearch": {
+    "description": "Search panel, Cmd-K menu: the last item, hides the row's item in the search (copy.md 19.6)."
+  },
+  "hiddenFromSearchNotice": "Hidden from search. Undo in Settings.",
+  "@hiddenFromSearchNotice": {
+    "description": "Search panel: the notice after Hide from Search, for 6 seconds (copy.md 19.6)."
   },
   "actLockScreen": "Lock Screen",
   "@actLockScreen": {
@@ -2769,10 +2861,6 @@
   "winAXReady": "Ready to arrange windows",
   "@winAXReady": {
     "description": "The banner once Accessibility is allowed (copy.md 15.5)."
-  },
-  "hotkeysFilterActions": "System & Window",
-  "@hotkeysFilterActions": {
-    "description": "Settings › Shortcuts: the filter of the system and window actions (copy.md 15.7)."
   },
   "appFinder": "Finder",
   "@appFinder": {

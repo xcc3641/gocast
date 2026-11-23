@@ -176,14 +176,14 @@ func TestSuggestionRows(t *testing.T) {
 
 	// Gocast's own items show as theirs, the clipboard history too, and
 	// again in the Gocast group; what isn't there is skipped.
-	got := spellRows(suggestionRows([]string{"app:a", clipItemID, "app:gone", "gocast:settings", "preset:p"}, item, own), items, own)
+	got := spellRows(suggestionRows([]string{"app:a", clipItemID, "app:gone", "gocast:settings", "preset:p"}, item, own, allShown), items, own)
 	want := append([]string{"[Suggestions]", "app:a", "gocast:clipboard", "gocast:settings", "preset:p"}, group...)
 	if !slices.Equal(got, want) {
 		t.Errorf("rows:\n got %q\nwant %q", got, want)
 	}
 	// No suggestions: no title over none; the Gocast group, its first
 	// row first.
-	rows := suggestionRows(nil, item, own)
+	rows := suggestionRows(nil, item, own, allShown)
 	if got := spellRows(rows, items, own); !slices.Equal(got, group) {
 		t.Errorf("no suggestions: %q", got)
 	}
@@ -199,7 +199,7 @@ func TestSuggestionRows(t *testing.T) {
 func TestStepRow(t *testing.T) {
 	inLocale(t, "en")
 	own := gocastItems("", "", gocastDo{})
-	rows := suggestionRows([]string{"gocast:terminal", "gocast:settings"}, func(string) int { return -1 }, own)
+	rows := suggestionRows([]string{"gocast:terminal", "gocast:settings"}, func(string) int { return -1 }, own, allShown)
 	// [Suggestions] terminal settings [Gocast] clipboard notes terminal add settings quit
 	for _, c := range []struct{ from, step, want int }{
 		{1, 1, 2}, {2, 1, 4}, {4, -1, 2}, {1, -1, 1}, {9, 1, 9}, {9, 3, 9},
@@ -397,8 +397,9 @@ func TestLauncherSearchesOwnItems(t *testing.T) {
 			}
 			// As the clipboard history's result: its symbol, the Gocast tag.
 			e, _ := l.current()
-			if a := l.actions(); len(a) != 1 || a[0].icon != symbols[c.want] {
-				t.Errorf("%s %q: actions %+v, want %s alone", locale, c.query, a, symbols[c.want])
+			// Its action, then Hide from Search alone (design.md 2.5).
+			if a := l.actions(); len(a) != 2 || a[0].icon != symbols[c.want] || a[1].label != locales.ActionHideFromSearch() {
+				t.Errorf("%s %q: actions %+v, want %s and Hide from Search", locale, c.query, a, symbols[c.want])
 			}
 			if s := ownSymbol(l.own, e.own); s != symbols[c.want] {
 				t.Errorf("%s %q: symbol %s, want %s", locale, c.query, s, symbols[c.want])
@@ -414,3 +415,6 @@ func TestLauncherSearchesOwnItems(t *testing.T) {
 		t.Error("Quit Gocast scored, or Settings… not")
 	}
 }
+
+// allShown hides none of Gocast's own items.
+func allShown(string) bool { return true }

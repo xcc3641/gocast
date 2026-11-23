@@ -890,16 +890,16 @@ func (msgs Messages) SettingsTitle() string {
 	return Catalog.Format(msgs.locale, "settingsTitle", nil)
 }
 
-// PageShortcuts says "Shortcuts"
+// PageShortcuts says "Search & Shortcuts"
 // in the language the app shows.
 //
-// Settings sidebar.
+// Settings sidebar, and the page's title (copy.md 19.1).
 func PageShortcuts() string { return In(i18n.Locale()).PageShortcuts() }
 
-// PageShortcuts says "Shortcuts"
+// PageShortcuts says "Search & Shortcuts"
 // in the language of msgs.
 //
-// Settings sidebar.
+// Settings sidebar, and the page's title (copy.md 19.1).
 func (msgs Messages) PageShortcuts() string {
 	return Catalog.Format(msgs.locale, "pageShortcuts", nil)
 }
@@ -7744,16 +7744,16 @@ func (msgs Messages) HotkeySpoken(keys string) string {
 	return Catalog.Format(msgs.locale, "hotkeySpoken", map[string]any{"keys": keys})
 }
 
-// HotkeysIntro says "Give anything a shortcut. Apps and presets open with one press and hide with another while in front. System and windo…"
+// HotkeysIntro says "Give anything a shortcut, or hide what you don’t need from search. Hidden items still work with their shortcuts."
 // in the language the app shows.
 //
-// Settings › Shortcuts: line over the list (copy.md 11.3).
+// Settings › Search & Shortcuts: line over the list (copy.md 19.1).
 func HotkeysIntro() string { return In(i18n.Locale()).HotkeysIntro() }
 
-// HotkeysIntro says "Give anything a shortcut. Apps and presets open with one press and hide with another while in front. System and windo…"
+// HotkeysIntro says "Give anything a shortcut, or hide what you don’t need from search. Hidden items still work with their shortcuts."
 // in the language of msgs.
 //
-// Settings › Shortcuts: line over the list (copy.md 11.3).
+// Settings › Search & Shortcuts: line over the list (copy.md 19.1).
 func (msgs Messages) HotkeysIntro() string {
 	return Catalog.Format(msgs.locale, "hotkeysIntro", nil)
 }
@@ -7798,34 +7798,6 @@ func HotkeysFilterSet() string { return In(i18n.Locale()).HotkeysFilterSet() }
 // Settings › Shortcuts: filter, the rows with a shortcut (copy.md 11.3).
 func (msgs Messages) HotkeysFilterSet() string {
 	return Catalog.Format(msgs.locale, "hotkeysFilterSet", nil)
-}
-
-// HotkeysFilterApps says "Apps"
-// in the language the app shows.
-//
-// Settings › Shortcuts: filter (copy.md 11.3).
-func HotkeysFilterApps() string { return In(i18n.Locale()).HotkeysFilterApps() }
-
-// HotkeysFilterApps says "Apps"
-// in the language of msgs.
-//
-// Settings › Shortcuts: filter (copy.md 11.3).
-func (msgs Messages) HotkeysFilterApps() string {
-	return Catalog.Format(msgs.locale, "hotkeysFilterApps", nil)
-}
-
-// HotkeysFilterPresets says "Presets"
-// in the language the app shows.
-//
-// Settings › Shortcuts: filter (copy.md 11.3).
-func HotkeysFilterPresets() string { return In(i18n.Locale()).HotkeysFilterPresets() }
-
-// HotkeysFilterPresets says "Presets"
-// in the language of msgs.
-//
-// Settings › Shortcuts: filter (copy.md 11.3).
-func (msgs Messages) HotkeysFilterPresets() string {
-	return Catalog.Format(msgs.locale, "hotkeysFilterPresets", nil)
 }
 
 // HotkeysFilter says "Show"
@@ -8022,6 +7994,286 @@ func HotkeysUsedForSpoken(other string) string { return In(i18n.Locale()).Hotkey
 // Screen reader: a row in conflict (copy.md 11.4).
 func (msgs Messages) HotkeysUsedForSpoken(other string) string {
 	return Catalog.Format(msgs.locale, "hotkeysUsedForSpoken", map[string]any{"other": other})
+}
+
+// HotkeysFilterHidden says "Hidden"
+// in the language the app shows.
+//
+// Settings › Search & Shortcuts: filter, the rows hidden in the search
+// (copy.md 19.1).
+func HotkeysFilterHidden() string { return In(i18n.Locale()).HotkeysFilterHidden() }
+
+// HotkeysFilterHidden says "Hidden"
+// in the language of msgs.
+//
+// Settings › Search & Shortcuts: filter, the rows hidden in the search
+// (copy.md 19.1).
+func (msgs Messages) HotkeysFilterHidden() string {
+	return Catalog.Format(msgs.locale, "hotkeysFilterHidden", nil)
+}
+
+// GroupGocast says "Gocast"
+// in the language the app shows.
+//
+// Settings › Search & Shortcuts: the group of Gocast's own items (copy.md
+// 19.2).
+func GroupGocast() string { return In(i18n.Locale()).GroupGocast() }
+
+// GroupGocast says "Gocast"
+// in the language of msgs.
+//
+// Settings › Search & Shortcuts: the group of Gocast's own items (copy.md
+// 19.2).
+func (msgs Messages) GroupGocast() string {
+	return Catalog.Format(msgs.locale, "groupGocast", nil)
+}
+
+// GroupSystem says "System & Window"
+// in the language the app shows.
+//
+// Settings › Search & Shortcuts: the group of the system's and the
+// window's actions, Keep Awake too (copy.md 19.2).
+func GroupSystem() string { return In(i18n.Locale()).GroupSystem() }
+
+// GroupSystem says "System & Window"
+// in the language of msgs.
+//
+// Settings › Search & Shortcuts: the group of the system's and the
+// window's actions, Keep Awake too (copy.md 19.2).
+func (msgs Messages) GroupSystem() string {
+	return Catalog.Format(msgs.locale, "groupSystem", nil)
+}
+
+// GroupPresets says "Presets"
+// in the language the app shows.
+//
+// Settings › Search & Shortcuts: the group of the terminal presets
+// (copy.md 19.2).
+func GroupPresets() string { return In(i18n.Locale()).GroupPresets() }
+
+// GroupPresets says "Presets"
+// in the language of msgs.
+//
+// Settings › Search & Shortcuts: the group of the terminal presets
+// (copy.md 19.2).
+func (msgs Messages) GroupPresets() string {
+	return Catalog.Format(msgs.locale, "groupPresets", nil)
+}
+
+// GroupSystemApps says "System Apps"
+// in the language the app shows.
+//
+// Settings › Search & Shortcuts: the group of the apps in
+// /System/Applications (copy.md 19.2).
+func GroupSystemApps() string { return In(i18n.Locale()).GroupSystemApps() }
+
+// GroupSystemApps says "System Apps"
+// in the language of msgs.
+//
+// Settings › Search & Shortcuts: the group of the apps in
+// /System/Applications (copy.md 19.2).
+func (msgs Messages) GroupSystemApps() string {
+	return Catalog.Format(msgs.locale, "groupSystemApps", nil)
+}
+
+// GroupOtherApps says "Other Apps"
+// in the language the app shows.
+//
+// Settings › Search & Shortcuts: the group of the other apps (copy.md
+// 19.2).
+func GroupOtherApps() string { return In(i18n.Locale()).GroupOtherApps() }
+
+// GroupOtherApps says "Other Apps"
+// in the language of msgs.
+//
+// Settings › Search & Shortcuts: the group of the other apps (copy.md
+// 19.2).
+func (msgs Messages) GroupOtherApps() string {
+	return Catalog.Format(msgs.locale, "groupOtherApps", nil)
+}
+
+// GroupHiddenCount says "{m} hidden"
+// in the language the app shows.
+//
+// Settings › Search & Shortcuts: after a group's count, while some of its
+// rows are hidden (copy.md 19.2).
+func GroupHiddenCount(m int) string { return In(i18n.Locale()).GroupHiddenCount(m) }
+
+// GroupHiddenCount says "{m} hidden"
+// in the language of msgs.
+//
+// Settings › Search & Shortcuts: after a group's count, while some of its
+// rows are hidden (copy.md 19.2).
+func (msgs Messages) GroupHiddenCount(m int) string {
+	return Catalog.Format(msgs.locale, "groupHiddenCount", map[string]any{"m": m})
+}
+
+// GroupShowTip says "Show this group in search"
+// in the language the app shows.
+//
+// Settings › Search & Shortcuts: tooltip of a group's switch (copy.md
+// 19.2).
+func GroupShowTip() string { return In(i18n.Locale()).GroupShowTip() }
+
+// GroupShowTip says "Show this group in search"
+// in the language of msgs.
+//
+// Settings › Search & Shortcuts: tooltip of a group's switch (copy.md
+// 19.2).
+func (msgs Messages) GroupShowTip() string {
+	return Catalog.Format(msgs.locale, "groupShowTip", nil)
+}
+
+// RowShowTip says "Show in search"
+// in the language the app shows.
+//
+// Settings › Search & Shortcuts: tooltip of a row's switch (copy.md
+// 19.3).
+func RowShowTip() string { return In(i18n.Locale()).RowShowTip() }
+
+// RowShowTip says "Show in search"
+// in the language of msgs.
+//
+// Settings › Search & Shortcuts: tooltip of a row's switch (copy.md
+// 19.3).
+func (msgs Messages) RowShowTip() string {
+	return Catalog.Format(msgs.locale, "rowShowTip", nil)
+}
+
+// HiddenEmpty says "Nothing is hidden. Turn off the switch on any row to keep it out of search."
+// in the language the app shows.
+//
+// Settings › Search & Shortcuts: the filter Hidden with no rows (copy.md
+// 19.4).
+func HiddenEmpty() string { return In(i18n.Locale()).HiddenEmpty() }
+
+// HiddenEmpty says "Nothing is hidden. Turn off the switch on any row to keep it out of search."
+// in the language of msgs.
+//
+// Settings › Search & Shortcuts: the filter Hidden with no rows (copy.md
+// 19.4).
+func (msgs Messages) HiddenEmpty() string {
+	return Catalog.Format(msgs.locale, "hiddenEmpty", nil)
+}
+
+// GroupSpoken says "{group}, {n, plural, one {# item} other {# items}}"
+// in the language the app shows.
+//
+// Screen reader: a group's title row, its name and count (copy.md 19.5).
+func GroupSpoken(group string, n int) string { return In(i18n.Locale()).GroupSpoken(group, n) }
+
+// GroupSpoken says "{group}, {n, plural, one {# item} other {# items}}"
+// in the language of msgs.
+//
+// Screen reader: a group's title row, its name and count (copy.md 19.5).
+func (msgs Messages) GroupSpoken(group string, n int) string {
+	return Catalog.Format(msgs.locale, "groupSpoken", map[string]any{"group": group, "n": n})
+}
+
+// GroupExpanded says "expanded"
+// in the language the app shows.
+//
+// Screen reader: a group's title row, expanded (copy.md 19.5).
+func GroupExpanded() string { return In(i18n.Locale()).GroupExpanded() }
+
+// GroupExpanded says "expanded"
+// in the language of msgs.
+//
+// Screen reader: a group's title row, expanded (copy.md 19.5).
+func (msgs Messages) GroupExpanded() string {
+	return Catalog.Format(msgs.locale, "groupExpanded", nil)
+}
+
+// GroupCollapsed says "collapsed"
+// in the language the app shows.
+//
+// Screen reader: a group's title row, collapsed (copy.md 19.5).
+func GroupCollapsed() string { return In(i18n.Locale()).GroupCollapsed() }
+
+// GroupCollapsed says "collapsed"
+// in the language of msgs.
+//
+// Screen reader: a group's title row, collapsed (copy.md 19.5).
+func (msgs Messages) GroupCollapsed() string {
+	return Catalog.Format(msgs.locale, "groupCollapsed", nil)
+}
+
+// GroupSwitchSpoken says "Show “{group}” in search"
+// in the language the app shows.
+//
+// Screen reader: a group's switch; the system adds "switch, on/off"
+// (copy.md 19.5).
+func GroupSwitchSpoken(group string) string { return In(i18n.Locale()).GroupSwitchSpoken(group) }
+
+// GroupSwitchSpoken says "Show “{group}” in search"
+// in the language of msgs.
+//
+// Screen reader: a group's switch; the system adds "switch, on/off"
+// (copy.md 19.5).
+func (msgs Messages) GroupSwitchSpoken(group string) string {
+	return Catalog.Format(msgs.locale, "groupSwitchSpoken", map[string]any{"group": group})
+}
+
+// RowSwitchSpoken says "Show “{name}” in search"
+// in the language the app shows.
+//
+// Screen reader: a row's switch; the system adds "switch, on/off" (copy.md
+// 19.5).
+func RowSwitchSpoken(name string) string { return In(i18n.Locale()).RowSwitchSpoken(name) }
+
+// RowSwitchSpoken says "Show “{name}” in search"
+// in the language of msgs.
+//
+// Screen reader: a row's switch; the system adds "switch, on/off" (copy.md
+// 19.5).
+func (msgs Messages) RowSwitchSpoken(name string) string {
+	return Catalog.Format(msgs.locale, "rowSwitchSpoken", map[string]any{"name": name})
+}
+
+// RowHiddenSpoken says "hidden from search"
+// in the language the app shows.
+//
+// Screen reader: after a row hidden in the search (copy.md 19.5).
+func RowHiddenSpoken() string { return In(i18n.Locale()).RowHiddenSpoken() }
+
+// RowHiddenSpoken says "hidden from search"
+// in the language of msgs.
+//
+// Screen reader: after a row hidden in the search (copy.md 19.5).
+func (msgs Messages) RowHiddenSpoken() string {
+	return Catalog.Format(msgs.locale, "rowHiddenSpoken", nil)
+}
+
+// ActionHideFromSearch says "Hide from Search"
+// in the language the app shows.
+//
+// Search panel, Cmd-K menu: the last item, hides the row's item in the
+// search (copy.md 19.6).
+func ActionHideFromSearch() string { return In(i18n.Locale()).ActionHideFromSearch() }
+
+// ActionHideFromSearch says "Hide from Search"
+// in the language of msgs.
+//
+// Search panel, Cmd-K menu: the last item, hides the row's item in the
+// search (copy.md 19.6).
+func (msgs Messages) ActionHideFromSearch() string {
+	return Catalog.Format(msgs.locale, "actionHideFromSearch", nil)
+}
+
+// HiddenFromSearchNotice says "Hidden from search. Undo in Settings."
+// in the language the app shows.
+//
+// Search panel: the notice after Hide from Search, for 6 seconds (copy.md
+// 19.6).
+func HiddenFromSearchNotice() string { return In(i18n.Locale()).HiddenFromSearchNotice() }
+
+// HiddenFromSearchNotice says "Hidden from search. Undo in Settings."
+// in the language of msgs.
+//
+// Search panel: the notice after Hide from Search, for 6 seconds (copy.md
+// 19.6).
+func (msgs Messages) HiddenFromSearchNotice() string {
+	return Catalog.Format(msgs.locale, "hiddenFromSearchNotice", nil)
 }
 
 // ActLockScreen says "Lock Screen"
@@ -9196,22 +9448,6 @@ func WinAXReady() string { return In(i18n.Locale()).WinAXReady() }
 // The banner once Accessibility is allowed (copy.md 15.5).
 func (msgs Messages) WinAXReady() string {
 	return Catalog.Format(msgs.locale, "winAXReady", nil)
-}
-
-// HotkeysFilterActions says "System & Window"
-// in the language the app shows.
-//
-// Settings › Shortcuts: the filter of the system and window actions
-// (copy.md 15.7).
-func HotkeysFilterActions() string { return In(i18n.Locale()).HotkeysFilterActions() }
-
-// HotkeysFilterActions says "System & Window"
-// in the language of msgs.
-//
-// Settings › Shortcuts: the filter of the system and window actions
-// (copy.md 15.7).
-func (msgs Messages) HotkeysFilterActions() string {
-	return Catalog.Format(msgs.locale, "hotkeysFilterActions", nil)
 }
 
 // AppFinder says "Finder"

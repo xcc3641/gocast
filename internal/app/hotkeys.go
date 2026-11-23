@@ -144,6 +144,14 @@ func (g *gocast) hotkeyItems() []hotkeyItem {
 		h := settings.Hotkey{Note: id}
 		add(h, g.hotkeyLabel(h), nil)
 	}
+	for _, id := range settings.OwnItems {
+		h := settings.Hotkey{Own: id}
+		add(h, g.hotkeyLabel(h), nil)
+	}
+	for _, id := range awakeHotkeyItems() {
+		h := settings.Hotkey{Awake: id}
+		add(h, g.hotkeyLabel(h), nil)
+	}
 	return items
 }
 
@@ -183,6 +191,12 @@ func (g *gocast) hotkeyLabel(h settings.Hotkey) string {
 	}
 	if h.Note != "" {
 		return noteItemName(h.Note)
+	}
+	if h.Own != "" {
+		return ownHotkeyName(h.Own)
+	}
+	if h.Awake != "" {
+		return awakeItemName(h.Awake)
 	}
 	if h.App == "" {
 		if i := presets.Find(g.presets, h.Preset); i >= 0 {
@@ -327,6 +341,10 @@ func (g *gocast) hotkeyFunc(h settings.Hotkey) func() {
 		return func() { g.actionHotkeyPressed(h.Action) }
 	case h.Note != "":
 		return func() { g.notes.hotkey(h.Note) }
+	case h.Own != "":
+		return func() { g.ownHotkeyPressed(h.Own) }
+	case h.Awake != "":
+		return func() { g.awakeHotkeyPressed(h.Awake) }
 	}
 	return func() { g.presetHotkeyPressed(h.Preset) }
 }

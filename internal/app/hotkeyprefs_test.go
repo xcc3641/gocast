@@ -48,36 +48,81 @@ func addGone(p *prefsWindow) {
 	p.g.hotkeyStates[h] = p.g.registerHotkey(h)
 }
 
-// shownIDs are the IDs of the rows the list shows.
+// shownIDs are the IDs of the rows the list shows, without the groups'
+// titles.
 func shownIDs(p *prefsWindow) []string {
 	var ids []string
-	for _, i := range p.hk.shown {
-		ids = append(ids, p.hk.rows[i].id)
+	for _, ln := range p.hk.lines {
+		if ln.row >= 0 {
+			ids = append(ids, p.hk.rows[ln.row].id)
+		}
 	}
 	return ids
 }
 
-// rowIndex is where the row with the ID shows, failing if it does not.
+// lineIDs are the lines the list shows: the rows' IDs, "[group]" for a
+// group's title.
+func lineIDs(p *prefsWindow) []string {
+	var ids []string
+	for _, ln := range p.hk.lines {
+		if ln.row < 0 {
+			ids = append(ids, "["+ln.group+"]")
+			continue
+		}
+		ids = append(ids, p.hk.rows[ln.row].id)
+	}
+	return ids
+}
+
+// rowIndex is the line where the row with the ID shows, failing if it
+// does not.
 func rowIndex(t *testing.T, p *prefsWindow, id string) int {
 	t.Helper()
-	i := slices.Index(shownIDs(p), id)
+	i := slices.Index(lineIDs(p), id)
 	if i < 0 {
-		t.Fatalf("no row %s in %q", id, shownIDs(p))
+		t.Fatalf("no row %s in %q", id, lineIDs(p))
 	}
 	return i
 }
 
+// gocastRowIDs are the rows of the Gocast group, in order (design.md
+// 4.4).
+var gocastRowIDs = []string{"own:1", "own:2", "own:3", "note:open", "note:new", "note:search", addPresetItemID, settingsItemID, quitItemID}
+
+// systemRowIDs are the rows of System & Window: the system's actions,
+// Keep Awake's, the window's.
+func systemRowIDs() []string {
+	var ids []string
+	for _, a := range sysact.Actions {
+		if a.Kind != sysact.KindWindow {
+			ids = append(ids, actionPrefix+a.ID)
+		}
+	}
+	ids = append(ids, "awake:toggle", "awake:30", "awake:60", "awake:120", "awake:240")
+	for _, a := range sysact.Actions {
+		if a.Kind == sysact.KindWindow {
+			ids = append(ids, actionPrefix+a.ID)
+		}
+	}
+	return ids
+}
+
+// The rows by group (design.md 4.4): Gocast's, the system's with Keep
+// Awake's, the presets, the apps in /System/Applications (Utilities
+// too), the others.
 func TestHotkeyPrefsRows(t *testing.T) {
 	p, tt, _ := hotkeyPrefs(t, "en")
-	// The notes' three after Gocast's own (design.md 11.1).
-	want := []string{"own:1", "own:2", "own:3", "note:open", "note:new", "note:search", "app:com.apple.finder", "preset:p", "app:com.apple.Notes", "app:com.apple.Safari", "app:com.apple.Terminal"}
-	for _, a := range sysact.Actions { // last (TestHotkeyPrefsActions)
-		want = append(want, actionPrefix+a.ID)
-	}
-	if got := shownIDs(p); !slices.Equal(got, want) {
+	p.g.settings.CollapsedGroups = nil
+	p.filterHotkeys(true)
+	want := append([]string{"[gocast]"}, gocastRowIDs...)
+	want = append(append(want, "[system]"), systemRowIDs()...)
+	want = append(want, "[presets]", "preset:p", "[systemApps]", "app:com.apple.Notes", "app:com.apple.Terminal",
+		"[otherApps]", "app:com.apple.finder", "app:com.apple.Safari")
+	if got := lineIDs(p); !slices.Equal(got, want) {
 		t.Fatalf("rows:\n%q\nwant\n%q", got, want)
 	}
-	for _, s := range []string{locales.ShortcutLauncher(), "Terminal", locales.HotkeysSetShortcut(), locales.HotkeysIntro()} {
+	want = shownIDs(p)
+	for _, s := range []string{locales.ShortcutLauncher(), locales.GroupGocast(), locales.HotkeysSetShortcut(), locales.HotkeysIntro()} {
 		if !has(tt, s) {
 			t.Errorf("no %q in %q", s, tt.Texts())
 		}
@@ -95,20 +140,19 @@ func TestHotkeyPrefsRows(t *testing.T) {
 	tt.Key(ui.Cmd, ui.KeyA)
 	tt.Type("zzz")
 	tt.Frame()
-	if len(p.hk.shown) != 0 || !has(tt, locales.HotkeysNoMatch()) {
+	if len(p.hk.lines) != 0 || !has(tt, locales.HotkeysNoMatch()) {
 		t.Errorf("no match: %q %q", shownIDs(p), tt.Texts())
 	}
 	tt.Key(0, ui.KeyEscape)
 	tt.Frame()
-	if p.hk.query != "" || len(p.hk.shown) != len(want) {
-		t.Errorf("Escape: %q, %d rows", p.hk.query, len(p.hk.shown))
+	if p.hk.query != "" || len(p.hk.matched) != len(want) {
+		t.Errorf("Escape: %q, %d rows", p.hk.query, len(p.hk.matched))
 	}
 
 	// The filters.
 	for f, ids := range map[int][]string{
-		hkFilterSet:     {"own:1", "own:2", "own:3", "app:com.apple.Terminal"},
-		hkFilterApps:    {"app:com.apple.finder", "app:com.apple.Notes", "app:com.apple.Safari", "app:com.apple.Terminal"},
-		hkFilterPresets: {"preset:p"},
+		hkFilterSet:    {"own:1", "own:2", "own:3", "app:com.apple.Terminal"},
+		hkFilterHidden: nil,
 	} {
 		p.hk.filter = f
 		p.filterHotkeys(true)
@@ -320,7 +364,8 @@ func TestHotkeyPrefsLabels(t *testing.T) {
 	if got := label("app:com.apple.Safari"); got != "Safari, press the new shortcut" {
 		t.Errorf("recording: %q", got)
 	}
-	tt.Frame()
+	tt.Frame() // scrolled to
+	tt.Frame() // the recorder focused
 	tt.Key(ui.Alt|ui.Cmd, ui.KeyT)
 	tt.Frame()
 	if got := label("app:com.apple.Safari"); got != "Safari, this shortcut is already used for “Terminal”" {
@@ -385,6 +430,7 @@ func TestHotkeyPrefsStoredNames(t *testing.T) {
 	tt.Key(0, ui.KeyEscape)
 	tt.Frame()
 	p.startRecording(rowIndex(t, p, "app:com.apple.Notes"))
+	tt.Frame()
 	tt.Frame()
 	tt.Key(ui.Alt|ui.Cmd, ui.KeyW)
 	tt.Frame()

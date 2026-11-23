@@ -824,8 +824,22 @@ func (l *launcher) redraw() {
 }
 
 // actions are what the menu offers for the result chosen, its primary
-// action first (copy.md 2.2).
+// action first (copy.md 2.2), Hide from Search last when it may be hidden
+// (design.md 2.5).
 func (l *launcher) actions() []action {
+	as := l.rowActions()
+	if len(as) == 0 {
+		return as
+	}
+	if a, ok := l.hideAction(); ok {
+		as = append(as, a)
+	}
+	return as
+}
+
+// rowActions are the menu's actions for the result chosen, but Hide from
+// Search.
+func (l *launcher) rowActions() []action {
 	e, ok := l.current()
 	if !ok {
 		return nil
@@ -1050,20 +1064,26 @@ func (l *launcher) sayAction(n actionNotice) {
 	l.notice, l.noticeDanger, l.announce = n.text, false, true
 	l.noticeAct = &n
 	l.noticeGen++
-	if n.settings == "" {
+	switch {
+	case n.long:
+		l.fadeNoticeAfter(hiddenNoticeFor)
+	case n.settings == "":
 		l.fadeNotice()
-	} else {
+	default:
 		l.redraw()
 	}
 }
 
 // fadeNotice clears the notice said last after a few seconds.
-func (l *launcher) fadeNotice() {
+func (l *launcher) fadeNotice() { l.fadeNoticeAfter(noticeFor) }
+
+// fadeNoticeAfter clears the notice said last after d.
+func (l *launcher) fadeNoticeAfter(d time.Duration) {
 	gen := l.noticeGen
 	if l.win == nil { // drawn in a test
 		return
 	}
-	time.AfterFunc(noticeFor, func() {
+	time.AfterFunc(d, func() {
 		l.win.Update(func() {
 			if l.noticeGen == gen {
 				l.notice, l.noticeAct = "", nil
@@ -1092,6 +1112,8 @@ func (l *launcher) ownItems() []ownItem {
 		notesKey:       l.g.settings.Hotkey(settings.Hotkey{Note: settings.NoteOpen}),
 		newNoteKey:     l.g.settings.Hotkey(settings.Hotkey{Note: settings.NoteNew}),
 		searchNotesKey: l.g.settings.Hotkey(settings.Hotkey{Note: settings.NoteSearch}),
+		addPresetKey:   l.g.settings.Hotkey(settings.Hotkey{Own: settings.OwnAddPreset}),
+		settingsKey:    l.g.settings.Hotkey(settings.Hotkey{Own: settings.OwnSettings}),
 	})
 }
 
@@ -1203,9 +1225,10 @@ const noQuery = "\x00"
 func (l *launcher) find() []panelRow {
 	l.evalCalc()
 	if l.empty() {
-		return suggestionRows(suggested(l.ranked, padIDs(l.g.presets), l.exists), l.itemIndex, l.own)
+		return suggestionRows(suggested(l.ranked, padIDs(l.g.presets), l.suggestable), l.itemIndex, l.own, l.shownOwn)
 	}
-	rows := l.awakeRows(itemRows(search.Filter(l.items, l.query, l.g.usage.Choice(l.query, time.Now()))))
+	// Those hidden left out (design.md 4.4).
+	rows := l.awakeRows(l.withoutHidden(itemRows(search.Filter(l.items, l.query, l.g.usage.Choice(l.query, time.Now())))))
 	if l.calcOn { // the calculator's card first (design.md 2.3a)
 		rows = append([]panelRow{{calc: true, item: -1, own: -1}}, rows...)
 	}

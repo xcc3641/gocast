@@ -1,9 +1,10 @@
 package app
 
-// Settings › Shortcuts (design.md 4.4, copy.md 11.3): one list of all
-// that can have a shortcut, searched and filtered, each row recording its
-// own inline: Gocast's own three first, then every app the search panel
-// knows and every terminal preset, by name.
+// Settings › Search & Shortcuts (design.md 4.4, copy.md 19, 11.3): one
+// list of all the search panel finds, and the rest that can have a
+// shortcut, in fixed groups (Gocast, System & Window, Presets, System
+// Apps, Other Apps), searched and filtered; each row records its own
+// shortcut inline, and its switch says whether the search shows it.
 
 import (
 	"errors"
@@ -16,6 +17,7 @@ import (
 	"github.com/egoist/mygo/plugins/sfsymbols"
 	"github.com/egoist/mygo/ui"
 
+	"gocast/internal/keepawake"
 	"gocast/internal/search"
 	"gocast/internal/settings"
 	"gocast/internal/shortcut"
@@ -24,22 +26,25 @@ import (
 )
 
 // The Settings window's size (design.md 4.1): room for the shortcuts'
-// name, type and recorder columns, about 11 rows high.
+// name, recorder and switch columns, about 11 rows high.
 const (
 	prefsWidth  = 820
 	prefsHeight = 580
 )
 
-// The measures of the shortcuts list (design.md 4.4).
+// The measures of the list (design.md 4.4).
 const (
 	hkRowHeight   = 36
+	hkTitleHeight = 40 // a group's title
 	hkRowPad      = 10 // a row's padding, left and right
 	hkListPad     = 4  // the list's block, around the list
 	hkIcon        = 20
-	hkTypeWidth   = 56
-	hkTypeGap     = 12 // between the type and the recorder
+	hkRecGap      = 12 // between the name and the recorder
 	hkRecWidth    = 150
 	hkRecHeight   = 24
+	hkSwitchGap   = 16 // between the recorder and the switch
+	hkSwitchW     = 32 // the small switch
+	hkSwitchH     = 18
 	hkDescLeft    = hkIcon + 10 // the line under a row, from the row's padding: under the name
 	hkNoteHeight  = 52          // the line under Gocast's own in With Shortcut, none set
 	hkExpandFor   = 120 * time.Millisecond
@@ -58,12 +63,10 @@ const hkNoteWidth = hkListWidth - 2*20
 const (
 	hkFilterAll = iota
 	hkFilterSet
-	hkFilterApps
-	hkFilterPresets
-	hkFilterActions
+	hkFilterHidden
 )
 
-// The kinds of row, which its type label says.
+// The kinds of row, which assistive technology reads.
 const (
 	hkGocast = iota
 	hkApp
@@ -78,21 +81,43 @@ var errSpotlightBusy = errors.New("spotlight has Cmd-Space")
 
 // hkRow is a row of the list.
 type hkRow struct {
-	id      string          // "own:1", "app:" + bundle ID, "preset:" + ID, "action:" + ID
-	own     int             // 1 to 3 for Gocast's own, by its row; else 0
-	item    settings.Hotkey // an app's, preset's or action's
-	kind    int
-	name    string
-	path    string // an app's bundle, "" for a preset or an app missing
-	missing bool   // an app not installed, kept for its hotkey
-	match   search.Item
+	// id: "own:1" to "own:3", "note:" + item, "gocast:" + item, "app:"
+	// + bundle ID, "preset:" + ID, "action:" + ID, "awake:" + item.
+	id   string
+	own  int             // 1 to 3 for Gocast's own shortcuts, by its row; else 0
+	item settings.Hotkey // the others', but Quit Gocast's
+	// noKeys: no recorder, Quit Gocast (design.md 4.4).
+	noKeys bool
+	kind   int
+	group  string // one of settings.Groups
+	// searchID is the search item the row's switch hides, "" for no
+	// switch (the search panel's own shortcut).
+	searchID string
+	symbol   string // a Gocast row's or Keep Awake's, on a square
+	name     string
+	path     string // an app's bundle, "" for a preset or an app missing
+	missing  bool   // an app not installed, kept for its hotkey
+	match    search.Item
 }
 
-// hotkeyPage is the state of Settings › Shortcuts.
+// hkLine is a line of the list: a group's title (row -1) or a row.
+type hkLine struct {
+	group string
+	row   int
+}
+
+// hotkeyPage is the state of Settings › Search & Shortcuts.
 type hotkeyPage struct {
-	rows  []hkRow // all, Gocast's own then by name
-	made  string  // what rows were made of (hotkeyRowsOf)
-	shown []int   // the rows the query and filter leave, in order
+	rows []hkRow // all, by group, in their order
+	made string  // what rows were made of (hotkeyRowsOf)
+	// matched are the rows the query and filter left as they last
+	// changed, in order: a row changed since (its shortcut cleared,
+	// shown again) stays until they change (design.md 4.4).
+	matched []int
+	lines   []hkLine // what the list shows: the groups' titles, their rows
+	// folded are the groups collapsed while searching, which shows them
+	// all: until the query changes, the settings' kept as they are.
+	folded []string
 	// none: With Shortcut, and no app or preset has one: a line says so
 	// under Gocast's own, as the list's last row.
 	none   bool
@@ -150,25 +175,75 @@ func (p *prefsWindow) hotkeyRowsOf() string {
 	return b.String()
 }
 
-// makeHotkeyRows makes the rows: Gocast's own, then the presets, the apps
-// the search panel knows and the apps with a hotkey it does not, by name
-// (Chinese names by their pinyin), as the search panel sorts them; last
-// the system's actions, then the window's, in copy.md's order (design.md
-// 4.4: Left Half, Right Half... together).
+// makeHotkeyRows makes the rows, by group (design.md 4.4): Gocast's, in
+// their order; the system's actions, Keep Awake's rows, the window's
+// actions, in copy.md's order (Left Half, Right Half... together); the
+// presets, the system's apps and the others, those with a hotkey the
+// search panel does not know too, by name (Chinese names by their
+// pinyin), as the search panel sorts them.
 func (p *prefsWindow) makeHotkeyRows() []hkRow {
 	g, l := p.g, p.g.launcher
-	rows := make([]hkRow, 0, 3+len(g.presets)+len(l.apps)+len(sysact.Actions))
+	rows := make([]hkRow, 0, 9+len(g.presets)+len(l.apps)+len(sysact.Actions)+5)
+	gocast := func(r hkRow) {
+		r.kind, r.group = hkGocast, settings.GroupGocast
+		names := ownSearchNames(r.searchID, "")
+		if r.own > 0 {
+			names = nil
+		}
+		r.match = search.NewItem(r.id, r.name, names...)
+		rows = append(rows, r)
+	}
+	ownIDs := [4]string{"", "", termItemID, clipItemID} // the search panel's own has no item
 	for r := 1; r <= 3; r++ {
-		id := "own:" + strconv.Itoa(r)
-		rows = append(rows, hkRow{id: id, own: r, kind: hkGocast, name: shortcutLabel(r), match: search.NewItem(id, shortcutLabel(r))})
+		gocast(hkRow{id: "own:" + strconv.Itoa(r), own: r, name: shortcutLabel(r), searchID: ownIDs[r]})
 	}
-	// The notes' three after them, Gocast's too, with no default
-	// (design.md 11.1, copy.md 16.8).
+	// The notes' three after them, with no default (design.md 11.1,
+	// copy.md 16.8).
 	for _, item := range settings.NoteItems {
-		id, name := "note:"+item, noteItemName(item)
-		rows = append(rows, hkRow{id: id, item: settings.Hotkey{Note: item}, kind: hkGocast, name: name,
-			match: search.NewItem(id, name, ownSearchNames(noteOwnID(item), "")...)})
+		gocast(hkRow{id: "note:" + item, item: settings.Hotkey{Note: item}, name: noteItemName(item),
+			searchID: noteOwnID(item), symbol: ownSymbolOf(noteOwnID(item))})
 	}
+	for _, item := range settings.OwnItems {
+		id, symbol := ownHotkeyItemID(item), "plus"
+		if item == settings.OwnSettings {
+			symbol = "gearshape"
+		}
+		gocast(hkRow{id: id, item: settings.Hotkey{Own: item}, name: ownHotkeyName(item), searchID: id, symbol: symbol})
+	}
+	gocast(hkRow{id: quitItemID, noKeys: true, name: locales.TrayQuit(), searchID: quitItemID, symbol: "power"})
+
+	// The system's actions, Keep Awake's rows after them, then the
+	// window's.
+	action := func(a sysact.Action) {
+		id, name, kind := actionPrefix+a.ID, actionName(a.ID), hkSystem
+		if a.Kind == sysact.KindWindow {
+			kind = hkWindow
+		}
+		rows = append(rows, hkRow{id: id, item: actionHotkey(a.ID), kind: kind, group: settings.GroupSystem, name: name,
+			searchID: id, match: search.NewItem(id, name, actionSearchNames(a.ID)...)})
+	}
+	for _, a := range sysact.Actions {
+		if a.Kind != sysact.KindWindow {
+			action(a)
+		}
+	}
+	en, zh := locales.In("en"), locales.In("zh-Hans")
+	awakeNames := []string{en.AwakeTitle(), zh.AwakeTitle()}
+	for _, item := range awakeHotkeyItems() {
+		id, name := awakeItemID(item), awakeItemName(item)
+		names := awakeNames
+		if r, ok := awakeRequest(item); ok { // by their names in both languages too
+			names = append([]string{keepawake.Words{Msgs: en}.Title(r, time.Time{}), keepawake.Words{Msgs: zh}.Title(r, time.Time{})}, names...)
+		}
+		rows = append(rows, hkRow{id: id, item: settings.Hotkey{Awake: item}, kind: hkSystem, group: settings.GroupSystem,
+			name: name, searchID: id, symbol: "cup.and.saucer", match: search.NewItem(id, name, names...)})
+	}
+	for _, a := range sysact.Actions {
+		if a.Kind == sysact.KindWindow {
+			action(a)
+		}
+	}
+
 	type keyed struct {
 		row hkRow
 		key string
@@ -177,7 +252,7 @@ func (p *prefsWindow) makeHotkeyRows() []hkRow {
 	add := func(r hkRow) { items = append(items, keyed{r, search.SortKey(r.name)}) }
 	for _, ps := range g.presets {
 		id, name := "preset:"+ps.ID, presetTitle(ps)
-		add(hkRow{id: id, item: settings.Hotkey{Preset: ps.ID}, kind: hkPreset, name: name, match: search.NewItem(id, name)})
+		add(hkRow{id: id, item: settings.Hotkey{Preset: ps.ID}, kind: hkPreset, group: settings.GroupPresets, name: name, searchID: id, match: search.NewItem(id, name)})
 	}
 	known := make(map[string]bool, len(l.apps))
 	for i, a := range l.apps {
@@ -187,7 +262,7 @@ func (p *prefsWindow) makeHotkeyRows() []hkRow {
 			alts = l.alts[i]
 		}
 		id := "app:" + a.ID
-		add(hkRow{id: id, item: settings.Hotkey{App: a.ID}, kind: hkApp, name: a.Name, path: a.Path, match: search.NewItem(id, a.Name, alts...)})
+		add(hkRow{id: id, item: settings.Hotkey{App: a.ID}, kind: hkApp, group: itemGroup(id, a.Path), name: a.Name, path: a.Path, searchID: id, match: search.NewItem(id, a.Name, alts...)})
 	}
 	for _, h := range g.settings.Hotkeys() {
 		if h.App == "" || known[h.App] {
@@ -202,20 +277,17 @@ func (p *prefsWindow) makeHotkeyRows() []hkRow {
 		} else {
 			r.name = strings.TrimSuffix(filepath.Base(r.path), ".app")
 		}
+		r.searchID, r.group = r.id, itemGroup(r.id, r.path)
 		r.match = search.NewItem(r.id, r.name)
 		add(r)
 	}
 	slices.SortStableFunc(items, func(a, b keyed) int { return strings.Compare(a.key, b.key) })
-	for _, it := range items {
-		rows = append(rows, it.row)
-	}
-	for _, a := range sysact.Actions {
-		id, name, kind := actionPrefix+a.ID, actionName(a.ID), hkSystem
-		if a.Kind == sysact.KindWindow {
-			kind = hkWindow
+	for _, group := range []string{settings.GroupPresets, settings.GroupSystemApps, settings.GroupOtherApps} {
+		for _, it := range items {
+			if it.row.group == group {
+				rows = append(rows, it.row)
+			}
 		}
-		rows = append(rows, hkRow{id: id, item: actionHotkey(a.ID), kind: kind, name: name,
-			match: search.NewItem(id, name, actionSearchNames(a.ID)...)})
 	}
 	return rows
 }
@@ -244,14 +316,21 @@ func (p *prefsWindow) enterShortcuts() {
 	p.hk.search.Focus()
 }
 
+// rowHidden reports whether the search leaves out the row's item.
+func (p *prefsWindow) rowHidden(r *hkRow) bool {
+	return r.searchID != "" && p.g.settings.Hidden(r.searchID, r.group)
+}
+
 // filterHotkeys finds the rows the query and the filter leave, in their
-// order; with top, the first chosen, at the top. A row whose hotkey was
-// cleared under With Shortcut stays until this runs again (design.md
-// 4.4: it does not go from under the pointer).
+// order, and lays them out; with top, the first line chosen, at the top.
+// A row whose hotkey was cleared under With Shortcut, or shown again
+// under Hidden, stays until this runs again (design.md 4.4: it does not
+// go from under the pointer).
 func (p *prefsWindow) filterHotkeys(top bool) {
 	h := &p.hk
 	q := strings.TrimSpace(h.query)
-	h.shown = h.shown[:0]
+	h.matched = h.matched[:0]
+	h.folded = nil
 	anySet := false
 	for i := range h.rows {
 		r := &h.rows[i]
@@ -264,16 +343,8 @@ func (p *prefsWindow) filterHotkeys(top bool) {
 			if r.own == 0 && accel == "" {
 				continue
 			}
-		case hkFilterApps:
-			if r.kind != hkApp {
-				continue
-			}
-		case hkFilterPresets:
-			if r.kind != hkPreset {
-				continue
-			}
-		case hkFilterActions:
-			if r.kind != hkSystem && r.kind != hkWindow {
+		case hkFilterHidden:
+			if !p.rowHidden(r) {
 				continue
 			}
 		}
@@ -282,13 +353,148 @@ func (p *prefsWindow) filterHotkeys(top bool) {
 				continue
 			}
 		}
-		h.shown = append(h.shown, i)
+		h.matched = append(h.matched, i)
 	}
-	h.none = h.filter == hkFilterSet && !anySet && len(h.shown) > 0
+	h.none = h.filter == hkFilterSet && !anySet && len(h.matched) > 0
+	p.layoutHotkeys()
 	if top {
 		h.list.Choose(0)
 		h.list.ScrollTo(0, ui.Start)
 	}
+}
+
+// collapsed reports whether the list shows the group collapsed: as the
+// settings keep it, but all expanded while searching, unless collapsed
+// since (design.md 4.4).
+func (p *prefsWindow) collapsed(group string) bool {
+	if strings.TrimSpace(p.hk.query) != "" {
+		return slices.Contains(p.hk.folded, group)
+	}
+	return p.g.settings.Collapsed(group)
+}
+
+// layoutHotkeys lays out the rows matched by group, under their titles,
+// a group collapsed by its title alone, a group with none not at all;
+// the choice stays on its line.
+func (p *prefsWindow) layoutHotkeys() {
+	h := &p.hk
+	var was any
+	if h.chosen >= 0 && h.chosen < len(h.lines) {
+		was = p.lineKey(h.chosen)
+	}
+	h.lines = h.lines[:0]
+	for _, group := range settings.Groups {
+		at := len(h.lines)
+		for _, i := range h.matched {
+			if h.rows[i].group != group {
+				continue
+			}
+			if len(h.lines) == at {
+				h.lines = append(h.lines, hkLine{group: group, row: -1})
+				if p.collapsed(group) {
+					break
+				}
+			}
+			h.lines = append(h.lines, hkLine{group: group, row: i})
+		}
+	}
+	if was != nil {
+		for i := range h.lines {
+			if p.lineKey(i) == was {
+				h.list.Choose(i)
+				break
+			}
+		}
+	}
+}
+
+// groupCounts are how many rows of the group the list has, and how many
+// of them the search leaves out (design.md 4.4).
+func (p *prefsWindow) groupCounts(group string) (n, hidden int) {
+	for _, i := range p.hk.matched {
+		r := &p.hk.rows[i]
+		if r.group != group {
+			continue
+		}
+		n++
+		if p.rowHidden(r) {
+			hidden++
+		}
+	}
+	return n, hidden
+}
+
+// toggleGroup collapses the group, or expands it, keeping it so in the
+// settings; while searching, only until the query changes.
+func (p *prefsWindow) toggleGroup(group string) {
+	p.stopRecording(false)
+	if strings.TrimSpace(p.hk.query) != "" {
+		if i := slices.Index(p.hk.folded, group); i >= 0 {
+			p.hk.folded = slices.Delete(p.hk.folded, i, i+1)
+		} else {
+			p.hk.folded = append(p.hk.folded, group)
+		}
+	} else {
+		p.g.settings.SetCollapsed(group, !p.g.settings.Collapsed(group))
+		p.g.saveSettings()
+	}
+	p.layoutHotkeys()
+	p.hk.scroll = true
+	p.redraw()
+}
+
+// setGroupFolded collapses or expands the group, if it is not so.
+func (p *prefsWindow) setGroupFolded(group string, fold bool) {
+	if p.collapsed(group) != fold {
+		p.toggleGroup(group)
+	}
+}
+
+// groupShown reports whether the search shows the group: not hidden
+// whole.
+func (p *prefsWindow) groupShown(group string) bool { return !p.g.settings.GroupHidden(group) }
+
+// setRowShown shows the row's item in the search, or hides it, at once.
+func (p *prefsWindow) setRowShown(r *hkRow, on bool) {
+	if r.searchID == "" {
+		return
+	}
+	p.g.setSearchHidden(r.searchID, r.group, !on)
+	p.redraw()
+}
+
+// setGroupShown shows the group in the search, or hides it whole, at
+// once.
+func (p *prefsWindow) setGroupShown(group string, on bool) {
+	p.g.setGroupHidden(group, !on)
+	p.redraw()
+}
+
+// toggleShown turns the switch of the line chosen: its row's, or its
+// group's (design.md 4.4: Space, the list focused).
+func (p *prefsWindow) toggleShown() {
+	h := &p.hk
+	if h.chosen < 0 || h.chosen >= len(h.lines) {
+		return
+	}
+	if r := p.hkRowAt(h.chosen); r != nil {
+		p.setRowShown(r, p.rowHidden(r))
+		return
+	}
+	group := h.lines[h.chosen].group
+	p.setGroupShown(group, !p.groupShown(group))
+}
+
+// lineKey is what keeps the choice on its line: the row's ID, the
+// group's for its title.
+func (p *prefsWindow) lineKey(i int) any {
+	if r := p.hkRowAt(i); r != nil {
+		return r.id
+	}
+	if g, ok := p.hkTitleAt(i); ok {
+		return "group:" + g
+	}
+	return "none"
 }
 
 // rowAccel is a row's shortcut, "" for none: Gocast's own as registered,
@@ -340,12 +546,36 @@ func typeLabel(kind int) string {
 	return locales.SearchTagGocast()
 }
 
-// hkRowAt is the row shown at i, nil for the line under the rows.
+// groupName is the name of a group of settings.Groups (copy.md 19.2).
+func groupName(group string) string {
+	switch group {
+	case settings.GroupSystem:
+		return locales.GroupSystem()
+	case settings.GroupPresets:
+		return locales.GroupPresets()
+	case settings.GroupSystemApps:
+		return locales.GroupSystemApps()
+	case settings.GroupOtherApps:
+		return locales.GroupOtherApps()
+	}
+	return locales.GroupGocast()
+}
+
+// hkRowAt is the row shown at i, nil for a group's title or the line
+// under the rows.
 func (p *prefsWindow) hkRowAt(i int) *hkRow {
-	if i < 0 || i >= len(p.hk.shown) {
+	if i < 0 || i >= len(p.hk.lines) || p.hk.lines[i].row < 0 {
 		return nil
 	}
-	return &p.hk.rows[p.hk.shown[i]]
+	return &p.hk.rows[p.hk.lines[i].row]
+}
+
+// hkTitleAt is the group whose title shows at i, ok false for a row.
+func (p *prefsWindow) hkTitleAt(i int) (group string, ok bool) {
+	if i < 0 || i >= len(p.hk.lines) || p.hk.lines[i].row >= 0 {
+		return "", false
+	}
+	return p.hk.lines[i].group, true
 }
 
 // hkRowByID is the row with the ID, nil if none.
@@ -365,7 +595,7 @@ func (p *prefsWindow) hkRowByID(id string) *hkRow {
 // recorder (design.md 4.4). One row records at a time.
 func (p *prefsWindow) startRecording(i int) {
 	r := p.hkRowAt(i)
-	if r == nil || p.hk.rec.id == r.id {
+	if r == nil || r.noKeys || p.hk.rec.id == r.id {
 		return
 	}
 	p.stopRecording(false)
@@ -525,6 +755,9 @@ func (p *prefsWindow) useHere() {
 // of Gocast's own goes back to its default (design.md 4.4).
 func (p *prefsWindow) clearRow(r *hkRow) {
 	p.stopRecording(false)
+	if r.noKeys {
+		return
+	}
 	if r.own > 0 {
 		p.resetShortcut(r.own)
 		return
@@ -575,7 +808,7 @@ func (p *prefsWindow) shortcutsPage(c *ui.Context, k tokens) {
 		p.hotkeySearch(c, k)
 		ui.Themed(c, segmentTheme(c)).Background(ui.Transparent).Shrink(0).Children(func() {
 			seg := ui.Segmented(c, &h.filter, locales.HotkeysFilterAll(), locales.HotkeysFilterSet(),
-				locales.HotkeysFilterApps(), locales.HotkeysFilterPresets(), locales.HotkeysFilterActions()).Height(28).FontSize(12).Shrink(0).Label(locales.HotkeysFilter())
+				locales.HotkeysFilterHidden()).Height(28).FontSize(12).Shrink(0).Label(locales.HotkeysFilter())
 			if seg.Changed() {
 				p.stopRecording(false)
 				p.filterHotkeys(true)
@@ -583,7 +816,7 @@ func (p *prefsWindow) shortcutsPage(c *ui.Context, k tokens) {
 		})
 	})
 	card(c, k).Grow(1).Shrink(1).Padding(hkListPad).Children(func() {
-		if len(h.shown) == 0 {
+		if len(h.lines) == 0 {
 			p.hotkeysEmpty(c, k)
 			return
 		}
@@ -637,7 +870,10 @@ func (p *prefsWindow) searchKey(key ui.TextKey) bool {
 	case key.Key == ui.KeyDown && key.Mods == 0:
 		p.moveChoice(1)
 	case key.Key == ui.KeyEnter && key.Mods == 0:
-		p.startRecording(h.chosen)
+		p.submitLine(h.chosen)
+	case (key.Key == ui.KeyLeft || key.Key == ui.KeyRight) && key.Mods == 0 && key.Text() == "":
+		// With nothing typed, no caret to move: the list's.
+		p.foldKey(key.Key == ui.KeyLeft)
 	case key.Key == ui.KeyBackspace && key.Mods == ui.Cmd:
 		if r := p.hkRowAt(h.chosen); r != nil {
 			p.clearRow(r)
@@ -656,12 +892,45 @@ func (p *prefsWindow) searchKey(key ui.TextKey) bool {
 	return true
 }
 
-func (p *prefsWindow) moveChoice(d int) {
-	h := &p.hk
-	if len(h.shown) == 0 {
+// submitLine is Return, or a double click, on the line at i: a group's
+// title collapses or expands; a row records, if it may (design.md 4.4).
+func (p *prefsWindow) submitLine(i int) {
+	if g, ok := p.hkTitleAt(i); ok {
+		p.toggleGroup(g)
 		return
 	}
-	i := min(max(h.chosen+d, 0), len(h.shown)-1)
+	p.startRecording(i)
+}
+
+// foldKey is Left (fold) or Right on the line chosen (design.md 4.4): a
+// group's title collapses or expands; Left on a row goes to its group's
+// title.
+func (p *prefsWindow) foldKey(fold bool) {
+	h := &p.hk
+	if g, ok := p.hkTitleAt(h.chosen); ok {
+		p.setGroupFolded(g, fold)
+		return
+	}
+	if !fold || h.chosen < 0 || h.chosen >= len(h.lines) {
+		return
+	}
+	p.stopRecording(false)
+	for i := h.chosen; i >= 0; i-- {
+		if h.lines[i].row < 0 {
+			h.list.Choose(i)
+			h.scroll = true
+			break
+		}
+	}
+	p.redraw()
+}
+
+func (p *prefsWindow) moveChoice(d int) {
+	h := &p.hk
+	if len(h.lines) == 0 {
+		return
+	}
+	i := min(max(h.chosen+d, 0), len(h.lines)-1)
 	h.list.Choose(i)
 	h.scroll = true
 	p.redraw()
@@ -670,8 +939,8 @@ func (p *prefsWindow) moveChoice(d int) {
 // hotkeysEmpty says why the list is empty, in its middle.
 func (p *prefsWindow) hotkeysEmpty(c *ui.Context, k tokens) {
 	text := locales.HotkeysNoMatch()
-	if p.hk.filter == hkFilterPresets && len(p.g.presets) == 0 {
-		text = locales.PresetsEmptyTitle()
+	if p.hk.filter == hkFilterHidden && strings.TrimSpace(p.hk.query) == "" {
+		text = locales.HiddenEmpty() // copy.md 19.4
 	}
 	ui.Column(c).Grow(1).Justify(ui.Center).AlignItems(ui.Center).Padding(0, 20).Children(func() {
 		ui.Text(c, text).FontSize(13).TextColor(k.textSecondary).TextAlign(ui.Center).MaxWidth(hkNoteWidth).Role(ui.RoleStatus)
@@ -681,14 +950,9 @@ func (p *prefsWindow) hotkeysEmpty(c *ui.Context, k tokens) {
 func (p *prefsWindow) hotkeyList(c *ui.Context, k tokens) {
 	h := &p.hk
 	h.list.Selected = &h.chosen
-	h.list.Key = func(i int) any {
-		if r := p.hkRowAt(i); r != nil {
-			return r.id
-		}
-		return "none"
-	}
+	h.list.Key = p.lineKey
 	h.list.Label = p.hotkeyRowLabel
-	n := len(h.shown)
+	n := len(h.lines)
 	if h.none {
 		n++
 	}
@@ -698,8 +962,20 @@ func (p *prefsWindow) hotkeyList(c *ui.Context, k tokens) {
 	ui.Themed(c, searchListTheme(c, k)).Background(ui.Transparent).Grow(1).Children(func() {
 		list = ui.List(c, &h.list, n).Grow(1).Rows(func(r ui.ListRow) { p.hotkeyRow(c, k, r) })
 	})
-	if h.chosen >= len(h.shown) && len(h.shown) > 0 { // the line under the rows is not chosen
-		h.list.Choose(len(h.shown) - 1)
+	if h.chosen >= len(h.lines) && len(h.lines) > 0 { // the line under the rows is not chosen
+		h.list.Choose(len(h.lines) - 1)
+	}
+	// The list's keys (design.md 4.4): Space turns the switch of the line
+	// chosen; Left and Right collapse and expand.
+	if !p.isRecording() {
+		switch {
+		case h.list.Shortcut(c, 0, ui.KeySpace):
+			p.toggleShown()
+		case h.list.Shortcut(c, 0, ui.KeyLeft):
+			p.foldKey(true)
+		case h.list.Shortcut(c, 0, ui.KeyRight):
+			p.foldKey(false)
+		}
 	}
 	if list.Changed() {
 		if r := p.hkRowAt(h.chosen); r == nil || r.id != h.rec.id {
@@ -707,7 +983,7 @@ func (p *prefsWindow) hotkeyList(c *ui.Context, k tokens) {
 		}
 	}
 	if list.Submitted() {
-		p.startRecording(h.chosen)
+		p.submitLine(h.chosen)
 	}
 	if h.scroll && h.chosen >= 0 {
 		h.scroll = false
@@ -719,9 +995,59 @@ func (p *prefsWindow) hotkeyList(c *ui.Context, k tokens) {
 	}
 }
 
-// hotkeyRow draws a row: icon, name, type, recorder; under it, while it
-// records or something is wrong, a line saying so (design.md 4.4).
+// groupTitle draws a group's title (design.md 4.4): a line over it but
+// over the first; the arrow, the name, how many rows, how many of them
+// hidden; the group's switch. A click but on the switch collapses or
+// expands it.
+func (p *prefsWindow) groupTitle(c *ui.Context, k tokens, lr ui.ListRow, group string) {
+	n, hidden := p.groupCounts(group)
+	ui.Column(c).Shrink(0).Children(func() {
+		if lr.Index > 0 {
+			ui.Box(c).Height(1).Shrink(0).Margin(0, 2).Background(k.hairline).AccessHidden(true)
+		}
+		row := ui.Row(c).Height(hkTitleHeight).Shrink(0).Padding(0, hkRowPad).Radius(6).AlignItems(ui.Center).
+			OnClick(func() { p.toggleGroup(group) })
+		if lr.Selected() {
+			row.Background(k.selection)
+		}
+		row.Children(func() {
+			arrow := "chevron.down"
+			if p.collapsed(group) {
+				arrow = "chevron.right"
+			}
+			ui.Box(c).Size(16, 16).Shrink(0).Center().AccessHidden(true).Children(func() {
+				sfsymbols.Symbol(c, arrow).Size(10).Weight(sfsymbols.Semibold).Color(k.textSecondary)
+			})
+			ui.Text(c, groupName(group)).FontSize(13).FontWeight(600).TextColor(k.text).SingleLine().Shrink(1).Margin(0, 6, 0, 4).AccessHidden(true)
+			count := strconv.Itoa(n)
+			if hidden > 0 && p.hk.filter != hkFilterHidden {
+				count += " · " + locales.GroupHiddenCount(hidden)
+			}
+			ui.Text(c, count).FontSize(12).TextColor(k.textSecondary).FontFeatures("tnum").SingleLine().Shrink(0).AccessHidden(true)
+			ui.Box(c).Grow(1)
+			on := p.groupShown(group)
+			sw := smallSwitch(c, &on).Tooltip(locales.GroupShowTip()).Label(locales.GroupSwitchSpoken(groupName(group)))
+			if sw.Changed() {
+				p.setGroupShown(group, on)
+			}
+		})
+	})
+}
+
+// smallSwitch is the small switch of the list, 32 by 18 (design.md
+// 4.4), rather than the regular one of the other pages.
+func smallSwitch(c *ui.Context, on *bool) ui.Element {
+	return ui.Switch(c, on).Size(hkSwitchW, hkSwitchH).Radius(hkSwitchH / 2).Shrink(0)
+}
+
+// hotkeyRow draws a line: a group's title, or a row: icon, name,
+// recorder, switch; under it, while it records or something is wrong, a
+// line saying so (design.md 4.4).
 func (p *prefsWindow) hotkeyRow(c *ui.Context, k tokens, lr ui.ListRow) {
+	if g, ok := p.hkTitleAt(lr.Index); ok {
+		p.groupTitle(c, k, lr, g)
+		return
+	}
 	r := p.hkRowAt(lr.Index)
 	if r == nil {
 		ui.Box(c).Height(hkNoteHeight).Shrink(0).Center().Padding(0, 20).AccessHidden(true).Children(func() {
@@ -749,7 +1075,7 @@ func (p *prefsWindow) hotkeyRow(c *ui.Context, k tokens, lr ui.ListRow) {
 	box.Children(func() {
 		ui.Row(c).Height(hkRowHeight).Shrink(0).AlignItems(ui.Center).Children(func() {
 			p.rowIcon(c, k, r)
-			ui.Row(c).Grow(1).Shrink(1).Margin(0, 12, 0, 10).Gap(8).AlignItems(ui.Center).Children(func() {
+			ui.Row(c).Grow(1).Shrink(1).Margin(0, hkRecGap, 0, 10).Gap(8).AlignItems(ui.Center).Children(func() {
 				name := ui.Text(c, r.name).FontSize(13).TextColor(k.text).SingleLine().Shrink(1).AccessHidden(true)
 				switch {
 				case r.missing:
@@ -759,10 +1085,19 @@ func (p *prefsWindow) hotkeyRow(c *ui.Context, k tokens, lr ui.ListRow) {
 					ui.Text(c, locales.ShortcutSpotlightBusy()).FontSize(12).TextColor(k.textSecondary).SingleLine().Shrink(0).AccessHidden(true)
 				}
 			})
-			ui.Box(c).Width(hkTypeWidth).Shrink(0).Margin(0, hkTypeGap, 0, 0).AccessHidden(true).Children(func() {
-				ui.Text(c, typeLabel(r.kind)).FontSize(12).TextColor(k.textSecondary).SingleLine()
-			})
 			p.recorder(c, k, lr.Index, r, accel, recording, hot, desc != "" && descColor == k.danger)
+			// The switch, or its room (design.md 4.4: the search panel's
+			// own shortcut has none).
+			cell := ui.Box(c).Size(hkSwitchW, hkSwitchH).Shrink(0).Margin(0, 0, 0, hkSwitchGap)
+			if r.searchID != "" {
+				cell.Children(func() {
+					on := !p.rowHidden(r)
+					sw := smallSwitch(c, &on).Tooltip(locales.RowShowTip()).Label(locales.RowSwitchSpoken(r.name))
+					if sw.Changed() {
+						p.setRowShown(r, on)
+					}
+				})
+			}
 		})
 		if desc == "" {
 			return
@@ -830,8 +1165,8 @@ func (p *prefsWindow) rowIcon(c *ui.Context, k tokens, r *hkRow) {
 	case r.own > 0:
 		square([4]string{"", "magnifyingglass", "apple.terminal", "doc.on.clipboard"}[r.own], 11)
 		return
-	case r.item.Note != "":
-		square(ownSymbolOf(noteOwnID(r.item.Note)), 11)
+	case r.symbol != "":
+		square(r.symbol, 11)
 		return
 	case r.kind == hkPreset:
 		square("apple.terminal.fill", 11)
@@ -866,6 +1201,10 @@ func missingOpacity(r *hkRow) float32 {
 // pointed at or chosen), the keys held while it records; at its right,
 // clear (an app's or preset's) or Reset to Default (Gocast's own).
 func (p *prefsWindow) recorder(c *ui.Context, k tokens, i int, r *hkRow, accel string, recording, hot, wrong bool) {
+	if r.noKeys { // its room alone (design.md 4.4: Quit Gocast)
+		ui.Box(c).Size(hkRecWidth, hkRecHeight).Shrink(0)
+		return
+	}
 	rec := p.hk.rec
 	b := ui.Row(c).Size(hkRecWidth, hkRecHeight).Shrink(0).Radius(6).Padding(0, 4, 0, 6).Gap(4).AlignItems(ui.Center)
 	switch {
@@ -950,11 +1289,22 @@ func recorderCaps(c *ui.Context, k tokens, caps []string, color ui.Color) {
 // a missing app's; the row recording, or what is wrong with the shortcut
 // pressed.
 func (p *prefsWindow) hotkeyRowLabel(i int) string {
+	sep := listSep()
+	if g, ok := p.hkTitleAt(i); ok { // "System Apps, 38 items, 37 hidden, expanded" (copy.md 19.5)
+		n, hidden := p.groupCounts(g)
+		s := locales.GroupSpoken(groupName(g), n)
+		if hidden > 0 && p.hk.filter != hkFilterHidden {
+			s += sep + locales.GroupHiddenCount(hidden)
+		}
+		if p.collapsed(g) {
+			return s + sep + locales.GroupCollapsed()
+		}
+		return s + sep + locales.GroupExpanded()
+	}
 	r := p.hkRowAt(i)
 	if r == nil {
 		return locales.HotkeysNoneSet()
 	}
-	sep := listSep()
 	if rec := p.hk.rec; rec.id == r.id {
 		switch {
 		case rec.movable:
@@ -969,8 +1319,15 @@ func (p *prefsWindow) hotkeyRowLabel(i int) string {
 	if r.missing {
 		s += sep + locales.HotkeysAppMissingSpoken()
 	}
-	if accel == "" {
-		return s + sep + locales.HotkeysNoShortcut()
+	switch {
+	case r.noKeys:
+	case accel == "":
+		s += sep + locales.HotkeysNoShortcut()
+	default:
+		s += hotkeySpoken(accel)
 	}
-	return s + hotkeySpoken(accel)
+	if p.rowHidden(r) { // copy.md 19.5
+		s += sep + locales.RowHiddenSpoken()
+	}
+	return s
 }

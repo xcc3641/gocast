@@ -265,6 +265,8 @@ func (l *launcher) awakeRows(rows []panelRow) []panelRow {
 	}
 	toggle, typed := l.itemAt[awakeToggleID], l.itemAt[awakeTypedID]
 	on := l.g.awakeActive()
+	// Keep Awake hidden in the search: not brought in (design.md 4.4).
+	shown := !l.itemHidden(toggle)
 	if m, ok := keepawake.ParseQuery(l.query); ok {
 		e := entry{awake: awakeHint}
 		title := locales.AwakeUntilBare()
@@ -274,7 +276,7 @@ func (l *launcher) awakeRows(rows []panelRow) []panelRow {
 		}
 		l.items[typed].Title, l.entries[typed] = title, e
 		var front []panelRow
-		if on {
+		if on && shown {
 			front = append(front, panelRow{item: toggle, own: -1})
 		}
 		front = append(front, panelRow{item: typed, own: -1})
@@ -289,7 +291,7 @@ func (l *launcher) awakeRows(rows []panelRow) []panelRow {
 			awake = append(awake, r)
 		}
 	}
-	if !slices.ContainsFunc(awake, func(r panelRow) bool { return r.item == toggle }) && keepawake.Commanded(l.query) {
+	if shown && !slices.ContainsFunc(awake, func(r panelRow) bool { return r.item == toggle }) && keepawake.Commanded(l.query) {
 		awake = append(awake, panelRow{item: toggle, own: -1})
 	}
 	if len(awake) == 0 {

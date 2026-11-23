@@ -102,12 +102,12 @@ func TestHotkeyMenuItems(t *testing.T) {
 		t.Errorf("Terminal: %q, want %q", got, want)
 	}
 	chooseRow(t, l, "app:com.apple.Safari")
-	if got := menuLabels(l); !slices.Equal(got, []string{"Open", "Show in Finder", "Copy Path", "Set Shortcut…"}) {
+	if got := menuLabels(l); !slices.Equal(got, []string{"Open", "Show in Finder", "Copy Path", "Set Shortcut…", "Hide from Search"}) {
 		t.Errorf("Safari: %q", got)
 	}
 	typeQuery(l, "gocast")
 	chooseRow(t, l, "preset:p")
-	if got := menuLabels(l); !slices.Equal(got, []string{locales.ActionOpenInTerminal(), locales.ActionNewTab(), locales.ActionEditPreset(), "Set Shortcut…", locales.ActionShowFolder()}) {
+	if got := menuLabels(l); !slices.Equal(got, []string{locales.ActionOpenInTerminal(), locales.ActionNewTab(), locales.ActionEditPreset(), "Set Shortcut…", locales.ActionShowFolder(), locales.ActionHideFromSearch()}) {
 		t.Errorf("preset: %q", got)
 	}
 	// Gocast's own rows: none.

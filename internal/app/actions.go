@@ -481,6 +481,7 @@ type actionNotice struct {
 	warning  bool
 	text     string
 	settings string // the URL of the pane, "" for no button
+	long     bool   // shows for hiddenNoticeFor, not noticeFor
 }
 
 // actionNotice says n in the panel, run from it, which shows it again
