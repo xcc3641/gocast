@@ -486,7 +486,8 @@ func TestScreensSearchShortcuts(t *testing.T) {
 }
 
 // All five Keep Awake rows hidden: "唤醒" and "awake" find none of Keep
-// Awake's rows; one of them hidden: only that one is not found (each row
+// Awake's rows, nor does a length or time typed (those rows follow Keep
+// Awake's switch, design.md 4.4); one of them hidden: only that one is not found (each row
 // only its own, no cascade).
 func TestSearchHiddenAwakeAll(t *testing.T) {
 	ids := []string{awakeToggleID, awakePrefix + "30", awakePrefix + "60", awakePrefix + "120", awakePrefix + "240"}
@@ -507,7 +508,7 @@ func TestSearchHiddenAwakeAll(t *testing.T) {
 		for _, id := range ids {
 			g.setSearchHidden(id, settings.GroupSystem, true)
 		}
-		for _, q := range []string{"awake", "唤醒", "keep awake", "保持唤醒"} {
+		for _, q := range []string{"awake", "唤醒", "keep awake", "保持唤醒", "唤醒 90m", "keep awake 1h30m", "keep awake until 17:30", "保持唤醒到 17:30", "keep awake until"} {
 			typeQuery(l, q)
 			for _, id := range rowIDs(l) {
 				if strings.HasPrefix(id, awakePrefix) {
@@ -516,5 +517,23 @@ func TestSearchHiddenAwakeAll(t *testing.T) {
 				}
 			}
 		}
+	}
+}
+
+// Keep Awake alone hidden: a length typed brings no row of its own, the
+// lengths' rows still found.
+func TestSearchHiddenAwakeTyped(t *testing.T) {
+	l, _, _ := awakePanel(t, "en")
+	if !found(l, "keep awake 1h30m", awakeTypedID) {
+		t.Fatalf("typed row not found while shown: %q", shown(l))
+	}
+	l.g.setSearchHidden(awakeToggleID, settings.GroupSystem, true)
+	for _, q := range []string{"keep awake 1h30m", "keep awake until 17:30", "keep awake until"} {
+		if found(l, q, awakeTypedID) {
+			t.Errorf("Keep Awake hidden, %q brought the typed row: %q", q, shown(l))
+		}
+	}
+	if !found(l, "keep awake", awakePrefix+"30") {
+		t.Errorf("30 Minutes not found: %q", shown(l))
 	}
 }

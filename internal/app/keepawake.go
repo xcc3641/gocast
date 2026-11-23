@@ -265,9 +265,11 @@ func (l *launcher) awakeRows(rows []panelRow) []panelRow {
 	}
 	toggle, typed := l.itemAt[awakeToggleID], l.itemAt[awakeTypedID]
 	on := l.g.awakeActive()
-	// Keep Awake hidden in the search: not brought in (design.md 4.4).
+	// Keep Awake hidden in the search: not brought in, nor the rows made
+	// of a length or time typed, nor the hint's, which follow its switch
+	// (design.md 4.4).
 	shown := !l.itemHidden(toggle)
-	if m, ok := keepawake.ParseQuery(l.query); ok {
+	if m, ok := keepawake.ParseQuery(l.query); ok && shown {
 		e := entry{awake: awakeHint}
 		title := locales.AwakeUntilBare()
 		if !m.NeedTime {
@@ -276,7 +278,7 @@ func (l *launcher) awakeRows(rows []panelRow) []panelRow {
 		}
 		l.items[typed].Title, l.entries[typed] = title, e
 		var front []panelRow
-		if on && shown {
+		if on {
 			front = append(front, panelRow{item: toggle, own: -1})
 		}
 		front = append(front, panelRow{item: typed, own: -1})
