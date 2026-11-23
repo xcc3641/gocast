@@ -133,6 +133,9 @@ type hotkeyPage struct {
 	// composing: the input method composes in the search field.
 	composing bool
 	accent    ui.Color // the window's, for the recorder recording
+	// theme is the window's, for the switches: the list's has no
+	// accent.
+	theme ui.Theme
 }
 
 // hkRecording is the recorder of a row, as it records.
@@ -958,6 +961,7 @@ func (p *prefsWindow) hotkeyList(c *ui.Context, k tokens) {
 	}
 	var list ui.Element
 	h.accent = c.Theme().Accent // the list's theme has none
+	h.theme = *c.Theme()
 	// The rows draw their own choice, 6 round (design.md 4.4).
 	ui.Themed(c, searchListTheme(c, k)).Background(ui.Transparent).Grow(1).Children(func() {
 		list = ui.List(c, &h.list, n).Grow(1).Rows(func(r ui.ListRow) { p.hotkeyRow(c, k, r) })
@@ -1026,8 +1030,7 @@ func (p *prefsWindow) groupTitle(c *ui.Context, k tokens, lr ui.ListRow, group s
 			ui.Text(c, count).FontSize(12).TextColor(k.textSecondary).FontFeatures("tnum").SingleLine().Shrink(0).AccessHidden(true)
 			ui.Box(c).Grow(1)
 			on := p.groupShown(group)
-			sw := smallSwitch(c, &on).Tooltip(locales.GroupShowTip()).Label(locales.GroupSwitchSpoken(groupName(group)))
-			if sw.Changed() {
+			if p.smallSwitch(c, &on, locales.GroupShowTip(), locales.GroupSwitchSpoken(groupName(group))) {
 				p.setGroupShown(group, on)
 			}
 		})
@@ -1035,9 +1038,15 @@ func (p *prefsWindow) groupTitle(c *ui.Context, k tokens, lr ui.ListRow, group s
 }
 
 // smallSwitch is the small switch of the list, 32 by 18 (design.md
-// 4.4), rather than the regular one of the other pages.
-func smallSwitch(c *ui.Context, on *bool) ui.Element {
-	return ui.Switch(c, on).Size(hkSwitchW, hkSwitchH).Radius(hkSwitchH / 2).Shrink(0)
+// 4.4), rather than the regular one of the other pages, in the window's
+// accent; it reports whether it was turned.
+func (p *prefsWindow) smallSwitch(c *ui.Context, on *bool, tip, label string) bool {
+	changed := false
+	ui.Themed(c, &p.hk.theme).Background(ui.Transparent).Shrink(0).Children(func() {
+		sw := ui.Switch(c, on).Size(hkSwitchW, hkSwitchH).Radius(hkSwitchH / 2).Shrink(0).Tooltip(tip).Label(label)
+		changed = sw.Changed()
+	})
+	return changed
 }
 
 // hotkeyRow draws a line: a group's title, or a row: icon, name,
@@ -1092,8 +1101,7 @@ func (p *prefsWindow) hotkeyRow(c *ui.Context, k tokens, lr ui.ListRow) {
 			if r.searchID != "" {
 				cell.Children(func() {
 					on := !p.rowHidden(r)
-					sw := smallSwitch(c, &on).Tooltip(locales.RowShowTip()).Label(locales.RowSwitchSpoken(r.name))
-					if sw.Changed() {
+					if p.smallSwitch(c, &on, locales.RowShowTip(), locales.RowSwitchSpoken(r.name)) {
 						p.setRowShown(r, on)
 					}
 				})

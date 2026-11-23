@@ -1,6 +1,7 @@
 package app
 
 import (
+	"image"
 	"slices"
 	"strings"
 	"testing"
@@ -15,12 +16,23 @@ import (
 )
 
 // withSystemApps adds Calendar and Chess, of /System/Applications, to the
-// search panel's apps.
-func withSystemApps(l *launcher) {
-	for _, a := range []mygo.InstalledApp{
+// search panel's apps, named in Chinese with zh; with more, Maps and
+// Photos too.
+func withSystemApps(l *launcher, zh, more bool) {
+	apps := []mygo.InstalledApp{
 		{Name: "Calendar", ID: "com.apple.iCal", Path: "/System/Applications/Calendar.app"},
 		{Name: "Chess", ID: "com.apple.Chess", Path: "/System/Applications/Chess.app"},
-	} {
+	}
+	if more {
+		apps = append(apps,
+			mygo.InstalledApp{Name: "Maps", ID: "com.apple.Maps", Path: "/System/Applications/Maps.app"},
+			mygo.InstalledApp{Name: "Photos", ID: "com.apple.Photos", Path: "/System/Applications/Photos.app"})
+	}
+	cn := map[string]string{"Calendar": "日历", "Chess": "国际象棋", "Maps": "地图", "Photos": "照片"}
+	for _, a := range apps {
+		if zh {
+			a.Name = cn[a.Name]
+		}
 		l.apps = append(l.apps, a)
 		l.alts = append(l.alts, nil)
 		l.places = append(l.places, "")
@@ -71,7 +83,7 @@ func TestSearchLeavesOutHidden(t *testing.T) {
 // Calendar too (design.md 4.4).
 func TestSearchHiddenGroup(t *testing.T) {
 	l, _, _ := hotkeyPanel(t, "en")
-	withSystemApps(l)
+	withSystemApps(l, false, false)
 	g := l.g
 	const (
 		cal   = "app:com.apple.iCal"
@@ -346,5 +358,129 @@ func TestHotkeyPrefsCollapse(t *testing.T) {
 	p.foldKey(false)
 	if p.g.settings.Collapsed(settings.GroupOtherApps) {
 		t.Error("Right did not expand")
+	}
+}
+
+// --- Screenshots ---
+
+// The page and the search panel with items hidden (design.md 4.4, 2.5):
+// GOCAST_SCREENS=<dir> go test -run TestScreensSearchShortcuts.
+func TestScreensSearchShortcuts(t *testing.T) {
+	dir := screensDir(t)
+	full := image.Rect(0, 0, prefsWidth, prefsHeight)
+	const (
+		cal   = "app:com.apple.iCal"
+		chess = "app:com.apple.Chess"
+	)
+	for _, loc := range []string{"zh-Hans", "en"} {
+		for _, dark := range []bool{false, true} {
+			name := "ss-"
+			if loc == "en" {
+				name += "en-"
+			}
+			mode := "light"
+			if dark {
+				mode = "dark"
+			}
+			// The page: Search Notes and Quit Gocast hidden, Chess too.
+			shot := func(state string, setup func(p *prefsWindow, tt *ui.Tester)) {
+				p, tt, _ := hotkeyPrefs(t, loc)
+				withSystemApps(p.g.launcher, loc != "en", true)
+				screenIcons(t, p)
+				g := p.g
+				g.setSearchHidden(noteOwnID(settings.NoteSearch), settings.GroupGocast, true)
+				g.setSearchHidden(quitItemID, settings.GroupGocast, true)
+				g.setSearchHidden(chess, settings.GroupSystemApps, true)
+				p.enterShortcuts()
+				tt.SetScale(2)
+				tt.SetDark(dark)
+				tt.Frame()
+				setup(p, tt)
+				saveScreen(t, tt, dir, name+state+"-"+mode, full)
+			}
+			collapse := func(p *prefsWindow, groups ...string) {
+				for _, g := range groups {
+					p.g.settings.SetCollapsed(g, true)
+				}
+				p.layoutHotkeys()
+			}
+			// System Apps off, Calendar on alone.
+			groupOff := func(p *prefsWindow) {
+				p.g.setGroupHidden(settings.GroupSystemApps, true)
+				p.g.setSearchHidden(cal, settings.GroupSystemApps, false)
+			}
+			shot("all", func(p *prefsWindow, tt *ui.Tester) {})
+			shot("gocast", func(p *prefsWindow, tt *ui.Tester) {
+				collapse(p, settings.GroupSystem, settings.GroupPresets, settings.GroupSystemApps, settings.GroupOtherApps)
+			})
+			shot("group-off", func(p *prefsWindow, tt *ui.Tester) {
+				groupOff(p)
+				collapse(p, settings.GroupGocast, settings.GroupSystem)
+				p.hk.list.Choose(rowIndex(t, p, "[systemApps]"))
+				tt.Frame()
+			})
+			if loc == "en" {
+				shot("hidden", func(p *prefsWindow, tt *ui.Tester) {
+					groupOff(p)
+					p.hk.filter = hkFilterHidden
+					p.filterHotkeys(true)
+				})
+				continue
+			}
+			shot("hidden", func(p *prefsWindow, tt *ui.Tester) {
+				groupOff(p)
+				p.hk.filter = hkFilterHidden
+				p.filterHotkeys(true)
+			})
+			shot("hidden-empty", func(p *prefsWindow, tt *ui.Tester) {
+				p.g.settings.HiddenItems = nil
+				p.hk.filter = hkFilterHidden
+				p.filterHotkeys(true)
+			})
+			shot("search", func(p *prefsWindow, tt *ui.Tester) { tt.Type("rili") })
+			shot("recording", func(p *prefsWindow, tt *ui.Tester) {
+				tt.Type("rili")
+				tt.Frame()
+				p.startRecording(rowIndex(t, p, cal))
+				tt.Frame()
+				tt.CodeDown(ui.Alt, ui.CodeAltLeft)
+				tt.CodeDown(ui.Alt|ui.Cmd, ui.CodeSuperLeft)
+			})
+			shot("keep-awake", func(p *prefsWindow, tt *ui.Tester) {
+				_ = p.g.setHotkey(settings.Hotkey{Awake: settings.AwakeToggle}, "Ctrl+Alt+K")
+				collapse(p, settings.GroupGocast)
+				p.hk.list.ScrollTo(rowIndex(t, p, awakeToggleID)-4, ui.Start)
+				p.hk.list.Choose(rowIndex(t, p, awakeToggleID))
+				tt.Frame()
+			})
+		}
+	}
+
+	// The search panel: Cmd-K on Safari, then after Hide from Search.
+	for _, loc := range []string{"zh-Hans", "en"} {
+		for _, dark := range []bool{false, true} {
+			name := "ss-"
+			if loc == "en" {
+				name += "en-"
+			}
+			mode := "light"
+			if dark {
+				mode = "dark"
+			}
+			panel := func(state string, setup func(l *launcher, tt *ui.Tester)) {
+				l, tt, _ := hotkeyPanel(t, loc)
+				l.shown = true
+				tt.SetScale(2)
+				tt.SetDark(dark)
+				chooseRow(t, l, "app:com.apple.Safari")
+				tt.Frame()
+				setup(l, tt)
+				saveScreen(t, tt, dir, name+state+"-"+mode, panelRect)
+			}
+			panel("menu", func(l *launcher, tt *ui.Tester) { l.toggleMenu() })
+			panel("hidden-notice", func(l *launcher, tt *ui.Tester) {
+				runAction(t, l, locales.ActionHideFromSearch())
+			})
+		}
 	}
 }
