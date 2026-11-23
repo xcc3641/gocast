@@ -7,13 +7,31 @@ import (
 	"gocast/internal/shortcut"
 )
 
-// Hotkey names what a hotkey of AppHotkeys, PresetHotkeys, ActionHotkeys
-// or NoteHotkeys opens or runs: an app by its bundle ID, a terminal
-// preset by its ID, one of Gocast's actions by its ID, or the notes
-// window (NoteOpen, NoteNew, NoteSearch): one of the four.
+// Hotkey names what a hotkey of AppHotkeys, PresetHotkeys, ActionHotkeys,
+// NoteHotkeys, GocastHotkeys or AwakeHotkeys opens or runs: an app by its
+// bundle ID, a terminal preset by its ID, one of Gocast's actions by its
+// ID, the notes window (NoteOpen, NoteNew, NoteSearch), another of
+// Gocast's own items (OwnAddPreset, OwnSettings), or Keep Awake
+// (AwakeToggle, or the minutes of a length): one of the six.
 type Hotkey struct {
-	App, Preset, Action, Note string
+	App, Preset, Action, Note, Own, Awake string
 }
+
+// What the hotkeys of GocastHotkeys run (design.md 4.4): Add Preset, and
+// Settings….
+const (
+	OwnAddPreset = "add-preset"
+	OwnSettings  = "settings"
+)
+
+// OwnItems are Gocast's own items of GocastHotkeys, in the order of
+// Settings › Search & Shortcuts.
+var OwnItems = []string{OwnAddPreset, OwnSettings}
+
+// AwakeToggle is the hotkey of Keep Awake itself, which starts it until
+// stopped, or stops it (design.md 4.4); the others of AwakeHotkeys are
+// by the minutes of a length: "30", "60", ...
+const AwakeToggle = "toggle"
 
 // What the hotkeys of the notes open (design.md 11.1): the notes window,
 // a new note in it, and it with Browse Notes open.
@@ -36,6 +54,10 @@ func (s Settings) Hotkey(h Hotkey) string {
 		return s.ActionHotkeys[h.Action]
 	case h.Note != "":
 		return s.NoteHotkeys[h.Note]
+	case h.Own != "":
+		return s.GocastHotkeys[h.Own]
+	case h.Awake != "":
+		return s.AwakeHotkeys[h.Awake]
 	}
 	return s.PresetHotkeys[h.Preset]
 }
@@ -52,6 +74,10 @@ func (s *Settings) SetHotkey(h Hotkey, accel string) {
 		m, key = &s.ActionHotkeys, h.Action
 	case h.Note != "":
 		m, key = &s.NoteHotkeys, h.Note
+	case h.Own != "":
+		m, key = &s.GocastHotkeys, h.Own
+	case h.Awake != "":
+		m, key = &s.AwakeHotkeys, h.Awake
 	}
 	if key == "" {
 		return
@@ -99,10 +125,10 @@ func (s *Settings) SetAppHotkeyName(id, name string) {
 // with it.
 func (s *Settings) RemoveHotkey(h Hotkey) { s.SetHotkey(h, "") }
 
-// Hotkeys are the apps, presets, actions and notes' items with a hotkey,
-// in that order, each by ID: always in the same order, for the first of two with
-// the same hotkey (settings.json edited by hand) to be the one that has
-// it.
+// Hotkeys are the apps, presets, actions, notes' items, Gocast's other
+// items and Keep Awake's rows with a hotkey, in that order, each by ID:
+// always in the same order, for the first of two with the same hotkey
+// (settings.json edited by hand) to be the one that has it.
 func (s Settings) Hotkeys() []Hotkey {
 	var hs []Hotkey
 	for _, id := range slices.Sorted(maps.Keys(s.AppHotkeys)) {
@@ -118,6 +144,14 @@ func (s Settings) Hotkeys() []Hotkey {
 		if s.NoteHotkeys[id] != "" {
 			hs = append(hs, Hotkey{Note: id})
 		}
+	}
+	for _, id := range OwnItems {
+		if s.GocastHotkeys[id] != "" {
+			hs = append(hs, Hotkey{Own: id})
+		}
+	}
+	for _, id := range slices.Sorted(maps.Keys(s.AwakeHotkeys)) {
+		hs = append(hs, Hotkey{Awake: id})
 	}
 	return hs
 }

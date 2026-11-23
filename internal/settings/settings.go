@@ -2,8 +2,8 @@
 // global shortcuts, the terminal's font size, whether the floating
 // terminal hides as the user clicks away, its size and position, the tips
 // dismissed, the clipboard history's and the calculator's switches, the
-// hotkeys of apps and terminal presets, and 自动检查更新 with the last
-// check.
+// hotkeys of apps and terminal presets, what the search leaves out, and
+// 自动检查更新 with the last check.
 package settings
 
 import (
@@ -126,6 +126,27 @@ type Settings struct {
 	// NoteHotkeys open the notes window, by what they open: NoteOpen,
 	// NoteNew, NoteSearch; none by default (copy.md 16.8).
 	NoteHotkeys map[string]string `json:"noteHotkeys,omitempty"`
+
+	// GocastHotkeys run Gocast's own items that have no shortcut of
+	// their own above, by what they are: OwnAddPreset, OwnSettings;
+	// AwakeHotkeys start and stop Keep Awake, by its rows: AwakeToggle,
+	// or the minutes of one of its lengths ("30"); none by default
+	// (design.md 4.4).
+	GocastHotkeys map[string]string `json:"gocastHotkeys,omitempty"`
+	AwakeHotkeys  map[string]string `json:"keepAwakeHotkeys,omitempty"`
+
+	// What the search panel leaves out (design.md 4.4, Settings › Search
+	// & Shortcuts), by the IDs of its items ("app:" + bundle ID,
+	// "preset:" + ID, ...), see Hidden: the items hidden one by one, the
+	// groups hidden whole (Group...), and, by group, the items shown one
+	// by one while their group is hidden. IDs of apps not installed are
+	// kept, for when they come back.
+	HiddenItems  []string            `json:"hiddenInSearch,omitempty"`
+	HiddenGroups []string            `json:"hiddenGroupsInSearch,omitempty"`
+	ShownItems   map[string][]string `json:"shownInHiddenGroups,omitempty"`
+	// CollapsedGroups are the groups Settings › Search & Shortcuts shows
+	// collapsed; none at first.
+	CollapsedGroups []string `json:"collapsedShortcutGroups,omitempty"`
 
 	// NotesZoom is the notes' text size in percent, 0 for 100 (design.md
 	// 11.4: one of NotesZooms, for every note).
