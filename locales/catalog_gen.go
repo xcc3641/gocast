@@ -1548,6 +1548,90 @@ func (msgs Messages) GeneralFontSize() string {
 	return Catalog.Format(msgs.locale, "generalFontSize", nil)
 }
 
+// GeneralTermLook says "Appearance"
+// in the language the app shows.
+//
+// Settings › Floating Terminal: the name of the row choosing what the
+// floating terminal looks like, over Font size, and of its two segments
+// (copy.md 20). Not Gocast's light or dark appearance, which is General's.
+func GeneralTermLook() string { return In(i18n.Locale()).GeneralTermLook() }
+
+// GeneralTermLook says "Appearance"
+// in the language of msgs.
+//
+// Settings › Floating Terminal: the name of the row choosing what the
+// floating terminal looks like, over Font size, and of its two segments
+// (copy.md 20). Not Gocast's light or dark appearance, which is General's.
+func (msgs Messages) GeneralTermLook() string {
+	return Catalog.Format(msgs.locale, "generalTermLook", nil)
+}
+
+// GeneralTermLookGhostty says "Ghostty"
+// in the language the app shows.
+//
+// Settings › Floating Terminal › Appearance: the first segment, the
+// default: the terminal looks like Ghostty (copy.md 20). A name: not
+// translated.
+func GeneralTermLookGhostty() string { return In(i18n.Locale()).GeneralTermLookGhostty() }
+
+// GeneralTermLookGhostty says "Ghostty"
+// in the language of msgs.
+//
+// Settings › Floating Terminal › Appearance: the first segment, the
+// default: the terminal looks like Ghostty (copy.md 20). A name: not
+// translated.
+func (msgs Messages) GeneralTermLookGhostty() string {
+	return Catalog.Format(msgs.locale, "generalTermLookGhostty", nil)
+}
+
+// GeneralTermLookGocast says "Gocast"
+// in the language the app shows.
+//
+// Settings › Floating Terminal › Appearance: the second segment:
+// Gocast's own frosted glass look (copy.md 20). A name: not translated.
+func GeneralTermLookGocast() string { return In(i18n.Locale()).GeneralTermLookGocast() }
+
+// GeneralTermLookGocast says "Gocast"
+// in the language of msgs.
+//
+// Settings › Floating Terminal › Appearance: the second segment:
+// Gocast's own frosted glass look (copy.md 20). A name: not translated.
+func (msgs Messages) GeneralTermLookGocast() string {
+	return Catalog.Format(msgs.locale, "generalTermLookGocast", nil)
+}
+
+// GeneralTermLookGhosttyHint says "Looks like Ghostty out of the box: dark gray background, JetBrains Mono."
+// in the language the app shows.
+//
+// Settings › Floating Terminal › Appearance: the note under it while
+// Ghostty is chosen (copy.md 20).
+func GeneralTermLookGhosttyHint() string { return In(i18n.Locale()).GeneralTermLookGhosttyHint() }
+
+// GeneralTermLookGhosttyHint says "Looks like Ghostty out of the box: dark gray background, JetBrains Mono."
+// in the language of msgs.
+//
+// Settings › Floating Terminal › Appearance: the note under it while
+// Ghostty is chosen (copy.md 20).
+func (msgs Messages) GeneralTermLookGhosttyHint() string {
+	return Catalog.Format(msgs.locale, "generalTermLookGhosttyHint", nil)
+}
+
+// GeneralTermLookGocastHint says "Frosted glass that follows light or dark appearance."
+// in the language the app shows.
+//
+// Settings › Floating Terminal › Appearance: the note under it while
+// Gocast is chosen (copy.md 20).
+func GeneralTermLookGocastHint() string { return In(i18n.Locale()).GeneralTermLookGocastHint() }
+
+// GeneralTermLookGocastHint says "Frosted glass that follows light or dark appearance."
+// in the language of msgs.
+//
+// Settings › Floating Terminal › Appearance: the note under it while
+// Gocast is chosen (copy.md 20).
+func (msgs Messages) GeneralTermLookGocastHint() string {
+	return Catalog.Format(msgs.locale, "generalTermLookGocastHint", nil)
+}
+
 // GeneralPosition says "Position"
 // in the language the app shows.
 //

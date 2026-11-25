@@ -85,6 +85,7 @@ type prefsWindow struct {
 	searchOnly bool // the search panel opens with its search field alone
 	calculator bool // the search panel calculates (design.md 2.3a)
 	screenOff  bool // Keep Awake lets the screen turn off (design.md 2.10)
+	termLook   int  // the floating terminal's look chosen: its index in settings.TerminalLooks
 	fontSize   float64
 	folderGone bool    // the default folder is not there, as of the last look
 	termPos    string  // the floating terminal's position chosen (settings.TerminalPositions)
@@ -164,6 +165,7 @@ func (p *prefsWindow) show(page string) {
 	p.searchOnly = p.g.settings.SearchOnly
 	p.calculator = p.g.settings.Calculator()
 	p.screenOff = p.g.settings.AwakeScreenOff
+	p.termLook = slices.Index(settings.TerminalLooks, p.g.settings.TermLook())
 	p.fontSize = float64(p.g.settings.Font())
 	p.termPos = p.g.settings.TermPosition()
 	p.termWidth = float64(p.g.settings.TermWidth())
@@ -542,6 +544,7 @@ func (p *prefsWindow) terminalGroup(c *ui.Context, k tokens) {
 	p.termWidth = max(p.termWidth, float64(lo))
 	newGroupNoted(c, k, locales.GeneralTerminalGroupHint(), func(g *group) {
 		p.defaultFolderRow(c, k, g)
+		p.lookRow(c, k, g)
 		g.row(c, k, locales.GeneralFontSize(), "", k.textSecondary, func() {
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 				ui.Text(c, strconv.Itoa(int(p.fontSize))).FontSize(13).Font("monospace").TextColor(k.text)
@@ -575,6 +578,27 @@ func (p *prefsWindow) terminalGroup(c *ui.Context, k tokens) {
 			if ui.Switch(c, &p.hideBlur).Label(locales.GeneralHideOnBlur()).Changed() {
 				p.g.settings.KeepTerminalOnBlur = !p.hideBlur
 				p.g.saveSettings()
+			}
+		})
+	})
+}
+
+// lookRow chooses what the floating terminal looks like (design.md 3.3b,
+// 4.4): Ghostty or Gocast, the note under it saying what the one chosen
+// is (copy.md 20). Saved, and every tab of the terminal changed, at once.
+func (p *prefsWindow) lookRow(c *ui.Context, k tokens, g *group) {
+	hint := locales.GeneralTermLookGhosttyHint()
+	if settings.TerminalLooks[p.termLook] == settings.LookGocast {
+		hint = locales.GeneralTermLookGocastHint()
+	}
+	g.row(c, k, locales.GeneralTermLook(), hint, k.textSecondary, func() {
+		ui.Themed(c, segmentTheme(c)).Background(ui.Transparent).Shrink(0).Children(func() {
+			seg := ui.Segmented(c, &p.termLook, locales.GeneralTermLookGhostty(), locales.GeneralTermLookGocast()).
+				Height(24).FontSize(12).Shrink(0).Label(locales.GeneralTermLook())
+			if seg.Changed() {
+				p.g.settings.SetTermLook(settings.TerminalLooks[p.termLook])
+				p.g.saveSettings()
+				p.g.term.lookChanged()
 			}
 		})
 	})

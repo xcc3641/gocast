@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/egoist/mygo"
+	"github.com/egoist/mygo/plugins/terminal"
 	"github.com/egoist/mygo/ui"
 
 	"gocast/internal/settings"
@@ -255,8 +256,10 @@ func TestDragRect(t *testing.T) {
 // At the pointer, the line typed on is the cursor's row, as the terminal
 // lays its rows out under the tab bar, kept to the rows the panel holds;
 // with no cursor known, 3.5 lines of 1.25 the font size over the bottom
-// of the terminal's room, which capsules raise (design.md 3.7).
+// of the terminal's room, which capsules raise (design.md 3.7), or of 1
+// the font size in the Ghostty look (3.3b).
 func TestCursorAnchor(t *testing.T) {
+	gocast, ghostty := gocastLook(ui.Preferences{}), ghosttyLook()
 	// Estimated: 569 − 12 − 3.5 × 16.25 = 500.1, at 13 points; with
 	// capsules, 569 − 60 − 56.9.
 	for _, c := range []struct {
@@ -271,39 +274,44 @@ func TestCursorAnchor(t *testing.T) {
 		{569, 20, false, 470}, // 569 − 12 − 87.5
 		{854, 11, true, 746},  // 854 − 60 − 48.1
 	} {
-		if got := cursorAnchor(c.h, c.size, 2, c.capsules, -1); got != c.want {
+		if got := cursorAnchor(c.h, gocast.font(c.size), 2, c.capsules, -1); got != c.want {
 			t.Errorf("estimated, %d high at %v points, capsules %v: %d, want %d", c.h, c.size, c.capsules, got, c.want)
 		}
+	}
+	// 569 − 12 − 3.5 × 13 = 511.5.
+	if got := cursorAnchor(569, ghostty.font(13), 2, false, -1); got != 512 {
+		t.Errorf("estimated in the Ghostty look: %d, want 512", got)
 	}
 	// The cursor's row: its middle, the rows from under the outline and
 	// the tab bar, a whole number of pixels high each.
 	for _, scale := range []float64{1, 2} {
-		for _, size := range []float32{11, 13, 20} {
-			cell := float64(termCellPixels(size, scale)) / scale
-			if want := float64(size) * termLineHeight; cell < want || cell > want*1.4 {
-				t.Fatalf("rows at %v points, %v×: %v high", size, scale, cell)
+		for _, f := range []terminal.Font{gocast.font(11), gocast.font(13), gocast.font(20), ghostty.font(13)} {
+			size := f.Size
+			cell := float64(termCellPixels(f, scale)) / scale
+			if want := float64(size * f.LineHeight); cell < want || cell > want*1.4 {
+				t.Fatalf("rows at %v points of %q, %v×: %v high", size, f.Family, scale, cell)
 			}
 			for _, capsules := range []bool{false, true} {
 				bottom := 569 - termPadBottom
 				if capsules {
 					bottom = 569 - termPadCapsules
 				}
-				name := fmt.Sprintf("%v points at %v×, capsules %v", size, scale, capsules)
-				first := cursorAnchor(569, size, scale, capsules, 0)
+				name := fmt.Sprintf("%v points of %q at %v×, capsules %v", size, f.Family, scale, capsules)
+				first := cursorAnchor(569, f, scale, capsules, 0)
 				if math.Abs(float64(first)-(termGridTop+cell/2)) > 1 {
 					t.Errorf("%s: the first row's middle at %d, want %.1f", name, first, termGridTop+cell/2)
 				}
-				if got, want := cursorAnchor(569, size, scale, capsules, 10), termGridTop+10.5*cell; math.Abs(float64(got)-want) > 1 {
+				if got, want := cursorAnchor(569, f, scale, capsules, 10), termGridTop+10.5*cell; math.Abs(float64(got)-want) > 1 {
 					t.Errorf("%s: the 11th row's middle at %d, want %.1f", name, got, want)
 				}
 				// Rows the panel doesn't hold, as a taller terminal's at
 				// the host: the last it holds, which shows whole over the
 				// bottom padding.
-				last := cursorAnchor(569, size, scale, capsules, 1000)
+				last := cursorAnchor(569, f, scale, capsules, 1000)
 				if float64(last)+cell/2 > float64(bottom)+1 || float64(last)+cell*1.5 < float64(bottom)-1 {
 					t.Errorf("%s: the last row's middle at %d, %.1f high, the room to %d", name, last, cell, bottom)
 				}
-				if below := cursorAnchor(569, size, scale, capsules, 999); below != last {
+				if below := cursorAnchor(569, f, scale, capsules, 999); below != last {
 					t.Errorf("%s: rows 999 and 1000 at %d and %d", name, below, last)
 				}
 			}
@@ -320,7 +328,7 @@ func TestTypedAnchor(t *testing.T) {
 	sessionCursor = func(*session) int { return row }
 	t.Cleanup(func() { sessionCursor = was })
 	g := &gocast{}
-	p := &termPanel{g: g, active: -1, pos: settings.PositionPointer, scale: 2}
+	p := &termPanel{g: g, active: -1, pos: settings.PositionPointer, scale: 2, look: gocastLook(ui.Preferences{})}
 	if got := p.typedAnchor(569); got != 500 {
 		t.Errorf("no tab: %d, want 500", got)
 	}
@@ -334,7 +342,7 @@ func TestTypedAnchor(t *testing.T) {
 	}
 	row = 4
 	p.tabs[0].fontSize = 16
-	if got, want := p.typedAnchor(569), cursorAnchor(569, 16, 2, true, 4); got != want {
+	if got, want := p.typedAnchor(569), cursorAnchor(569, p.look.font(16), 2, true, 4); got != want {
 		t.Errorf("on row 4 at 16 points: %d, want %d", got, want)
 	}
 	p.pos = settings.PositionBottom

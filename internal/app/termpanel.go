@@ -107,13 +107,19 @@ type termPanel struct {
 	bounds  mygo.Rectangle // the panel's bounds as last placed or resized
 	placing bool           // the panel's bounds are being set, not dragged
 	saveGen int            // the size dragged to last, to save
-	accents [2]ui.Color    // the light and dark accents of the themes
-	themes  [2]*terminal.Theme
-	hints   cmdHints // the shortcut hints while Command is held (cmdhints.go)
+	accents [2]ui.Color    // the light and dark accents of the look's themes
+	look    termLook       // what the panel and its terminals look like (termlook.go)
+	lookFor string         // the look's name in Settings (settings.TerminalLooks)
+	prefs   ui.Preferences // the last frame's, which applyLook takes between frames
+	hints   cmdHints       // the shortcut hints while Command is held (cmdhints.go)
 }
 
 func newTermPanel(g *gocast) *termPanel {
-	p := &termPanel{g: g, active: -1}
+	p := &termPanel{g: g, active: -1, look: lookFor(g.settings.TermLook(), ui.Preferences{})}
+	// The look's themes wait for the window's accent colors, which the
+	// first frame follows (followLook): terminals joined before it take
+	// them then.
+	p.look.theme, p.look.darkTheme = nil, nil
 	p.win = mygo.NewWindow(mygo.WindowOptions{
 		Title:        locales.TrayTerminal(),
 		Panel:        true, // over every app and full-screen ones, on every Space
@@ -164,24 +170,24 @@ func (p *termPanel) current() *session {
 }
 
 func (p *termPanel) view(c *ui.Context) {
-	c.SetTheme(themed(c))
-	k := tokensFor(c)
+	p.followLook(c)
+	k := p.look.setTheme(c)
 	c.Root().Background(ui.Transparent)
-	p.followAccent(c)
 	p.shortcuts(c)
 	hints := p.hintsShown(c)
 	s := p.current()
-	// One surface, the tinted glass, under the tab bar and the terminal,
-	// with no line between them, outlined as the search panel (design.md
-	// 3.2, 3.3). It sees each key and click, which end the hints.
-	root := ui.Column(c).Fill().Background(glassFill(c, k, terminalTint)).ObserveInput(p.hints.input)
+	// One surface, the look's (the tinted glass, or Ghostty's dark gray),
+	// under the tab bar and the terminal, with no line between them,
+	// outlined as the search panel (design.md 3.2, 3.3, 3.3b). It sees
+	// each key and click, which end the hints.
+	root := ui.Column(c).Fill().Background(p.look.fill(c, k)).ObserveInput(p.hints.input)
 	panelOutline(root, k).Children(func() {
 		p.tabBar(c, k, hints)
-		bottom := float32(termPadBottom)
+		bottom := p.look.padBottom
 		if s != nil && p.hasCapsules(s) {
-			bottom = termPadCapsules // the last line and the cursor above the capsules
+			bottom = p.look.padCapsules // the last line and the cursor above the capsules
 		}
-		ui.Column(c).Grow(1).Padding(0, termPadX, bottom, termPadX).Children(func() {
+		ui.Column(c).Grow(1).Padding(0, p.look.padX, bottom, p.look.padX).Children(func() {
 			if s == nil {
 				return
 			}
@@ -216,27 +222,58 @@ func (p *termPanel) view(c *ui.Context) {
 	})
 }
 
-// followAccent gives the terminals the themes of the user's accent color,
-// which colors their cursor and selection, as it changes.
-func (p *termPanel) followAccent(c *ui.Context) {
-	prefs := c.Preferences()
+// followLook gives the panel the look Settings names, for the user's
+// accent color, which colors the terminals' cursor and selection in
+// Gocast's, as either changes; and every tab's terminal its colors, and
+// its font and least contrast where the look changed them, its content
+// and scrolling kept (design.md 3.3b). The cursor's shape changes with
+// new tabs.
+func (p *termPanel) followLook(c *ui.Context) {
+	p.prefs = c.Preferences()
+	p.applyLook(p.prefs)
+}
+
+// applyLook is followLook's work, for the preferences prefs: also run,
+// with the last frame's, where no frame comes first, as a hidden panel draws none (lookChanged,
+// show), so that the panel is placed with the look Settings names.
+func (p *termPanel) applyLook(prefs ui.Preferences) {
 	accents := [2]ui.Color{ui.LightTheme().WithPreferences(prefs).Accent, ui.DarkTheme().WithPreferences(prefs).Accent}
-	if p.themes[0] != nil && accents == p.accents {
+	name := p.g.settings.TermLook()
+	if p.look.theme != nil && accents == p.accents && name == p.lookFor {
 		return
 	}
-	p.accents = accents
-	p.themes = [2]*terminal.Theme{terminalTheme(false, accents[0]), terminalTheme(true, accents[1])}
+	was := p.look
+	p.accents, p.lookFor = accents, name
+	p.look = lookFor(name, prefs)
 	for _, s := range p.tabs {
-		if s.term != nil {
-			s.term.SetTheme(p.themes[0], p.themes[1])
+		if s.term == nil {
+			continue
+		}
+		s.term.SetTheme(p.look.theme, p.look.darkTheme)
+		if !p.look.sameFont(&was) {
+			s.term.SetFont(p.look.font(s.fontSize))
+		}
+		if p.look.contrast != was.contrast {
+			s.term.SetMinimumContrast(p.look.contrast)
 		}
 	}
 }
 
-// termFont is the terminal's font at size: the system's monospaced font
-// (SF Mono), its rows 1.25 its line height (design.md 3.3a).
-func termFont(size float32) terminal.Font {
-	return terminal.Font{Size: size, LineHeight: termLineHeight}
+// lookChanged shows the look Settings now names, at once (followLook).
+func (p *termPanel) lookChanged() {
+	p.applyLook(p.prefs)
+	if p.win != nil { // nil: drawn in a test
+		p.win.Invalidate()
+	}
+}
+
+// fontSize is the font size of a new tab: Settings', else the look's, else
+// Settings' default.
+func (p *termPanel) fontSize() float32 {
+	if p.g.settings.FontSize == 0 && p.look.fontSize > 0 {
+		return p.look.fontSize
+	}
+	return float32(p.g.settings.Font())
 }
 
 // shortcuts are the panel's Command keys, which never reach the program:
@@ -282,12 +319,12 @@ func (p *termPanel) shortcuts(c *ui.Context) {
 		size = max(size-1, minFontSize)
 	}
 	if c.Shortcut(ui.Cmd, ui.Key0) {
-		size = float32(p.g.settings.Font())
+		size = p.fontSize()
 	}
 	if size != s.fontSize {
 		s.fontSize = size // this tab's, not written to the settings
 		if s.term != nil {
-			s.term.SetFont(termFont(size))
+			s.term.SetFont(p.look.font(size))
 		}
 		p.saveMeta(s)
 	}
@@ -354,7 +391,7 @@ func (p *termPanel) tab(c *ui.Context, k tokens, i int, s *session, hints bool) 
 		if on || hovered {
 			closeBox.Label(locales.TermCloseTabTip()).Tooltip(locales.TermCloseTabTip()).
 				OnClick(func() { p.closeTab(s) }).Children(func() {
-				sfsymbols.Symbol(c, "xmark").Size(10).Color(fg)
+				sfsymbols.Symbol(c, "xmark").Size(10).Color(closeColor(k, fg))
 			})
 		}
 	})
@@ -545,7 +582,7 @@ func (p *termPanel) capsules(c *ui.Context, k tokens, s *session, card float32) 
 // shows it.
 func (p *termPanel) newTab(pr *presets.Preset) {
 	p.keys++
-	s := &session{pending: true, key: p.keys, fontSize: float32(p.g.settings.Font())}
+	s := &session{pending: true, key: p.keys, fontSize: p.fontSize()}
 	if pr != nil {
 		s.presetID, s.preset = pr.ID, *pr
 	}
@@ -697,15 +734,21 @@ func (p *termPanel) run(s *session, req termhost.CreateRequest, id string, inHos
 	var term *terminal.Terminal
 	var conn *hostConn
 	opts := terminal.Options{
-		Font: termFont(s.fontSize),
-		// The glass shows through the terminal, in the colors of
-		// design.md 3.3a; its room is the view's padding (termPadX…),
-		// which changes as capsules come and go.
+		Font: p.look.font(s.fontSize),
+		// The panel's surface shows through the terminal, in the look's
+		// colors (design.md 3.3a); its room is the view's padding
+		// (termLook.padX…), which changes as capsules come and go. The
+		// Ghostty look's terminal is opaque, as 3.3b has it, by the
+		// panel's surface in its background's color under it: a terminal
+		// can't stop being Transparent, and one that drew its own would
+		// cover the glass once the user went back to Gocast's look.
 		Transparent:     true,
-		Theme:           p.themes[0],
-		DarkTheme:       p.themes[1],
-		MinimumContrast: terminalContrast,
-		Padding:         terminal.Padding{X: -1, Y: -1},
+		Theme:           p.look.theme,
+		DarkTheme:       p.look.darkTheme,
+		Cursor:          p.look.cursor,
+		NoBlink:         p.look.noBlink,
+		MinimumContrast: p.look.contrast,
+		Padding:         p.look.gridPadding,
 		// A tab whose shell exited closes, as in every terminal app, so
 		// the terminal's dim [Process exited] line would never be seen.
 		NoExitMessage: true,
@@ -903,7 +946,7 @@ func (p *termPanel) addRestored(list []termhost.Session, active string) {
 		p.keys++
 		s := &session{id: ts.ID, key: p.keys, restored: true, dir: m.Dir, done: ts.Done || m.Done, fontSize: m.FontSize}
 		if s.fontSize <= 0 {
-			s.fontSize = float32(p.g.settings.Font())
+			s.fontSize = p.fontSize()
 		}
 		if m.Preset != nil {
 			s.presetID, s.preset = m.PresetID, *m.Preset
@@ -977,13 +1020,23 @@ func (p *termPanel) presetsChanged() {
 	p.win.Invalidate()
 }
 
+// closeColor is the color of a tab's close button, its title's fg: in
+// Ghostty's look, which has overlays, the secondary text's on every tab
+// (design.md 3.3b).
+func closeColor(k tokens, fg ui.Color) ui.Color {
+	if k.overlay.A > 0 {
+		return k.textOnGlass
+	}
+	return fg
+}
+
 // fontChanged sets the font size of Settings in every tab.
 func (p *termPanel) fontChanged() {
-	size := float32(p.g.settings.Font())
+	size := p.fontSize()
 	for _, s := range p.tabs {
 		s.fontSize = size
 		if s.term != nil {
-			s.term.SetFont(termFont(size))
+			s.term.SetFont(p.look.font(size))
 		}
 		p.saveMeta(s)
 	}
@@ -1047,6 +1100,7 @@ func (p *termPanel) show() {
 	}
 	p.shown = true
 	p.hints.reset()
+	p.applyLook(p.prefs)
 	p.syncVisible()
 	pt, wa, scale := sysPointer()
 	w, h := termSize(wa.Width, wa.Height, p.g.settings)
@@ -1179,7 +1233,7 @@ func (p *termPanel) typedAnchor(h int) int {
 	if p.pos != settings.PositionPointer {
 		return 0
 	}
-	size := float32(p.g.settings.Font())
+	size := p.fontSize()
 	s := p.current()
 	capsules := false
 	if s != nil {
@@ -1188,7 +1242,7 @@ func (p *termPanel) typedAnchor(h int) int {
 			size = s.fontSize
 		}
 	}
-	return cursorAnchor(h, size, max(p.scale, 1), capsules, sessionCursor(s))
+	return cursorAnchor(h, p.look.font(size), max(p.scale, 1), capsules, sessionCursor(s))
 }
 
 // sessionCursor is the row of the cursor of the tab's terminal, 0 at the

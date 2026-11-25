@@ -48,7 +48,7 @@ func hintsPanel(t *testing.T, locale string, w, h int, out string, titles ...str
 	if terminal.Load() == nil {
 		for _, s := range p.tabs {
 			term, err := terminal.New(terminal.Options{
-				Conn: newIdleConn(), Font: termFont(s.fontSize), Transparent: true, Theme: p.themes[0], DarkTheme: p.themes[1],
+				Conn: newIdleConn(), Font: p.look.font(s.fontSize), Transparent: true, Theme: p.look.theme, DarkTheme: p.look.darkTheme,
 				MinimumContrast: terminalContrast, Padding: terminal.Padding{X: -1, Y: -1}, NoExitMessage: true,
 			})
 			if err != nil {

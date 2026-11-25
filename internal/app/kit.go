@@ -156,7 +156,7 @@ func gocastMark(c *ui.Context, k tokens) ui.Element {
 // keycap draws a key of a shortcut, as ⌘ or K, in menus and Settings;
 // assistive technology skips it (the control says its shortcut).
 func keycap(c *ui.Context, k tokens, label string, size float32) {
-	keycapColored(c, k, label, size, k.textOnGlass)
+	keycapColored(c, k, label, size, k.keycapText)
 }
 
 // keycapColored is keycap, its label in color: faded in a dimmed row.
@@ -196,7 +196,7 @@ func capNudge(label string) float32 {
 
 // keycaps draws the keys of a shortcut, 4 apart.
 func keycaps(c *ui.Context, k tokens, caps []string, size float32) {
-	keycapsColored(c, k, caps, size, k.textOnGlass)
+	keycapsColored(c, k, caps, size, k.keycapText)
 }
 
 // keycapsColored is keycaps, their labels in color.
@@ -230,9 +230,19 @@ func capsule(c *ui.Context, k tokens, bottom float32) ui.Element {
 	// The capsules are the system's glass, as the panel: MyGo's glass
 	// over the window's would show what the window painted under it,
 	// nothing, as gray.
-	return ui.Row(c).Absolute().Bottom(bottom).Height(capsuleHeight).Radius(capsuleHeight/2).
-		AlignItems(ui.Center).Material(glassOf(k, searchTint)).Border(1, k.capsuleBorder).
-		Shadow(0, 4, 12, 0, ui.RGBA(0, 0, 0, 0.12))
+	e := ui.Row(c).Absolute().Bottom(bottom).Height(capsuleHeight).Radius(capsuleHeight / 2).AlignItems(ui.Center)
+	if k.overlay.A > 0 {
+		return overlaid(e, k)
+	}
+	return e.Material(glassOf(k, searchTint)).Border(1, k.capsuleBorder).Shadow(0, 4, 12, 0, ui.RGBA(0, 0, 0, 0.12))
+}
+
+// overlaid fills a capsule, card or popup menu with the tokens' overlay,
+// where they have one, in place of the glass (design.md 3.3b): on the
+// Ghostty look's opaque dark gray, glass would show the same gray, and
+// blur; a shade lighter, outlined, with a deeper shadow, it floats.
+func overlaid(e ui.Element, k tokens) ui.Element {
+	return e.Background(k.overlay).Border(1, k.capsuleBorder).Shadow(0, 8, 24, 0, ui.RGBA(0, 0, 0, 0.40))
 }
 
 // actionsCapsule is the capsule of actions at the bottom right, inset
@@ -401,10 +411,13 @@ func popupMenu(c *ui.Context, k tokens, originX, originY float32) ui.Element {
 		fade := &ui.Motion{Opacity: 0}
 		tr = ui.ElementTransition{Enter: fade, Exit: fade, Duration: 80 * time.Millisecond}
 	}
-	return ui.Column(c).Absolute().Width(menuWidth).MaxHeight(menuMaxHeight).
-		Radius(12).Material(glassOf(k, searchTint)).Border(1, k.capsuleBorder).
-		Shadow(0, 8, 24, 0, ui.RGBA(0, 0, 0, 0.20)).Clip().
-		TransformOrigin(originX, originY).Transition(tr)
+	e := ui.Column(c).Absolute().Width(menuWidth).MaxHeight(menuMaxHeight).Radius(12)
+	if k.overlay.A > 0 {
+		overlaid(e, k)
+	} else {
+		e.Material(glassOf(k, searchTint)).Border(1, k.capsuleBorder).Shadow(0, 8, 24, 0, ui.RGBA(0, 0, 0, 0.20))
+	}
+	return e.Clip().TransformOrigin(originX, originY).Transition(tr)
 }
 
 // menuFieldH is the height of a popup menu's field with its hairline.

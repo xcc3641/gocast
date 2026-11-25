@@ -294,3 +294,37 @@ func TestTerminalPosition(t *testing.T) {
 		}
 	}
 }
+
+// The floating terminal's look survives a restart; everyone has the
+// Ghostty look until they choose Gocast's, and a value Gocast does not
+// know reads as the default.
+func TestTerminalLook(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "settings.json")
+	for _, look := range TerminalLooks {
+		var s Settings
+		s.SetTermLook(look)
+		if err := s.Save(path); err != nil {
+			t.Fatal(err)
+		}
+		data, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if look == LookGhostty && strings.Contains(string(data), "terminalLook") {
+			t.Errorf("the default is saved: %s", data)
+		}
+		got, err := Load(path)
+		if err != nil || got.TermLook() != look {
+			t.Errorf("%s: Load = %q, %v", look, got.TermLook(), err)
+		}
+	}
+	for _, raw := range []string{`{}`, `{"fontSize": 14}`, `{"terminalLook": "Gocast"}`, `{"terminalLook": "iterm"}`, `{"terminalLook": ""}`} {
+		if err := os.WriteFile(path, []byte(raw), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		got, err := Load(path)
+		if err != nil || got.TermLook() != LookGhostty {
+			t.Errorf("%s: Load = %q, %v", raw, got.TermLook(), err)
+		}
+	}
+}

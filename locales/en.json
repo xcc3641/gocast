@@ -514,6 +514,26 @@
   "@generalFontSize": {
     "description": "General: stepper."
   },
+  "generalTermLook": "Appearance",
+  "@generalTermLook": {
+    "description": "Settings › Floating Terminal: the name of the row choosing what the floating terminal looks like, over Font size, and of its two segments (copy.md 20). Not Gocast's light or dark appearance, which is General's."
+  },
+  "generalTermLookGhostty": "Ghostty",
+  "@generalTermLookGhostty": {
+    "description": "Settings › Floating Terminal › Appearance: the first segment, the default: the terminal looks like Ghostty (copy.md 20). A name: not translated."
+  },
+  "generalTermLookGocast": "Gocast",
+  "@generalTermLookGocast": {
+    "description": "Settings › Floating Terminal › Appearance: the second segment: Gocast's own frosted glass look (copy.md 20). A name: not translated."
+  },
+  "generalTermLookGhosttyHint": "Looks like Ghostty out of the box: dark gray background, JetBrains Mono.",
+  "@generalTermLookGhosttyHint": {
+    "description": "Settings › Floating Terminal › Appearance: the note under it while Ghostty is chosen (copy.md 20)."
+  },
+  "generalTermLookGocastHint": "Frosted glass that follows light or dark appearance.",
+  "@generalTermLookGocastHint": {
+    "description": "Settings › Floating Terminal › Appearance: the note under it while Gocast is chosen (copy.md 20)."
+  },
   "generalPosition": "Position",
   "@generalPosition": {
     "description": "Settings › Floating Terminal: the name of the row of six pictures of where the floating terminal shows, and of their radio group (copy.md 17)."

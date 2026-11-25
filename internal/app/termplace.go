@@ -4,6 +4,7 @@ import (
 	"math"
 
 	"github.com/egoist/mygo"
+	"github.com/egoist/mygo/plugins/terminal"
 	"github.com/egoist/mygo/ui"
 
 	"gocast/internal/settings"
@@ -109,8 +110,8 @@ func placeIn(pos string, wa mygo.Rectangle, w, h int, pt mygo.Point, anchor, gap
 
 // The line typed on, at the pointer (design.md 3.7). A terminal that
 // tells no cursor, as one not started yet, has its line estimated where
-// an agent's input box is: its middle typedLinesUp lines, each
-// termLineHeight its font size, over the bottom of the terminal's room,
+// an agent's input box is: its middle typedLinesUp lines, each its font's
+// line height times its size, over the bottom of the terminal's room,
 // with a line and two of status under it.
 const typedLinesUp = 3.5
 
@@ -121,20 +122,20 @@ const termGridTop = panelBorderWidth + tabBarH
 
 // cursorAnchor is how far under the top of a panel h high the middle of
 // its line typed on is, which shows at the pointer (design.md 3.7), for a
-// tab of font size, its bottom padding that of capsules or not: of the
+// tab of font f, its bottom padding that of capsules or not: of the
 // cursor's row, on a display of scale, as the terminal lays its rows out,
 // kept to the rows the panel holds; estimated with a row < 0, not known.
-func cursorAnchor(h int, fontSize float32, scale float64, capsules bool, row int) int {
+func cursorAnchor(h int, f terminal.Font, scale float64, capsules bool, row int) int {
 	bottom := float64(termPadBottom)
 	if capsules {
 		bottom = termPadCapsules
 	}
 	if row < 0 {
-		return int(math.Round(float64(h) - bottom - typedLinesUp*float64(fontSize)*termLineHeight))
+		return int(math.Round(float64(h) - bottom - typedLinesUp*float64(f.Size)*float64(termRows(f))))
 	}
 	// As the terminal's view: its cells a whole number of pixels high, its
 	// rows from the pixel its top is on.
-	cell := termCellPixels(fontSize, scale)
+	cell := termCellPixels(f, scale)
 	room := float64(h) - 2*panelBorderWidth - tabBarH - bottom
 	rows := max(int(math.Round(room*scale))/cell, 1)
 	row = min(row, rows-1)
@@ -142,12 +143,25 @@ func cursorAnchor(h int, fontSize float32, scale float64, capsules bool, row int
 	return int(math.Round(top + (float64(row)+0.5)*float64(cell)/scale))
 }
 
-// termCellPixels is how many pixels high the terminal's rows are at font
-// size on a display of scale, as MyGo's terminal view makes them: the
-// font's line, termLineHeight high, up to a whole pixel.
-func termCellPixels(fontSize float32, scale float64) int {
-	m := ui.Font{Family: "monospace", Size: fontSize, Weight: 400}.Metrics()
-	return max(int(math.Ceil(float64((m.Ascent+m.Descent+m.LineGap)*termLineHeight*float32(scale)-0.05))), 1)
+// termCellPixels is how many pixels high the terminal's rows are in font
+// f on a display of scale, as MyGo's terminal view makes them: the
+// font's line, f.LineHeight high, up to a whole pixel.
+func termCellPixels(f terminal.Font, scale float64) int {
+	family := f.Family
+	if family == "" {
+		family = "monospace"
+	}
+	m := ui.Font{Family: family, Size: f.Size, Weight: 400}.Metrics()
+	return max(int(math.Ceil(float64((m.Ascent+m.Descent+m.LineGap)*termRows(f)*float32(scale)-0.05))), 1)
+}
+
+// termRows is the height of the terminal's rows in font f, as a multiple
+// of its line: 1 when unset, as the terminal takes it.
+func termRows(f terminal.Font) float32 {
+	if f.LineHeight <= 0 {
+		return 1
+	}
+	return f.LineHeight
 }
 
 // edgeGap is the panel's distance from the work area's edges along an

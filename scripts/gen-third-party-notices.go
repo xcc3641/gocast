@@ -22,10 +22,12 @@
 //     scripts/notices/, for the Ghostty commit below. If MyGo moves to
 //     another Ghostty commit the program stops, so that the components
 //     and texts in scripts/notices/ are checked again.
+//   - The fonts embedded in internal/termfonts, for the terminal's Ghostty
+//     look: their license texts are kept beside them (termFonts below).
 //   - Go's own license, for the standard library and runtime.
 //
-// The output depends only on go.mod, go.sum and scripts/notices/, so it is
-// the same on every machine.
+// The output depends only on go.mod, go.sum, scripts/notices/ and the
+// license texts in internal/termfonts, so it is the same on every machine.
 package main
 
 import (
@@ -227,6 +229,21 @@ func generate() ([]byte, error) {
 		unicode = true
 	}
 
+	// Fonts embedded in Gocast's own code.
+	if _, ok := byPath[termFontsPkg]; ok {
+		body.WriteString("## Fonts\n\n")
+		body.WriteString("Embedded in the Gocast executable by `internal/termfonts`, for the terminal's Ghostty look.\n\n")
+		for _, f := range termFonts {
+			text, err := readText(f.file)
+			if err != nil {
+				return nil, err
+			}
+			fmt.Fprintf(&body, "### %s %s\n\n%s\n\n", f.name, f.version, f.about)
+			writeText(&body, text)
+			summary = append(summary, row{f.name, f.version, f.license})
+		}
+	}
+
 	// Unicode data, used by CLDR and by uucode.
 	if unicode {
 		text, err := readText(filepath.Join(noticesDir, "unicode.LICENSE"))
@@ -296,6 +313,30 @@ var ghosttyParts = []struct {
 		"Bjoern Hoehrmann's UTF-8 decoder", "", "MIT",
 		"Used by uucode.",
 		"libghostty-vt/uucode.LICENSE_Bjoern_Hoehrmann",
+	},
+}
+
+// termFontsPkg embeds the fonts in termFonts.
+const termFontsPkg = "gocast/internal/termfonts"
+
+// termFonts are the fonts termFontsPkg embeds, with their license texts.
+var termFonts = []struct {
+	name, version, license, about, file string
+}{
+	{
+		"JetBrains Mono", "2.304", "OFL-1.1",
+		"https://github.com/JetBrains/JetBrainsMono: its Regular, Bold, Italic and Bold Italic faces.",
+		"internal/termfonts/JetBrainsMono-OFL.txt",
+	},
+	{
+		"Symbols Nerd Font Mono", "Nerd Fonts 3.4.0", "MIT",
+		"https://github.com/ryanoasis/nerd-fonts: the icon font of its symbols-only release, MIT as a whole. " +
+			"Its glyphs come from these projects, under these licenses (Nerd Fonts' license-audit.md): " +
+			"Codicons (CC BY 4.0), Devicons (MIT), Font Awesome (CC BY 4.0), Font Awesome Extension (MIT), " +
+			"Font Logos (Unlicense), IEC Power Symbols (MIT), Material Design Icons (Apache 2.0), " +
+			"Seti-UI (MIT), Octicons (MIT), Pomicons (SIL OFL 1.1), Powerline Extra Symbols (MIT), " +
+			"Powerline Symbols (free license), Weather Icons (SIL OFL 1.1).",
+		"internal/termfonts/SymbolsNerdFont-LICENSE",
 	},
 }
 

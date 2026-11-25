@@ -127,7 +127,7 @@ func tabNumber(c *ui.Context, k tokens, n int) {
 	c.Key("number")
 	e := ui.Box(c).Size(20, 20).Radius(5).Background(k.keycap).Center().AccessHidden(true).IgnoreInput(true)
 	hintFade(e, c).Children(func() {
-		capLabel(c, string(rune('0'+n)), 12, k.textOnGlass).FontFeatures("tnum")
+		capLabel(c, string(rune('0'+n)), 12, k.keycapText).FontFeatures("tnum")
 	})
 }
 
@@ -210,9 +210,14 @@ func combosWidth(combos [][]string, measure func(text string, size float32) floa
 func (p *termPanel) hintCard(c *ui.Context, k tokens, sz hintSize) {
 	rows := hintRows()
 	c.Key("hint-card")
-	card := ui.Column(c).Absolute().Right(termInset).Bottom(termInset).Width(sz.w).Padding(sz.pad-1).
-		Radius(12).Material(panelGlass{fallback: k.surface, tint: k.glassTint.Alpha(searchTint)}).Border(1, k.capsuleBorder).
-		Shadow(0, 8, 24, 0, ui.RGBA(0, 0, 0, 0.20)).AccessHidden(true).IgnoreInput(true)
+	card := ui.Column(c).Absolute().Right(termInset).Bottom(termInset).Width(sz.w).Padding(sz.pad - 1).
+		Radius(12).AccessHidden(true).IgnoreInput(true)
+	if k.overlay.A > 0 {
+		overlaid(card, k)
+	} else {
+		card.Material(panelGlass{fallback: k.surface, tint: k.glassTint.Alpha(searchTint)}).Border(1, k.capsuleBorder).
+			Shadow(0, 8, 24, 0, ui.RGBA(0, 0, 0, 0.20))
+	}
 	hintFade(card, c).Children(func() {
 		for _, r := range rows {
 			ui.Row(c).Height(sz.rowH).Shrink(0).Padding(0, hintRowPad).Gap(hintNameGap).AlignItems(ui.Center).Children(func() {

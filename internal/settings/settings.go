@@ -1,9 +1,9 @@
 // Package settings keeps Gocast's preferences in settings.json: the two
-// global shortcuts, the terminal's font size, whether the floating
-// terminal hides as the user clicks away, its size and position, the tips
-// dismissed, the clipboard history's and the calculator's switches, the
-// hotkeys of apps and terminal presets, what the search leaves out, and
-// 自动检查更新 with the last check.
+// global shortcuts, the terminal's look and font size, whether the
+// floating terminal hides as the user clicks away, its size and position,
+// the tips dismissed, the clipboard history's and the calculator's
+// switches, the hotkeys of apps and terminal presets, what the search
+// leaves out, and 自动检查更新 with the last check.
 package settings
 
 import (
@@ -63,6 +63,10 @@ type Settings struct {
 	// display with the pointer, one of TerminalPositions; "" for
 	// PositionTop (copy.md 17).
 	TerminalPosition string `json:"terminalPosition,omitempty"`
+	// TerminalLook is what the floating terminal looks like, one of
+	// TerminalLooks; "" for LookGhostty, everyone's from the version
+	// that brought it (copy.md 20).
+	TerminalLook string `json:"terminalLook,omitempty"`
 	// TerminalDir is the folder new plain terminals start in, and presets
 	// without a folder of their own, as the user reads it (~/Work); empty
 	// for the home folder.
@@ -347,6 +351,36 @@ func (s *Settings) SetTermPosition(pos string) {
 	s.TerminalPosition = pos
 	if pos == PositionTop {
 		s.TerminalPosition = ""
+	}
+}
+
+// What the floating terminal looks like (design.md 3.3b, copy.md 20): as
+// Ghostty out of the box, the default, or Gocast's own frosted glass.
+const (
+	LookGhostty = "ghostty"
+	LookGocast  = "gocast"
+)
+
+// TerminalLooks are the looks of the floating terminal, in the order
+// Settings lists them.
+var TerminalLooks = []string{LookGhostty, LookGocast}
+
+// TermLook is what the floating terminal looks like: one of
+// TerminalLooks, LookGhostty while unset or for any other value
+// (settings.json edited by hand, or by a later Gocast).
+func (s Settings) TermLook() string {
+	if slices.Contains(TerminalLooks, s.TerminalLook) {
+		return s.TerminalLook
+	}
+	return LookGhostty
+}
+
+// SetTermLook makes look what the floating terminal looks like, "" again
+// for the default.
+func (s *Settings) SetTermLook(look string) {
+	s.TerminalLook = look
+	if look == LookGhostty {
+		s.TerminalLook = ""
 	}
 }
 

@@ -31,6 +31,13 @@ type tokens struct {
 	// scrim dims the panel under a card that asks (the clipboard view's
 	// clear confirmation): thicker in dark mode, where 0.12 doesn't show.
 	scrim ui.Color
+	// keycapText is the label of a keycap: textOnGlass, but on the
+	// floating terminal's Ghostty look (design.md 3.3b).
+	keycapText ui.Color
+	// overlay, where set, fills the capsules, cards and popup menus
+	// floating over a window, opaque, instead of the glass: the floating
+	// terminal's Ghostty look (design.md 3.3b, overlaid). Unset elsewhere.
+	overlay ui.Color
 }
 
 // The alpha of glassTint over each glass window (design.md 1.2): the
@@ -72,6 +79,7 @@ func tokensOf(dark, highContrast bool) tokens {
 			scrim: ui.RGBA(0, 0, 0, 0.12),
 		}
 	}
+	k.keycapText = k.textOnGlass
 	if highContrast {
 		k.selection = k.selection.Alpha(1.5)
 		if dark {
@@ -87,7 +95,12 @@ func tokensOf(dark, highContrast bool) tokens {
 // differ (TextMuted, Danger, Warning), still following the system's
 // accent and contrast.
 func themed(c *ui.Context) *ui.Theme {
-	k := tokensFor(c)
+	return themedWith(c, tokensFor(c))
+}
+
+// themedWith is themed with the colors of k: the floating terminal's
+// look's (termLook.setTheme).
+func themedWith(c *ui.Context, k tokens) *ui.Theme {
 	t := *c.Theme()
 	t.Text = k.text
 	t.TextMuted = k.textSecondary
