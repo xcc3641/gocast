@@ -2,6 +2,7 @@ package app
 
 import (
 	"log"
+	"math"
 	"os"
 	"path/filepath"
 	"slices"
@@ -41,8 +42,11 @@ type termLook struct {
 	grounds *[2]termGround
 	// dark sets the appearance of the panel's ui theme, and so which of
 	// the terminals' themes shows, whatever the system's; nil follows the
-	// system's.
+	// system's (but see setTheme).
 	dark *bool
+	// ground is the index in grounds of the ground of the frame, as
+	// setTheme picked it.
+	ground int
 	// The cursor's shape, and whether it keeps from blinking, until a
 	// program sets them; the least contrast of text with its background
 	// (Options.MinimumContrast).
@@ -202,13 +206,37 @@ func ghosttyLook(conf *ghosttyconf.Result) termLook {
 	}
 	l.noBlink = c.CursorBlink != nil && !*c.CursorBlink
 	if p := c.PaddingX; p != nil {
-		l.padLeft, l.padRight = max(l.padLeft, float32(p.Start)), max(l.padRight, float32(p.End))
+		start, end := float32(min(p.Start, maxPadX)), float32(min(p.End, maxPadX))
+		l.padLeft, l.padRight = max(l.padLeft, start), max(l.padRight, end)
 	}
 	if p := c.PaddingY; p != nil {
-		l.padTop = float32(p.Start)
-		l.padBottom, l.padCapsules = max(l.padBottom, float32(p.End)), max(l.padCapsules, float32(p.End))
+		start, end := float32(min(p.Start, maxPadY)), float32(min(p.End, maxPadY))
+		l.padTop = start
+		l.padBottom, l.padCapsules = max(l.padBottom, end), max(l.padCapsules, end)
 	}
 	return l
+}
+
+// The most room the config's window-padding-x and -y give the terminal at
+// each side: a larger one is taken as this, and counts as not recognized
+// (lookUnrecognized). The smallest panel (termMinWidth×termMinHeight)
+// keeps a terminal 240 wide (some 30 columns at 13) and 128 high (some 7
+// rows), its tab bar and the room of the capsules (termPadCapsules)
+// taken.
+const maxPadX, maxPadY = 200, 60
+
+// lookUnrecognized reports whether the Ghostty look can't use some of
+// the appearance the config c sets: the keys it couldn't read, or a
+// padding larger than the most it takes (maxPadX, maxPadY).
+func lookUnrecognized(c *ghosttyconf.Config) bool {
+	if len(c.Unrecognized) > 0 {
+		return true
+	}
+	if p := c.PaddingX; p != nil && max(p.Start, p.End) > maxPadX {
+		return true
+	}
+	p := c.PaddingY
+	return p != nil && max(p.Start, p.End) > maxPadY
 }
 
 // ghosttyTheme is the terminals' colors as the config c sets them, over
@@ -245,6 +273,56 @@ func isLight(c ui.Color) bool {
 	return 0.2126*float32(c.R)+0.7152*float32(c.G)+0.0722*float32(c.B) > 127.5
 }
 
+// luminance is c's relative luminance, as WCAG 2 has it, its alpha
+// ignored.
+func luminance(c ui.Color) float64 {
+	lin := func(v uint8) float64 {
+		s := float64(v) / 255
+		if s <= 0.04045 {
+			return s / 12.92
+		}
+		return math.Pow((s+0.055)/1.055, 2.4)
+	}
+	return 0.2126*lin(c.R) + 0.7152*lin(c.G) + 0.0722*lin(c.B)
+}
+
+// contrast is the contrast ratio of a and b, as WCAG 2 has it: 1 to 21.
+func contrast(a, b ui.Color) float64 {
+	la, lb := luminance(a), luminance(b)
+	return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
+}
+
+// The gray text on a ground of the config's colors (groundTokens): the
+// text moved toward the background by up to secondaryMix, as far as it
+// keeps secondaryContrast with it.
+const (
+	secondaryMix      = 0.35
+	secondaryContrast = 4.5
+)
+
+// secondaryText is the gray text on the background bg of text fg
+// (design.md 3.3b): fg moved toward bg by secondaryMix, or less, where
+// that would take it under secondaryContrast with bg; fg itself where fg
+// is under it already.
+func secondaryText(fg, bg ui.Color) ui.Color {
+	if contrast(fg, bg) < secondaryContrast {
+		return fg
+	}
+	// The contrast falls as fg nears bg: the farthest step that keeps it.
+	const steps = 70
+	for i := steps; i > 0; i-- {
+		c := fg.Mix(bg, secondaryMix*float32(i)/steps)
+		if contrast(c, bg) >= secondaryContrast {
+			return c
+		}
+	}
+	return fg
+}
+
+// minSurfaceContrast is the least contrast of a light ground's surface
+// with the ground, for capsules and cards to stand out of it.
+const minSurfaceContrast = 1.08
+
 // groundTokens are the colors of the chrome on the Ghostty look's ground g
 // (design.md 3.3b): on Ghostty's dark gray, the table's; on another
 // background, the like from its own text and background, dark or light
@@ -256,18 +334,27 @@ func groundTokens(g termGround, highContrast bool) tokens {
 	bg := g.bg
 	bg.A = 255
 	secondary, surface := termTextSecondary, termSurface
+	selection := g.fg.Alpha(0.10)
 	if bg != termBg || g.fg != termText {
 		// About as far from the text toward the background as Ghostty's
-		// gray is; the surface a step lighter than the background.
-		secondary = g.fg.Mix(bg, 0.35)
+		// gray is, keeping its contrast; the surface a step lighter than
+		// the background, or, on a light one, toward white, else, where
+		// that is not apart from it (white, or near), a step darker.
+		secondary = secondaryText(g.fg, bg)
 		surface = bg.Mix(ui.RGB(255, 255, 255), 0.065)
 		if !dark {
 			surface = bg.Mix(ui.RGB(255, 255, 255), 0.6)
+			if contrast(surface, bg) < minSurfaceContrast {
+				surface = bg.Mix(ui.RGB(0, 0, 0), 0.05)
+			}
+			// The selected tab a shade darker than the background, not
+			// lighter.
+			selection = ui.RGBA(0, 0, 0, 0.06)
 		}
 	}
 	k.text, k.keycapText = g.fg, g.fg
 	k.textSecondary, k.textOnGlass = secondary, secondary
-	k.selection, k.keycap = g.fg.Alpha(0.10), g.fg.Alpha(0.12)
+	k.selection, k.keycap = selection, g.fg.Alpha(0.12)
 	k.hairline, k.capsuleBorder = g.fg.Alpha(0.10), g.fg.Alpha(0.10)
 	k.surface, k.glassTint, k.overlay = surface, bg, surface
 	if highContrast {
@@ -295,7 +382,7 @@ func (l *termLook) fill(c *ui.Context, k tokens) ui.Color {
 	if l.grounds == nil {
 		return glassFill(c, k, l.tint)
 	}
-	bg := l.grounds[b2i(c.Theme().Dark)].bg
+	bg := l.grounds[l.ground].bg
 	if !c.Vibrancy() {
 		bg.A = 255 // no glass to show: opaque, as Gocast's
 	}
@@ -311,19 +398,52 @@ func b2i(b bool) int {
 
 // setTheme sets the panel's theme for the frame, themed's in the look's
 // appearance where it has one of its own, else the system's, and returns
-// the colors its chrome is drawn in.
+// the colors its chrome is drawn in. A look of a ground for each of the
+// system's appearances (a theme of light:…,dark:…) takes the one of the
+// system's, and the appearance of its background, so that fields and
+// focus rings are drawn as the chrome: the terminals keep the theme of
+// the system's appearance (termThemes).
 func (l *termLook) setTheme(c *ui.Context) tokens {
-	if l.dark != nil && *l.dark != c.Theme().Dark {
+	sys := c.Theme().Dark
+	dark := l.dark
+	if l.grounds != nil {
+		l.ground = b2i(sys)
+		if dark == nil {
+			d := !isLight(l.grounds[l.ground].bg)
+			dark = &d
+		}
+	}
+	if dark != nil && *dark != sys {
 		t := ui.LightTheme()
-		if *l.dark {
+		if *dark {
 			t = ui.DarkTheme()
 		}
 		c.SetTheme(t)
 	}
 	k := tokensFor(c)
 	if l.grounds != nil {
-		k = groundTokens(l.grounds[b2i(c.Theme().Dark)], c.Preferences().HighContrast)
+		k = groundTokens(l.grounds[l.ground], c.Preferences().HighContrast)
 	}
 	c.SetTheme(themedWith(c, k))
 	return k
+}
+
+// ownThemes reports whether the terminals' theme follows the system's
+// appearance, not the panel's (setTheme): in the Ghostty look of a theme
+// of light:…,dark:….
+func (l *termLook) ownThemes() bool { return l.grounds != nil && l.dark == nil }
+
+// termThemes are the terminals' colors, as Options.Theme and DarkTheme
+// take them, in a panel whose system's appearance is sysDark: the look's
+// light and dark ones, the panel's appearance picking; or, where the
+// panel's appearance is its ground's (ownThemes), the one the system's
+// picks alone.
+func (l *termLook) termThemes(sysDark bool) (theme, dark *terminal.Theme) {
+	if !l.ownThemes() {
+		return l.theme, l.darkTheme
+	}
+	if sysDark {
+		return l.darkTheme, nil
+	}
+	return l.theme, nil
 }

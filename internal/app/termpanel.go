@@ -125,6 +125,8 @@ type termPanel struct {
 	conf    *ghosttyconf.Result // the user's Ghostty config, as last read (readConf); nil before
 	lookOf  *ghosttyconf.Result // the config the look was made with
 	prefs   ui.Preferences      // the last frame's, which applyLook takes between frames
+	sysDark bool                // the system's appearance in the last frame, which applyLook takes too
+	themed  bool                // the appearance the terminals' themes are of (termLook.termThemes)
 	hints   cmdHints            // the shortcut hints while Command is held (cmdhints.go)
 }
 
@@ -248,7 +250,7 @@ func (p *termPanel) view(c *ui.Context) {
 // kept (design.md 3.3b); the tabs at the font size new tabs had, the one
 // they have now. The cursor's shape changes with new tabs.
 func (p *termPanel) followLook(c *ui.Context) {
-	p.prefs = c.Preferences()
+	p.prefs, p.sysDark = c.Preferences(), c.Theme().Dark
 	p.applyLook(p.prefs)
 }
 
@@ -259,11 +261,24 @@ func (p *termPanel) applyLook(prefs ui.Preferences) {
 	accents := [2]ui.Color{ui.LightTheme().WithPreferences(prefs).Accent, ui.DarkTheme().WithPreferences(prefs).Accent}
 	name := p.g.settings.TermLook()
 	if p.look.theme != nil && accents == p.accents && name == p.lookFor && p.conf == p.lookOf {
+		if p.themed != p.sysDark && p.look.ownThemes() {
+			// The system's appearance changed: the terminals take its
+			// theme.
+			p.themed = p.sysDark
+			theme, dark := p.look.termThemes(p.sysDark)
+			for _, s := range p.tabs {
+				if s.term != nil {
+					s.term.SetTheme(theme, dark)
+				}
+			}
+		}
 		return
 	}
 	was, base := p.look, p.fontSize()
 	p.accents, p.lookFor, p.lookOf = accents, name, p.conf
 	p.look = lookFor(name, prefs, p.conf)
+	p.themed = p.sysDark
+	theme, dark := p.look.termThemes(p.sysDark)
 	size := p.fontSize()
 	for _, s := range p.tabs {
 		resized := s.fontSize == base && size != base
@@ -273,7 +288,7 @@ func (p *termPanel) applyLook(prefs ui.Preferences) {
 		if s.term == nil {
 			continue
 		}
-		s.term.SetTheme(p.look.theme, p.look.darkTheme)
+		s.term.SetTheme(theme, dark)
 		if resized || !p.look.sameFont(&was) {
 			s.term.SetFont(p.look.font(s.fontSize))
 		}
@@ -308,7 +323,7 @@ func (p *termPanel) confHint() string {
 	if r := p.conf; r != nil {
 		for _, c := range []*ghosttyconf.Config{r.Light, r.Dark} {
 			applied = applied || c.Applied()
-			partly = partly || len(c.Unrecognized) > 0
+			partly = partly || lookUnrecognized(c)
 		}
 	}
 	switch {
@@ -840,6 +855,7 @@ func (p *termPanel) run(s *session, req termhost.CreateRequest, id string, inHos
 	s.gen++
 	var term *terminal.Terminal
 	var conn *hostConn
+	theme, dark := p.look.termThemes(p.themed)
 	opts := terminal.Options{
 		Font: p.look.font(s.fontSize),
 		// The panel's surface shows through the terminal, in the look's
@@ -850,8 +866,8 @@ func (p *termPanel) run(s *session, req termhost.CreateRequest, id string, inHos
 		// can't stop being Transparent, and one that drew its own would
 		// cover the glass once the user went back to Gocast's look.
 		Transparent:     true,
-		Theme:           p.look.theme,
-		DarkTheme:       p.look.darkTheme,
+		Theme:           theme,
+		DarkTheme:       dark,
 		Cursor:          p.look.cursor,
 		NoBlink:         p.look.noBlink,
 		MinimumContrast: p.look.contrast,

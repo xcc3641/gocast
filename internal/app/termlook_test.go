@@ -371,3 +371,172 @@ func TestGhosttyConfigHint(t *testing.T) {
 		}
 	}
 }
+
+// The config's window-padding is taken up to maxPadX and maxPadY at each
+// side, a larger one as these, and then counted as not recognized, so
+// that the smallest panel keeps a terminal of use.
+func TestGhosttyPaddingBounds(t *testing.T) {
+	inLocale(t, "en")
+	for _, c := range []struct {
+		conf                               string
+		left, right, top, bottom, capsules float32
+		partly                             bool
+	}{
+		{"window-padding-x = 200\nwindow-padding-y = 60\n", 200, 200, 60, 60, 60, false},
+		{"window-padding-x = 500,10\nwindow-padding-y = 300\n", 200, 20, 60, 60, 60, true},
+		{"window-padding-x = 4\nwindow-padding-y = 9999,4\n", 20, 20, 60, 12, 60, true},
+	} {
+		useGhosttyConfig(t, map[string]string{ghosttyConfig: c.conf})
+		p := &termPanel{g: &gocast{}}
+		p.readConf()
+		l := ghosttyLook(p.conf)
+		if l.padLeft != c.left || l.padRight != c.right || l.padTop != c.top || l.padBottom != c.bottom || l.padCapsules != c.capsules {
+			t.Errorf("%q: room %v %v %v %v %v", c.conf, l.padLeft, l.padRight, l.padTop, l.padBottom, l.padCapsules)
+		}
+		want := locales.GeneralTermLookConfigHint()
+		if c.partly {
+			want = locales.GeneralTermLookConfigPartlyHint()
+		}
+		if got := p.confHint(); got != want {
+			t.Errorf("%q: hint %q, want %q", c.conf, got, want)
+		}
+	}
+	// The smallest panel keeps room for the terminal.
+	if w, h := termMinWidth-2*maxPadX, termMinHeight-tabBarH-2*maxPadY; w < 200 || h < 100 {
+		t.Errorf("the smallest terminal: %v×%v", w, h)
+	}
+}
+
+// The gray text moves from the text toward the background by 35% at most,
+// as far as it keeps 4.5:1 with it, and is the text where that is under
+// 4.5:1 already (design.md 3.3b).
+func TestSecondaryText(t *testing.T) {
+	for _, c := range []struct {
+		name, fg, bg string
+		moved        bool
+	}{
+		{"Catppuccin Latte", "#4C4F69", "#EFF1F5", true},
+		{"Solarized dark", "#839496", "#002B36", true},
+		{"Solarized light", "#657B83", "#FDF6E3", false},
+	} {
+		fg, bg := ui.Hex(c.fg), ui.Hex(c.bg)
+		got := secondaryText(fg, bg)
+		if got != fg && contrast(got, bg) < 4.5 {
+			t.Errorf("%s: %v, %.2f:1", c.name, got, contrast(got, bg))
+		}
+		if moved := got != fg; moved != c.moved {
+			t.Errorf("%s: %v, moved %v, want %v", c.name, got, moved, c.moved)
+		}
+		if c.moved && contrast(got, bg) > 4.7 {
+			t.Errorf("%s: %v, %.2f:1, stopped short of 4.5", c.name, got, contrast(got, bg))
+		}
+	}
+	// Far apart, the full 35%.
+	white, black := ui.Hex("#FFFFFF"), ui.Hex("#000000")
+	if got := secondaryText(white, black); got != white.Mix(black, 0.35) {
+		t.Errorf("white on black: %v", got)
+	}
+	k := groundTokens(termGround{bg: ui.Hex("#EFF1F5"), fg: ui.Hex("#4C4F69")}, false)
+	if k.textSecondary != secondaryText(ui.Hex("#4C4F69"), ui.Hex("#EFF1F5")) || k.textOnGlass != k.textSecondary {
+		t.Errorf("tokens: %v, %v", k.textSecondary, k.textOnGlass)
+	}
+}
+
+// On a light background the surface is 60% toward white, but where that
+// can't be told from the background (white, or near), 5% toward black;
+// the selected tab 6% black. On a dark one, 6.5% toward white and the
+// text at 10%, as before (design.md 3.3b).
+func TestGroundTokensLight(t *testing.T) {
+	white, black := ui.RGB(255, 255, 255), ui.RGB(0, 0, 0)
+	for _, c := range []struct {
+		bg      string
+		surface ui.Color
+	}{
+		{"#FFFFFF", white.Mix(black, 0.05)},
+		{"#FDF6E3", ui.Hex("#FDF6E3").Mix(black, 0.05)},
+		{"#EEE8D5", ui.Hex("#EEE8D5").Mix(white, 0.6)},
+		{"#E0E0E0", ui.Hex("#E0E0E0").Mix(white, 0.6)},
+	} {
+		bg := ui.Hex(c.bg)
+		k := groundTokens(termGround{bg: bg, fg: ui.Hex("#333333")}, false)
+		if k.surface != c.surface || k.overlay != c.surface || contrast(k.surface, bg) < minSurfaceContrast {
+			t.Errorf("%s: surface %v, %.3f:1, want %v", c.bg, k.surface, contrast(k.surface, bg), c.surface)
+		}
+		if k.selection != ui.RGBA(0, 0, 0, 0.06) {
+			t.Errorf("%s: selection %v", c.bg, k.selection)
+		}
+	}
+	bg, fg := ui.Hex("#1E1E2E"), ui.Hex("#CDD6F4")
+	if k := groundTokens(termGround{bg: bg, fg: fg}, false); k.surface != bg.Mix(white, 0.065) || k.selection != fg.Alpha(0.10) {
+		t.Errorf("dark: surface %v, selection %v", k.surface, k.selection)
+	}
+}
+
+// A theme of light:…,dark:… gives the panel the ground of the system's
+// appearance, and its ui theme the appearance of that ground's background,
+// so that fields and focus rings are drawn as the chrome; the terminals
+// keep the colors of the system's appearance.
+func TestGhosttyLookConditionalTheme(t *testing.T) {
+	home := useGhosttyConfig(t, map[string]string{
+		ghosttyThemeShipped: mochaTheme,
+		"res/themes/Latte":  "background = #eff1f5\nforeground = #4c4f69\n",
+		"res/themes/Nord":   "background = #2e3440\nforeground = #d8dee9\n",
+		ghosttyConfig:       "theme = light:Mocha,dark:Latte\n",
+	})
+	frame := func(l *termLook, sysDark bool) (panelDark bool, fill ui.Color) {
+		tt := ui.NewTester(func(c *ui.Context) {
+			k := l.setTheme(c)
+			fill, panelDark = l.fill(c, k), c.Theme().Dark
+		}, 200, 100)
+		tt.SetDark(sysDark)
+		tt.Frame()
+		return panelDark, fill
+	}
+	mocha, latte := ui.Hex("#1e1e2e"), ui.Hex("#eff1f5")
+	l := ghosttyLook(ghosttyconf.Load(sysGhosttyEnv()))
+	if !l.ownThemes() {
+		t.Fatal("light and dark: not the system's themes")
+	}
+	for sysDark, want := range map[bool]struct {
+		dark bool
+		bg   ui.Color
+	}{false: {true, mocha}, true: {false, latte}} {
+		if dark, fill := frame(&l, sysDark); dark != want.dark || fill != want.bg {
+			t.Errorf("inverted, system dark %v: panel dark %v, fill %v", sysDark, dark, fill)
+		}
+		if th, dk := l.termThemes(sysDark); th.Background != want.bg || dk != nil {
+			t.Errorf("inverted, system dark %v: terminals %v, %v", sysDark, th.Background, dk)
+		}
+	}
+	// Both dark: the panel dark in either, the terminals the system's.
+	writeGhosttyFile(t, home, ghosttyConfig, "theme = light:Nord,dark:Mocha\n")
+	l = ghosttyLook(ghosttyconf.Load(sysGhosttyEnv()))
+	for sysDark, want := range map[bool]ui.Color{false: ui.Hex("#2e3440"), true: mocha} {
+		if dark, fill := frame(&l, sysDark); !dark || fill != want {
+			t.Errorf("both dark, system dark %v: panel dark %v, fill %v", sysDark, dark, fill)
+		}
+		if th, _ := l.termThemes(sysDark); th.Background != want {
+			t.Errorf("both dark, system dark %v: terminals %v", sysDark, th.Background)
+		}
+	}
+	// The panel gives its terminals the themes of the system's appearance
+	// as it changes.
+	p := &termPanel{g: &gocast{}}
+	p.readConf()
+	p.sysDark = true
+	p.applyLook(p.prefs)
+	if !p.themed {
+		t.Error("made in dark mode: themes not dark")
+	}
+	p.sysDark = false
+	p.applyLook(p.prefs)
+	if p.themed {
+		t.Error("light mode: themes not light")
+	}
+	// Without a config, as before: the system's themes picked by the
+	// panel's appearance.
+	l = ghosttyLook(nil)
+	if th, dk := l.termThemes(false); th == nil || th != dk || l.ownThemes() {
+		t.Errorf("no config: %v, %v", th, dk)
+	}
+}

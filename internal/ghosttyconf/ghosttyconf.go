@@ -38,6 +38,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -151,18 +152,19 @@ func (r *Result) For(dark bool) *Config {
 	return r.Light
 }
 
-// stamp is a file looked at: whether it was there, its size and time.
+// stamp is a file looked at: whether it was there, and a regular file,
+// its size and time.
 type stamp struct {
-	path  string
-	there bool
-	size  int64
-	mod   time.Time
+	path           string
+	there, regular bool
+	size           int64
+	mod            time.Time
 }
 
 func stampOf(path string) stamp {
 	st := stamp{path: path}
 	if fi, err := os.Stat(path); err == nil {
-		st.there, st.size, st.mod = true, fi.Size(), fi.ModTime()
+		st.there, st.regular, st.size, st.mod = true, fi.Mode().IsRegular(), fi.Size(), fi.ModTime()
 	}
 	return st
 }
@@ -195,14 +197,17 @@ type loader struct {
 }
 
 // read returns the lines of the file at path, and false where it isn't a
-// file or can't be read whole, or is larger than maxFileSize.
+// regular file or can't be read whole, or is larger than maxFileSize. It
+// opens no other kind: a FIFO would block the opening, and so the UI
+// thread, until something wrote to it; it opens without blocking still,
+// should the file be replaced by one between the look and the opening.
 func (l *loader) read(path string) ([]line, bool) {
 	st := stampOf(path)
 	l.stamps = append(l.stamps, st)
-	if !st.there {
+	if !st.there || !st.regular || st.size > maxFileSize {
 		return nil, false
 	}
-	f, err := os.Open(path)
+	f, err := os.OpenFile(path, os.O_RDONLY|syscall.O_NONBLOCK, 0)
 	if err != nil {
 		return nil, false
 	}
@@ -252,8 +257,13 @@ func Load(env Env) *Result {
 	l := &loader{env: env, seen: map[string]bool{}}
 	var lines []line
 	var includes []include
-	// adds takes the config-file lines of a file depth deep: each adds a
-	// file, an empty one clears the list (Ghostty's RepeatablePath).
+	// adds takes the config-file lines of a file depth deep, as Ghostty's
+	// RepeatablePath does: each adds a file to the list, an empty one
+	// clears the list, the files read and those to read alike. Ghostty
+	// reads the list by index while it grows (loadRecursiveFiles), as the
+	// loop below does: a list an included file clears ends the reading
+	// there, the files named after the clear taking places already read,
+	// but those past them; Gocast shows what Ghostty does.
 	adds := func(ls []line, depth int) {
 		for _, ln := range ls {
 			if ln.key != "config-file" || !ln.has {
@@ -274,6 +284,8 @@ func Load(env Env) *Result {
 			includes = append(includes, include{l.abs(v, ln.dir), depth + 1})
 		}
 	}
+	// The four files go in no list of files read: Ghostty reads one that
+	// a file includes again, after the four (loadDefaultFiles keeps none).
 	for _, path := range env.Files() {
 		ls, _ := l.read(path)
 		lines = append(lines, ls...)
@@ -506,8 +518,8 @@ func (c *Config) apply(ln line, bad map[string]bool, theme bool) {
 			return
 		}
 		n, col, has := strings.Cut(v, "=")
-		i, err := strconv.ParseUint(strings.Trim(n, " \t"), 0, 8)
-		if !ln.has || !has || err != nil {
+		i, good := parseIndex(strings.Trim(n, " \t"))
+		if !ln.has || !has || !good {
 			bad["palette"] = true
 			return
 		}
@@ -632,6 +644,36 @@ func ParseColor(v string) (Color, bool) {
 		return Color{}, false
 	}
 	return Color{uint8(n >> 16), uint8(n >> 8), uint8(n)}, true
+}
+
+// parseIndex parses a palette index as Ghostty does (Zig's
+// std.fmt.parseInt(u8, s, 0)): decimal, or of base 16, 8 or 2 after 0x,
+// 0o or 0b (of either case), a + or - before it, _ between its digits;
+// so 010 is ten, where Go's base 0 would read eight.
+func parseIndex(s string) (uint64, bool) {
+	neg := false
+	if s != "" && (s[0] == '+' || s[0] == '-') {
+		neg, s = s[0] == '-', s[1:]
+	}
+	base := 10
+	if len(s) > 2 && s[0] == '0' {
+		switch s[1] {
+		case 'x', 'X':
+			base, s = 16, s[2:]
+		case 'o', 'O':
+			base, s = 8, s[2:]
+		case 'b', 'B':
+			base, s = 2, s[2:]
+		}
+	}
+	if s == "" || s[0] == '_' || s[len(s)-1] == '_' {
+		return 0, false
+	}
+	n, err := strconv.ParseUint(strings.ReplaceAll(s, "_", ""), base, 8)
+	if err != nil || neg && n != 0 { // -0 is 0, as Zig has it
+		return 0, false
+	}
+	return n, true
 }
 
 // parseBool parses a boolean as Ghostty does.

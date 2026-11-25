@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -305,5 +306,109 @@ func TestChanged(t *testing.T) {
 		if r.Changed() {
 			t.Errorf("%s: changed as read again", name)
 		}
+	}
+}
+
+// A file of the chain that isn't a regular file, a FIFO above all, is
+// skipped without being opened: opening a FIFO waits for a writer.
+func TestLoadNotRegular(t *testing.T) {
+	env := home(t, map[string]string{
+		appSupport:         "font-size = 12\nconfig-file = fifo\ntheme = Fifo\n",
+		"res/themes/Other": "background = #000001\n",
+	})
+	fifo := func(name string) {
+		path := filepath.Join(env.Home, name)
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := syscall.Mkfifo(path, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	fifo(xdgFile)
+	fifo("Library/Application Support/com.mitchellh.ghostty/fifo")
+	fifo("res/themes/Fifo")
+	done := make(chan *Result)
+	go func() { done <- Load(env) }()
+	select {
+	case r := <-done:
+		if c := r.Light; c.FontSize != 12 || c.Background != nil || !reflect.DeepEqual(c.Unrecognized, []string{"theme"}) {
+			t.Errorf("%+v", c)
+		}
+		if r.Changed() {
+			t.Error("changed as read")
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("Load blocked on a FIFO")
+	}
+}
+
+// A palette's index is read as Ghostty's Zig parseInt of base 0 reads it:
+// decimal unless 0x, 0o or 0b, so a leading 0 is no octal.
+func TestPaletteIndex(t *testing.T) {
+	for s, want := range map[string]int{
+		"8": 8, "08": 8, "010": 10, "0x0f": 15, "0X0A": 10, "0o10": 8, "0b11": 3, "+3": 3, "-0": 0, "1_0": 10, "0x_f": -1,
+		"0x": -1, "_1": -1, "1_": -1, "-1": -1, "256": -1, "0o9": -1, "": -1, "1.0": -1,
+	} {
+		n, ok := parseIndex(s)
+		if got := int(n); !ok {
+			got = -1
+		} else if got != want {
+			t.Errorf("%q: %d, want %d", s, got, want)
+		}
+		if ok != (want >= 0) {
+			t.Errorf("%q: ok %v, want %d", s, ok, want)
+		}
+	}
+	c := Load(home(t, map[string]string{xdgFile: "palette = 010=#0000aa\npalette = 08=#0000bb\n"})).Light
+	if *c.Palette[10] != *col("#0000aa") || *c.Palette[8] != *col("#0000bb") || len(c.Unrecognized) > 0 {
+		t.Errorf("010 and 08: %v, %v, %v", c.Palette[10], c.Palette[8], c.Unrecognized)
+	}
+}
+
+// An empty config-file in an included file clears the list of files as
+// Ghostty 1.3's does: Ghostty reads the list by index as it grows, so the
+// files named after the clear take the places of those read, and only
+// those past them are read; the files named before it, not yet read, are
+// not.
+func TestLoadConfigFileClearedInInclude(t *testing.T) {
+	env := home(t, map[string]string{
+		xdgFile:              "config-file = a\nconfig-file = b\n",
+		".config/ghostty/a":  "font-size = 11\nconfig-file =\nconfig-file = c\n",
+		".config/ghostty/b":  "background = #00000b\n",
+		".config/ghostty/c":  "foreground = #00000c\n",
+		".config/ghostty/d":  "cursor-color = #00000d\n",
+		".config/ghostty/a2": "font-size = 12\nconfig-file =\nconfig-file = c\nconfig-file = d\n",
+	})
+	c := Load(env).Light
+	if c.FontSize != 11 || c.Background != nil || c.Foreground != nil {
+		t.Errorf("cleared, one named after: %+v", c)
+	}
+	// Two named after: the list is c, d, and the second place, d's, is
+	// read next.
+	write(t, filepath.Join(env.Home, xdgFile), "config-file = a2\nconfig-file = b\n")
+	c = Load(env).Light
+	if c.FontSize != 12 || c.Background != nil || c.Foreground != nil || *c.CursorColor != *col("#00000d") {
+		t.Errorf("cleared, two named after: %+v", c)
+	}
+}
+
+// One of the four files that a file includes is read again where it is
+// included, as Ghostty reads it: its keys over those of the files after
+// it; once only, though it include itself.
+func TestLoadMainIncluded(t *testing.T) {
+	c := Load(home(t, map[string]string{
+		xdgFile:    "font-size = 11\nfont-family = A\nconfig-file = config.ghostty\n",
+		appSupport: "font-size = 12\n",
+	})).Light
+	if c.FontSize != 11 || !reflect.DeepEqual(c.FontFamily, []string{"A", "A"}) {
+		t.Errorf("itself: font-size %v, families %v", c.FontSize, c.FontFamily)
+	}
+	c = Load(home(t, map[string]string{
+		xdgLegacy:  "font-size = 11\n",
+		appSupport: "font-size = 12\nconfig-file = ~/.config/ghostty/config\n",
+	})).Light
+	if c.FontSize != 11 {
+		t.Errorf("another: font-size %v, want 11, read again last", c.FontSize)
 	}
 }

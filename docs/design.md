@@ -584,10 +584,16 @@ macOS 不让窗口从菜单栏上方滑进来，所以不做整窗从屏幕外�
 - 选中文字：前景和底色互换（白底深字），和 Ghostty 默认一样。
 
 **读用户的 Ghostty 配置（第二步，只在选 Ghostty 时）**
-- 读哪里（和 Ghostty 1.3 的 loadDefaultFiles 一样，后读的盖前面的）：`$XDG_CONFIG_HOME/ghostty/config` → 同目录 `config.ghostty`（`XDG_CONFIG_HOME` 没设时是 `~/.config`）→ `~/Library/Application Support/com.mitchellh.ghostty/config` → 同目录 `config.ghostty`。`config-file` 引用的文件在这四个之后按顺序读，路径相对写它的那个文件，前面带 `?` 的找不到就算了；同一文件只读一次（防循环），最多引用 10 层，单个文件超过 1 MB 不读。
+- 读哪里（和 Ghostty 1.3 的 loadDefaultFiles 一样，后读的盖前面的）：`$XDG_CONFIG_HOME/ghostty/config` → 同目录 `config.ghostty`（`XDG_CONFIG_HOME` 没设时是 `~/.config`）→ `~/Library/Application Support/com.mitchellh.ghostty/config` → 同目录 `config.ghostty`。`config-file` 引用的文件在这四个之后按顺序读，路径相对写它的那个文件，前面带 `?` 的找不到就算了；同一文件只读一次（防循环），最多引用 10 层，单个文件超过 1 MB 不读，不是普通文件的（命名管道、设备、文件夹）不打开、不读（打开命名管道会卡住界面）。和 Ghostty 一样的两处细节：四个主文件被 `config-file` 引用时会在最后再读一遍（盖过后面的主文件）；被引用的文件里写了空的 `config-file =` 会清空待读列表，Ghostty 按序号往下读，所以之后的引用基本读不到（只有比已读位置多出来的才读），照这个来。
 - `theme`：名字先找 `$XDG_CONFIG_HOME/ghostty/themes/<名字>`，再找 Ghostty 自带的（`Ghostty.app/Contents/Resources/ghostty/themes`），也可以是绝对路径；`light:X,dark:Y` 两套都读，面板跟着系统浅深色换。先套主题，配置里明写的项再盖上去。
-- 只认外观项：font-family（可多个，`""` 清空）、font-size、background、foreground、palette 0–15、cursor-color、cursor-text、cursor-style（block_hollow 当 block）、cursor-style-blink、selection-background/foreground、window-padding-x/y、background-opacity。其他键一律跳过。颜色认 `#rrggbb`、`rrggbb`、`#rgb`，X11 颜色名不认。读不了、写错了都不弹窗：按 Ghostty 默认的样子，读不懂的行跳过。
-- 怎么用：配色、光标照配置（没写的用上面 Ghostty 的默认值；选中没写就是前景背景互换）；字体是配置里的字体在前，JetBrains Mono 和 Symbols Nerd Font Mono 跟在后面补字（配置里的字体没装时就是它们）；留白取配置的 window-padding 和 左右 20 / 上 0 / 下 12（胶囊时 60）里较大的；background-opacity 小于 1 时面板底按这个透明度盖在玻璃上（减少透明度时不透明）。面板和标签栏的深浅跟背景色走：背景浅就是浅色的字和灰。
+- 只认外观项：font-family（可多个，`""` 清空）、font-size、background、foreground、palette 0–15（序号按 Ghostty 的读法：十进制，带 `0x` / `0o` / `0b` 才是别的进制，`010` 就是 10）、cursor-color、cursor-text、cursor-style（block_hollow 当 block）、cursor-style-blink、selection-background/foreground、window-padding-x/y、background-opacity。其他键一律跳过。颜色认 `#rrggbb`、`rrggbb`、`#rgb`，X11 颜色名不认。读不了、写错了都不弹窗：按 Ghostty 默认的样子，读不懂的行跳过。
+- 怎么用：配色、光标照配置（没写的用上面 Ghostty 的默认值；选中没写就是前景背景互换）；字体是配置里的字体在前，JetBrains Mono 和 Symbols Nerd Font Mono 跟在后面补字（配置里的字体没装时就是它们）；留白取配置的 window-padding 和 左右 20 / 上 0 / 下 12（胶囊时 60）里较大的，配置的值每边最多左右 200、上下 60（最小的面板 640×300 里终端还剩约 240×128，13 号字约 30 列 7 行），超过按上限算，并算作「有几项没认出来」；background-opacity 小于 1 时面板底按这个透明度盖在玻璃上（减少透明度时不透明）。面板和标签栏的深浅跟背景色走：背景浅就是浅色的字和灰。
+- 配置给了别的背景或文字色时，标签栏、浮层用的颜色（背景、文字都是默认值时仍是上面表里的固定值，一点不变）：
+  - 字（选中标签、浮层正文、键帽里的字）：配置的前景色。
+  - 灰字（标志、没选中的标签、×、＋、收起、胶囊图标、菜单灰字）：从前景色往背景色混，最多 35%，混到和背景的对比刚好还有 4.5:1 就停（WCAG 相对亮度对比）；前景色本身对背景就不到 4.5:1 时，直接用前景色。例：Catppuccin Latte（字 `#4C4F69` 底 `#EFF1F5`）、Solarized Dark（`#839496` / `#002B36`）停在 4.5:1 左右；Solarized Light（`#657B83` / `#FDF6E3`，本身 4.13:1）就用前景色。
+  - 浮层底（提示胶囊、⌘ 提示卡、「用预设打开」菜单）：深色背景往白混 6.5%；浅色背景往白混 60%，但混出来和背景的对比不到 1.08:1（白或接近白的背景，Latte、Solarized Light 也在内）时改为往黑混 5%，免得胶囊和提示卡看不出来。
+  - 选中标签的底（也是按钮按下、菜单选中行的底）：深色背景叠前景色 10%；浅色背景叠黑色 6%。键帽底叠前景色 12%，细线和胶囊描边叠前景色 10%。
+  - 输入框、焦点环这些控件的浅深也跟当前背景走。`light:X,dark:Y` 时先按系统浅深挑 X 或 Y，面板的底、标签栏颜色、控件浅深都按挑中那套的背景定；终端配色照样按系统浅深挑（比如 `light:` 给了深色主题，浅色模式下就是深色面板配那套深色配色）。
 - 什么时候生效：每次唤出终端时看一眼读过的每个文件（含引用和主题，以及没找到的那几个位置）的修改时间和大小，变了就重读；在设置里切到 Ghostty、打开设置时也重读。颜色、字体、留白对所有开着的标签立刻生效，光标样式只对新标签。
 - 字号：用户没在 Gocast 里调过字号（settings.json 里没有 fontSize），就用配置的 font-size（限在 11–20），设置里显示的就是这个数；在设置里调过（包括调到 13）就以 Gocast 的为准。老版本把 13 存成「没有」，所以以前选过 13 的用户算「没调过」，会跟 Ghostty 的 font-size 走，直到再调一次——这是分不出来的，接受。没缩放过的标签跟着新字号走，⌘+/⌘- 缩放过的不动。
 - 设置里「终端外观」下面的说明见 copy.md 20：没有配置或配置里没有外观项时是默认那句；用上了至少一项时是「字体、配色和光标来自你的 Ghostty 配置。」；有外观项的值用不了（颜色认不出、主题找不到……）时后面加「有几项没认出来，按默认样子显示。」
