@@ -1,4 +1,6 @@
-# Gocast 界面文案 v1.37（搜索面板 · 悬浮终端 · 笔记 · 设置）
+# Gocast 界面文案 v1.38（搜索面板 · 悬浮终端 · 笔记 · 设置）
+
+v1.38 改动：新增第 20 节「终端外观：Ghostty / Gocast」。
 
 v1.37 改动：2.2a 空搜索框合成一列，去掉「推荐」「Gocast」小标题；Gocast 行右侧只写灰字，键帽只在选中时出。
 
@@ -1374,3 +1376,24 @@ CHANGELOG 一条，README 不改（开头那段讲的是搜索、终端、剪贴
 - 菜单栏、搜索面板 ⌘K 里打开这页的入口，原来叫「快捷键」的地方都改成「搜索与快捷键」；11.1 ⌘K 里的「设置快捷键… / 更改快捷键… / 移除快捷键」不变（那是对一项说的）。
 - ⌘K 最后一行加「在搜索中隐藏 / Hide from Search」（Ato 已定）。点了出胶囊：中文「已在搜索中隐藏，可在设置 › 搜索与快捷键 里找回」；英文「Hidden from search. Undo in Settings.」（胶囊约 45 个字母放得下，英文不写页名，打开设置一眼就看到「搜索与快捷键」）。
 - 11.3、15.7 里提到「设置 › 快捷键」的句子（页面说明、空状态「在「全部」里点任意一行右边就能设」）照旧能用；文档里的「设置 › 快捷键」发版时我一起改。
+
+## 20. 终端外观：Ghostty / Gocast（v1.38；需求见 Ghostty 对齐方案，位置和控件以 design.md 为准）
+
+放在设置 › 悬浮终端上半那组里，「字号」上面。
+
+| 位置 | 中文 | English |
+|---|---|---|
+| 设置名 | 终端外观 | Appearance |
+| 选项 1（默认） | Ghostty | Ghostty |
+| 选项 2 | Gocast | Gocast |
+| 选 Ghostty、没有 Ghostty 配置时的说明 | 和 Ghostty 默认的样子一样：深灰底、JetBrains Mono 字体。 | Looks like Ghostty out of the box: dark gray background, JetBrains Mono. |
+| 选 Ghostty、读到了配置时的说明（第二步才有） | 字体、配色和光标来自你的 Ghostty 配置。 | Font, colors and cursor come from your Ghostty config. |
+| 读到配置、里面有看不懂的项时，在上面那句后面加（第二步） | 有几项没认出来，按默认样子显示。 | A few settings weren’t recognized and use the defaults. |
+| 选 Gocast 时的说明 | 磨砂玻璃底，跟着浅色或深色外观走。 | Frosted glass that follows light or dark appearance. |
+
+用词：
+- 设置名叫「终端外观」：这一页已经是「悬浮终端」，但下面还有「出现位置」这类不管样子的项，「外观」前面带上「终端」，免得以为管的是整个 Gocast 的浅深色（那个在通用里叫「外观」）。英文页标题已是 Floating Terminal，用 Appearance 就够。
+- 选项直接写 Ghostty 和 Gocast，不写「跟 Ghostty 一样」「经典」：用 Ghostty 的人一眼就懂；Gocast 就是它原来的样子。
+- 说明里不写配置文件路径、不写「libghostty」「主题」这些词；用户在乎的是字体、颜色像不像。路径给会去翻的人，写在 README 或支持页。
+- 读配置出错不弹窗、不标红，只在说明里加半句（需求：读不懂的忽略、不报错）。
+- 「字号」不补说明（Pluso 已确认）：没在 Gocast 里调过时跟着 Ghostty 配置走，设置里显示的就是那个数；调过就以 Gocast 的为准。看到的数就是用的数，不用解释来源。
