@@ -36,3 +36,6 @@ type noWindows struct{ screens func() []Screen }
 func (noWindows) Trusted() bool               { return false }
 func (noWindows) Focused(int) (Window, error) { return nil, ErrUnsupported }
 func (w noWindows) Screens() []Screen         { return w.screens() }
+
+// MouseHeld reports false but on macOS.
+func MouseHeld() bool { return false }

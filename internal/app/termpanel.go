@@ -20,6 +20,7 @@ import (
 	"gocast/internal/presets"
 	"gocast/internal/settings"
 	"gocast/internal/shortcut"
+	"gocast/internal/sysact"
 	"gocast/internal/termhost"
 	"gocast/locales"
 )
@@ -40,6 +41,9 @@ const (
 	// sizeSaveDelay is how long after the last step of a drag of the
 	// panel's edges its size is saved: once the drag ended.
 	sizeSaveDelay = 400 * time.Millisecond
+	// keepPoll is how often the panel the user moved out of the work area
+	// looks whether the drag ended, to come back in (keepInside).
+	keepPoll = 50 * time.Millisecond
 	// How long the panel moves and fades as it shows and hides, or only
 	// fades, with Reduce Motion (design.md 1.5); how far, termplace.go.
 	slideIn         = 180 * time.Millisecond
@@ -95,6 +99,7 @@ type termPanel struct {
 
 	shown  bool         // shown, or showing: hide is what the shortcut does next
 	anim   atomic.Int64 // the generation of the slide in progress
+	still  int64        // the generation of anim the panel is still at, where it showed
 	reveal bool         // scroll the tab bar to the active tab
 	menu   bool         // the new tab menu shows
 	chosen int          // the row of the new tab menu chosen
@@ -106,6 +111,8 @@ type termPanel struct {
 	pl      termPlace      // where it shows, and how it moves and resizes there
 	bounds  mygo.Rectangle // the panel's bounds as last placed or resized
 	placing bool           // the panel's bounds are being set, not dragged
+	moved   bool           // the user moved the panel this showing (design.md 3.4)
+	keeping bool           // a check that the panel moved is in the work area waits for the button
 	saveGen int            // the size dragged to last, to save
 	accents [2]ui.Color    // the light and dark accents of the look's themes
 	look    termLook       // what the panel and its terminals look like (termlook.go)
@@ -144,6 +151,7 @@ func newTermPanel(g *gocast) *termPanel {
 		}
 	})
 	p.win.OnResize(p.resized)
+	p.win.OnMove(p.userMove)
 	p.win.OnBlur(func() {
 		p.hints.cancel()
 		if !g.settings.KeepTerminalOnBlur {
@@ -334,7 +342,15 @@ func (p *termPanel) shortcuts(c *ui.Context) {
 // on the glass, as the search bar (design.md 3.4); the tabs' numbers with
 // the hints.
 func (p *termPanel) tabBar(c *ui.Context, k tokens, hints bool) {
-	ui.Row(c).Height(tabBarH).Shrink(0).Padding(0, 12, 0, 20).Gap(12).AlignItems(ui.Center).Children(func() {
+	bar := ui.Row(c).Height(tabBarH).Shrink(0).Padding(0, 12, 0, 20).Gap(12).AlignItems(ui.Center)
+	// Its blank, and Gocast's mark, move the panel, as a title bar, once
+	// it is still where it showed: not as it moves in. A double click
+	// there does nothing, not zooming it (design.md 3.4).
+	if !p.sliding() {
+		bar.DragWindow()
+	}
+	bar.WindowDoubleClicked()
+	bar.Children(func() {
 		gocastMark(c, k)
 		ui.ScrollHorizontal(c).Grow(1).Shrink(1).Children(func() {
 			ui.Row(c).Gap(4).AlignItems(ui.Center).Children(func() {
@@ -1102,11 +1118,8 @@ func (p *termPanel) show() {
 	p.hints.reset()
 	p.applyLook(p.prefs)
 	p.syncVisible()
-	pt, wa, scale := sysPointer()
-	w, h := termSize(wa.Width, wa.Height, p.g.settings)
-	p.wa, p.scale, p.pos, p.pointer = wa, scale, p.g.settings.TermPosition(), pt
-	p.pl = termPlacement(p.pos, wa, w, h, pt, p.typedAnchor(h))
-	x, y := p.pl.rect.X, p.pl.rect.Y
+	p.placeFor(sysPointer())
+	x, y, w, h := p.pl.rect.X, p.pl.rect.Y, p.pl.rect.Width, p.pl.rect.Height
 	gen := p.anim.Add(1)
 	reduce := mygo.Theme.Preferences().ReduceMotion
 	// AppKit keeps a window's top under the menu bar (a frameless window
@@ -1125,15 +1138,98 @@ func (p *termPanel) show() {
 	}
 	p.win.Show()
 	p.win.Invalidate()
+	// Still where it showed, the user may move it (sliding).
+	still := func() {
+		if p.anim.Load() == gen {
+			p.still = gen
+			p.bounds = p.win.Bounds()
+			p.win.Invalidate()
+		}
+	}
 	if reduce {
-		p.animate(gen, fadeIn, easeOut, func(t float64) { p.win.SetOpacity(t) }, nil)
+		p.animate(gen, fadeIn, easeOut, func(t float64) { p.win.SetOpacity(t) }, still)
 		return
 	}
 	p.animate(gen, slideIn, easeOut, func(t float64) {
 		p.win.SetOpacity(t)
 		p.win.SetPosition(from.X+int(math.Round(float64(x-from.X)*t)), from.Y+int(math.Round(float64(y-from.Y)*t)))
-	}, nil)
+	}, still)
 }
+
+// placeFor places the panel about to show, with the pointer at pt, in
+// the work area wa of its display of scale, where Settings has it, at its
+// size there (design.md 3.2, 3.7): wherever the user moved it the last
+// time it showed, which it does not keep (3.4).
+func (p *termPanel) placeFor(pt mygo.Point, wa mygo.Rectangle, scale float64) {
+	w, h := termSize(wa.Width, wa.Height, p.g.settings)
+	p.wa, p.scale, p.pos, p.pointer = wa, scale, p.g.settings.TermPosition(), pt
+	p.moved = false
+	p.pl = termPlacement(p.pos, wa, w, h, pt, p.typedAnchor(h))
+}
+
+// sliding reports whether the panel is moving in, or out, or hidden: not
+// still where it showed, which the user moves it from.
+func (p *termPanel) sliding() bool { return !p.shown || p.anim.Load() != p.still }
+
+// userMove follows the user's move of the panel by its tab bar (design.md
+// 3.4): it stays where it is dropped while it shows, kept in the work
+// area, and resizes as a window from there (freeDragRect). The keys go
+// on to the terminal.
+func (p *termPanel) userMove() {
+	if !p.movedTo(p.win.Bounds()) {
+		return
+	}
+	p.refocus()
+	p.keepInside()
+}
+
+// movedTo notes the panel's bounds b after a move, and reports whether
+// the user moved it: still where it showed, not placed by Gocast, nor
+// resized (resized's).
+func (p *termPanel) movedTo(b mygo.Rectangle) bool {
+	prev := p.bounds
+	if p.placing || p.sliding() || b == prev || b.Width != prev.Width || b.Height != prev.Height {
+		return false
+	}
+	p.moved, p.bounds = true, b
+	return true
+}
+
+// keepInside keeps the panel the user moved in the work area of the
+// display it is mostly on, which it then shows in, once the drag ends:
+// not while the window server moves it, which would take it back.
+func (p *termPanel) keepInside() {
+	if !p.moved || p.sliding() {
+		return
+	}
+	b := p.win.Bounds()
+	d := mygo.Screen.DisplayMatching(b)
+	if d.WorkArea.Width <= 0 || d.WorkArea.Height <= 0 {
+		return
+	}
+	r := keepIn(b, d.WorkArea)
+	if r != b && mouseHeld() {
+		if !p.keeping {
+			p.keeping = true
+			time.AfterFunc(keepPoll, func() {
+				p.win.Update(func() {
+					p.keeping = false
+					p.keepInside()
+				})
+			})
+		}
+		return
+	}
+	p.wa, p.scale = d.WorkArea, d.ScaleFactor
+	if r != b {
+		p.place(r)
+	} else {
+		p.bounds = b
+	}
+}
+
+// mouseHeld reports whether a mouse button is down; a fake in tests.
+var mouseHeld = sysact.MouseHeld
 
 // place sets the panel's bounds, which resized then knows the user did not
 // drag.
@@ -1157,7 +1253,7 @@ func (p *termPanel) resized() {
 	if b == prev {
 		return
 	}
-	r := dragRect(prev, b, p.wa, p.pl)
+	r := p.dragTo(prev, b)
 	w, h := r.Width, r.Height
 	if r != b {
 		p.place(r)
@@ -1187,6 +1283,16 @@ func (p *termPanel) resized() {
 	})
 }
 
+// dragTo is the panel's bounds as the user drags its edges from prev to
+// b: as a window's once the user moved it this showing (freeDragRect),
+// else with the edge it shows against staying (dragRect).
+func (p *termPanel) dragTo(prev, b mygo.Rectangle) mygo.Rectangle {
+	if p.moved {
+		return freeDragRect(prev, b, p.wa)
+	}
+	return dragRect(prev, b, p.wa, p.pl)
+}
+
 // clampSize keeps px within lo% and hi% of wa, at least least, and never
 // over wa.
 func clampSize(px, wa, lo, hi, least int) int {
@@ -1194,9 +1300,16 @@ func clampSize(px, wa, lo, hi, least int) int {
 }
 
 // sizeChanged gives the panel showing the size of Settings, where it
-// shows, as it would show at that size: by the pointer where it was.
+// shows, as it would show at that size: by the pointer where it was;
+// where the user moved it, from its top left corner, kept in the work
+// area.
 func (p *termPanel) sizeChanged() {
 	if !p.shown || p.wa.Width <= 0 {
+		return
+	}
+	if p.moved && !p.sliding() {
+		w, h := termSize(p.wa.Width, p.wa.Height, p.g.settings)
+		p.place(keepIn(mygo.Rectangle{X: p.bounds.X, Y: p.bounds.Y, Width: w, Height: h}, p.wa))
 		return
 	}
 	p.replace()
@@ -1218,11 +1331,13 @@ func (p *termPanel) positionChanged() {
 // replace places the panel showing at p.pos, with the size of Settings,
 // ending a move in progress where it would end.
 func (p *termPanel) replace() {
-	p.anim.Add(1)
+	p.still = p.anim.Add(1)
 	p.win.SetOpacity(1)
 	w, h := termSize(p.wa.Width, p.wa.Height, p.g.settings)
+	p.moved = false
 	p.pl = termPlacement(p.pos, p.wa, w, h, p.pointer, p.typedAnchor(h))
 	p.place(p.pl.rect)
+	p.win.Invalidate()
 }
 
 // typedAnchor is how far under the top of the panel, h high, the middle

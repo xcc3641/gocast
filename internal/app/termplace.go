@@ -263,3 +263,44 @@ func fixAxis(p, ps, size int, fix axisFix) int {
 	}
 	return p + (ps-size)/2
 }
+
+// freeDragRect is the panel's bounds as the user drags its edges from
+// prev to b, in the work area wa, once the user moved it this showing
+// (design.md 3.4): as a window's, the edge dragged moving and the other
+// one staying, along each axis; a corner does both its edges. Within the
+// settings' ranges and the minimum, as dragRect, and never outside wa: an
+// edge dragged past it stops there.
+func freeDragRect(prev, b, wa mygo.Rectangle) mygo.Rectangle {
+	x, w := freeAxis(prev.X, prev.Width, b.X, b.Width, wa.X, wa.Width, func(px int) int {
+		return clampSize(px, wa.Width, settings.MinTermWidth(wa.Width), settings.MaxTerminalWidth, termMinWidth)
+	})
+	y, h := freeAxis(prev.Y, prev.Height, b.Y, b.Height, wa.Y, wa.Height, func(px int) int {
+		return clampSize(px, wa.Height, settings.MinTerminalHeight, settings.MaxTerminalHeight, termMinHeight)
+	})
+	return mygo.Rectangle{X: x, Y: y, Width: w, Height: h}
+}
+
+// freeAxis is the start and size along an axis of the panel, which was
+// at p, ps long, as its edges there go to start b, size bs, in the work
+// area's span from lo: the start dragged, its end stays; else its start
+// stays and its end goes where it was dragged. Its size is what fit makes
+// of it, and no more than the room up to the work area's edge, unless
+// that is under the least fit allows, the panel then moving in.
+func freeAxis(p, ps, b, bs, lo, span int, fit func(int) int) (start, size int) {
+	least := fit(0)
+	if b != p { // the start edge: the end stays
+		end := p + ps
+		size = max(min(fit(end-b), end-lo), least)
+		return clampInside(end-size, lo, span, size, 0), size
+	}
+	size = max(min(fit(bs), lo+span-p), least)
+	return clampInside(p, lo, span, size, 0), size
+}
+
+// keepIn is the panel's bounds b, moved by the user, kept inside the work
+// area wa (design.md 3.4): as dragRect and freeDragRect keep it, against
+// its edges at most, no smaller, unless wa is.
+func keepIn(b, wa mygo.Rectangle) mygo.Rectangle {
+	w, h := min(b.Width, wa.Width), min(b.Height, wa.Height)
+	return mygo.Rectangle{X: clampInside(b.X, wa.X, wa.Width, w, 0), Y: clampInside(b.Y, wa.Y, wa.Height, h, 0), Width: w, Height: h}
+}
