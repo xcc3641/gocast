@@ -8,6 +8,14 @@ The section of each version is the release notes that the update window
 shows (MyGo reads `## [version]`), so write it for users, in Chinese and
 English.
 
+## [0.3.2] - 2026-11-25
+
+- 悬浮终端默认换成 Ghostty 的样子：深灰底、JetBrains Mono 字体、Ghostty 的配色和白色方块光标，浅色深色外观下都一样。Powerlevel10k 这类提示符里的图标也能正常显示，字体随 Gocast 自带，不用另装。
+- 想要原来的磨砂玻璃样子，在设置 › 悬浮终端 › 终端外观里选 Gocast，开着的终端立刻换，内容不丢。
+
+- The floating terminal now looks like Ghostty out of the box: dark gray background, JetBrains Mono, Ghostty’s colors and a white block cursor, the same in light and dark appearance. Icons in prompts like Powerlevel10k show properly; the fonts come with Gocast, nothing to install.
+- Prefer the old frosted glass? Choose Gocast under Settings › Floating Terminal › Appearance. Open terminals switch at once and keep their content.
+
 ## [0.3.1] - 2026-11-24
 
 - 打开搜索面板时不再分「推荐」「Gocast」两段，合成一列：常用的在前，Gocast 自己的功能接在后面，同一项只出现一次。
