@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/egoist/mygo"
 
+	"gocast/internal/ghosttyconf"
 	"gocast/internal/running"
 	"gocast/internal/termhost"
 )
@@ -76,8 +78,55 @@ func TestMain(m *testing.M) {
 	sysAppQuit = func() {} // no test quits the test binary's app
 	sysNotesKey = func(*notesWindow) bool { return false }
 	sysPanelKey = func(*launcher) bool { return false }
-	os.Exit(m.Run())
+	// Nor the user's Ghostty config: a home folder with none
+	// (useGhosttyConfig gives a test one).
+	noHome, err := os.MkdirTemp("", "gocast-ghostty")
+	if err != nil {
+		panic(err)
+	}
+	sysGhosttyEnv = func() ghosttyconf.Env { return ghosttyconf.Env{Home: noHome} }
+	code := m.Run()
+	os.RemoveAll(noHome)
+	os.Exit(code)
 }
+
+// useGhosttyConfig gives the test a home folder of its own with the
+// Ghostty config files of files, by their path from it (".config/ghostty/
+// config", "Library/Application Support/com.mitchellh.ghostty/config",
+// "res/themes/…" for the themes Ghostty ships), and returns it.
+func useGhosttyConfig(t *testing.T, files map[string]string) string {
+	t.Helper()
+	home := t.TempDir()
+	for name, data := range files {
+		writeGhosttyFile(t, home, name, data)
+	}
+	was := sysGhosttyEnv
+	sysGhosttyEnv = func() ghosttyconf.Env {
+		return ghosttyconf.Env{Home: home, Resources: []string{filepath.Join(home, "res")}}
+	}
+	t.Cleanup(func() { sysGhosttyEnv = was })
+	return home
+}
+
+// writeGhosttyFile writes data to the file name under home, a minute later
+// than any write before it, whatever the file system's resolution.
+func writeGhosttyFile(t *testing.T, home, name, data string) {
+	t.Helper()
+	path := filepath.Join(home, name)
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, []byte(data), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	ghosttyWrites++
+	at := time.Now().Add(time.Duration(ghosttyWrites) * time.Minute)
+	if err := os.Chtimes(path, at, at); err != nil {
+		t.Fatal(err)
+	}
+}
+
+var ghosttyWrites int
 
 // fakeShortcuts stands for MyGo's global shortcuts: it refuses the
 // shortcuts of refuse, as the system does those another app has.

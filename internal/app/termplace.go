@@ -115,31 +115,29 @@ func placeIn(pos string, wa mygo.Rectangle, w, h int, pt mygo.Point, anchor, gap
 // with a line and two of status under it.
 const typedLinesUp = 3.5
 
-// termGridTop is how far under the panel's top the terminal's rows start:
-// under its outline and the tab bar, the terminal having no padding of
-// its own (termPanel.view, run).
+// termGridTop is how far under the panel's top the terminal's room starts:
+// under its outline and the tab bar (termPanel.view, run); its rows start
+// the look's padTop under that, the terminal having no padding of its own.
 const termGridTop = panelBorderWidth + tabBarH
 
 // cursorAnchor is how far under the top of a panel h high the middle of
 // its line typed on is, which shows at the pointer (design.md 3.7), for a
-// tab of font f, its bottom padding that of capsules or not: of the
-// cursor's row, on a display of scale, as the terminal lays its rows out,
-// kept to the rows the panel holds; estimated with a row < 0, not known.
-func cursorAnchor(h int, f terminal.Font, scale float64, capsules bool, row int) int {
-	bottom := float64(termPadBottom)
-	if capsules {
-		bottom = termPadCapsules
-	}
+// tab of font f, the terminal's room padded top and bottom (the look's,
+// bottom that of capsules or not): of the cursor's row, on a display of
+// scale, as the terminal lays its rows out, kept to the rows the panel
+// holds; estimated with a row < 0, not known.
+func cursorAnchor(h int, f terminal.Font, scale float64, padTop, padBottom float32, row int) int {
+	bottom := float64(padBottom)
 	if row < 0 {
 		return int(math.Round(float64(h) - bottom - typedLinesUp*float64(f.Size)*float64(termRows(f))))
 	}
 	// As the terminal's view: its cells a whole number of pixels high, its
 	// rows from the pixel its top is on.
 	cell := termCellPixels(f, scale)
-	room := float64(h) - 2*panelBorderWidth - tabBarH - bottom
+	room := float64(h) - 2*panelBorderWidth - tabBarH - float64(padTop) - bottom
 	rows := max(int(math.Round(room*scale))/cell, 1)
 	row = min(row, rows-1)
-	top := math.Round(termGridTop*scale) / scale
+	top := math.Round((termGridTop+float64(padTop))*scale) / scale
 	return int(math.Round(top + (float64(row)+0.5)*float64(cell)/scale))
 }
 

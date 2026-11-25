@@ -530,6 +530,18 @@
   "@generalTermLookGhosttyHint": {
     "description": "Settings › Floating Terminal › Appearance: the note under it while Ghostty is chosen (copy.md 20)."
   },
+  "generalTermLookConfigHint": "Font, colors and cursor come from your Ghostty config.",
+  "@generalTermLookConfigHint": {
+    "description": "Settings › Floating Terminal › Appearance: the note under it while Ghostty is chosen and the user's Ghostty config sets some of the terminal's appearance (copy.md 20)."
+  },
+  "generalTermLookConfigPartlyHint": "Font, colors and cursor come from your Ghostty config. A few settings weren’t recognized and use the defaults.",
+  "@generalTermLookConfigPartlyHint": {
+    "description": "Settings › Floating Terminal › Appearance: generalTermLookConfigHint, with the sentence added when some of the appearance settings of the user's Ghostty config could not be used (copy.md 20)."
+  },
+  "generalTermLookGhosttyPartlyHint": "Looks like Ghostty out of the box: dark gray background, JetBrains Mono. A few settings weren’t recognized and use the defaults.",
+  "@generalTermLookGhosttyPartlyHint": {
+    "description": "Settings › Floating Terminal › Appearance: generalTermLookGhosttyHint, with the sentence added when the user's Ghostty config has appearance settings that could not be used, and none that could (copy.md 20)."
+  },
   "generalTermLookGocastHint": "Frosted glass that follows light or dark appearance.",
   "@generalTermLookGocastHint": {
     "description": "Settings › Floating Terminal › Appearance: the note under it while Gocast is chosen (copy.md 20)."

@@ -165,8 +165,7 @@ func (p *prefsWindow) show(page string) {
 	p.searchOnly = p.g.settings.SearchOnly
 	p.calculator = p.g.settings.Calculator()
 	p.screenOff = p.g.settings.AwakeScreenOff
-	p.termLook = slices.Index(settings.TerminalLooks, p.g.settings.TermLook())
-	p.fontSize = float64(p.g.settings.Font())
+	p.showLook()
 	p.termPos = p.g.settings.TermPosition()
 	p.termWidth = float64(p.g.settings.TermWidth())
 	p.termHeight = float64(p.g.settings.TermHeight())
@@ -180,6 +179,16 @@ func (p *prefsWindow) show(page string) {
 	p.win.Show()
 	p.win.Focus()
 	p.win.Invalidate()
+}
+
+// showLook shows the floating terminal's look as Settings has it, and the
+// font size new tabs have: the user's Ghostty config's, as it is now, till
+// the user chose one (design.md 3.3b, copy.md 20).
+func (p *prefsWindow) showLook() {
+	p.termLook = slices.Index(settings.TerminalLooks, p.g.settings.TermLook())
+	p.g.term.readConf()
+	p.g.term.applyLook(p.g.term.prefs)
+	p.fontSize = float64(p.g.term.fontSize())
 }
 
 // hide hides Settings, and Gocast with it, for the keyboard to go back to
@@ -547,12 +556,12 @@ func (p *prefsWindow) terminalGroup(c *ui.Context, k tokens) {
 		p.lookRow(c, k, g)
 		g.row(c, k, locales.GeneralFontSize(), "", k.textSecondary, func() {
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-				ui.Text(c, strconv.Itoa(int(p.fontSize))).FontSize(13).Font("monospace").TextColor(k.text)
+				ui.Text(c, strconv.FormatFloat(p.fontSize, 'f', -1, 32)).FontSize(13).Font("monospace").TextColor(k.text)
 				if ui.Stepper(c, &p.fontSize, settings.MinFontSize, settings.MaxFontSize, 1).Label(locales.GeneralFontSize()).Changed() {
+					// Kept, 13 too: chosen here, it is Gocast's from now on,
+					// whatever Ghostty's config says (settings.Settings.FontSize).
+					p.fontSize = math.Round(p.fontSize) // a step from Ghostty's 16.5
 					p.g.settings.FontSize = int(p.fontSize)
-					if p.g.settings.FontSize == settings.DefaultFontSize {
-						p.g.settings.FontSize = 0
-					}
 					p.g.saveSettings()
 					p.g.term.fontChanged()
 				}
@@ -585,9 +594,11 @@ func (p *prefsWindow) terminalGroup(c *ui.Context, k tokens) {
 
 // lookRow chooses what the floating terminal looks like (design.md 3.3b,
 // 4.4): Ghostty or Gocast, the note under it saying what the one chosen
-// is (copy.md 20). Saved, and every tab of the terminal changed, at once.
+// is, Ghostty's whether the user's Ghostty config changed it (copy.md
+// 20). Saved, and every tab of the terminal changed, at once; the font
+// size shown the look's, till the user chose one.
 func (p *prefsWindow) lookRow(c *ui.Context, k tokens, g *group) {
-	hint := locales.GeneralTermLookGhosttyHint()
+	hint := p.g.term.confHint()
 	if settings.TerminalLooks[p.termLook] == settings.LookGocast {
 		hint = locales.GeneralTermLookGocastHint()
 	}
@@ -599,6 +610,7 @@ func (p *prefsWindow) lookRow(c *ui.Context, k tokens, g *group) {
 				p.g.settings.SetTermLook(settings.TerminalLooks[p.termLook])
 				p.g.saveSettings()
 				p.g.term.lookChanged()
+				p.fontSize = float64(p.g.term.fontSize())
 			}
 		})
 	})

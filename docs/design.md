@@ -583,6 +583,15 @@ macOS 不让窗口从菜单栏上方滑进来，所以不做整窗从屏幕外�
 - 光标：方块、闪烁，颜色 `#FFFFFF`，光标下的字 `#282C34`。不跟系统强调色。（第一版到处是方块。）
 - 选中文字：前景和底色互换（白底深字），和 Ghostty 默认一样。
 
+**读用户的 Ghostty 配置（第二步，只在选 Ghostty 时）**
+- 读哪里（和 Ghostty 1.3 的 loadDefaultFiles 一样，后读的盖前面的）：`$XDG_CONFIG_HOME/ghostty/config` → 同目录 `config.ghostty`（`XDG_CONFIG_HOME` 没设时是 `~/.config`）→ `~/Library/Application Support/com.mitchellh.ghostty/config` → 同目录 `config.ghostty`。`config-file` 引用的文件在这四个之后按顺序读，路径相对写它的那个文件，前面带 `?` 的找不到就算了；同一文件只读一次（防循环），最多引用 10 层，单个文件超过 1 MB 不读。
+- `theme`：名字先找 `$XDG_CONFIG_HOME/ghostty/themes/<名字>`，再找 Ghostty 自带的（`Ghostty.app/Contents/Resources/ghostty/themes`），也可以是绝对路径；`light:X,dark:Y` 两套都读，面板跟着系统浅深色换。先套主题，配置里明写的项再盖上去。
+- 只认外观项：font-family（可多个，`""` 清空）、font-size、background、foreground、palette 0–15、cursor-color、cursor-text、cursor-style（block_hollow 当 block）、cursor-style-blink、selection-background/foreground、window-padding-x/y、background-opacity。其他键一律跳过。颜色认 `#rrggbb`、`rrggbb`、`#rgb`，X11 颜色名不认。读不了、写错了都不弹窗：按 Ghostty 默认的样子，读不懂的行跳过。
+- 怎么用：配色、光标照配置（没写的用上面 Ghostty 的默认值；选中没写就是前景背景互换）；字体是配置里的字体在前，JetBrains Mono 和 Symbols Nerd Font Mono 跟在后面补字（配置里的字体没装时就是它们）；留白取配置的 window-padding 和 左右 20 / 上 0 / 下 12（胶囊时 60）里较大的；background-opacity 小于 1 时面板底按这个透明度盖在玻璃上（减少透明度时不透明）。面板和标签栏的深浅跟背景色走：背景浅就是浅色的字和灰。
+- 什么时候生效：每次唤出终端时看一眼读过的每个文件（含引用和主题，以及没找到的那几个位置）的修改时间和大小，变了就重读；在设置里切到 Ghostty、打开设置时也重读。颜色、字体、留白对所有开着的标签立刻生效，光标样式只对新标签。
+- 字号：用户没在 Gocast 里调过字号（settings.json 里没有 fontSize），就用配置的 font-size（限在 11–20），设置里显示的就是这个数；在设置里调过（包括调到 13）就以 Gocast 的为准。老版本把 13 存成「没有」，所以以前选过 13 的用户算「没调过」，会跟 Ghostty 的 font-size 走，直到再调一次——这是分不出来的，接受。没缩放过的标签跟着新字号走，⌘+/⌘- 缩放过的不动。
+- 设置里「终端外观」下面的说明见 copy.md 20：没有配置或配置里没有外观项时是默认那句；用上了至少一项时是「字体、配色和光标来自你的 Ghostty 配置。」；有外观项的值用不了（颜色认不出、主题找不到……）时后面加「有几项没认出来，按默认样子显示。」
+
 **切换外观时**
 - 在设置里切：开着的终端立刻换（底、标签栏、浮层、颜色、字体一起换），所有标签都换，不用重开；内容、滚动位置不变，行数随行高重新排。光标样式只有新开的标签换（3.3b 和 Gocast 外观都是方块时没有区别）。
 - 搜索面板、设置、笔记窗口不受影响，仍跟着系统浅深色走。

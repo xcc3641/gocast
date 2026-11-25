@@ -48,7 +48,14 @@ type Settings struct {
 	// SpotlightChecked: a launch checked whether Spotlight had ⌘Space,
 	// and said so; the next ones don't.
 	SpotlightChecked bool `json:"spotlightChecked,omitempty"`
-	// FontSize of the terminal, 0 for DefaultFontSize.
+	// FontSize of the terminal, as the user chose it in Settings; 0
+	// while they never did, for the look's: the font-size of their
+	// Ghostty config in the Ghostty look, else DefaultFontSize. Any size
+	// chosen is kept, DefaultFontSize too, and wins over Ghostty's from
+	// then on. Gocast up to 0.3.2 saved DefaultFontSize as 0, so the users
+	// who chose 13 then (or chose another and came back) follow Ghostty's
+	// font-size, where their config has one, until they choose again:
+	// "never changed" can't be told from "chose 13" in their settings.
 	FontSize int `json:"fontSize,omitempty"`
 	// KeepTerminalOnBlur leaves the floating terminal on screen as the
 	// user goes to another window (the switch is "hide when you click

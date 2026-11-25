@@ -1616,6 +1616,66 @@ func (msgs Messages) GeneralTermLookGhosttyHint() string {
 	return Catalog.Format(msgs.locale, "generalTermLookGhosttyHint", nil)
 }
 
+// GeneralTermLookConfigHint says "Font, colors and cursor come from your Ghostty config."
+// in the language the app shows.
+//
+// Settings › Floating Terminal › Appearance: the note under it while
+// Ghostty is chosen and the user's Ghostty config sets some of the
+// terminal's appearance (copy.md 20).
+func GeneralTermLookConfigHint() string { return In(i18n.Locale()).GeneralTermLookConfigHint() }
+
+// GeneralTermLookConfigHint says "Font, colors and cursor come from your Ghostty config."
+// in the language of msgs.
+//
+// Settings › Floating Terminal › Appearance: the note under it while
+// Ghostty is chosen and the user's Ghostty config sets some of the
+// terminal's appearance (copy.md 20).
+func (msgs Messages) GeneralTermLookConfigHint() string {
+	return Catalog.Format(msgs.locale, "generalTermLookConfigHint", nil)
+}
+
+// GeneralTermLookConfigPartlyHint says "Font, colors and cursor come from your Ghostty config. A few settings weren’t recognized and use the defaults."
+// in the language the app shows.
+//
+// Settings › Floating Terminal › Appearance: generalTermLookConfigHint,
+// with the sentence added when some of the appearance settings of the
+// user's Ghostty config could not be used (copy.md 20).
+func GeneralTermLookConfigPartlyHint() string {
+	return In(i18n.Locale()).GeneralTermLookConfigPartlyHint()
+}
+
+// GeneralTermLookConfigPartlyHint says "Font, colors and cursor come from your Ghostty config. A few settings weren’t recognized and use the defaults."
+// in the language of msgs.
+//
+// Settings › Floating Terminal › Appearance: generalTermLookConfigHint,
+// with the sentence added when some of the appearance settings of the
+// user's Ghostty config could not be used (copy.md 20).
+func (msgs Messages) GeneralTermLookConfigPartlyHint() string {
+	return Catalog.Format(msgs.locale, "generalTermLookConfigPartlyHint", nil)
+}
+
+// GeneralTermLookGhosttyPartlyHint says "Looks like Ghostty out of the box: dark gray background, JetBrains Mono. A few settings weren’t recognized and use …"
+// in the language the app shows.
+//
+// Settings › Floating Terminal › Appearance:
+// generalTermLookGhosttyHint, with the sentence added when the user's
+// Ghostty config has appearance settings that could not be used, and none
+// that could (copy.md 20).
+func GeneralTermLookGhosttyPartlyHint() string {
+	return In(i18n.Locale()).GeneralTermLookGhosttyPartlyHint()
+}
+
+// GeneralTermLookGhosttyPartlyHint says "Looks like Ghostty out of the box: dark gray background, JetBrains Mono. A few settings weren’t recognized and use …"
+// in the language of msgs.
+//
+// Settings › Floating Terminal › Appearance:
+// generalTermLookGhosttyHint, with the sentence added when the user's
+// Ghostty config has appearance settings that could not be used, and none
+// that could (copy.md 20).
+func (msgs Messages) GeneralTermLookGhosttyPartlyHint() string {
+	return Catalog.Format(msgs.locale, "generalTermLookGhosttyPartlyHint", nil)
+}
+
 // GeneralTermLookGocastHint says "Frosted glass that follows light or dark appearance."
 // in the language the app shows.
 //

@@ -17,6 +17,7 @@ import (
 	"github.com/egoist/mygo/transfer"
 	"github.com/egoist/mygo/ui"
 
+	"gocast/internal/ghosttyconf"
 	"gocast/internal/presets"
 	"gocast/internal/settings"
 	"gocast/internal/shortcut"
@@ -104,29 +105,34 @@ type termPanel struct {
 	menu   bool         // the new tab menu shows
 	chosen int          // the row of the new tab menu chosen
 
-	wa      mygo.Rectangle // the work area the panel shows in
-	scale   float64        // the scale of its display
-	pos     string         // the position it shows at (settings.TerminalPositions)
-	pointer mygo.Point     // the pointer, as it showed: where it shows at settings.PositionPointer
-	pl      termPlace      // where it shows, and how it moves and resizes there
-	bounds  mygo.Rectangle // the panel's bounds as last placed or resized
-	placing bool           // the panel's bounds are being set, not dragged
-	moved   bool           // the user moved the panel this showing (design.md 3.4)
-	keeping bool           // a check that the panel moved is in the work area waits for the button
-	armed   bool           // a press on the tab bar's blank may move the panel (armMove)
-	letGo   time.Time      // when that press let go; zero while it is down
-	barAt   ui.Rect        // the tab bar, as the last frame drew it
-	taken   []ui.Rect      // the tabs and buttons in it, which take their presses
-	saveGen int            // the size dragged to last, to save
-	accents [2]ui.Color    // the light and dark accents of the look's themes
-	look    termLook       // what the panel and its terminals look like (termlook.go)
-	lookFor string         // the look's name in Settings (settings.TerminalLooks)
-	prefs   ui.Preferences // the last frame's, which applyLook takes between frames
-	hints   cmdHints       // the shortcut hints while Command is held (cmdhints.go)
+	wa      mygo.Rectangle      // the work area the panel shows in
+	scale   float64             // the scale of its display
+	pos     string              // the position it shows at (settings.TerminalPositions)
+	pointer mygo.Point          // the pointer, as it showed: where it shows at settings.PositionPointer
+	pl      termPlace           // where it shows, and how it moves and resizes there
+	bounds  mygo.Rectangle      // the panel's bounds as last placed or resized
+	placing bool                // the panel's bounds are being set, not dragged
+	moved   bool                // the user moved the panel this showing (design.md 3.4)
+	keeping bool                // a check that the panel moved is in the work area waits for the button
+	armed   bool                // a press on the tab bar's blank may move the panel (armMove)
+	letGo   time.Time           // when that press let go; zero while it is down
+	barAt   ui.Rect             // the tab bar, as the last frame drew it
+	taken   []ui.Rect           // the tabs and buttons in it, which take their presses
+	saveGen int                 // the size dragged to last, to save
+	accents [2]ui.Color         // the light and dark accents of the look's themes
+	look    termLook            // what the panel and its terminals look like (termlook.go)
+	lookFor string              // the look's name in Settings (settings.TerminalLooks)
+	conf    *ghosttyconf.Result // the user's Ghostty config, as last read (readConf); nil before
+	lookOf  *ghosttyconf.Result // the config the look was made with
+	prefs   ui.Preferences      // the last frame's, which applyLook takes between frames
+	hints   cmdHints            // the shortcut hints while Command is held (cmdhints.go)
 }
 
 func newTermPanel(g *gocast) *termPanel {
-	p := &termPanel{g: g, active: -1, look: lookFor(g.settings.TermLook(), ui.Preferences{})}
+	p := &termPanel{g: g, active: -1}
+	p.readConf()
+	p.look = lookFor(g.settings.TermLook(), ui.Preferences{}, p.conf)
+	p.lookOf = p.conf
 	// The look's themes wait for the window's accent colors, which the
 	// first frame follows (followLook): terminals joined before it take
 	// them then.
@@ -199,7 +205,7 @@ func (p *termPanel) view(c *ui.Context) {
 		if s != nil && p.hasCapsules(s) {
 			bottom = p.look.padCapsules // the last line and the cursor above the capsules
 		}
-		ui.Column(c).Grow(1).Padding(0, p.look.padX, bottom, p.look.padX).Children(func() {
+		ui.Column(c).Grow(1).Padding(p.look.padTop, p.look.padRight, bottom, p.look.padLeft).Children(func() {
 			if s == nil {
 				return
 			}
@@ -236,10 +242,11 @@ func (p *termPanel) view(c *ui.Context) {
 
 // followLook gives the panel the look Settings names, for the user's
 // accent color, which colors the terminals' cursor and selection in
-// Gocast's, as either changes; and every tab's terminal its colors, and
-// its font and least contrast where the look changed them, its content
-// and scrolling kept (design.md 3.3b). The cursor's shape changes with
-// new tabs.
+// Gocast's, and the user's Ghostty config as last read (readConf), as
+// either changes; and every tab's terminal its colors, and its font and
+// least contrast where the look changed them, its content and scrolling
+// kept (design.md 3.3b); the tabs at the font size new tabs had, the one
+// they have now. The cursor's shape changes with new tabs.
 func (p *termPanel) followLook(c *ui.Context) {
 	p.prefs = c.Preferences()
 	p.applyLook(p.prefs)
@@ -251,36 +258,83 @@ func (p *termPanel) followLook(c *ui.Context) {
 func (p *termPanel) applyLook(prefs ui.Preferences) {
 	accents := [2]ui.Color{ui.LightTheme().WithPreferences(prefs).Accent, ui.DarkTheme().WithPreferences(prefs).Accent}
 	name := p.g.settings.TermLook()
-	if p.look.theme != nil && accents == p.accents && name == p.lookFor {
+	if p.look.theme != nil && accents == p.accents && name == p.lookFor && p.conf == p.lookOf {
 		return
 	}
-	was := p.look
-	p.accents, p.lookFor = accents, name
-	p.look = lookFor(name, prefs)
+	was, base := p.look, p.fontSize()
+	p.accents, p.lookFor, p.lookOf = accents, name, p.conf
+	p.look = lookFor(name, prefs, p.conf)
+	size := p.fontSize()
 	for _, s := range p.tabs {
+		resized := s.fontSize == base && size != base
+		if resized {
+			s.fontSize = size
+		}
 		if s.term == nil {
 			continue
 		}
 		s.term.SetTheme(p.look.theme, p.look.darkTheme)
-		if !p.look.sameFont(&was) {
+		if resized || !p.look.sameFont(&was) {
 			s.term.SetFont(p.look.font(s.fontSize))
 		}
 		if p.look.contrast != was.contrast {
 			s.term.SetMinimumContrast(p.look.contrast)
 		}
+		if resized {
+			p.saveMeta(s)
+		}
 	}
 }
 
-// lookChanged shows the look Settings now names, at once (followLook).
+// readConf reads the user's Ghostty config again where the Ghostty look
+// is Settings' and a file it was read from changed, or it was never read
+// (design.md 3.3b): as the panel shows, and as Settings shows or chooses
+// the look. The next applyLook makes the look with it.
+func (p *termPanel) readConf() {
+	if p.g.settings.TermLook() != settings.LookGhostty {
+		return
+	}
+	if p.conf == nil || p.conf.Changed() {
+		p.conf = ghosttyconf.Load(sysGhosttyEnv())
+	}
+}
+
+// confHint is the note under the Ghostty look in Settings (copy.md 20):
+// Ghostty's out of the box, or that the user's Ghostty config gives the
+// font, colors and cursor, where it sets any; either saying some were not
+// recognized, where a setting of the appearance could not be used.
+func (p *termPanel) confHint() string {
+	applied, partly := false, false
+	if r := p.conf; r != nil {
+		for _, c := range []*ghosttyconf.Config{r.Light, r.Dark} {
+			applied = applied || c.Applied()
+			partly = partly || len(c.Unrecognized) > 0
+		}
+	}
+	switch {
+	case applied && partly:
+		return locales.GeneralTermLookConfigPartlyHint()
+	case applied:
+		return locales.GeneralTermLookConfigHint()
+	case partly:
+		return locales.GeneralTermLookGhosttyPartlyHint()
+	}
+	return locales.GeneralTermLookGhosttyHint()
+}
+
+// lookChanged shows the look Settings now names, at once (followLook),
+// with the user's Ghostty config as it is now.
 func (p *termPanel) lookChanged() {
+	p.readConf()
 	p.applyLook(p.prefs)
 	if p.win != nil { // nil: drawn in a test
 		p.win.Invalidate()
 	}
 }
 
-// fontSize is the font size of a new tab: Settings', else the look's, else
-// Settings' default.
+// fontSize is the font size of a new tab: Settings', once the user chose
+// one there (any, 13 too: settings.Settings.FontSize), else the look's,
+// the Ghostty config's font-size in Ghostty's, else Settings' default.
 func (p *termPanel) fontSize() float32 {
 	if p.g.settings.FontSize == 0 && p.look.fontSize > 0 {
 		return p.look.fontSize
@@ -1093,7 +1147,9 @@ func (p *termPanel) fontChanged() {
 		}
 		p.saveMeta(s)
 	}
-	p.win.Invalidate()
+	if p.win != nil { // nil: drawn in a test
+		p.win.Invalidate()
+	}
 }
 
 // --- Showing and hiding ---
@@ -1153,6 +1209,7 @@ func (p *termPanel) show() {
 	}
 	p.shown = true
 	p.hints.reset()
+	p.readConf() // the config edited since it last showed
 	p.applyLook(p.prefs)
 	p.syncVisible()
 	p.placeFor(sysPointer())
@@ -1473,7 +1530,11 @@ func (p *termPanel) typedAnchor(h int) int {
 			size = s.fontSize
 		}
 	}
-	return cursorAnchor(h, p.look.font(size), max(p.scale, 1), capsules, sessionCursor(s))
+	bottom := p.look.padBottom
+	if capsules {
+		bottom = p.look.padCapsules
+	}
+	return cursorAnchor(h, p.look.font(size), max(p.scale, 1), p.look.padTop, bottom, sessionCursor(s))
 }
 
 // sessionCursor is the row of the cursor of the tab's terminal, 0 at the

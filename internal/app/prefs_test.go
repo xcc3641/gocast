@@ -263,3 +263,30 @@ func saveFrame(t *testing.T, tt *ui.Tester, dir, name string, r image.Rectangle)
 		t.Fatal(err)
 	}
 }
+
+// Settings shows the font size of the user's Ghostty config while they
+// never chose one, and the note that the config gives the look; a size
+// stepped to is saved as chosen, 13 too, and is the terminal's from then
+// on whatever the config says (settings.Settings.FontSize).
+func TestPrefsGhosttyFontSize(t *testing.T) {
+	useGhosttyConfig(t, map[string]string{ghosttyConfig: "font-size = 14\nbackground = #102030\n"})
+	p, tt := prefsWindowTester(t, "en", pagePresets, nil)
+	p.showLook() // as Settings shows
+	tt.Frame()
+	if !tt.HasText("14") || !tt.HasText(locales.GeneralTermLookConfigHint()) {
+		t.Fatalf("Ghostty's 14 and the note not shown: %q", tt.Texts())
+	}
+	stepper, ok := tt.AccessByRole(ui.RoleStepper, locales.GeneralFontSize())
+	if !ok {
+		t.Fatal("no stepper")
+	}
+	b := stepper.Bounds
+	down := func() { tt.ClickAt(b.X+b.W/2, b.Y+b.H*3/4); tt.Frame() }
+	down()
+	if p.g.settings.FontSize != 13 || p.g.term.fontSize() != 13 || !tt.HasText("13") {
+		t.Errorf("stepped down to 13: saved %v, the terminal's %v", p.g.settings.FontSize, p.g.term.fontSize())
+	}
+	if s, err := settings.Load(p.g.settingsPath()); err != nil || s.FontSize != 13 {
+		t.Errorf("saved %v, %v", s.FontSize, err)
+	}
+}
