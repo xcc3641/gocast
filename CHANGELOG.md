@@ -8,6 +8,16 @@ The section of each version is the release notes that the update window
 shows (MyGo reads `## [version]`), so write it for users, in Chinese and
 English.
 
+## [0.3.3] - 2026-11-25
+
+- 终端外观选 Ghostty 时，悬浮终端会跟着你自己的 Ghostty 配置走：主题、字体、字号、配色、光标、留白和透明度都一样。在 Ghostty 里改了配置，下次唤出终端就换上。没有配置或读不了时，还是 Ghostty 默认的样子。
+- 字号在 Gocast 里没调过的话，用 Ghostty 配置里的字号；在设置里调过就以 Gocast 为准。
+- 按住悬浮终端顶部的标签栏可以把它拖到别处，这次用完收起后，下次还是从「出现位置」出来。
+
+- With Appearance set to Ghostty, the floating terminal follows your own Ghostty config: theme, font, size, colors, cursor, padding and opacity. Change it in Ghostty and the terminal picks it up the next time you summon it. With no config, or one that can’t be read, it keeps Ghostty’s default look.
+- If you haven’t changed the font size in Gocast, the size from your Ghostty config is used; once you change it in Settings, Gocast’s wins.
+- Drag the floating terminal by its tab bar to move it out of the way. After you put it away, it comes back at its usual position next time.
+
 ## [0.3.2] - 2026-11-25
 
 - 悬浮终端默认换成 Ghostty 的样子：深灰底、JetBrains Mono 字体、Ghostty 的配色和白色方块光标，浅色深色外观下都一样。Powerlevel10k 这类提示符里的图标也能正常显示，字体随 Gocast 自带，不用另装。
