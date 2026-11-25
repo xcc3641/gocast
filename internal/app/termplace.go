@@ -285,8 +285,13 @@ func freeDragRect(prev, b, wa mygo.Rectangle) mygo.Rectangle {
 // area's span from lo: the start dragged, its end stays; else its start
 // stays and its end goes where it was dragged. Its size is what fit makes
 // of it, and no more than the room up to the work area's edge, unless
-// that is under the least fit allows, the panel then moving in.
+// that is under the least fit allows, the panel then moving in. Neither
+// edge dragged, the axis is as it was, whatever fit says now (as on
+// another display).
 func freeAxis(p, ps, b, bs, lo, span int, fit func(int) int) (start, size int) {
+	if b == p && bs == ps {
+		return p, ps
+	}
 	least := fit(0)
 	if b != p { // the start edge: the end stays
 		end := p + ps

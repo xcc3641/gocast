@@ -113,6 +113,10 @@ type termPanel struct {
 	placing bool           // the panel's bounds are being set, not dragged
 	moved   bool           // the user moved the panel this showing (design.md 3.4)
 	keeping bool           // a check that the panel moved is in the work area waits for the button
+	armed   bool           // a press on the tab bar's blank may move the panel (armMove)
+	letGo   time.Time      // when that press let go; zero while it is down
+	barAt   ui.Rect        // the tab bar, as the last frame drew it
+	taken   []ui.Rect      // the tabs and buttons in it, which take their presses
 	saveGen int            // the size dragged to last, to save
 	accents [2]ui.Color    // the light and dark accents of the look's themes
 	look    termLook       // what the panel and its terminals look like (termlook.go)
@@ -350,16 +354,29 @@ func (p *termPanel) tabBar(c *ui.Context, k tokens, hints bool) {
 		bar.DragWindow()
 	}
 	bar.WindowDoubleClicked()
+	// A press there arms the move that follows (movedTo), and leaves the
+	// keyboard with the terminal.
+	bar.ObserveInput(func(ev ui.InputEvent) {
+		if ev.Kind == ui.InputPointerDown && ev.Button == 0 && p.blankAt(ev.X, ev.Y) {
+			p.armMove()
+			p.refocus()
+		}
+	})
+	p.barAt, p.taken = bar.Bounds(), p.taken[:0]
 	bar.Children(func() {
 		gocastMark(c, k)
-		ui.ScrollHorizontal(c).Grow(1).Shrink(1).Children(func() {
+		scroll := ui.ScrollHorizontal(c).Grow(1).Shrink(1)
+		view := scroll.Bounds()
+		scroll.Children(func() {
 			ui.Row(c).Gap(4).AlignItems(ui.Center).Children(func() {
 				for i, s := range p.tabs {
-					p.tab(c, k, i, s, hints)
+					p.taken = append(p.taken, clipRect(p.tab(c, k, i, s, hints).Bounds(), view))
 				}
 			})
 		})
-		ui.Row(c).Gap(4).Shrink(0).AlignItems(ui.Center).Children(func() {
+		buttons := ui.Row(c).Gap(4).Shrink(0).AlignItems(ui.Center)
+		p.taken = append(p.taken, buttons.Bounds())
+		buttons.Children(func() {
 			roundButton(c, k, "plus", locales.TermNewTab(), p.menu).HasPopup(ui.PopupMenu).Expanded(p.menu).
 				OnClick(p.toggleMenu)
 			hide := locales.TermHide(shortcut.Glyphs(p.g.terminalKey))
@@ -374,7 +391,7 @@ func (p *termPanel) tabBar(c *ui.Context, k tokens, hints bool) {
 // their number in its place, and none its close button; the tab keeps its
 // width (design.md 3.5a), which its title sets, and the title is cut
 // where the number's key, wider than the button, needs the room.
-func (p *termPanel) tab(c *ui.Context, k tokens, i int, s *session, hints bool) {
+func (p *termPanel) tab(c *ui.Context, k tokens, i int, s *session, hints bool) ui.Element {
 	on := i == p.active
 	bg, fg := ui.Transparent, k.textOnGlass
 	if on {
@@ -415,6 +432,26 @@ func (p *termPanel) tab(c *ui.Context, k tokens, i int, s *session, hints bool) 
 		p.reveal = false
 		tab.ScrollIntoView()
 	}
+	return tab
+}
+
+// blankAt reports whether x, y in the tab bar is its blank, or Gocast's
+// mark: none of its tabs or buttons, as the last frame drew them.
+func (p *termPanel) blankAt(x, y float32) bool {
+	x, y = p.barAt.X+x, p.barAt.Y+y
+	for _, r := range p.taken {
+		if r.Contains(x, y) {
+			return false
+		}
+	}
+	return true
+}
+
+// clipRect is r, as much of it as is inside view.
+func clipRect(r, view ui.Rect) ui.Rect {
+	x0, y0 := max(r.X, view.X), max(r.Y, view.Y)
+	x1, y1 := min(r.X+r.W, view.X+view.W), min(r.Y+r.H, view.Y+view.H)
+	return ui.Rect{X: x0, Y: y0, W: max(x1-x0, 0), H: max(y1-y0, 0)}
 }
 
 // A tab's measures: its padding, left and right, the gap between its
@@ -1163,7 +1200,7 @@ func (p *termPanel) show() {
 func (p *termPanel) placeFor(pt mygo.Point, wa mygo.Rectangle, scale float64) {
 	w, h := termSize(wa.Width, wa.Height, p.g.settings)
 	p.wa, p.scale, p.pos, p.pointer = wa, scale, p.g.settings.TermPosition(), pt
-	p.moved = false
+	p.moved, p.armed = false, false
 	p.pl = termPlacement(p.pos, wa, w, h, pt, p.typedAnchor(h))
 }
 
@@ -1184,11 +1221,11 @@ func (p *termPanel) userMove() {
 }
 
 // movedTo notes the panel's bounds b after a move, and reports whether
-// the user moved it: still where it showed, not placed by Gocast, nor
-// resized (resized's).
+// the user moved it: by a press on the tab bar's blank (armedNow), still
+// where it showed, not placed by Gocast, nor resized (resized's).
 func (p *termPanel) movedTo(b mygo.Rectangle) bool {
 	prev := p.bounds
-	if p.placing || p.sliding() || b == prev || b.Width != prev.Width || b.Height != prev.Height {
+	if p.placing || p.sliding() || !p.armedNow() || b == prev || b.Width != prev.Width || b.Height != prev.Height {
 		return false
 	}
 	p.moved, p.bounds = true, b
@@ -1203,12 +1240,8 @@ func (p *termPanel) keepInside() {
 		return
 	}
 	b := p.win.Bounds()
-	d := mygo.Screen.DisplayMatching(b)
-	if d.WorkArea.Width <= 0 || d.WorkArea.Height <= 0 {
-		return
-	}
-	r := keepIn(b, d.WorkArea)
-	if r != b && mouseHeld() {
+	r, wait := p.keepRect(b)
+	if wait {
 		if !p.keeping {
 			p.keeping = true
 			time.AfterFunc(keepPoll, func() {
@@ -1220,7 +1253,6 @@ func (p *termPanel) keepInside() {
 		}
 		return
 	}
-	p.wa, p.scale = d.WorkArea, d.ScaleFactor
 	if r != b {
 		p.place(r)
 	} else {
@@ -1228,8 +1260,65 @@ func (p *termPanel) keepInside() {
 	}
 }
 
+// keepRect is where the panel the user moved to b goes, kept in the work
+// area of the display it is mostly on, which it then shows in; or, out of
+// it with the button still down, wait: the drag goes on.
+func (p *termPanel) keepRect(b mygo.Rectangle) (r mygo.Rectangle, wait bool) {
+	d := displayOf(b)
+	if d.WorkArea.Width <= 0 || d.WorkArea.Height <= 0 {
+		return b, false
+	}
+	r = keepIn(b, d.WorkArea)
+	if r != b && mouseHeld() {
+		return b, true
+	}
+	p.wa, p.scale = d.WorkArea, d.ScaleFactor
+	return r, false
+}
+
+// displayOf is the display the bounds b are mostly on; a fake in tests.
+var displayOf = func(b mygo.Rectangle) mygo.Display { return mygo.Screen.DisplayMatching(b) }
+
 // mouseHeld reports whether a mouse button is down; a fake in tests.
 var mouseHeld = sysact.MouseHeld
+
+// armGrace is how long after the press on the tab bar's blank lets go a
+// move of the panel is still its: AppKit tells where the window server
+// moved a window about a tenth of a second late.
+const armGrace = 500 * time.Millisecond
+
+// armMove notes a press on the tab bar's blank, whose move of the panel
+// is the user's (movedTo), and watches for its release, which AppKit's
+// window drag keeps from the panel.
+func (p *termPanel) armMove() {
+	p.armed, p.letGo = true, time.Time{}
+	if p.win != nil { // nil: drawn in a test
+		p.watchRelease()
+	}
+}
+
+// watchRelease notes when the press that armed a move lets go.
+func (p *termPanel) watchRelease() {
+	time.AfterFunc(keepPoll, func() {
+		p.win.Update(func() {
+			if !p.armed || !p.letGo.IsZero() {
+				return
+			}
+			if mouseHeld() {
+				p.watchRelease()
+				return
+			}
+			p.letGo = time.Now()
+		})
+	})
+}
+
+// armedNow reports whether a move of the panel now is the user's: a press
+// on the tab bar's blank, this showing, is down, or let go armGrace ago
+// at most.
+func (p *termPanel) armedNow() bool {
+	return p.armed && (p.letGo.IsZero() || time.Since(p.letGo) < armGrace)
+}
 
 // place sets the panel's bounds, which resized then knows the user did not
 // drag.
@@ -1251,6 +1340,10 @@ func (p *termPanel) resized() {
 	}
 	b, prev := p.win.Bounds(), p.bounds
 	if b == prev {
+		return
+	}
+	if r, ok := p.systemRect(prev, b); ok {
+		p.place(r)
 		return
 	}
 	r := p.dragTo(prev, b)
@@ -1281,6 +1374,29 @@ func (p *termPanel) resized() {
 			}
 		})
 	})
+}
+
+// systemRect is where the panel the user moved goes, which the system
+// resized from prev to b as the user drags it (as macOS tiles a window
+// dragged to a display's edge): at that size, which is not saved, kept in
+// the work area of the display it is on, which it then shows in. No drag
+// of an edge moves both edges along an axis. ok reports such a resize.
+func (p *termPanel) systemRect(prev, b mygo.Rectangle) (r mygo.Rectangle, ok bool) {
+	if !p.moved || !bothEdges(prev, b) || !mouseHeld() {
+		return b, false
+	}
+	d := displayOf(b)
+	if d.WorkArea.Width <= 0 || d.WorkArea.Height <= 0 {
+		return b, true
+	}
+	p.wa, p.scale = d.WorkArea, d.ScaleFactor
+	return keepIn(b, d.WorkArea), true
+}
+
+// bothEdges reports whether both edges of the panel moved, from prev to
+// b, along an axis.
+func bothEdges(prev, b mygo.Rectangle) bool {
+	return b.X != prev.X && b.X+b.Width != prev.X+prev.Width || b.Y != prev.Y && b.Y+b.Height != prev.Y+prev.Height
 }
 
 // dragTo is the panel's bounds as the user drags its edges from prev to
@@ -1428,8 +1544,10 @@ func (p *termPanel) hide() {
 	}
 	p.shown = false
 	p.menu = false
+	p.armed = false
 	p.hints.cancel()
 	p.syncVisible()
+	p.win.Invalidate() // the tab bar moves the panel no more (sliding)
 	gen := p.anim.Add(1)
 	done := func() {
 		if p.anim.Load() == gen {
@@ -1462,7 +1580,7 @@ func (p *termPanel) animate(gen int64, d time.Duration, ease func(float64) float
 				return
 			}
 			t := min(1, float64(time.Since(start))/float64(d))
-			step(ease(t)) // the window's methods run on the main thread
+			p.stepIf(gen, func() { step(ease(t)) })
 			if t >= 1 {
 				break
 			}
@@ -1472,6 +1590,20 @@ func (p *termPanel) animate(gen int64, d time.Duration, ease func(float64) float
 		}
 	}()
 }
+
+// stepIf runs step, a step of the slide gen, on the main thread, unless
+// another slide or a placing started meanwhile (replace): a step that
+// came late would move the panel from where that put it, as a user might.
+func (p *termPanel) stepIf(gen int64, step func()) {
+	runOnMain(func() {
+		if p.anim.Load() == gen {
+			step()
+		}
+	})
+}
+
+// runOnMain runs fn on the main thread and waits for it; a fake in tests.
+var runOnMain = mygo.RunOnMain
 
 // easeOut is design.md's cubic-bezier(0.2, 0.8, 0.2, 1); easeIn the
 // standard ease-in, cubic-bezier(0.42, 0, 1, 1).

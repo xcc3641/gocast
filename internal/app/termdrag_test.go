@@ -2,6 +2,7 @@ package app
 
 import (
 	"testing"
+	"time"
 
 	"github.com/egoist/mygo"
 
@@ -91,6 +92,13 @@ func TestUserMove(t *testing.T) {
 	moved := shown
 	moved.X, moved.Y = 100, 300
 
+	// No press on the tab bar's blank: the system's, as a display
+	// changing.
+	if p.movedTo(moved) || p.moved {
+		t.Error("a move with no press on the tab bar is the user's")
+	}
+	p.armMove()
+
 	// Moving in: the slide's steps.
 	gen := p.anim.Add(1)
 	if p.movedTo(moved) || p.moved {
@@ -130,10 +138,11 @@ func TestUserMove(t *testing.T) {
 		t.Errorf("left edge out after the move: %+v, want %+v", got, want)
 	}
 
-	// Shown again: where Settings has it, its edges as 3.7 has them.
+	// Shown again: where Settings has it, its edges as 3.7 has them, and
+	// no move the user's till the tab bar is pressed again.
 	p.placeFor(mygo.Point{X: 700, Y: 500}, waMain, 2)
-	if p.moved || p.pl.rect != shown {
-		t.Errorf("shown again: moved %v, at %+v, want %+v", p.moved, p.pl.rect, shown)
+	if p.moved || p.armed || p.pl.rect != shown {
+		t.Errorf("shown again: moved %v, armed %v, at %+v, want %+v", p.moved, p.armed, p.pl.rect, shown)
 	}
 	if got, want := p.dragTo(shown, left(shown)), rect(shown.X-50, shown.Y, shown.Width+100, shown.Height); got != want {
 		t.Errorf("left edge out, shown again: %+v, want %+v", got, want)
@@ -155,5 +164,174 @@ func TestTabBarDragsAroundTabs(t *testing.T) {
 	tt.Frame()
 	if p.active != 1 {
 		t.Errorf("the second tab, clicked: tab %d showing", p.active)
+	}
+}
+
+// The press that arms a move is the user's while it is down, and for
+// armGrace once it lets go, as AppKit tells the window server's move late;
+// not after.
+func TestArmedMove(t *testing.T) {
+	p := &termPanel{g: &gocast{}, active: -1, shown: true, bounds: rect(100, 100, 908, 380)}
+	p.armMove()
+	if !p.armedNow() {
+		t.Error("the press, down: not armed")
+	}
+	p.letGo = time.Now().Add(-armGrace / 5)
+	if !p.armedNow() || !p.movedTo(rect(150, 120, 908, 380)) {
+		t.Error("a move told 0.1 s after the release: not the user's")
+	}
+	p.letGo = time.Now().Add(-2 * armGrace)
+	if p.armedNow() || p.movedTo(rect(200, 140, 908, 380)) {
+		t.Error("a move long after the release: the user's")
+	}
+}
+
+// A press on the tab bar's blank, or Gocast's mark, arms a move and keeps
+// the keyboard with the terminal; one on a tab or a button does not.
+func TestTabBarArmsMove(t *testing.T) {
+	p, tt := hintsPanel(t, "en", 1000, 600, "", "first", "second")
+	tt.Frame() // the frame that knows where the tabs are
+	focused := func() string {
+		for _, a := range tt.AccessAll() {
+			if a.Focused {
+				return a.Name
+			}
+		}
+		return ""
+	}
+	if p.tabs[0].term != nil {
+		was := focused()
+		tt.ClickAt(600, tabBarH/2)
+		tt.Frame()
+		if was == "" || focused() != was {
+			t.Errorf("a click on the blank: %q focused, was %q", focused(), was)
+		}
+	}
+	for _, c := range []struct {
+		name string
+		x    float32
+		arms bool
+	}{
+		{"the blank", 600, true},
+		{"Gocast's mark", 30, true},
+		{"the padding left", 4, true},
+		{"the first tab", 0, false},
+		{"the new tab button", 1000 - 12 - 32 - 4 - 16, false},
+		{"the hide button", 1000 - 12 - 16, false},
+	} {
+		x := c.x
+		if c.name == "the first tab" {
+			r, ok := tt.Find("first")
+			if !ok {
+				t.Fatal("no first tab")
+			}
+			x = r.X + r.W/2
+		}
+		p.armed = false
+		tt.Press(x, tabBarH/2)
+		if p.armed != c.arms {
+			t.Errorf("%s at %v: armed %v, want %v", c.name, x, p.armed, c.arms)
+		}
+		tt.Release(x, 500) // away, not to click: the panel has no window
+		tt.Frame()
+	}
+}
+
+// Once the user moved the panel out of the work area, it comes back in
+// as the drag ends, not while the button is down; on another display, in
+// that display's work area, which it then sizes in.
+func TestKeepRect(t *testing.T) {
+	held := true
+	wasHeld, wasDisplay := mouseHeld, displayOf
+	mouseHeld = func() bool { return held }
+	displayOf = func(b mygo.Rectangle) mygo.Display {
+		if b.X+b.Width/2 < 0 {
+			return mygo.Display{WorkArea: waLeft, ScaleFactor: 1}
+		}
+		return mygo.Display{WorkArea: waMain, ScaleFactor: 2}
+	}
+	t.Cleanup(func() { mouseHeld, displayOf = wasHeld, wasDisplay })
+	p := &termPanel{g: &gocast{}, active: -1, shown: true, moved: true, wa: waMain, scale: 2}
+
+	out := rect(1000, 300, 908, 380)
+	if r, wait := p.keepRect(out); !wait || r != out {
+		t.Errorf("out, held: %+v, wait %v", r, wait)
+	}
+	in := rect(100, 300, 908, 380)
+	if r, wait := p.keepRect(in); wait || r != in {
+		t.Errorf("in, held: %+v, wait %v", r, wait)
+	}
+	held = false
+	if r, wait := p.keepRect(out); wait || r != rect(604, 300, 908, 380) {
+		t.Errorf("out, let go: %+v, wait %v", r, wait)
+	}
+	left := rect(-700, 1000, 908, 380)
+	if r, wait := p.keepRect(left); wait || r != rect(-908, 700, 908, 380) || p.wa != waLeft || p.scale != 1 {
+		t.Errorf("out on the left display: %+v, wait %v, in %+v at %v", r, wait, p.wa, p.scale)
+	}
+}
+
+// Resized with both edges of an axis moved while the user drags the
+// panel moved, the system placed it (as macOS tiles it): kept in the work
+// area at that size, not taken for a drag of its edges.
+func TestSystemRect(t *testing.T) {
+	held := true
+	wasHeld, wasDisplay := mouseHeld, displayOf
+	mouseHeld = func() bool { return held }
+	displayOf = func(mygo.Rectangle) mygo.Display { return mygo.Display{WorkArea: waMain, ScaleFactor: 2} }
+	t.Cleanup(func() { mouseHeld, displayOf = wasHeld, wasDisplay })
+	p := &termPanel{g: &gocast{}, active: -1, shown: true, moved: true, wa: waMain}
+	prev := rect(200, 300, 908, 380)
+	tiled := rect(0, 33, 756, 949) // the left half
+	if r, ok := p.systemRect(prev, tiled); !ok || r != tiled {
+		t.Errorf("tiled: %+v, %v", r, ok)
+	}
+	if r, ok := p.systemRect(prev, rect(-10, 20, 1600, 1000)); !ok || r != rect(0, 33, 1512, 949) {
+		t.Errorf("tiled past the work area: %+v, %v", r, ok)
+	}
+	for _, b := range []mygo.Rectangle{
+		rect(150, 300, 958, 380), // the left edge
+		rect(200, 300, 958, 380), // the right edge
+		rect(150, 250, 958, 430), // the top-left corner
+	} {
+		if _, ok := p.systemRect(prev, b); ok {
+			t.Errorf("a drag of the edges to %+v: the system's", b)
+		}
+	}
+	held = false
+	if _, ok := p.systemRect(prev, tiled); ok {
+		t.Error("the button up: the system's")
+	}
+	held, p.moved = true, false
+	if _, ok := p.systemRect(prev, tiled); ok {
+		t.Error("not moved by the user: the system's")
+	}
+}
+
+// A step of a slide that comes once another slide, or a placing
+// (replace), started does nothing: it would move the panel from where
+// that put it, as a user would.
+func TestStepIf(t *testing.T) {
+	was := runOnMain
+	runOnMain = func(fn func()) { fn() }
+	t.Cleanup(func() { runOnMain = was })
+	p := &termPanel{g: &gocast{}, active: -1, shown: true}
+	gen := p.anim.Add(1)
+	steps := 0
+	p.stepIf(gen, func() { steps++ })
+	p.still = p.anim.Add(1) // replace, as Settings' position changes
+	p.stepIf(gen, func() { steps++ })
+	if steps != 1 {
+		t.Errorf("%d steps, want 1", steps)
+	}
+}
+
+// Neither edge of an axis dragged, the axis stays as it is, though the
+// work area's ranges for it changed, as on another display.
+func TestFreeDragRectUntouchedAxis(t *testing.T) {
+	small := rect(0, 25, 1000, 600) // 90% high is 540
+	prev := rect(100, 30, 700, 590)
+	if got, want := freeDragRect(prev, rect(100, 30, 750, 590), small), rect(100, 30, 750, 590); got != want {
+		t.Errorf("the right edge on a smaller display: %+v, want %+v", got, want)
 	}
 }
